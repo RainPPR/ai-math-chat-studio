@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User preferences for the AI chat.",
+      "type": "object",
+      "properties": {
+        "model": { "type": "string", "description": "The selected Gemini model." },
+        "systemPrompt": { "type": "string", "description": "Global system prompt." },
+        "thinkingLevel": { "type": "string", "description": "Thinking level (e.g., HIGH, LOW, MINIMAL)." }
+      }
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "A single message in a chat session.",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["user", "model"] },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["role", "content", "createdAt"]
+    },
+    "ChatSession": {
+      "title": "ChatSession",
+      "description": "A chat session containing multiple messages.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Owner UID" },
+        "title": { "type": "string" },
+        "messages": {
+          "type": "array",
+          "items": { "$ref": "#/entities/ChatMessage" }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "title", "messages", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "#/entities/UserSettings",
+      "description": "User settings."
+    },
+    "/sessions/{sessionId}": {
+      "schema": "#/entities/ChatSession",
+      "description": "User chat sessions."
+    }
+  }
+}
