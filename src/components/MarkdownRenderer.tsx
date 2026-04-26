@@ -24,6 +24,14 @@ interface MarkdownRendererProps {
 }
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content }) => {
+  let processedContent = content;
+  
+  // Replace \[ ... \] with $$ ... $$
+  processedContent = processedContent.replace(/\\\[([\s\S]*?)\\\]/g, (match, p1) => `$$${p1}$$`);
+  
+  // Replace \( ... \) with $ ... $
+  processedContent = processedContent.replace(/\\\(([\s\S]*?)\\\)/g, (match, p1) => `$${p1}$`);
+
   return (
     <div className="prose prose-invert max-w-none">
       <ReactMarkdown
@@ -37,11 +45,11 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content
         rehypePlugins={[
           rehypeRaw, 
           rehypeSanitize, 
-          [rehypeKatex, { strict: false }], 
+          [rehypeKatex, { strict: false, throwOnError: false }], 
           [rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }]
         ]}
       >
-        {content}
+        {processedContent}
       </ReactMarkdown>
     </div>
   );

@@ -7,7 +7,7 @@ async function run() {
       model: 'gemini-3.1-pro-preview',
       contents: 'hello',
       config: {
-        thinkingConfig: { thinkingLevel: 'low' }
+        thinkingConfig: { thinkingLevel: 'LOW' as any }
       }
     });
     console.log(response.text);

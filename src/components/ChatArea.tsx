@@ -1,22 +1,112 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatSession } from '../types';
-import { Send, Loader2, Copy, Check, Download } from 'lucide-react';
+import { ChatSession, UserSettings, ChatMessage } from '../types';
+import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface ChatAreaProps {
   session?: ChatSession;
   onSendMessage: (content: string) => void;
   isGenerating: boolean;
+  settings: UserSettings;
+  onStop?: () => void;
+  onRetry?: (msgId: string) => void;
+  onContinue?: () => void;
 }
 
-export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating }) => {
+const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue }: { msg: ChatMessage, isLast: boolean, isGenerating: boolean, settings: UserSettings, onCopy: (id: string, content: string) => void, copiedId: string | null, onRetry?: (msgId: string) => void, onContinue?: () => void }) => {
+  const isUser = msg.role === 'user';
+  let thoughts: string[] = [];
+  let mainContent = msg.content;
+  
+  if (!isUser) {
+    const thoughtRegex = /<details(?: open)?>\n<summary>Thinking Process<\/summary>\n\n```text\n([\s\S]*?)(?:\n```\n\n<\/details>|$)/g;
+    for (const m of msg.content.matchAll(thoughtRegex)) {
+      if (m[1]) thoughts.push(m[1].trim());
+    }
+    mainContent = mainContent.replace(thoughtRegex, '').trim();
+  }
+
+  const [isThoughtOpen, setIsThoughtOpen] = useState(true);
+
+  return (
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group`}>
+      <div className={`max-w-[85%] md:max-w-[75%] flex flex-col gap-2 ${isUser ? 'items-end' : 'items-start'} w-full`}>
+        
+        {thoughts.map((thought, i) => (
+          <div key={`thought-${i}`} className="rounded-xl shadow-sm relative w-full bg-gray-800/40 border border-gray-700/50 overflow-hidden">
+            <button 
+              onClick={() => setIsThoughtOpen(!isThoughtOpen)}
+              className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800/60 hover:bg-gray-800/80 transition-colors text-xs font-semibold uppercase tracking-wider text-gray-400"
+            >
+              <div className="flex items-center gap-2">
+                <Loader2 size={12} className={isGenerating && isLast ? "animate-spin text-blue-400" : "text-gray-500"} />
+                Thinking Process
+              </div>
+              <span className="text-gray-500">{isThoughtOpen ? 'Hide' : 'Show'}</span>
+            </button>
+            {isThoughtOpen && (
+              <div className="px-4 py-3 border-t border-gray-700/30 text-gray-300 text-sm">
+                {settings.renderThinkingAsMarkdown ? (
+                  <MarkdownRenderer content={thought} />
+                ) : (
+                  <pre className="whitespace-pre-wrap font-sans text-sm opacity-80">{thought}</pre>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+        
+        {mainContent && (
+          <div className={`rounded-2xl px-6 py-4 shadow-sm relative w-full ${isUser ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-100 border border-gray-700'}`}>
+            <button
+              onClick={() => msg.id && onCopy(msg.id, msg.content)}
+              className={`absolute top-2 ${isUser ? '-left-10' : '-right-10'} p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-opacity`}
+              title="Copy message"
+            >
+              {copiedId === msg.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+            </button>
+            <MarkdownRenderer content={mainContent} />
+          </div>
+        )}
+        
+        <div className="flex items-center gap-3 mt-1 opacity-0 group-hover:opacity-100 transition-opacity px-2 select-none">
+          <span className="text-[10px] text-gray-500">
+            {new Date(msg.createdAt).toLocaleString()}
+          </span>
+          {!isGenerating && onRetry && (
+            <button 
+              onClick={() => msg.id && onRetry(msg.id)}
+              className="text-[10px] text-gray-400 hover:text-blue-400 flex items-center gap-1 transition-colors"
+              title="Delete this message and subsequent, then regenerate"
+            >
+              <RefreshCcw size={10} /> Retry
+            </button>
+          )}
+          {!isGenerating && isLast && !isUser && onContinue && (
+            <button 
+              onClick={onContinue}
+              className="text-[10px] text-gray-400 hover:text-blue-400 flex items-center gap-1 transition-colors"
+              title="Continue generating from this point"
+            >
+              <Play size={10} /> Continue
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue }) => {
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [session?.messages, isGenerating]);
+    if (settings.autoScroll !== false) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [session?.messages, isGenerating, settings.autoScroll]);
 
   const handleSend = () => {
     if (input.trim() && !isGenerating) {
@@ -85,23 +175,17 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       
       <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
         {session.messages.map((msg, idx) => (
-          <div key={msg.id || idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group`}>
-            <div className={`max-w-[85%] md:max-w-[75%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-              <div className={`rounded-2xl px-6 py-4 shadow-sm relative w-full ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-100 border border-gray-700'}`}>
-                <button
-                  onClick={() => handleCopy(msg.id, msg.content)}
-                  className={`absolute top-2 ${msg.role === 'user' ? '-left-10' : '-right-10'} p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-opacity`}
-                  title="Copy message"
-                >
-                  {copiedId === msg.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
-                </button>
-                <MarkdownRenderer content={msg.content} />
-              </div>
-              <span className="text-[10px] text-gray-500 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity px-2 select-none">
-                {new Date(msg.createdAt).toLocaleString()}
-              </span>
-            </div>
-          </div>
+          <MessageItem 
+            key={msg.id || idx} 
+            msg={msg} 
+            isLast={idx === session.messages.length - 1} 
+            isGenerating={isGenerating}
+            settings={settings}
+            onCopy={handleCopy}
+            copiedId={copiedId}
+            onRetry={onRetry}
+            onContinue={onContinue}
+          />
         ))}
         {isGenerating && (
           <div className="flex justify-start">
@@ -130,13 +214,23 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
               target.style.height = `${Math.min(target.scrollHeight, 256)}px`;
             }}
           />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isGenerating}
-            className="p-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm"
-          >
-            <Send size={20} />
-          </button>
+          {isGenerating ? (
+            <button
+              onClick={onStop}
+              className="p-3.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm"
+              title="Stop generating"
+            >
+              <SquareTerminal size={20} />
+            </button>
+          ) : (
+            <button
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="p-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm"
+            >
+              <Send size={20} />
+            </button>
+          )}
         </div>
         <div className="text-center mt-2">
           <span className="text-xs text-gray-500">AI can make mistakes. Verify important information.</span>

@@ -53,7 +53,8 @@ export async function generateChatResponse(
   history: { role: 'user' | 'model', content: string }[],
   newMessage: string,
   onUpdate: (text: string) => void,
-  onToolCall?: (toolCall: { name: string; args: any; result: string }) => void
+  onToolCall?: (toolCall: { name: string; args: any; result: string }) => void,
+  options?: { signal?: AbortSignal }
 ) {
   // Context management: keep only the last 40 messages to save tokens and prevent bloat.
   let activeHistory = history;
@@ -108,10 +109,14 @@ export async function generateChatResponse(
   let keepResolving = true;
 
   while (keepResolving) {
+    if (options?.signal?.aborted) break;
+
     let functionCalls: any[] = [];
     let modelParts: any[] = [];
 
     for await (const chunk of currentStream) {
+      if (options?.signal?.aborted) break;
+
       if (chunk.functionCalls && chunk.functionCalls.length > 0) {
         functionCalls.push(...chunk.functionCalls);
       }

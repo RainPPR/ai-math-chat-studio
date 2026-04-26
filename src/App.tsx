@@ -4,6 +4,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import { ChatSession, UserSettings, ChatMessage, ToolCallRecord } from './types';
 import { fetchModels, generateChatResponse } from './lib/gemini';
+import { generateNvidiaChatResponse, fetchNvidiaModels } from './lib/nvidia';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
@@ -11,9 +12,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { Loader2, Wrench, ChevronRight, ChevronLeft } from 'lucide-react';
 
 const DEFAULT_SETTINGS: UserSettings = {
+  provider: 'gemini',
   model: 'gemini-3.1-pro-preview',
   systemPrompt: '',
   thinkingLevel: 'DEFAULT',
+  temperature: 1,
+  topP: 0.95,
+  maxTokens: 16384,
+  extraBody: '{"chat_template_kwargs":{"thinking":true,"reasoning_effort":"max"}}',
+  renderThinkingAsMarkdown: false,
+  autoScroll: true,
 };
 
 export default function App() {
@@ -121,6 +129,146 @@ export default function App() {
     }
   };
 
+  const abortControllerRef = React.useRef<AbortController | null>(null);
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  };
+
+  const runLLM = async (sessionId: string, messagesToSubmit: ChatMessage[]) => {
+    setIsGenerating(true);
+    abortControllerRef.current = new AbortController();
+    const abortSignal = abortControllerRef.current.signal;
+
+    const modelMessageId = uuidv4();
+    let currentModelText = "";
+    let currentToolCalls: ToolCallRecord[] = [];
+
+    const history = messagesToSubmit.slice(0, -1).map(m => ({ role: m.role as 'user'|'model', content: m.content }));
+    const newMessageContent = messagesToSubmit[messagesToSubmit.length - 1].content;
+
+    try {
+      let extraBodyObj = undefined;
+      if (settings.provider === 'nvidia' && settings.extraBody) {
+        try {
+          extraBodyObj = JSON.parse(settings.extraBody);
+        } catch (e) {
+          console.warn("Invalid extraBody JSON, ignoring.");
+        }
+      }
+
+      if (settings.provider === 'nvidia') {
+        await generateNvidiaChatResponse(
+          settings.model,
+          settings.systemPrompt,
+          history,
+          newMessageContent,
+          settings.temperature ?? 1,
+          settings.topP ?? 0.95,
+          settings.maxTokens ?? 16384,
+          extraBodyObj,
+          (text) => {
+            currentModelText = text;
+            setSessions(prev => prev.map(s => {
+              if (s.id === sessionId) {
+                const msgs = [...s.messages];
+                const lastMsg = msgs[msgs.length - 1];
+                if (lastMsg && lastMsg.id === modelMessageId) {
+                  lastMsg.content = text;
+                } else {
+                  msgs.push({
+                    id: modelMessageId,
+                    role: 'model',
+                    content: text,
+                    createdAt: new Date().toISOString(),
+                    toolCalls: [],
+                  });
+                }
+                return { ...s, messages: msgs };
+              }
+              return s;
+            }));
+          },
+          { signal: abortSignal }
+        );
+      } else {
+        await generateChatResponse(
+          settings.model,
+          settings.systemPrompt,
+          settings.thinkingLevel,
+          history,
+          newMessageContent,
+          (text) => {
+            currentModelText = text;
+            setSessions(prev => prev.map(s => {
+              if (s.id === sessionId) {
+                const msgs = [...s.messages];
+                const lastMsg = msgs[msgs.length - 1];
+                if (lastMsg && lastMsg.id === modelMessageId) {
+                  lastMsg.content = text;
+                  lastMsg.toolCalls = currentToolCalls;
+                } else {
+                  msgs.push({
+                    id: modelMessageId,
+                    role: 'model',
+                    content: text,
+                    createdAt: new Date().toISOString(),
+                    toolCalls: currentToolCalls,
+                  });
+                }
+                return { ...s, messages: msgs };
+              }
+              return s;
+            }));
+          },
+          (toolCall) => {
+            currentToolCalls = [...currentToolCalls, toolCall];
+            setSessions(prev => prev.map(s => {
+              if (s.id === sessionId) {
+                const msgs = [...s.messages];
+                const lastMsg = msgs[msgs.length - 1];
+                if (lastMsg && lastMsg.id === modelMessageId) {
+                  lastMsg.toolCalls = currentToolCalls;
+                }
+                return { ...s, messages: msgs };
+              }
+              return s;
+            }));
+          },
+          { signal: abortSignal }
+        );
+      }
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        console.log('Generation aborted');
+      } else {
+        console.error("Generation error", error);
+        currentModelText += "\n\n**Error generating response.**";
+      }
+    } finally {
+      setIsGenerating(false);
+      abortControllerRef.current = null;
+      const finalModelMessage: ChatMessage = {
+        id: modelMessageId,
+        role: 'model',
+        content: currentModelText,
+        createdAt: new Date().toISOString(),
+        toolCalls: currentToolCalls,
+      };
+      try {
+        await updateDoc(doc(db, 'sessions', sessionId), {
+          messages: [...messagesToSubmit, finalModelMessage].filter(m => m.content.trim() !== ""),
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (insertErr) {
+        console.error('Failed to save final message', insertErr);
+      }
+    }
+  };
+
   const handleSendMessage = async (content: string) => {
     if (!user || !content.trim() || isGenerating) return;
 
@@ -166,78 +314,65 @@ export default function App() {
       return;
     }
 
-    setIsGenerating(true);
+    await runLLM(sessionId, updatedMessages);
+  };
 
-    const modelMessageId = uuidv4();
-    let currentModelText = "";
-    let currentToolCalls: ToolCallRecord[] = [];
+  const handleRetry = async (msgId: string) => {
+    if (isGenerating || !currentSessionId) return;
+    const session = sessions.find(s => s.id === currentSessionId);
+    if (!session) return;
 
-    try {
-      await generateChatResponse(
-        settings.model,
-        settings.systemPrompt,
-        settings.thinkingLevel,
-        updatedMessages.map(m => ({ role: m.role, content: m.content })),
-        content,
-        (text) => {
-          currentModelText = text;
-          setSessions(prev => prev.map(s => {
-            if (s.id === sessionId) {
-              const msgs = [...s.messages];
-              const lastMsg = msgs[msgs.length - 1];
-              if (lastMsg && lastMsg.id === modelMessageId) {
-                lastMsg.content = text;
-                lastMsg.toolCalls = currentToolCalls;
-              } else {
-                msgs.push({
-                  id: modelMessageId,
-                  role: 'model',
-                  content: text,
-                  createdAt: new Date().toISOString(),
-                  toolCalls: currentToolCalls,
-                });
-              }
-              return { ...s, messages: msgs };
-            }
-            return s;
-          }));
-        },
-        (toolCall) => {
-          currentToolCalls = [...currentToolCalls, toolCall];
-          setSessions(prev => prev.map(s => {
-            if (s.id === sessionId) {
-              const msgs = [...s.messages];
-              const lastMsg = msgs[msgs.length - 1];
-              if (lastMsg && lastMsg.id === modelMessageId) {
-                lastMsg.toolCalls = currentToolCalls;
-              }
-              return { ...s, messages: msgs };
-            }
-            return s;
-          }));
-        }
-      );
-    } catch (error) {
-      console.error("Generation error", error);
-      currentModelText += "\n\n**Error generating response.**";
-    } finally {
-      const finalModelMessage: ChatMessage = {
-        id: modelMessageId,
-        role: 'model',
-        content: currentModelText,
-        createdAt: new Date().toISOString(),
-        toolCalls: currentToolCalls,
-      };
-      try {
-        await updateDoc(doc(db, 'sessions', sessionId), {
-          messages: [...updatedMessages, finalModelMessage],
-          updatedAt: new Date().toISOString(),
-        });
-      } catch (e) {
-        handleFirestoreError(e, OperationType.UPDATE, 'sessions');
-      }
-      setIsGenerating(false);
+    const idx = session.messages.findIndex(m => m.id === msgId);
+    if (idx === -1) return;
+
+    let userMsgIdx = idx;
+    while (userMsgIdx >= 0 && session.messages[userMsgIdx].role !== 'user') {
+      userMsgIdx--;
     }
+    if (userMsgIdx === -1) return;
+
+    const updatedMessages = session.messages.slice(0, userMsgIdx + 1);
+    try {
+      await updateDoc(doc(db, 'sessions', currentSessionId), {
+        messages: updatedMessages,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (e) {
+      handleFirestoreError(e, OperationType.UPDATE, 'sessions');
+      return;
+    }
+    
+    // optimistically update state before generation
+    setSessions(prev => prev.map(s => s.id === currentSessionId ? { ...s, messages: updatedMessages } : s));
+
+    await runLLM(currentSessionId, updatedMessages);
+  };
+
+  const handleContinue = async () => {
+    if (isGenerating || !currentSessionId) return;
+    const session = sessions.find(s => s.id === currentSessionId);
+    if (!session || session.messages.length === 0) return;
+
+    // continue sends a user message "continue" but we might actually just append logic here
+    const userMessage: ChatMessage = {
+      id: uuidv4(),
+      role: 'user',
+      content: 'continue',
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedMessages = [...session.messages, userMessage];
+    try {
+      await updateDoc(doc(db, 'sessions', currentSessionId), {
+        messages: updatedMessages,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (e) {
+      handleFirestoreError(e, OperationType.UPDATE, 'sessions');
+      return;
+    }
+
+    await runLLM(currentSessionId, updatedMessages);
   };
 
   if (!isAuthReady) {
@@ -278,6 +413,10 @@ export default function App() {
           session={currentSession}
           onSendMessage={handleSendMessage}
           isGenerating={isGenerating}
+          settings={settings}
+          onStop={handleStop}
+          onRetry={handleRetry}
+          onContinue={handleContinue}
         />
       </main>
 

@@ -1,8 +1,21 @@
 export interface UserSettings {
+  provider?: 'gemini' | 'nvidia' | 'custom';
   model: string;
   systemPrompt: string;
   thinkingLevel: string;
+  reasoningEffort?: string;
+  geminiApiKey?: string;
+  customBaseUrl?: string;
+  customApiKey?: string;
+  customModel?: string;
+  customParameters?: { key: string; value: string }[];
   memories?: string[];
+  temperature?: number;
+  topP?: number;
+  maxTokens?: number;
+  extraBody?: string; // Stored as JSON string
+  renderThinkingAsMarkdown?: boolean;
+  autoScroll?: boolean;
 }
 
 export interface ToolCallRecord {
