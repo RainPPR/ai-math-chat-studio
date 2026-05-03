@@ -5,6 +5,7 @@ import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, query, where
 import { ChatSession, UserSettings, ChatMessage, ToolCallRecord } from './types';
 import { fetchModels, generateChatResponse } from './lib/gemini';
 import { generateNvidiaChatResponse, fetchNvidiaModels } from './lib/nvidia';
+import { generateDs2apiChatResponse, fetchDs2apiModels } from './lib/ds2api';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
@@ -35,13 +36,20 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isToolsSidebarOpen, setIsToolsSidebarOpen] = useState(true);
 
+  const isLocalMode = import.meta.env.VITE_LOCAL_MODE === 'true';
+
   useEffect(() => {
+    if (isLocalMode) {
+      setUser({ uid: 'local_user', displayName: 'Local User' } as User);
+      setIsAuthReady(true);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setIsAuthReady(true);
     });
     return () => unsubscribe();
-  }, []);
+  }, [isLocalMode]);
 
   useEffect(() => {
     fetchModels().then(m => setModels(m || []));
@@ -51,6 +59,30 @@ export default function App() {
     if (!isAuthReady || !user) {
       setSessions([]);
       setSettings(DEFAULT_SETTINGS);
+      return;
+    }
+
+    if (isLocalMode) {
+      const storedSessions = localStorage.getItem('local_sessions');
+      if (storedSessions) {
+        try {
+          const parsed = JSON.parse(storedSessions);
+          parsed.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+          setSessions(parsed);
+          setCurrentSessionId(parsed.length > 0 ? parsed[0].id : null);
+        } catch (e) {
+          console.error("Local storage parsing error", e);
+        }
+      }
+      
+      const storedSettings = localStorage.getItem('local_settings');
+      if (storedSettings) {
+        try {
+          setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(storedSettings) });
+        } catch (e) {}
+      } else {
+        localStorage.setItem('local_settings', JSON.stringify(DEFAULT_SETTINGS));
+      }
       return;
     }
 
@@ -97,17 +129,32 @@ export default function App() {
     };
     
     // Optimistically update local state to prevent UI flicker
-    setSessions(prev => [newSession, ...prev]);
+    setSessions(prev => {
+      const next = [newSession, ...prev];
+      if (isLocalMode) localStorage.setItem('local_sessions', JSON.stringify(next));
+      return next;
+    });
     setCurrentSessionId(newSession.id);
     
-    try {
-      await setDoc(doc(db, 'sessions', newSession.id), newSession);
-    } catch (e) {
-      handleFirestoreError(e, OperationType.CREATE, 'sessions');
+    if (!isLocalMode) {
+      try {
+        await setDoc(doc(db, 'sessions', newSession.id), newSession);
+      } catch (e) {
+        handleFirestoreError(e, OperationType.CREATE, 'sessions');
+      }
     }
   };
 
   const handleDeleteChat = async (id: string) => {
+    if (isLocalMode) {
+      setSessions(prev => {
+        const next = prev.filter(s => s.id !== id);
+        localStorage.setItem('local_sessions', JSON.stringify(next));
+        return next;
+      });
+      if (currentSessionId === id) setCurrentSessionId(null);
+      return;
+    }
     try {
       await deleteDoc(doc(db, 'sessions', id));
       if (currentSessionId === id) {
@@ -120,6 +167,12 @@ export default function App() {
 
   const handleSaveSettings = async (newSettings: UserSettings) => {
     if (!user) return;
+    if (isLocalMode) {
+      localStorage.setItem('local_settings', JSON.stringify(newSettings));
+      setSettings(newSettings);
+      setIsSettingsOpen(false);
+      return;
+    }
     try {
       await setDoc(doc(db, 'users', user.uid), newSettings);
       setSettings(newSettings);
@@ -152,7 +205,7 @@ export default function App() {
 
     try {
       let extraBodyObj = undefined;
-      if (settings.provider === 'nvidia' && settings.extraBody) {
+      if ((settings.provider === 'nvidia' || settings.provider === 'ds2api') && settings.extraBody) {
         try {
           extraBodyObj = JSON.parse(settings.extraBody);
         } catch (e) {
@@ -162,6 +215,40 @@ export default function App() {
 
       if (settings.provider === 'nvidia') {
         await generateNvidiaChatResponse(
+          settings.model,
+          settings.systemPrompt,
+          history,
+          newMessageContent,
+          settings.temperature ?? 1,
+          settings.topP ?? 0.95,
+          settings.maxTokens ?? 16384,
+          extraBodyObj,
+          (text) => {
+            currentModelText = text;
+            setSessions(prev => prev.map(s => {
+              if (s.id === sessionId) {
+                const msgs = [...s.messages];
+                const lastMsg = msgs[msgs.length - 1];
+                if (lastMsg && lastMsg.id === modelMessageId) {
+                  lastMsg.content = text;
+                } else {
+                  msgs.push({
+                    id: modelMessageId,
+                    role: 'model',
+                    content: text,
+                    createdAt: new Date().toISOString(),
+                    toolCalls: [],
+                  });
+                }
+                return { ...s, messages: msgs };
+              }
+              return s;
+            }));
+          },
+          { signal: abortSignal }
+        );
+      } else if (settings.provider === 'ds2api') {
+        await generateDs2apiChatResponse(
           settings.model,
           settings.systemPrompt,
           history,
@@ -259,10 +346,12 @@ export default function App() {
         toolCalls: currentToolCalls,
       };
       try {
-        await updateDoc(doc(db, 'sessions', sessionId), {
-          messages: [...messagesToSubmit, finalModelMessage].filter(m => m.content.trim() !== ""),
-          updatedAt: new Date().toISOString(),
-        });
+        if (!isLocalMode) {
+          await updateDoc(doc(db, 'sessions', sessionId), {
+            messages: [...messagesToSubmit, finalModelMessage].filter(m => m.content.trim() !== ""),
+            updatedAt: new Date().toISOString(),
+          });
+        }
       } catch (insertErr) {
         console.error('Failed to save final message', insertErr);
       }
@@ -285,12 +374,21 @@ export default function App() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      try {
-        await setDoc(doc(db, 'sessions', sessionId), session);
-        setCurrentSessionId(sessionId);
-      } catch (e) {
-        handleFirestoreError(e, OperationType.CREATE, 'sessions');
-        return;
+      
+      setSessions(prev => {
+        const next = [session, ...prev];
+        if (isLocalMode) localStorage.setItem('local_sessions', JSON.stringify(next));
+        return next;
+      });
+      setCurrentSessionId(sessionId);
+      
+      if (!isLocalMode) {
+        try {
+          await setDoc(doc(db, 'sessions', sessionId), session);
+        } catch (e) {
+          handleFirestoreError(e, OperationType.CREATE, 'sessions');
+          return;
+        }
       }
     }
 
@@ -303,15 +401,28 @@ export default function App() {
 
     const updatedMessages = [...session.messages, userMessage];
     
-    try {
-      await updateDoc(doc(db, 'sessions', sessionId), {
-        messages: updatedMessages,
+    setSessions(prev => {
+      const next = prev.map(s => s.id === sessionId ? { 
+        ...s, 
+        messages: updatedMessages, 
         updatedAt: new Date().toISOString(),
-        title: session.messages.length === 0 ? content.slice(0, 30) : session.title
-      });
-    } catch (e) {
-      handleFirestoreError(e, OperationType.UPDATE, 'sessions');
-      return;
+        title: s.messages.length === 0 ? content.slice(0, 30) : s.title 
+      } : s);
+      if (isLocalMode) localStorage.setItem('local_sessions', JSON.stringify(next));
+      return next;
+    });
+
+    if (!isLocalMode) {
+      try {
+        await updateDoc(doc(db, 'sessions', sessionId), {
+          messages: updatedMessages,
+          updatedAt: new Date().toISOString(),
+          title: session.messages.length === 0 ? content.slice(0, 30) : session.title
+        });
+      } catch (e) {
+        handleFirestoreError(e, OperationType.UPDATE, 'sessions');
+        return;
+      }
     }
 
     await runLLM(sessionId, updatedMessages);
@@ -332,18 +443,24 @@ export default function App() {
     if (userMsgIdx === -1) return;
 
     const updatedMessages = session.messages.slice(0, userMsgIdx + 1);
-    try {
-      await updateDoc(doc(db, 'sessions', currentSessionId), {
-        messages: updatedMessages,
-        updatedAt: new Date().toISOString()
-      });
-    } catch (e) {
-      handleFirestoreError(e, OperationType.UPDATE, 'sessions');
-      return;
-    }
     
-    // optimistically update state before generation
-    setSessions(prev => prev.map(s => s.id === currentSessionId ? { ...s, messages: updatedMessages } : s));
+    setSessions(prev => {
+      const next = prev.map(s => s.id === currentSessionId ? { ...s, messages: updatedMessages, updatedAt: new Date().toISOString() } : s);
+      if (isLocalMode) localStorage.setItem('local_sessions', JSON.stringify(next));
+      return next;
+    });
+
+    if (!isLocalMode) {
+      try {
+        await updateDoc(doc(db, 'sessions', currentSessionId), {
+          messages: updatedMessages,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (e) {
+        handleFirestoreError(e, OperationType.UPDATE, 'sessions');
+        return;
+      }
+    }
 
     await runLLM(currentSessionId, updatedMessages);
   };
@@ -353,7 +470,6 @@ export default function App() {
     const session = sessions.find(s => s.id === currentSessionId);
     if (!session || session.messages.length === 0) return;
 
-    // continue sends a user message "continue" but we might actually just append logic here
     const userMessage: ChatMessage = {
       id: uuidv4(),
       role: 'user',
@@ -362,14 +478,23 @@ export default function App() {
     };
 
     const updatedMessages = [...session.messages, userMessage];
-    try {
-      await updateDoc(doc(db, 'sessions', currentSessionId), {
-        messages: updatedMessages,
-        updatedAt: new Date().toISOString()
-      });
-    } catch (e) {
-      handleFirestoreError(e, OperationType.UPDATE, 'sessions');
-      return;
+    
+    setSessions(prev => {
+      const next = prev.map(s => s.id === currentSessionId ? { ...s, messages: updatedMessages, updatedAt: new Date().toISOString() } : s);
+      if (isLocalMode) localStorage.setItem('local_sessions', JSON.stringify(next));
+      return next;
+    });
+
+    if (!isLocalMode) {
+      try {
+        await updateDoc(doc(db, 'sessions', currentSessionId), {
+          messages: updatedMessages,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (e) {
+        handleFirestoreError(e, OperationType.UPDATE, 'sessions');
+        return;
+      }
     }
 
     await runLLM(currentSessionId, updatedMessages);

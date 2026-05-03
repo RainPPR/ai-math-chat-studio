@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserSettings } from '../types';
 import { X, Sparkles } from 'lucide-react';
 import { fetchNvidiaModels } from '../lib/nvidia';
+import { fetchDs2apiModels } from '../lib/ds2api';
 
 interface SettingsModalProps {
   settings: UserSettings;
@@ -21,9 +22,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
   });
   
   const [nvidiaModels, setNvidiaModels] = useState<string[]>([]);
+  const [ds2apiModels, setDs2apiModels] = useState<string[]>([]);
 
   useEffect(() => {
     fetchNvidiaModels().then(setNvidiaModels).catch(console.error);
+    fetchDs2apiModels().then(setDs2apiModels).catch(console.error);
   }, []);
 
   const handleBeautifyJson = () => {
@@ -43,7 +46,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
   };
 
   const isNvidia = localSettings.provider === 'nvidia';
-  const displayModels = isNvidia ? nvidiaModels : models;
+  const isDs2api = localSettings.provider === 'ds2api';
+  const isCustomOpenAI = isNvidia || isDs2api;
+  
+  let displayModels = models;
+  if (isNvidia) displayModels = nvidiaModels;
+  else if (isDs2api) displayModels = ds2apiModels;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -84,11 +92,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
             <label className="block text-sm font-medium text-gray-300">Provider</label>
             <select 
               value={localSettings.provider || 'gemini'}
-              onChange={e => setLocalSettings(s => ({ ...s, provider: e.target.value as 'gemini' | 'nvidia', model: e.target.value === 'nvidia' ? nvidiaModels[0] || '' : models[0] || '' }))}
+              onChange={e => {
+                const newProvider = e.target.value as 'gemini' | 'nvidia' | 'ds2api';
+                let defaultModel = '';
+                if (newProvider === 'nvidia') defaultModel = nvidiaModels[0] || '';
+                else if (newProvider === 'ds2api') defaultModel = ds2apiModels[0] || '';
+                else defaultModel = models[0] || '';
+                
+                setLocalSettings(s => ({ 
+                  ...s, 
+                  provider: newProvider, 
+                  model: defaultModel 
+                }));
+              }}
               className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 transition-colors"
             >
               <option value="gemini">Google Gemini</option>
               <option value="nvidia">Nvidia API</option>
+              <option value="ds2api">DS2API</option>
             </select>
           </div>
 
@@ -108,7 +129,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
             </datalist>
           </div>
 
-          {!isNvidia && (
+          {!isCustomOpenAI && (
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-300">Thinking Level</label>
               <select 
@@ -135,7 +156,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
             />
           </div>
 
-          {isNvidia && (
+          {isCustomOpenAI && (
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

@@ -1,5 +1,5 @@
 export interface UserSettings {
-  provider?: 'gemini' | 'nvidia' | 'custom';
+  provider?: 'gemini' | 'nvidia' | 'ds2api' | 'custom';
   model: string;
   systemPrompt: string;
   thinkingLevel: string;

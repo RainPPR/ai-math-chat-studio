@@ -1,5 +1,9 @@
 import { GoogleGenAI, Type, FunctionDeclaration } from "@google/genai";
 import * as math from 'mathjs';
+import nerdamer from 'nerdamer';
+import 'nerdamer/Algebra';
+import 'nerdamer/Calculus';
+import 'nerdamer/Solve';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -15,6 +19,44 @@ export const evaluateExpressionTool: FunctionDeclaration = {
       },
     },
     required: ["expression"],
+  },
+};
+
+export const solveEquationTool: FunctionDeclaration = {
+  name: "solve_equation",
+  description: "Solves an algebraic equation for a specific variable. Returns exact algebraic solutions when possible.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      equation: {
+        type: Type.STRING,
+        description: "The equation to solve (e.g., 'x^2 - 4 = 0', '2*x + y = 10').",
+      },
+      variable: {
+        type: Type.STRING,
+        description: "The variable to solve for (e.g., 'x').",
+      },
+    },
+    required: ["equation", "variable"],
+  },
+};
+
+export const calculateDerivativeTool: FunctionDeclaration = {
+  name: "calculate_derivative",
+  description: "Calculates the mathematical derivative of an expression with respect to a variable.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      expression: {
+        type: Type.STRING,
+        description: "The mathematical expression to differentiate (e.g., 'x^2 + 2*x', 'sin(x)').",
+      },
+      variable: {
+        type: Type.STRING,
+        description: "The variable to differentiate with respect to (e.g., 'x').",
+      },
+    },
+    required: ["expression", "variable"],
   },
 };
 
@@ -37,9 +79,9 @@ export async function fetchModels() {
 }
 
 export const getMathInstructions = () => `
-CRITICAL INSTRUCTION: You have access to the 'evaluate_expression' tool which uses the mathjs library. You MUST use this tool for ANY mathematical calculation, equation solving, or numerical logic. 
-DO NOT perform calculations in your head. DO NOT guess the answer. Even for simple arithmetic, you MUST call 'evaluate_expression' to guarantee accuracy. 
-Failure to use the tool for math will result in incorrect answers.
+CRITICAL INSTRUCTION: You have access to mathematical tools: 'evaluate_expression', 'solve_equation', and 'calculate_derivative'. You MUST use these tools for ANY mathematical calculation, equation solving, or differentiation. 
+DO NOT perform calculations or algebraic manipulations in your head. DO NOT guess the answer. Even for simple arithmetic or algebra, you MUST call the appropriate tool to guarantee accuracy. 
+Failure to use the tools for math will result in incorrect answers.
 When outputting math equations, ALWAYS use KaTeX formatting. 
 For inline math, use single dollar signs: $x^2$.
 For block math, use double dollar signs: $$x^2$$.
@@ -78,7 +120,7 @@ export async function generateChatResponse(
 
   const config: any = {
     systemInstruction: systemPrompt ? systemPrompt + '\n\n' + getMathInstructions() : getMathInstructions(),
-    tools: [{ functionDeclarations: [evaluateExpressionTool] }],
+    tools: [{ functionDeclarations: [evaluateExpressionTool, solveEquationTool, calculateDerivativeTool] }],
   };
 
   if (thinkingLevel && thinkingLevel !== 'DEFAULT' && thinkingLevel !== 'none') {
@@ -155,6 +197,55 @@ export async function generateChatResponse(
           let result;
           try {
             result = math.evaluate(args.expression);
+          } catch (e: any) {
+            result = `Error: ${e.message}`;
+          }
+          
+          if (onToolCall) {
+            onToolCall({
+              name: call.name,
+              args,
+              result: String(result)
+            });
+          }
+
+          return {
+            functionResponse: {
+              name: call.name,
+              response: { result: String(result) }
+            }
+          };
+        } else if (call.name === 'solve_equation') {
+          const args = call.args as any;
+          
+          let result;
+          try {
+            const solutions = (nerdamer as any).solveEquations(args.equation, args.variable);
+            result = solutions.toString();
+          } catch (e: any) {
+            result = `Error: ${e.message}`;
+          }
+          
+          if (onToolCall) {
+            onToolCall({
+              name: call.name,
+              args,
+              result: String(result)
+            });
+          }
+
+          return {
+            functionResponse: {
+              name: call.name,
+              response: { result: String(result) }
+            }
+          };
+        } else if (call.name === 'calculate_derivative') {
+          const args = call.args as any;
+          
+          let result;
+          try {
+            result = math.derivative(args.expression, args.variable).toString();
           } catch (e: any) {
             result = `Error: ${e.message}`;
           }

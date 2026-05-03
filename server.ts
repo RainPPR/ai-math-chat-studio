@@ -64,6 +64,69 @@ async function startServer() {
     }
   });
 
+  // API Route for DS2API
+  app.post("/api/ds2api/chat", async (req, res) => {
+    try {
+      const { model, messages, temperature, top_p, max_tokens, extra_body } = req.body;
+      
+      const apiKey = process.env.DS2API_API_KEY || "no-key"; // Default to no-key if not set, user might use it without key if public
+      
+      const client = new OpenAI({
+        baseURL: "https://ds2api-hazel-one.vercel.app/v1",
+        apiKey,
+      });
+
+      const response = await client.chat.completions.create({
+        model,
+        messages,
+        temperature,
+        top_p,
+        max_tokens,
+        ...(extra_body || {}),
+        stream: true,
+      } as any) as any;
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      for await (const chunk of response) {
+        const delta = chunk.choices[0]?.delta as any;
+        const reasoning = delta?.reasoning || delta?.reasoning_content;
+        const content = delta?.content;
+        
+        let chunkData: any = {};
+        if (reasoning) {
+          chunkData.reasoning = reasoning;
+        }
+        if (content) {
+          chunkData.content = content;
+        }
+
+        if (Object.keys(chunkData).length > 0) {
+          res.write(`data: ${JSON.stringify(chunkData)}\n\n`);
+        }
+      }
+      res.write("data: [DONE]\n\n");
+      res.end();
+
+    } catch (error: any) {
+      console.error("DS2API API Error:", error);
+      res.status(500).json({ error: error.message || "Failed to generate text." });
+    }
+  });
+
+  app.get("/api/ds2api/models", async (req, res) => {
+    try {
+      const response = await fetch("https://ds2api-hazel-one.vercel.app/v1/models");
+      const data = await response.json();
+      res.json(data);
+    } catch (error: any) {
+      console.error("DS2API Models Error:", error);
+      res.status(500).json({ error: error.message || "Failed to fetch models." });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
