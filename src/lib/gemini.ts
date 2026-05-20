@@ -86,6 +86,13 @@ When outputting math equations, ALWAYS use KaTeX formatting.
 For inline math, use single dollar signs: $x^2$.
 For block math, use double dollar signs: $$x^2$$.
 For chemistry formulas, use the mhchem extension syntax inside KaTeX blocks: $\\ce{H2O}$ or $$\\ce{CO2 + C -> 2 CO}$$.
+
+TOOL CALLING & REASONING CONSTRAINTS:
+You MUST call tools either during your thinking process or BEFORE outputting your final response. You MUST deeply think and comprehensively formulate your final answer BEFORE responding. You must finish your entire response at once without interruption.
+
+Reasoning Effort: Absolute maximum with no shortcuts permitted.
+You MUST be very thorough in your thinking and comprehensively decompose the problem to resolve the root cause, rigorously stress-testing your logic against all potential paths, edge cases, and adversarial scenarios.
+Explicitly write out your entire deliberation process, documenting every intermediate step, considered alternative, and rejected hypothesis to ensure absolutely no assumption is left unchecked.
 `;
 
 export async function generateChatResponse(

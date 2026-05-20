@@ -1,12 +1,17 @@
-export async function fetchNvidiaModels() {
-  return [
-    "deepseek-ai/deepseek-r1",
-    "deepseek-ai/deepseek-v4-pro",
-    "meta/llama3-70b-instruct"
-  ];
+export async function fetchCloudflareModels() {
+  try {
+    const response = await fetch('/api/cloudflare/models');
+    if (!response.ok) throw new Error("Failed to fetch Cloudflare models");
+    return await response.json();
+  } catch (error) {
+    console.error("Cloudflare Models fetch error", error);
+    return [
+      "@cf/meta/llama-3.1-8b-instruct"
+    ];
+  }
 }
 
-export async function generateNvidiaChatResponse(
+export async function generateCloudflareChatResponse(
   model: string,
   systemPrompt: string,
   history: { role: 'user' | 'model', content: string }[],
@@ -37,7 +42,7 @@ export async function generateNvidiaChatResponse(
     content: newMessage
   });
 
-  const response = await fetch('/api/nvidia/chat', {
+  const response = await fetch('/api/cloudflare/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     signal: options?.signal,
@@ -53,7 +58,7 @@ export async function generateNvidiaChatResponse(
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || "Failed to generate Nvidia response");
+    throw new Error(err.error || "Failed to generate Cloudflare response");
   }
 
   if (!response.body) throw new Error("No response body");

@@ -1,29 +1,24 @@
-export async function fetchDs2apiModels() {
+export async function fetchAihubmixModels() {
   try {
-    const response = await fetch('/api/ds2api/models');
-    if (!response.ok) throw new Error("Failed to fetch DS2API models");
-    const data = await response.json();
-    return data.data.map((m: any) => m.id);
+    const response = await fetch('/api/aihubmix/models');
+    if (!response.ok) throw new Error("Failed to fetch AIHubMix models");
+    return await response.json();
   } catch (error) {
-    console.error("DS2API Models fetch error", error);
+    console.error("AIHubMix Models fetch error", error);
     return [
-      "deepseek-v4-flash",
-      "deepseek-v4-pro",
-      "deepseek-v4-flash-search",
-      "deepseek-v4-pro-search",
-      "deepseek-v4-vision"
+      "gpt-4o-mini"
     ];
   }
 }
 
-export async function generateDs2apiChatResponse(
+export async function generateAihubmixChatResponse(
   model: string,
   systemPrompt: string,
   history: { role: 'user' | 'model', content: string }[],
   newMessage: string,
-  temperature: number,
-  topP: number,
-  maxTokens: number,
+  temperature: number | undefined,
+  topP: number | undefined,
+  maxTokens: number | undefined,
   extraBody: any,
   onUpdate: (text: string) => void,
   options?: { signal?: AbortSignal }
@@ -47,7 +42,7 @@ export async function generateDs2apiChatResponse(
     content: newMessage
   });
 
-  const response = await fetch('/api/ds2api/chat', {
+  const response = await fetch('/api/aihubmix/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     signal: options?.signal,
@@ -63,7 +58,7 @@ export async function generateDs2apiChatResponse(
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || "Failed to generate DS2API response");
+    throw new Error(err.error || "Failed to generate AIHubMix response");
   }
 
   if (!response.body) throw new Error("No response body");

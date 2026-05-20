@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { UserSettings } from '../types';
 import { X, Sparkles } from 'lucide-react';
 import { fetchNvidiaModels } from '../lib/nvidia';
-import { fetchDs2apiModels } from '../lib/ds2api';
+import { fetchCloudflareModels } from '../lib/cloudflare';
+import { fetchAihubmixModels } from '../lib/aihubmix';
+import { fetchPoeModels } from '../lib/poe';
 
 interface SettingsModalProps {
   settings: UserSettings;
@@ -22,11 +24,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
   });
   
   const [nvidiaModels, setNvidiaModels] = useState<string[]>([]);
-  const [ds2apiModels, setDs2apiModels] = useState<string[]>([]);
+  const [cloudflareModels, setCloudflareModels] = useState<string[]>([]);
+  const [aihubmixModels, setAihubmixModels] = useState<string[]>([]);
+  const [poeModels, setPoeModels] = useState<string[]>([]);
 
   useEffect(() => {
     fetchNvidiaModels().then(setNvidiaModels).catch(console.error);
-    fetchDs2apiModels().then(setDs2apiModels).catch(console.error);
+    fetchCloudflareModels().then(setCloudflareModels).catch(console.error);
+    fetchAihubmixModels().then(setAihubmixModels).catch(console.error);
+    fetchPoeModels().then(setPoeModels).catch(console.error);
   }, []);
 
   const handleBeautifyJson = () => {
@@ -46,12 +52,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
   };
 
   const isNvidia = localSettings.provider === 'nvidia';
-  const isDs2api = localSettings.provider === 'ds2api';
-  const isCustomOpenAI = isNvidia || isDs2api;
+  const isCloudflare = localSettings.provider === 'cloudflare';
+  const isAihubmix = localSettings.provider === 'aihubmix';
+  const isPoe = localSettings.provider === 'poe';
+  const isCustomOpenAI = isNvidia || isCloudflare || isAihubmix || isPoe;
   
   let displayModels = models;
   if (isNvidia) displayModels = nvidiaModels;
-  else if (isDs2api) displayModels = ds2apiModels;
+  else if (isCloudflare) displayModels = cloudflareModels;
+  else if (isAihubmix) displayModels = aihubmixModels;
+  else if (isPoe) displayModels = poeModels.length > 0 ? poeModels : [
+    "Claude-Sonnet-4.6",
+    "GPT-5.4",
+    "Claude-Opus-4.7",
+    "Gemini-3.1-Pro",
+    "o3-mini",
+    "Claude-3.5-Haiku"
+  ];
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -86,6 +103,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
               />
               <span className="text-sm font-medium text-gray-300">Auto-scroll to bottom on new messages</span>
             </label>
+
+            {isPoe && (
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={localSettings.poeDisableTools ?? false}
+                  onChange={e => setLocalSettings(s => ({ ...s, poeDisableTools: e.target.checked }))}
+                  className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
+                />
+                <span className="text-sm font-medium text-gray-300">Disable Tool Calls (Recommended for unsupported models)</span>
+              </label>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -93,10 +122,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
             <select 
               value={localSettings.provider || 'gemini'}
               onChange={e => {
-                const newProvider = e.target.value as 'gemini' | 'nvidia' | 'ds2api';
+                const newProvider = e.target.value as 'gemini' | 'nvidia' | 'cloudflare' | 'aihubmix' | 'poe';
                 let defaultModel = '';
                 if (newProvider === 'nvidia') defaultModel = nvidiaModels[0] || '';
-                else if (newProvider === 'ds2api') defaultModel = ds2apiModels[0] || '';
+                else if (newProvider === 'cloudflare') defaultModel = cloudflareModels[0] || '';
+                else if (newProvider === 'aihubmix') defaultModel = aihubmixModels[0] || '';
+                else if (newProvider === 'poe') defaultModel = "Claude-Sonnet-4.6";
                 else defaultModel = models[0] || '';
                 
                 setLocalSettings(s => ({ 
@@ -109,7 +140,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
             >
               <option value="gemini">Google Gemini</option>
               <option value="nvidia">Nvidia API</option>
-              <option value="ds2api">DS2API</option>
+              <option value="cloudflare">Cloudflare Workers AI</option>
+              <option value="aihubmix">AIHubMix</option>
+              <option value="poe">Poe</option>
             </select>
           </div>
 
@@ -156,39 +189,49 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
             />
           </div>
 
-          {isCustomOpenAI && (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-300">Temperature: {localSettings.temperature}</label>
-                  <input 
-                    type="range" min="0" max="2" step="0.1" 
-                    value={localSettings.temperature ?? 1} 
-                    onChange={e => setLocalSettings(s => ({ ...s, temperature: parseFloat(e.target.value) }))}
-                    className="w-full"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-300">Top P: {localSettings.topP}</label>
-                  <input 
-                    type="range" min="0" max="1" step="0.05" 
-                    value={localSettings.topP ?? 0.95} 
-                    onChange={e => setLocalSettings(s => ({ ...s, topP: parseFloat(e.target.value) }))}
-                    className="w-full"
-                  />
-                </div>
-              </div>
+          <div className="space-y-4 pt-4 border-t border-gray-800">
+            <h3 className="text-lg font-medium text-white">Parameters</h3>
 
+            {(isNvidia || isCloudflare || isAihubmix || isPoe) && (
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">Max Tokens</label>
+                <label className="block text-sm font-medium text-gray-300">Temperature</label>
                 <input 
-                  type="number" min="1" max="32768"
-                  value={localSettings.maxTokens ?? 16384}
-                  onChange={e => setLocalSettings(s => ({ ...s, maxTokens: parseInt(e.target.value) || 16384 }))}
+                  type="number" min="0" max="2" step="0.1" 
+                  value={localSettings.temperature ?? ''} 
+                  onChange={e => setLocalSettings(s => ({ ...s, temperature: e.target.value === '' ? undefined : parseFloat(e.target.value) }))}
+                  placeholder="Provider default"
                   className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
+            )}
 
+            {(isNvidia || isAihubmix) && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-300">Top P</label>
+                <input 
+                  type="number" min="0" max="1" step="0.05" 
+                  value={localSettings.topP ?? ''} 
+                  onChange={e => setLocalSettings(s => ({ ...s, topP: e.target.value === '' ? undefined : parseFloat(e.target.value) }))}
+                  placeholder="Provider default"
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              </div>
+            )}
+
+            {(isNvidia || isAihubmix || isPoe) && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-300">Max Tokens</label>
+                <input 
+                  type="number" min="1" max="100000"
+                  value={localSettings.maxTokens ?? ''}
+                  onChange={e => setLocalSettings(s => ({ ...s, maxTokens: e.target.value === '' ? undefined : parseInt(e.target.value) }))}
+                  placeholder="Provider default"
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              </div>
+            )}
+
+            {isNvidia && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-sm font-medium text-gray-300">Extra Body (JSON)</label>
@@ -204,8 +247,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
                   spellCheck={false}
                 />
               </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
 
         <div className="p-6 border-t border-gray-800 bg-gray-950 flex justify-end gap-3 shrink-0">

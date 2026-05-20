@@ -1,5 +1,5 @@
 export interface UserSettings {
-  provider?: 'gemini' | 'nvidia' | 'ds2api' | 'custom';
+  provider?: 'gemini' | 'nvidia' | 'cloudflare' | 'aihubmix' | 'poe' | 'custom';
   model: string;
   systemPrompt: string;
   thinkingLevel: string;
@@ -16,6 +16,7 @@ export interface UserSettings {
   extraBody?: string; // Stored as JSON string
   renderThinkingAsMarkdown?: boolean;
   autoScroll?: boolean;
+  poeDisableTools?: boolean;
 }
 
 export interface ToolCallRecord {

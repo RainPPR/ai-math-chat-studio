@@ -5,7 +5,9 @@ import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, query, where
 import { ChatSession, UserSettings, ChatMessage, ToolCallRecord } from './types';
 import { fetchModels, generateChatResponse } from './lib/gemini';
 import { generateNvidiaChatResponse, fetchNvidiaModels } from './lib/nvidia';
-import { generateDs2apiChatResponse, fetchDs2apiModels } from './lib/ds2api';
+import { generateCloudflareChatResponse, fetchCloudflareModels } from './lib/cloudflare';
+import { generateAihubmixChatResponse, fetchAihubmixModels } from './lib/aihubmix';
+import { generatePoeChatResponse, fetchPoeModels } from './lib/poe';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
@@ -174,7 +176,8 @@ export default function App() {
       return;
     }
     try {
-      await setDoc(doc(db, 'users', user.uid), newSettings);
+      const cleanSettings = Object.fromEntries(Object.entries(newSettings).filter(([_, v]) => v !== undefined));
+      await setDoc(doc(db, 'users', user.uid), cleanSettings);
       setSettings(newSettings);
       setIsSettingsOpen(false);
     } catch (e) {
@@ -205,7 +208,7 @@ export default function App() {
 
     try {
       let extraBodyObj = undefined;
-      if ((settings.provider === 'nvidia' || settings.provider === 'ds2api') && settings.extraBody) {
+      if ((settings.provider === 'nvidia' || settings.provider === 'aihubmix') && settings.extraBody) {
         try {
           extraBodyObj = JSON.parse(settings.extraBody);
         } catch (e) {
@@ -219,9 +222,9 @@ export default function App() {
           settings.systemPrompt,
           history,
           newMessageContent,
-          settings.temperature ?? 1,
-          settings.topP ?? 0.95,
-          settings.maxTokens ?? 16384,
+          settings.temperature,
+          settings.topP,
+          settings.maxTokens,
           extraBodyObj,
           (text) => {
             currentModelText = text;
@@ -247,15 +250,15 @@ export default function App() {
           },
           { signal: abortSignal }
         );
-      } else if (settings.provider === 'ds2api') {
-        await generateDs2apiChatResponse(
+      } else if (settings.provider === 'cloudflare') {
+        await generateCloudflareChatResponse(
           settings.model,
           settings.systemPrompt,
           history,
           newMessageContent,
-          settings.temperature ?? 1,
-          settings.topP ?? 0.95,
-          settings.maxTokens ?? 16384,
+          settings.temperature,
+          settings.topP,
+          settings.maxTokens,
           extraBodyObj,
           (text) => {
             currentModelText = text;
@@ -273,6 +276,90 @@ export default function App() {
                     createdAt: new Date().toISOString(),
                     toolCalls: [],
                   });
+                }
+                return { ...s, messages: msgs };
+              }
+              return s;
+            }));
+          },
+          { signal: abortSignal }
+        );
+      } else if (settings.provider === 'aihubmix') {
+        await generateAihubmixChatResponse(
+          settings.model,
+          settings.systemPrompt,
+          history,
+          newMessageContent,
+          settings.temperature,
+          settings.topP,
+          settings.maxTokens,
+          extraBodyObj,
+          (text) => {
+            currentModelText = text;
+            setSessions(prev => prev.map(s => {
+              if (s.id === sessionId) {
+                const msgs = [...s.messages];
+                const lastMsg = msgs[msgs.length - 1];
+                if (lastMsg && lastMsg.id === modelMessageId) {
+                  lastMsg.content = text;
+                } else {
+                  msgs.push({
+                    id: modelMessageId,
+                    role: 'model',
+                    content: text,
+                    createdAt: new Date().toISOString(),
+                    toolCalls: [],
+                  });
+                }
+                return { ...s, messages: msgs };
+              }
+              return s;
+            }));
+          },
+          { signal: abortSignal }
+        );
+      } else if (settings.provider === 'poe') {
+        await generatePoeChatResponse(
+          settings.model,
+          settings.systemPrompt,
+          history,
+          newMessageContent,
+          !!settings.poeDisableTools,
+          settings.temperature,
+          undefined,
+          settings.maxTokens,
+          extraBodyObj,
+          (text) => {
+            currentModelText = text;
+            setSessions(prev => prev.map(s => {
+              if (s.id === sessionId) {
+                const msgs = [...s.messages];
+                const lastMsg = msgs[msgs.length - 1];
+                if (lastMsg && lastMsg.id === modelMessageId) {
+                  lastMsg.content = text;
+                  lastMsg.toolCalls = currentToolCalls;
+                } else {
+                  msgs.push({
+                    id: modelMessageId,
+                    role: 'model',
+                    content: text,
+                    createdAt: new Date().toISOString(),
+                    toolCalls: currentToolCalls,
+                  });
+                }
+                return { ...s, messages: msgs };
+              }
+              return s;
+            }));
+          },
+          (toolCall) => {
+            currentToolCalls = [...currentToolCalls, toolCall];
+            setSessions(prev => prev.map(s => {
+              if (s.id === sessionId) {
+                const msgs = [...s.messages];
+                const lastMsg = msgs[msgs.length - 1];
+                if (lastMsg && lastMsg.id === modelMessageId) {
+                  lastMsg.toolCalls = currentToolCalls;
                 }
                 return { ...s, messages: msgs };
               }

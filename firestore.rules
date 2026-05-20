@@ -23,7 +23,7 @@ service cloud.firestore {
 
     // Domain Validators
     function isValidUserSettings() {
-      return hasOnlyAllowedFields(['provider', 'model', 'systemPrompt', 'thinkingLevel', 'reasoningEffort', 'geminiApiKey', 'customBaseUrl', 'customApiKey', 'customModel', 'customParameters', 'temperature', 'topP', 'maxTokens', 'extraBody', 'memories', 'renderThinkingAsMarkdown', 'autoScroll']) &&
+      return hasOnlyAllowedFields(['provider', 'model', 'systemPrompt', 'thinkingLevel', 'reasoningEffort', 'geminiApiKey', 'customBaseUrl', 'customApiKey', 'customModel', 'customParameters', 'temperature', 'topP', 'maxTokens', 'extraBody', 'memories', 'renderThinkingAsMarkdown', 'autoScroll', 'poeDisableTools']) &&
              (request.resource.data.provider is string || !('provider' in request.resource.data)) &&
              (request.resource.data.model is string || !('model' in request.resource.data)) &&
              (request.resource.data.systemPrompt is string || !('systemPrompt' in request.resource.data)) &&
@@ -40,6 +40,7 @@ service cloud.firestore {
              (request.resource.data.extraBody is string || !('extraBody' in request.resource.data)) &&
              (request.resource.data.renderThinkingAsMarkdown is bool || !('renderThinkingAsMarkdown' in request.resource.data)) &&
              (request.resource.data.autoScroll is bool || !('autoScroll' in request.resource.data)) &&
+             (request.resource.data.poeDisableTools is bool || !('poeDisableTools' in request.resource.data)) &&
              (request.resource.data.memories is list || !('memories' in request.resource.data));
     }
 
