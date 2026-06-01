@@ -1,7 +1,9 @@
 name: Build Server Bundle
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - dev
 
 jobs:
   build:
