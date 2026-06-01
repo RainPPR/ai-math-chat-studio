@@ -1,675 +1,146 @@
-import React, { useState, useEffect } from 'react';
-import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
-import { ChatSession, UserSettings, ChatMessage, ToolCallRecord } from './types';
-import { fetchModels, generateChatResponse } from './lib/gemini';
-import { generateNvidiaChatResponse, fetchNvidiaModels } from './lib/nvidia';
-import { generateCloudflareChatResponse, fetchCloudflareModels } from './lib/cloudflare';
-import { generateAihubmixChatResponse, fetchAihubmixModels } from './lib/aihubmix';
-import { generatePoeChatResponse, fetchPoeModels } from './lib/poe';
-import { generateOpengatewayChatResponse, fetchOpengatewayModels } from './lib/opengateway';
+import React, { useState, useEffect, useCallback } from 'react';
+import { api } from './lib/api';
+import { ChatSession, UserSettings, DEFAULT_SETTINGS } from './types';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
-import { v4 as uuidv4 } from 'uuid';
 import { Loader2, Wrench, ChevronRight, ChevronLeft } from 'lucide-react';
 
-const DEFAULT_SETTINGS: UserSettings = {
-  provider: 'gemini',
-  model: 'gemini-3.1-pro-preview',
-  systemPrompt: '',
-  thinkingLevel: 'DEFAULT',
-  temperature: 1,
-  topP: 0.95,
-  maxTokens: 16384,
-  extraBody: '{"chat_template_kwargs":{"thinking":true,"reasoning_effort":"max"}}',
-  renderThinkingAsMarkdown: false,
-  autoScroll: true,
-  gemmaTrimThinkingSpaces: false,
-  collapseThinkingFinished: true,
-};
-
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [models, setModels] = useState<string[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [isToolsSidebarOpen, setIsToolsSidebarOpen] = useState(true);
-
-  const isLocalMode = import.meta.env.VITE_LOCAL_MODE === 'true';
-
-  useEffect(() => {
-    if (isLocalMode) {
-      setUser({ uid: 'local_user', displayName: 'Local User' } as User);
-      setIsAuthReady(true);
-      return;
-    }
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setIsAuthReady(true);
-    });
-    return () => unsubscribe();
-  }, [isLocalMode]);
+  const [generatingSessions, setGeneratingSessions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetchModels().then(m => setModels(m || []));
+    (async () => {
+      const [loadedSessions, loadedSettings] = await Promise.all([
+        api.sessions.list(),
+        api.settings.get(),
+      ]);
+      setSessions(loadedSessions);
+      if (loadedSessions.length > 0) setCurrentSessionId(loadedSessions[0].id);
+      if (loadedSettings) setSettings({ ...DEFAULT_SETTINGS, ...loadedSettings });
+      setIsReady(true);
+    })();
   }, []);
 
-  useEffect(() => {
-    if (!isAuthReady || !user) {
-      setSessions([]);
-      setSettings(DEFAULT_SETTINGS);
-      return;
-    }
-
-    if (isLocalMode) {
-      const storedSessions = localStorage.getItem('local_sessions');
-      if (storedSessions) {
-        try {
-          const parsed = JSON.parse(storedSessions);
-          parsed.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-          setSessions(parsed);
-          setCurrentSessionId(parsed.length > 0 ? parsed[0].id : null);
-        } catch (e) {
-          console.error("Local storage parsing error", e);
-        }
-      }
-      
-      const storedSettings = localStorage.getItem('local_settings');
-      if (storedSettings) {
-        try {
-          setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(storedSettings) });
-        } catch (e) {}
-      } else {
-        localStorage.setItem('local_settings', JSON.stringify(DEFAULT_SETTINGS));
-      }
-      return;
-    }
-
-    const q = query(collection(db, 'sessions'), where('uid', '==', user.uid));
-    const unsubscribeSessions = onSnapshot(q, (snapshot) => {
-      const loadedSessions = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ChatSession));
-      loadedSessions.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-      setSessions(loadedSessions);
-      
-      setCurrentSessionId(prev => {
-        if (loadedSessions.length > 0 && !prev) {
-          return loadedSessions[0].id;
-        }
-        if (prev && !loadedSessions.find(s => s.id === prev)) {
-          return loadedSessions.length > 0 ? loadedSessions[0].id : null;
-        }
-        return prev;
-      });
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'sessions'));
-
-    const unsubscribeSettings = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
-      if (docSnap.exists()) {
-        setSettings({ ...DEFAULT_SETTINGS, ...docSnap.data() } as UserSettings);
-      } else {
-        setDoc(doc(db, 'users', user.uid), DEFAULT_SETTINGS).catch(e => handleFirestoreError(e, OperationType.CREATE, 'users'));
-      }
-    }, (error) => handleFirestoreError(error, OperationType.GET, 'users'));
-
-    return () => {
-      unsubscribeSessions();
-      unsubscribeSettings();
-    };
-  }, [user, isAuthReady]);
-
-  const handleNewChat = async () => {
-    if (!user) return;
-    const newSession: ChatSession = {
-      id: uuidv4(),
-      uid: user.uid,
-      title: 'New Chat',
-      messages: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    // Optimistically update local state to prevent UI flicker
-    setSessions(prev => {
-      const next = [newSession, ...prev];
-      if (isLocalMode) localStorage.setItem('local_sessions', JSON.stringify(next));
+  const markGenerating = useCallback((id: string, v: boolean) => {
+    setGeneratingSessions(prev => {
+      const next = new Set(prev);
+      v ? next.add(id) : next.delete(id);
       return next;
     });
-    setCurrentSessionId(newSession.id);
-    
-    if (!isLocalMode) {
-      try {
-        await setDoc(doc(db, 'sessions', newSession.id), newSession);
-      } catch (e) {
-        handleFirestoreError(e, OperationType.CREATE, 'sessions');
-      }
-    }
+  }, []);
+
+  const refreshSession = useCallback(async (id: string) => {
+    const updated = await api.sessions.get(id);
+    setSessions(prev => prev.map(s => s.id === id ? updated : s));
+  }, []);
+
+  const handleNewChat = async () => {
+    const id = crypto.randomUUID();
+    const session: ChatSession = {
+      id, uid: 'local', title: 'New Chat',
+      messages: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    };
+    setSessions(prev => [session, ...prev]);
+    setCurrentSessionId(id);
   };
 
   const handleDeleteChat = async (id: string) => {
-    if (isLocalMode) {
-      setSessions(prev => {
-        const next = prev.filter(s => s.id !== id);
-        localStorage.setItem('local_sessions', JSON.stringify(next));
-        return next;
-      });
-      if (currentSessionId === id) setCurrentSessionId(null);
-      return;
+    setSessions(prev => prev.filter(s => s.id !== id));
+    if (currentSessionId === id) setCurrentSessionId(null);
+    await api.sessions.delete(id);
+  };
+
+  const handleSendMessage = async (content: string) => {
+    if (!content.trim()) return;
+
+    let sessionId = currentSessionId;
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      const session: ChatSession = {
+        id: sessionId, uid: 'local',
+        title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
+        messages: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      };
+      setSessions(prev => [session, ...prev]);
+      setCurrentSessionId(sessionId);
     }
+
     try {
-      await deleteDoc(doc(db, 'sessions', id));
-      if (currentSessionId === id) {
-        setCurrentSessionId(null);
-      }
-    } catch (e) {
-      handleFirestoreError(e, OperationType.DELETE, 'sessions');
+      await api.chat.send(sessionId, content);
+      markGenerating(sessionId, true);
+    } catch (e: any) {
+      console.error('Send failed:', e);
+    }
+  };
+
+  const handleStop = async () => {
+    if (!currentSessionId) return;
+    await api.chat.stop(currentSessionId);
+  };
+
+  const handleRetry = async (msgId: string) => {
+    if (!currentSessionId) return;
+    try {
+      await api.chat.retry(currentSessionId, msgId);
+      markGenerating(currentSessionId, true);
+    } catch (e: any) {
+      console.error('Retry failed:', e);
+    }
+  };
+
+  const handleContinue = async () => {
+    if (!currentSessionId) return;
+    try {
+      await api.chat.continue(currentSessionId);
+      markGenerating(currentSessionId, true);
+    } catch (e: any) {
+      console.error('Continue failed:', e);
     }
   };
 
   const handleSaveSettings = async (newSettings: UserSettings) => {
-    if (!user) return;
-    if (isLocalMode) {
-      localStorage.setItem('local_settings', JSON.stringify(newSettings));
-      setSettings(newSettings);
-      setIsSettingsOpen(false);
-      return;
-    }
-    try {
-      const cleanSettings = Object.fromEntries(Object.entries(newSettings).filter(([_, v]) => v !== undefined));
-      await setDoc(doc(db, 'users', user.uid), cleanSettings);
-      setSettings(newSettings);
-      setIsSettingsOpen(false);
-    } catch (e) {
-      handleFirestoreError(e, OperationType.UPDATE, 'users');
-    }
+    setSettings(newSettings);
+    setIsSettingsOpen(false);
+    await api.settings.save(newSettings);
   };
 
-  const abortControllerRef = React.useRef<AbortController | null>(null);
-
-  const handleStop = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-  };
-
-  const runLLM = async (sessionId: string, messagesToSubmit: ChatMessage[]) => {
-    setIsGenerating(true);
-    abortControllerRef.current = new AbortController();
-    const abortSignal = abortControllerRef.current.signal;
-
-    const modelMessageId = uuidv4();
-    let currentModelText = "";
-    let currentToolCalls: ToolCallRecord[] = [];
-
-    const history = messagesToSubmit.slice(0, -1).map(m => ({ role: m.role as 'user'|'model', content: m.content }));
-    const newMessageContent = messagesToSubmit[messagesToSubmit.length - 1].content;
-
-    try {
-      let extraBodyObj = undefined;
-      if ((settings.provider === 'nvidia' || settings.provider === 'aihubmix' || settings.provider === 'opengateway') && settings.extraBody) {
-        try {
-          extraBodyObj = JSON.parse(settings.extraBody);
-        } catch (e) {
-          console.warn("Invalid extraBody JSON, ignoring.");
-        }
-      }
-
-      if (settings.provider === 'nvidia') {
-        await generateNvidiaChatResponse(
-          settings.model,
-          settings.systemPrompt,
-          history,
-          newMessageContent,
-          settings.temperature,
-          settings.topP,
-          settings.maxTokens,
-          extraBodyObj,
-          (text) => {
-            currentModelText = text;
-            setSessions(prev => prev.map(s => {
-              if (s.id === sessionId) {
-                const msgs = [...s.messages];
-                const lastMsg = msgs[msgs.length - 1];
-                if (lastMsg && lastMsg.id === modelMessageId) {
-                  lastMsg.content = text;
-                } else {
-                  msgs.push({
-                    id: modelMessageId,
-                    role: 'model',
-                    content: text,
-                    createdAt: new Date().toISOString(),
-                    toolCalls: [],
-                  });
-                }
-                return { ...s, messages: msgs };
-              }
-              return s;
-            }));
-          },
-          { signal: abortSignal }
-        );
-      } else if (settings.provider === 'cloudflare') {
-        await generateCloudflareChatResponse(
-          settings.model,
-          settings.systemPrompt,
-          history,
-          newMessageContent,
-          settings.temperature,
-          settings.topP,
-          settings.maxTokens,
-          extraBodyObj,
-          (text) => {
-            currentModelText = text;
-            setSessions(prev => prev.map(s => {
-              if (s.id === sessionId) {
-                const msgs = [...s.messages];
-                const lastMsg = msgs[msgs.length - 1];
-                if (lastMsg && lastMsg.id === modelMessageId) {
-                  lastMsg.content = text;
-                } else {
-                  msgs.push({
-                    id: modelMessageId,
-                    role: 'model',
-                    content: text,
-                    createdAt: new Date().toISOString(),
-                    toolCalls: [],
-                  });
-                }
-                return { ...s, messages: msgs };
-              }
-              return s;
-            }));
-          },
-          { signal: abortSignal }
-        );
-      } else if (settings.provider === 'aihubmix') {
-        await generateAihubmixChatResponse(
-          settings.model,
-          settings.systemPrompt,
-          history,
-          newMessageContent,
-          settings.temperature,
-          settings.topP,
-          settings.maxTokens,
-          extraBodyObj,
-          (text) => {
-            currentModelText = text;
-            setSessions(prev => prev.map(s => {
-              if (s.id === sessionId) {
-                const msgs = [...s.messages];
-                const lastMsg = msgs[msgs.length - 1];
-                if (lastMsg && lastMsg.id === modelMessageId) {
-                  lastMsg.content = text;
-                } else {
-                  msgs.push({
-                    id: modelMessageId,
-                    role: 'model',
-                    content: text,
-                    createdAt: new Date().toISOString(),
-                    toolCalls: [],
-                  });
-                }
-                return { ...s, messages: msgs };
-              }
-              return s;
-            }));
-          },
-          { signal: abortSignal }
-        );
-      } else if (settings.provider === 'opengateway') {
-        await generateOpengatewayChatResponse(
-          settings.model,
-          settings.systemPrompt,
-          history,
-          newMessageContent,
-          settings.temperature,
-          settings.topP,
-          settings.maxTokens,
-          extraBodyObj,
-          (text) => {
-            currentModelText = text;
-            setSessions(prev => prev.map(s => {
-              if (s.id === sessionId) {
-                const msgs = [...s.messages];
-                const lastMsg = msgs[msgs.length - 1];
-                if (lastMsg && lastMsg.id === modelMessageId) {
-                  lastMsg.content = text;
-                } else {
-                  msgs.push({
-                    id: modelMessageId,
-                    role: 'model',
-                    content: text,
-                    createdAt: new Date().toISOString(),
-                    toolCalls: [],
-                  });
-                }
-                return { ...s, messages: msgs };
-              }
-              return s;
-            }));
-          },
-          { signal: abortSignal }
-        );
-      } else if (settings.provider === 'poe') {
-        await generatePoeChatResponse(
-          settings.model,
-          settings.systemPrompt,
-          history,
-          newMessageContent,
-          !!settings.poeDisableTools,
-          settings.temperature,
-          undefined,
-          settings.maxTokens,
-          extraBodyObj,
-          (text) => {
-            currentModelText = text;
-            setSessions(prev => prev.map(s => {
-              if (s.id === sessionId) {
-                const msgs = [...s.messages];
-                const lastMsg = msgs[msgs.length - 1];
-                if (lastMsg && lastMsg.id === modelMessageId) {
-                  lastMsg.content = text;
-                  lastMsg.toolCalls = currentToolCalls;
-                } else {
-                  msgs.push({
-                    id: modelMessageId,
-                    role: 'model',
-                    content: text,
-                    createdAt: new Date().toISOString(),
-                    toolCalls: currentToolCalls,
-                  });
-                }
-                return { ...s, messages: msgs };
-              }
-              return s;
-            }));
-          },
-          (toolCall) => {
-            currentToolCalls = [...currentToolCalls, toolCall];
-            setSessions(prev => prev.map(s => {
-              if (s.id === sessionId) {
-                const msgs = [...s.messages];
-                const lastMsg = msgs[msgs.length - 1];
-                if (lastMsg && lastMsg.id === modelMessageId) {
-                  lastMsg.toolCalls = currentToolCalls;
-                }
-                return { ...s, messages: msgs };
-              }
-              return s;
-            }));
-          },
-          { signal: abortSignal }
-        );
-      } else {
-        await generateChatResponse(
-          settings.model,
-          settings.systemPrompt,
-          settings.thinkingLevel,
-          history,
-          newMessageContent,
-          (text) => {
-            currentModelText = text;
-            setSessions(prev => prev.map(s => {
-              if (s.id === sessionId) {
-                const msgs = [...s.messages];
-                const lastMsg = msgs[msgs.length - 1];
-                if (lastMsg && lastMsg.id === modelMessageId) {
-                  lastMsg.content = text;
-                  lastMsg.toolCalls = currentToolCalls;
-                } else {
-                  msgs.push({
-                    id: modelMessageId,
-                    role: 'model',
-                    content: text,
-                    createdAt: new Date().toISOString(),
-                    toolCalls: currentToolCalls,
-                  });
-                }
-                return { ...s, messages: msgs };
-              }
-              return s;
-            }));
-          },
-          (toolCall) => {
-            currentToolCalls = [...currentToolCalls, toolCall];
-            setSessions(prev => prev.map(s => {
-              if (s.id === sessionId) {
-                const msgs = [...s.messages];
-                const lastMsg = msgs[msgs.length - 1];
-                if (lastMsg && lastMsg.id === modelMessageId) {
-                  lastMsg.toolCalls = currentToolCalls;
-                }
-                return { ...s, messages: msgs };
-              }
-              return s;
-            }));
-          },
-          { signal: abortSignal }
-        );
-      }
-    } catch (error: any) {
-      if (error?.name === 'AbortError') {
-        console.log('Generation aborted');
-      } else {
-        console.error("Generation error", error);
-        currentModelText += "\n\n**Error generating response.**";
-      }
-    } finally {
-      setIsGenerating(false);
-      abortControllerRef.current = null;
-      const finalModelMessage: ChatMessage = {
-        id: modelMessageId,
-        role: 'model',
-        content: currentModelText,
-        createdAt: new Date().toISOString(),
-        toolCalls: currentToolCalls,
-      };
-      try {
-        if (!isLocalMode) {
-          await updateDoc(doc(db, 'sessions', sessionId), {
-            messages: [...messagesToSubmit, finalModelMessage].filter(m => m.content.trim() !== ""),
-            updatedAt: new Date().toISOString(),
-          });
-        }
-      } catch (insertErr) {
-        console.error('Failed to save final message', insertErr);
-      }
-    }
-  };
-
-  const handleSendMessage = async (content: string) => {
-    if (!user || !content.trim() || isGenerating) return;
-
-    let sessionId = currentSessionId;
-    let session = sessions.find(s => s.id === sessionId);
-
-    if (!sessionId || !session) {
-      sessionId = uuidv4();
-      session = {
-        id: sessionId,
-        uid: user.uid,
-        title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
-        messages: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
-      setSessions(prev => {
-        const next = [session, ...prev];
-        if (isLocalMode) localStorage.setItem('local_sessions', JSON.stringify(next));
-        return next;
-      });
-      setCurrentSessionId(sessionId);
-      
-      if (!isLocalMode) {
-        try {
-          await setDoc(doc(db, 'sessions', sessionId), session);
-        } catch (e) {
-          handleFirestoreError(e, OperationType.CREATE, 'sessions');
-          return;
-        }
-      }
-    }
-
-    const userMessage: ChatMessage = {
-      id: uuidv4(),
-      role: 'user',
-      content,
-      createdAt: new Date().toISOString(),
-    };
-
-    const updatedMessages = [...session.messages, userMessage];
-    
-    setSessions(prev => {
-      const next = prev.map(s => s.id === sessionId ? { 
-        ...s, 
-        messages: updatedMessages, 
-        updatedAt: new Date().toISOString(),
-        title: s.messages.length === 0 ? content.slice(0, 30) : s.title 
-      } : s);
-      if (isLocalMode) localStorage.setItem('local_sessions', JSON.stringify(next));
-      return next;
-    });
-
-    if (!isLocalMode) {
-      try {
-        await updateDoc(doc(db, 'sessions', sessionId), {
-          messages: updatedMessages,
-          updatedAt: new Date().toISOString(),
-          title: session.messages.length === 0 ? content.slice(0, 30) : session.title
-        });
-      } catch (e) {
-        handleFirestoreError(e, OperationType.UPDATE, 'sessions');
-        return;
-      }
-    }
-
-    await runLLM(sessionId, updatedMessages);
-  };
-
-  const handleRetry = async (msgId: string) => {
-    if (isGenerating || !currentSessionId) return;
-    const session = sessions.find(s => s.id === currentSessionId);
-    if (!session) return;
-
-    const idx = session.messages.findIndex(m => m.id === msgId);
-    if (idx === -1) return;
-
-    let userMsgIdx = idx;
-    while (userMsgIdx >= 0 && session.messages[userMsgIdx].role !== 'user') {
-      userMsgIdx--;
-    }
-    if (userMsgIdx === -1) return;
-
-    const updatedMessages = session.messages.slice(0, userMsgIdx + 1);
-    
-    setSessions(prev => {
-      const next = prev.map(s => s.id === currentSessionId ? { ...s, messages: updatedMessages, updatedAt: new Date().toISOString() } : s);
-      if (isLocalMode) localStorage.setItem('local_sessions', JSON.stringify(next));
-      return next;
-    });
-
-    if (!isLocalMode) {
-      try {
-        await updateDoc(doc(db, 'sessions', currentSessionId), {
-          messages: updatedMessages,
-          updatedAt: new Date().toISOString()
-        });
-      } catch (e) {
-        handleFirestoreError(e, OperationType.UPDATE, 'sessions');
-        return;
-      }
-    }
-
-    await runLLM(currentSessionId, updatedMessages);
-  };
-
-  const handleContinue = async () => {
-    if (isGenerating || !currentSessionId) return;
-    const session = sessions.find(s => s.id === currentSessionId);
-    if (!session || session.messages.length === 0) return;
-
-    const userMessage: ChatMessage = {
-      id: uuidv4(),
-      role: 'user',
-      content: 'continue',
-      createdAt: new Date().toISOString(),
-    };
-
-    const updatedMessages = [...session.messages, userMessage];
-    
-    setSessions(prev => {
-      const next = prev.map(s => s.id === currentSessionId ? { ...s, messages: updatedMessages, updatedAt: new Date().toISOString() } : s);
-      if (isLocalMode) localStorage.setItem('local_sessions', JSON.stringify(next));
-      return next;
-    });
-
-    if (!isLocalMode) {
-      try {
-        await updateDoc(doc(db, 'sessions', currentSessionId), {
-          messages: updatedMessages,
-          updatedAt: new Date().toISOString()
-        });
-      } catch (e) {
-        handleFirestoreError(e, OperationType.UPDATE, 'sessions');
-        return;
-      }
-    }
-
-    await runLLM(currentSessionId, updatedMessages);
-  };
-
-  if (!isAuthReady) {
+  if (!isReady) {
     return <div className="flex h-screen items-center justify-center bg-gray-900"><Loader2 className="animate-spin text-white" /></div>;
-  }
-
-  if (!user) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center bg-gray-900 text-white">
-        <h1 className="text-4xl font-bold mb-8">AI Studio Chat</h1>
-        <button 
-          onClick={loginWithGoogle}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
-        >
-          Sign in with Google
-        </button>
-      </div>
-    );
   }
 
   const currentSession = sessions.find(s => s.id === currentSessionId);
 
   return (
     <div className="flex h-screen bg-gray-900 text-gray-100 overflow-hidden font-sans relative">
-      <Sidebar 
+      <Sidebar
         sessions={sessions}
         currentSessionId={currentSessionId}
         onSelectSession={setCurrentSessionId}
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        user={user}
-        onLogout={logout}
       />
-      
+
       <main className="flex-1 flex flex-col min-w-0">
-        <ChatArea 
+        <ChatArea
           session={currentSession}
           onSendMessage={handleSendMessage}
-          isGenerating={isGenerating}
+          isGenerating={currentSessionId ? generatingSessions.has(currentSessionId) : false}
           settings={settings}
           onStop={handleStop}
           onRetry={handleRetry}
           onContinue={handleContinue}
+          onGenerationEnd={(id) => { markGenerating(id, false); refreshSession(id); }}
         />
       </main>
 
-      {/* Tools Sidebar */}
       <div className={`bg-gray-800 border-l border-gray-700 flex flex-col transition-all duration-300 ease-in-out ${isToolsSidebarOpen ? 'w-80' : 'w-0'}`}>
         <div className="flex items-center justify-between p-4 border-b border-gray-700 whitespace-nowrap overflow-hidden">
           <div className="flex items-center gap-2 font-medium">
@@ -677,60 +148,34 @@ export default function App() {
             <span>Tool Calls</span>
           </div>
         </div>
-        
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {currentSession?.messages.filter(m => m.toolCalls && m.toolCalls.length > 0).length === 0 ? (
-            <div className="text-sm text-gray-500 text-center mt-10">
-              No tools called in this session yet.
-            </div>
+          {currentSession?.messages.filter(m => m.toolCalls?.length).length === 0 ? (
+            <div className="text-sm text-gray-500 text-center mt-10">No tools called yet.</div>
           ) : (
             currentSession?.messages.map((msg, msgIdx) => {
-              if (!msg.toolCalls || msg.toolCalls.length === 0) return null;
+              if (!msg.toolCalls?.length) return null;
               return (
                 <div key={msg.id} className="space-y-3">
                   <div className="text-xs text-gray-500 flex items-center gap-2">
-                    <div className="h-px bg-gray-700 flex-1"></div>
+                    <div className="h-px bg-gray-700 flex-1" />
                     <span>Message {msgIdx + 1}</span>
-                    <div className="h-px bg-gray-700 flex-1"></div>
+                    <div className="h-px bg-gray-700 flex-1" />
                   </div>
                   {msg.toolCalls.map((call, idx) => (
                     <div key={idx} className="bg-gray-900 rounded-lg border border-gray-700 overflow-hidden text-sm">
                       <div className="bg-gray-800 px-3 py-2 border-b border-gray-700 font-mono text-xs text-blue-400 flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                         {call.name}
                       </div>
                       <div className="p-3 space-y-3">
-                        {call.name === 'evaluate_expression' ? (
-                          <>
-                            <div>
-                              <span className="text-gray-500 text-xs uppercase tracking-wider">Expression</span>
-                              <div className="mt-1 font-mono text-sm text-gray-200 bg-gray-800/50 p-2 rounded border border-gray-700/50">
-                                {call.args.expression}
-                              </div>
-                            </div>
-                            <div>
-                              <span className="text-gray-500 text-xs uppercase tracking-wider">Result</span>
-                              <div className="mt-1 font-mono text-lg text-green-400 bg-gray-800/50 p-2 rounded border border-gray-700/50">
-                                = {call.result}
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div>
-                              <span className="text-gray-500 text-xs uppercase tracking-wider">Arguments</span>
-                              <pre className="mt-1 font-mono text-xs text-gray-300 whitespace-pre-wrap break-all bg-gray-800/50 p-2 rounded">
-                                {JSON.stringify(call.args, null, 2)}
-                              </pre>
-                            </div>
-                            <div>
-                              <span className="text-gray-500 text-xs uppercase tracking-wider">Result</span>
-                              <pre className="mt-1 font-mono text-xs text-green-400 whitespace-pre-wrap break-all bg-gray-800/50 p-2 rounded">
-                                {call.result}
-                              </pre>
-                            </div>
-                          </>
-                        )}
+                        <div>
+                          <span className="text-gray-500 text-xs uppercase tracking-wider">Arguments</span>
+                          <pre className="mt-1 font-mono text-xs text-gray-300 whitespace-pre-wrap break-all bg-gray-800/50 p-2 rounded">{JSON.stringify(call.args, null, 2)}</pre>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 text-xs uppercase tracking-wider">Result</span>
+                          <pre className="mt-1 font-mono text-xs text-green-400 whitespace-pre-wrap break-all bg-gray-800/50 p-2 rounded">{call.result}</pre>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -741,7 +186,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Tools Sidebar Toggle Button */}
       <button
         onClick={() => setIsToolsSidebarOpen(!isToolsSidebarOpen)}
         className={`absolute top-1/2 -translate-y-1/2 bg-gray-800 border border-gray-700 text-gray-400 hover:text-white p-1 rounded-l-md transition-all duration-300 z-10 ${isToolsSidebarOpen ? 'right-80' : 'right-0'}`}
@@ -750,9 +194,8 @@ export default function App() {
       </button>
 
       {isSettingsOpen && (
-        <SettingsModal 
+        <SettingsModal
           settings={settings}
-          models={models}
           onSave={handleSaveSettings}
           onClose={() => setIsSettingsOpen(false)}
         />

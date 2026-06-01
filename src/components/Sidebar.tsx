@@ -1,7 +1,6 @@
 import React from 'react';
 import { ChatSession } from '../types';
-import { Plus, Settings, LogOut, MessageSquare, Trash2 } from 'lucide-react';
-import { User } from 'firebase/auth';
+import { Plus, Settings, MessageSquare, Trash2 } from 'lucide-react';
 
 interface SidebarProps {
   sessions: ChatSession[];
@@ -10,12 +9,10 @@ interface SidebarProps {
   onNewChat: () => void;
   onDeleteChat: (id: string) => void;
   onOpenSettings: () => void;
-  user: User;
-  onLogout: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  sessions, currentSessionId, onSelectSession, onNewChat, onDeleteChat, onOpenSettings, user, onLogout
+  sessions, currentSessionId, onSelectSession, onNewChat, onDeleteChat, onOpenSettings
 }) => {
   return (
     <div className="w-64 bg-gray-950 flex flex-col h-full border-r border-gray-800 shrink-0">
@@ -58,15 +55,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Settings size={20} />
           <span>Settings</span>
         </button>
-        <div className="flex items-center justify-between px-3 py-2.5 mt-2 bg-gray-900 rounded-lg border border-gray-800">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <img src={user.photoURL || ''} alt="User" className="w-8 h-8 rounded-full bg-gray-800 shrink-0" />
-            <span className="truncate text-sm text-gray-300 font-medium">{user.displayName || user.email}</span>
-          </div>
-          <button onClick={onLogout} className="text-gray-500 hover:text-white p-1" title="Logout">
-            <LogOut size={18} />
-          </button>
-        </div>
       </div>
     </div>
   );

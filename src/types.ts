@@ -1,25 +1,37 @@
-export interface UserSettings {
-  provider?: 'gemini' | 'nvidia' | 'cloudflare' | 'aihubmix' | 'poe' | 'custom' | 'opengateway';
-  model: string;
-  systemPrompt: string;
-  thinkingLevel: string;
-  reasoningEffort?: string;
-  geminiApiKey?: string;
-  customBaseUrl?: string;
-  customApiKey?: string;
-  customModel?: string;
-  customParameters?: { key: string; value: string }[];
-  memories?: string[];
+export interface ModelPoolEntry {
+  id: string;
+  providerId: string;
+  modelId: string;
+  displayName?: string;
+  baseURL?: string;
+  apiKey?: string;
   temperature?: number;
-  topP?: number;
   maxTokens?: number;
-  extraBody?: string; // Stored as JSON string
-  renderThinkingAsMarkdown?: boolean;
-  autoScroll?: boolean;
-  poeDisableTools?: boolean;
-  gemmaTrimThinkingSpaces?: boolean;
-  collapseThinkingFinished?: boolean;
+  reasoningEffort?: string;
+  extraBody?: Record<string, any>;
+  thinkingLevel?: string;
+  enableTools: boolean;
+  disabledTools: string[];
 }
+
+export interface UserSettings {
+  activeModelId?: string;
+  modelPool: ModelPoolEntry[];
+  systemPrompt: string;
+  renderThinkingAsMarkdown: boolean;
+  autoScroll: boolean;
+  collapseThinkingFinished: boolean;
+  gemmaTrimThinkingSpaces: boolean;
+}
+
+export const DEFAULT_SETTINGS: UserSettings = {
+  modelPool: [],
+  systemPrompt: '',
+  renderThinkingAsMarkdown: false,
+  autoScroll: true,
+  collapseThinkingFinished: true,
+  gemmaTrimThinkingSpaces: false,
+};
 
 export interface ToolCallRecord {
   name: string;
