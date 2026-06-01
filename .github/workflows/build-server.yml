@@ -3,7 +3,7 @@ name: Build Server Bundle
 on:
   push:
     branches:
-      - dev
+      - desktop
 
 jobs:
   build:
