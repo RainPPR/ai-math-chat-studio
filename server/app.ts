@@ -1,7 +1,6 @@
 import express from 'express';
 import path from 'path';
 import { existsSync, mkdirSync } from 'fs';
-import { createViteServer } from './vite-helper';
 import { GenerationManager } from './services/generation-manager';
 import { createSettingsRouter } from './routes/settings';
 import { createSessionRouter } from './routes/sessions';
@@ -10,7 +9,7 @@ import { createModelsRouter } from './routes/models';
 
 export async function startApp() {
   const app = express();
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || '3000', 10);
 
   const DATA_DIR = path.join(process.cwd(), 'data');
   const SESSIONS_DIR = path.join(DATA_DIR, 'sessions');
@@ -29,15 +28,21 @@ export async function startApp() {
   app.use(createModelsRouter());
 
   if (process.env.NODE_ENV !== 'production') {
+    const { createViteServer } = await import('./vite-helper');
     const vite = await createViteServer();
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = process.env.DIST_DIR || path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+    app.get('{*path}', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
   }
 
-  app.listen(PORT, '127.0.0.1', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  return new Promise<import('net').Server>((resolve) => {
+    const server = app.listen(PORT, '127.0.0.1', () => {
+      const addr = server.address();
+      const actualPort = typeof addr === 'string' ? addr : addr?.port;
+      console.log(`Server running on http://localhost:${actualPort}`);
+      resolve(server);
+    });
   });
 }

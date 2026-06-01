@@ -1,0 +1,22 @@
+appId: com.aimathchat.studio
+productName: AI Math & Chat Studio
+directories:
+  app: build-electron
+  output: release
+files:
+  - main.cjs
+  - package.json
+extraResources:
+  - from: dist-server/server.bundle.mjs
+    to: server/server.bundle.mjs
+win:
+  target:
+    - nsis
+    - portable
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+portable:
+  artifactName: ${productName}-${version}-portable.exe
