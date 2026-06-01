@@ -7,3 +7,6 @@ coverage/
 .env*
 !.env.example
 /data
+/release
+/build-electron/dist-server
+/dist-server
