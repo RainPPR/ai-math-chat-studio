@@ -1,5 +1,5 @@
 export interface UserSettings {
-  provider?: 'gemini' | 'nvidia' | 'cloudflare' | 'aihubmix' | 'poe' | 'custom';
+  provider?: 'gemini' | 'nvidia' | 'cloudflare' | 'aihubmix' | 'poe' | 'custom' | 'opengateway';
   model: string;
   systemPrompt: string;
   thinkingLevel: string;
@@ -17,6 +17,8 @@ export interface UserSettings {
   renderThinkingAsMarkdown?: boolean;
   autoScroll?: boolean;
   poeDisableTools?: boolean;
+  gemmaTrimThinkingSpaces?: boolean;
+  collapseThinkingFinished?: boolean;
 }
 
 export interface ToolCallRecord {

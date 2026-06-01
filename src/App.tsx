@@ -8,6 +8,7 @@ import { generateNvidiaChatResponse, fetchNvidiaModels } from './lib/nvidia';
 import { generateCloudflareChatResponse, fetchCloudflareModels } from './lib/cloudflare';
 import { generateAihubmixChatResponse, fetchAihubmixModels } from './lib/aihubmix';
 import { generatePoeChatResponse, fetchPoeModels } from './lib/poe';
+import { generateOpengatewayChatResponse, fetchOpengatewayModels } from './lib/opengateway';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
@@ -25,6 +26,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   extraBody: '{"chat_template_kwargs":{"thinking":true,"reasoning_effort":"max"}}',
   renderThinkingAsMarkdown: false,
   autoScroll: true,
+  gemmaTrimThinkingSpaces: false,
+  collapseThinkingFinished: true,
 };
 
 export default function App() {
@@ -208,7 +211,7 @@ export default function App() {
 
     try {
       let extraBodyObj = undefined;
-      if ((settings.provider === 'nvidia' || settings.provider === 'aihubmix') && settings.extraBody) {
+      if ((settings.provider === 'nvidia' || settings.provider === 'aihubmix' || settings.provider === 'opengateway') && settings.extraBody) {
         try {
           extraBodyObj = JSON.parse(settings.extraBody);
         } catch (e) {
@@ -286,6 +289,40 @@ export default function App() {
         );
       } else if (settings.provider === 'aihubmix') {
         await generateAihubmixChatResponse(
+          settings.model,
+          settings.systemPrompt,
+          history,
+          newMessageContent,
+          settings.temperature,
+          settings.topP,
+          settings.maxTokens,
+          extraBodyObj,
+          (text) => {
+            currentModelText = text;
+            setSessions(prev => prev.map(s => {
+              if (s.id === sessionId) {
+                const msgs = [...s.messages];
+                const lastMsg = msgs[msgs.length - 1];
+                if (lastMsg && lastMsg.id === modelMessageId) {
+                  lastMsg.content = text;
+                } else {
+                  msgs.push({
+                    id: modelMessageId,
+                    role: 'model',
+                    content: text,
+                    createdAt: new Date().toISOString(),
+                    toolCalls: [],
+                  });
+                }
+                return { ...s, messages: msgs };
+              }
+              return s;
+            }));
+          },
+          { signal: abortSignal }
+        );
+      } else if (settings.provider === 'opengateway') {
+        await generateOpengatewayChatResponse(
           settings.model,
           settings.systemPrompt,
           history,

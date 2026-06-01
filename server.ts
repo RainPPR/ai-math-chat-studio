@@ -347,6 +347,101 @@ async function startServer() {
     }
   });
 
+  // API Route for Opengateway
+  app.post("/api/opengateway/chat", async (req, res) => {
+    try {
+      const { model, messages, temperature, top_p, max_tokens, extra_body } = req.body;
+      
+      const apiKey = process.env.OPENGATEWAY_API_KEY || process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ error: "OPENGATEWAY_API_KEY or OPENAI_API_KEY is required to use Gitlawb Opengateway." });
+      }
+
+      const client = new OpenAI({
+        baseURL: "https://opengateway.gitlawb.com/v1",
+        apiKey,
+      });
+
+      const payload: any = {
+        model,
+        messages,
+        stream: true,
+      };
+
+      if (temperature !== undefined && temperature !== null) payload.temperature = temperature;
+      if (top_p !== undefined && top_p !== null) payload.top_p = top_p;
+      if (max_tokens !== undefined && max_tokens !== null) payload.max_tokens = max_tokens;
+
+      const response = await client.chat.completions.create({
+        ...payload,
+        ...(extra_body || {}),
+      } as any) as any;
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      for await (const chunk of response) {
+        const delta = chunk.choices[0]?.delta as any;
+        const reasoning = delta?.reasoning || delta?.reasoning_content;
+        const content = delta?.content;
+        
+        let chunkData: any = {};
+        if (reasoning) {
+          chunkData.reasoning = reasoning;
+        }
+        if (content) {
+          chunkData.content = content;
+        }
+
+        if (Object.keys(chunkData).length > 0) {
+          res.write(`data: ${JSON.stringify(chunkData)}\n\n`);
+        }
+      }
+      res.write("data: [DONE]\n\n");
+      res.end();
+
+    } catch (error: any) {
+      console.error("Opengateway API Error:", error.response?.data || error.status || error);
+      res.status(500).json({ error: error.message || "Failed to generate text from Opengateway." });
+    }
+  });
+
+  app.get("/api/opengateway/models", async (req, res) => {
+    try {
+      const apiKey = process.env.OPENGATEWAY_API_KEY || process.env.OPENAI_API_KEY;
+      const headers: any = {};
+      if (apiKey) {
+        headers["Authorization"] = `Bearer ${apiKey}`;
+      }
+      const response = await fetch("https://opengateway.gitlawb.com/v1/models", {
+        headers
+      });
+      if (!response.ok) {
+        return res.json([
+          "mimo-v2.5-pro",
+          "mimo-v2-pro",
+          "mimo-v2.5",
+          "mimo-v2-omni",
+          "mimo-v2-flash",
+          "google/gemini-3.1-flash-lite-preview"
+        ]);
+      }
+      const data = await response.json();
+      res.json(data.data.map((m: any) => m.id));
+    } catch (error: any) {
+      console.error("Opengateway Models Error:", error);
+      res.json([
+        "mimo-v2.5-pro",
+        "mimo-v2-pro",
+        "mimo-v2.5",
+        "mimo-v2-omni",
+        "mimo-v2-flash",
+        "google/gemini-3.1-flash-lite-preview"
+      ]);
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

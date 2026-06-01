@@ -5,6 +5,7 @@ import { fetchNvidiaModels } from '../lib/nvidia';
 import { fetchCloudflareModels } from '../lib/cloudflare';
 import { fetchAihubmixModels } from '../lib/aihubmix';
 import { fetchPoeModels } from '../lib/poe';
+import { fetchOpengatewayModels } from '../lib/opengateway';
 
 interface SettingsModalProps {
   settings: UserSettings;
@@ -27,12 +28,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
   const [cloudflareModels, setCloudflareModels] = useState<string[]>([]);
   const [aihubmixModels, setAihubmixModels] = useState<string[]>([]);
   const [poeModels, setPoeModels] = useState<string[]>([]);
+  const [opengatewayModels, setOpengatewayModels] = useState<string[]>([]);
 
   useEffect(() => {
     fetchNvidiaModels().then(setNvidiaModels).catch(console.error);
     fetchCloudflareModels().then(setCloudflareModels).catch(console.error);
     fetchAihubmixModels().then(setAihubmixModels).catch(console.error);
     fetchPoeModels().then(setPoeModels).catch(console.error);
+    fetchOpengatewayModels().then(setOpengatewayModels).catch(console.error);
   }, []);
 
   const handleBeautifyJson = () => {
@@ -55,12 +58,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
   const isCloudflare = localSettings.provider === 'cloudflare';
   const isAihubmix = localSettings.provider === 'aihubmix';
   const isPoe = localSettings.provider === 'poe';
-  const isCustomOpenAI = isNvidia || isCloudflare || isAihubmix || isPoe;
+  const isOpengateway = localSettings.provider === 'opengateway';
+  const isCustomOpenAI = isNvidia || isCloudflare || isAihubmix || isPoe || isOpengateway;
   
   let displayModels = models;
   if (isNvidia) displayModels = nvidiaModels;
   else if (isCloudflare) displayModels = cloudflareModels;
   else if (isAihubmix) displayModels = aihubmixModels;
+  else if (isOpengateway) displayModels = opengatewayModels;
   else if (isPoe) displayModels = poeModels.length > 0 ? poeModels : [
     "Claude-Sonnet-4.6",
     "GPT-5.4",
@@ -104,6 +109,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
               <span className="text-sm font-medium text-gray-300">Auto-scroll to bottom on new messages</span>
             </label>
 
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={localSettings.collapseThinkingFinished ?? true}
+                onChange={e => setLocalSettings(s => ({ ...s, collapseThinkingFinished: e.target.checked }))}
+                className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
+              />
+              <span className="text-sm font-medium text-gray-300">Automatically collapse thinking process when reasoning is finished</span>
+            </label>
+
+            {localSettings.provider === 'gemini' && (
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={localSettings.gemmaTrimThinkingSpaces ?? false}
+                  onChange={e => setLocalSettings(s => ({ ...s, gemmaTrimThinkingSpaces: e.target.checked }))}
+                  className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
+                />
+                <span className="text-sm font-medium text-gray-300">Remove leading spaces from each line of thought (Optimized for Gemma series)</span>
+              </label>
+            )}
+
             {isPoe && (
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input
@@ -122,11 +149,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
             <select 
               value={localSettings.provider || 'gemini'}
               onChange={e => {
-                const newProvider = e.target.value as 'gemini' | 'nvidia' | 'cloudflare' | 'aihubmix' | 'poe';
+                const newProvider = e.target.value as 'gemini' | 'nvidia' | 'cloudflare' | 'aihubmix' | 'poe' | 'opengateway';
                 let defaultModel = '';
                 if (newProvider === 'nvidia') defaultModel = nvidiaModels[0] || '';
                 else if (newProvider === 'cloudflare') defaultModel = cloudflareModels[0] || '';
                 else if (newProvider === 'aihubmix') defaultModel = aihubmixModels[0] || '';
+                else if (newProvider === 'opengateway') defaultModel = opengatewayModels[0] || 'mimo-v2.5-pro';
                 else if (newProvider === 'poe') defaultModel = "Claude-Sonnet-4.6";
                 else defaultModel = models[0] || '';
                 
@@ -143,6 +171,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
               <option value="cloudflare">Cloudflare Workers AI</option>
               <option value="aihubmix">AIHubMix</option>
               <option value="poe">Poe</option>
+              <option value="opengateway">Gitlawb Opengateway</option>
             </select>
           </div>
 
@@ -192,7 +221,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
           <div className="space-y-4 pt-4 border-t border-gray-800">
             <h3 className="text-lg font-medium text-white">Parameters</h3>
 
-            {(isNvidia || isCloudflare || isAihubmix || isPoe) && (
+            {(isNvidia || isCloudflare || isAihubmix || isPoe || isOpengateway) && (
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-300">Temperature</label>
                 <input 
@@ -205,7 +234,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
               </div>
             )}
 
-            {(isNvidia || isAihubmix) && (
+            {(isNvidia || isAihubmix || isOpengateway) && (
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-300">Top P</label>
                 <input 
@@ -218,7 +247,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
               </div>
             )}
 
-            {(isNvidia || isAihubmix || isPoe) && (
+            {(isNvidia || isAihubmix || isPoe || isOpengateway) && (
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-300">Max Tokens</label>
                 <input 
@@ -231,7 +260,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, models, 
               </div>
             )}
 
-            {isNvidia && (
+            {(isNvidia || isOpengateway) && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-sm font-medium text-gray-300">Extra Body (JSON)</label>

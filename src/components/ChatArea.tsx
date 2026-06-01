@@ -21,12 +21,33 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
   if (!isUser) {
     const thoughtRegex = /<details(?: open)?>\n<summary>Thinking Process<\/summary>\n\n```text\n([\s\S]*?)(?:\n```\n\n<\/details>|$)/g;
     for (const m of msg.content.matchAll(thoughtRegex)) {
-      if (m[1]) thoughts.push(m[1].trim());
+      if (m[1]) {
+        let thoughtContent = m[1].trim();
+        if (settings.provider === 'gemini' && settings.gemmaTrimThinkingSpaces) {
+          thoughtContent = thoughtContent.split('\n').map(l => l.trimStart()).join('\n');
+        }
+        thoughts.push(thoughtContent);
+      }
     }
     mainContent = mainContent.replace(thoughtRegex, '').trim();
   }
 
-  const [isThoughtOpen, setIsThoughtOpen] = useState(true);
+  const [isThoughtOpen, setIsThoughtOpen] = useState(() => {
+    if (settings.collapseThinkingFinished) {
+      if (!(isLast && isGenerating) || mainContent) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (settings.collapseThinkingFinished) {
+      if (mainContent || (!isGenerating && !isLast)) {
+        setIsThoughtOpen(false);
+      }
+    }
+  }, [mainContent, isGenerating, isLast, settings.collapseThinkingFinished]);
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group`}>
@@ -95,6 +116,20 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
       </div>
     </div>
   );
+};
+
+const estimateTokens = (text: string) => {
+  if (!text) return 0;
+  let asciiCount = 0;
+  let nonAsciiCount = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (text.charCodeAt(i) <= 127) {
+      asciiCount++;
+    } else {
+      nonAsciiCount++;
+    }
+  }
+  return Math.ceil((asciiCount / 4) + (nonAsciiCount * 0.8));
 };
 
 export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue }) => {
@@ -232,8 +267,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             </button>
           )}
         </div>
-        <div className="text-center mt-2">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 mt-2 px-1 text-center sm:text-left">
           <span className="text-xs text-gray-500">AI can make mistakes. Verify important information.</span>
+          {input.length > 0 && (
+            <span className="text-xs text-gray-500 font-mono">
+              Est. Tokens: <span className="text-blue-400 font-medium">{estimateTokens(input)}</span> (~{input.length} chars)
+            </span>
+          )}
         </div>
       </div>
     </div>
