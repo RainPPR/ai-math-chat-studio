@@ -17,6 +17,7 @@ import 'katex/dist/katex-swap.min.css';
 if (typeof window !== 'undefined') {
   (window as any).katex = katex;
 }
+// @ts-ignore
 import 'katex/contrib/mhchem/mhchem';
 
 interface MarkdownRendererProps {

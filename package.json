@@ -10,7 +10,7 @@
     "build:electron": "node scripts/build-electron.mjs",
     "preview": "vite preview",
     "clean": "rm -rf dist dist-server build-electron release",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit --strict"
   },
   "dependencies": {
     "@google/genai": "^2.7.0",
@@ -52,15 +52,10 @@
     "esbuild": "^0.28.0",
     "tailwindcss": "^4.3.0",
     "tsx": "^4.22.4",
-    "typescript": "~6.0.3",
-    "vite": "^8.0.16"
+    "typescript": "~6.0.3"
   },
   "allowScripts": {
-    "@google/genai@2.7.0": true,
-    "esbuild@0.28.0": true,
-    "protobufjs@7.6.2": true,
     "electron@35.7.5": true,
-    "electron-builder@26.8.1": true,
-    "electron-winstaller@5.4.0": true
+    "electron-builder@26.8.1": true
   }
 }

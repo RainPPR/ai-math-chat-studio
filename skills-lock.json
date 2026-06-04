@@ -1,6 +1,24 @@
 {
   "version": 1,
   "skills": {
+    "gemini-api-dev": {
+      "source": "google-gemini/gemini-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gemini-api-dev/SKILL.md",
+      "computedHash": "6367efd63e09c87de6f79970ee4ff9eb45e12ba23691f5987d1d56945ca7dd5d"
+    },
+    "gemini-interactions-api": {
+      "source": "google-gemini/gemini-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gemini-interactions-api/SKILL.md",
+      "computedHash": "0b55af93bf199495bb86118c824ccc02e0c412fc23b90110fdf3c4a8b5abaa92"
+    },
+    "gemini-live-api-dev": {
+      "source": "google-gemini/gemini-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gemini-live-api-dev/SKILL.md",
+      "computedHash": "a93aa23b2a4cac2cab9d238b3cc751c6172146bd801959dfe340626f3a82dafa"
+    },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",

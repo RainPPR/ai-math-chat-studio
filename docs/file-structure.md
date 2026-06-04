@@ -28,14 +28,15 @@ ai-math-chat-studio/
 │   ├── app.ts                  # Express 5 应用组装，挂载所有路由
 │   ├── vite-helper.ts          # Vite 开发服务器辅助
 │   ├── providers/              # AI 供应商相关
-│   │   ├── config.ts           # 提供商配置、环境变量解析、模型列表获取
-│   │   ├── stream.ts           # 流式 API 调用（OpenAI 兼容 + Gemini）
+│   │   ├── built-in.ts         # 内置提供商类型定义
+│   │   ├── config.ts           # 提供商配置解析（apiKey、baseURL）
+│   │   ├── stream.ts           # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
 │   │   └── tools.ts            # 数学工具定义与执行
 │   ├── routes/                 # API 路由
 │   │   ├── settings.ts         # /api/settings GET/PUT
 │   │   ├── sessions.ts         # /api/sessions GET/GET/:id/DELETE
 │   │   ├── chat.ts             # /api/sessions/:id/messages, generation, retry, continue
-│   │   └── models.ts           # /api/providers, /api/providers/:id/models
+│   │   └── models.ts           # /api/providers, /api/providers/:type/models
 │   └── services/               # 核心服务
 │       └── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅、会话 CRUD
 ├── skills-lock.json            # Kilo Agent 技能版本锁定文件
@@ -43,12 +44,12 @@ ai-math-chat-studio/
 │   ├── App.tsx                 # 主应用组件（状态管理）
 │   ├── main.tsx                # React 入口
 │   ├── index.css               # Tailwind 导入
-│   ├── types.ts                # TypeScript 类型定义
+│   ├── types.ts                # TypeScript 类型定义（ProviderInstance, ModelInstance, UserSettings 等）
 │   ├── vite-env.d.ts           # Vite 类型声明
 │   ├── components/
 │   │   ├── ChatArea.tsx        # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
 │   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
-│   │   ├── SettingsModal.tsx   # 设置弹窗（3 Tab：General/Models/Tools）
+│   │   ├── SettingsModal.tsx   # 设置弹窗（3 Tab：General / Providers / Models）
 │   │   └── Sidebar.tsx         # 左侧栏（会话列表）
 │   └── lib/
 │       ├── api.ts              # 统一 API 客户端（REST + SSE 订阅）
@@ -63,18 +64,19 @@ ai-math-chat-studio/
 |------|------|
 | `server.ts` | 入口文件，`import 'dotenv/config'` + `startApp()` |
 | `server/app.ts` | Express 5 应用组装，挂载路由，创建 GenerationManager |
-| `server/providers/config.ts` | 提供商配置数据（PROVIDERS 数组）、环境变量解析、模型列表获取 |
-| `server/providers/stream.ts` | 流式 API 调用（OpenAI 兼容 + Gemini），StreamRequest/StreamChunk 类型 |
+| `server/providers/built-in.ts` | 内置 3 种提供商类型定义（google / nvidia / openai-compatible） |
+| `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
+| `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
 | `server/providers/tools.ts` | 数学工具定义（evaluate_expression, solve_equation, calculate_derivative）、执行、MATH_INSTRUCTIONS |
 | `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、断线续传、会话 CRUD |
 | `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
 | `server/routes/settings.ts` | `/api/settings` GET/PUT |
 | `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
-| `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:id/models` |
+| `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
 | `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
 | `src/lib/api.ts` | 统一 API 客户端，REST + SSE 订阅 |
 | `src/components/ChatArea.tsx` | 聊天 UI，SSE 订阅接收流式内容 |
-| `src/components/SettingsModal.tsx` | 3 Tab 设置（General/Models/Tools），模型池 CRUD |
+| `src/components/SettingsModal.tsx` | 3 Tab 设置（General / Providers / Models） |
 | `src/components/Sidebar.tsx` | 左侧栏 UI |
 | `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线 |
-| `src/types.ts` | TypeScript 接口定义（ModelPoolEntry, UserSettings, ChatSession 等） |
+| `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |

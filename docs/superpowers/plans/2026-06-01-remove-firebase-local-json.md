@@ -29,6 +29,7 @@
 ### Task 1: Delete Firebase config files
 
 **Files:**
+
 - Delete: `firebase-applet-config.json`
 - Delete: `firebase-blueprint.json`
 - Delete: `firestore.rules`
@@ -51,6 +52,7 @@ ls firebase-*
 ### Task 2: Remove Firebase dependency from package.json
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Remove `firebase` from dependencies**
@@ -70,6 +72,7 @@ Expected: Clean install, no firebase packages in `node_modules`.
 ### Task 3: Add `/data` to `.gitignore`
 
 **Files:**
+
 - Modify: `.gitignore`
 
 - [ ] **Step 1: Append `/data` to `.gitignore`**
@@ -81,6 +84,7 @@ Add a new line `/data` at the end of `.gitignore`.
 ### Task 4: Create server-side data API endpoints
 
 **Files:**
+
 - Modify: `server.ts`
 
 Add the following REST API endpoints to `server.ts` **before** the Vite middleware section (before line 446):
@@ -201,6 +205,7 @@ app.delete("/api/data/sessions/:id", async (req, res) => {
 ### Task 5: Create `src/lib/dataService.ts` (replaces `firebase.ts`)
 
 **Files:**
+
 - Create: `src/lib/dataService.ts`
 - Delete: `src/lib/firebase.ts`
 
@@ -267,6 +272,7 @@ rm src/lib/firebase.ts
 ### Task 6: Rewrite `src/App.tsx` — remove all Firebase, use dataService
 
 **Files:**
+
 - Modify: `src/App.tsx`
 
 This is the largest change. The entire file needs to be rewritten to:
@@ -293,7 +299,7 @@ import { generateNvidiaChatResponse, fetchNvidiaModels } from './lib/nvidia';
 import { generateCloudflareChatResponse, fetchCloudflareModels } from './lib/cloudflare';
 import { generateAihubmixChatResponse, fetchAihubmixModels } from './lib/aihubmix';
 import { generatePoeChatResponse, fetchPoeModels } from './lib/poe';
-import { generateOpengatewayChatResponse, fetchOpengatewayModels } from './lib/opengateway';
+import { generateOnerouterChatResponse, fetchOnerouterModels } from './lib/Onerouter';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
@@ -614,6 +620,7 @@ In the `finally` block, replace the session update logic with:
 ### Task 7: Update `src/components/Sidebar.tsx` — remove Firebase User type
 
 **Files:**
+
 - Modify: `src/components/Sidebar.tsx`
 
 - [ ] **Step 1: Remove Firebase import and user-related props**
@@ -689,6 +696,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 ### Task 8: Update `src/types.ts` — remove `uid` field (optional)
 
 **Files:**
+
 - Modify: `src/types.ts`
 
 - [ ] **Step 1: Keep `uid` for backward compat but it will always be `'local'`**
@@ -722,6 +730,7 @@ npm run dev
 ```
 
 Then open `http://localhost:3000` and verify:
+
 - App loads without login page
 - Can create new chat
 - Can send messages

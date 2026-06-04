@@ -1,11 +1,13 @@
 import { Router } from 'express';
-import { GenerationManager, ModelPoolEntry } from '../services/generation-manager';
+import { GenerationManager } from '../services/generation-manager';
 import fs from 'fs/promises';
 
 interface SettingsData {
   activeModelId?: string;
-  modelPool?: ModelPoolEntry[];
+  providers?: any[];
+  models?: any[];
   systemPrompt?: string;
+  injectThinkingTemplate?: boolean;
   [key: string]: any;
 }
 
@@ -17,9 +19,12 @@ async function loadSettings(settingsFile: string): Promise<SettingsData> {
   }
 }
 
-function resolveActiveModel(settings: SettingsData): ModelPoolEntry | null {
-  if (!settings.activeModelId || !settings.modelPool?.length) return null;
-  return settings.modelPool.find(m => m.id === settings.activeModelId) || null;
+function resolveActiveModel(settings: SettingsData) {
+  if (!settings.activeModelId || !settings.models?.length) return null;
+  const model = settings.models.find((m: any) => m.id === settings.activeModelId);
+  if (!model) return null;
+  const provider = settings.providers?.find((p: any) => p.id === model.providerId);
+  return { model, provider };
 }
 
 export function createChatRouter(gm: GenerationManager, settingsFile: string) {
@@ -30,11 +35,11 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!content?.trim()) return res.status(400).json({ error: 'Empty message' });
 
     const settings = await loadSettings(settingsFile);
-    const model = resolveActiveModel(settings);
-    if (!model) return res.status(400).json({ error: 'No active model configured' });
+    const result = resolveActiveModel(settings);
+    if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
-    await gm.sendMessage(sessionId, content.trim(), model, settings.systemPrompt || '');
+    await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
     res.status(202).json({ ok: true });
   });
 
@@ -79,24 +84,28 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     res.json({ ok: true });
   });
 
+  router.get('/api/generation-status', (_req, res) => {
+    res.json({ runningSessionIds: gm.getRunningSessionIds() });
+  });
+
   router.post('/api/sessions/:id/retry', async (req, res) => {
     const { messageId } = req.body;
     if (!messageId) return res.status(400).json({ error: 'Missing messageId' });
 
     const settings = await loadSettings(settingsFile);
-    const model = resolveActiveModel(settings);
-    if (!model) return res.status(400).json({ error: 'No active model configured' });
+    const result = resolveActiveModel(settings);
+    if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
-    await gm.retryMessage(req.params.id, messageId, model, settings.systemPrompt || '');
+    await gm.retryMessage(req.params.id, messageId, result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
     res.status(202).json({ ok: true });
   });
 
   router.post('/api/sessions/:id/continue', async (req, res) => {
     const settings = await loadSettings(settingsFile);
-    const model = resolveActiveModel(settings);
-    if (!model) return res.status(400).json({ error: 'No active model configured' });
+    const result = resolveActiveModel(settings);
+    if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
-    await gm.continueGeneration(req.params.id, model, settings.systemPrompt || '');
+    await gm.continueGeneration(req.params.id, result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
     res.status(202).json({ ok: true });
   });
 

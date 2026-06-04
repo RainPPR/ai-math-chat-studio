@@ -1,21 +1,55 @@
 import { Router } from 'express';
-import { listProviderModels, PROVIDERS } from '../providers/config';
+import OpenAI from 'openai';
+import { BUILT_IN_PROVIDERS } from '../providers/built-in';
 
 export function createModelsRouter() {
   const router = Router();
 
   router.get('/api/providers', (_req, res) => {
-    res.json(PROVIDERS.map(p => ({ id: p.id, name: p.name })));
+    res.json([
+      { id: 'google', name: 'Google Gemini' },
+      { id: 'nvidia', name: 'Nvidia NIM' },
+      { id: 'openai-compatible', name: 'OpenAI Compatible' },
+    ]);
   });
 
-  router.get('/api/providers/:id/models', async (req, res) => {
+  router.get('/api/providers/:type/models', async (req, res) => {
+    const { type } = req.params;
     const { baseURL, apiKey } = req.query;
+
     try {
-      const models = await listProviderModels(
-        req.params.id,
-        baseURL as string | undefined,
-        apiKey as string | undefined,
-      );
+      let models: string[] = [];
+
+      if (type === 'google') {
+        const key = process.env.GEMINI_API_KEY;
+        if (!key) return res.status(500).json({ models: [], error: 'GEMINI_API_KEY is not set' });
+        const { GoogleGenAI } = await import('@google/genai');
+        const ai = new GoogleGenAI({ apiKey: key });
+        const pager = await ai.models.list();
+        for await (const m of pager) {
+          if (m.supportedActions?.includes('generateContent') && m.name) {
+            models.push(m.name.replace('models/', ''));
+          }
+        }
+        if (models.length === 0) throw new Error('Gemini returned 0 models. Check your API key.');
+        res.json({ models });
+        return;
+      }
+
+      // For nvidia and openai-compatible, need baseURL and apiKey
+      const resolvedBaseURL = (baseURL as string | undefined) || BUILT_IN_PROVIDERS[type]?.defaultBaseURL;
+      if (!resolvedBaseURL || !apiKey) {
+        return res.status(400).json({
+          models: [],
+          error: 'baseURL and apiKey are required for this provider type (or provider type not found)',
+        });
+      }
+      const client = new OpenAI({ baseURL: resolvedBaseURL, apiKey: apiKey as string });
+      const list = await client.models.list();
+      for await (const m of list) {
+        models.push((m as any).id);
+      }
+      if (models.length === 0) throw new Error('Provider returned 0 models. Check your API key and Base URL.');
       res.json({ models });
     } catch (e: any) {
       res.status(500).json({ models: [], error: e.message });

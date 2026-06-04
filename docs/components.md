@@ -10,7 +10,8 @@ App.tsx
 │       └── MarkdownRenderer（Markdown 渲染）
 ├── Tools Sidebar（右侧工具调用面板，App.tsx 内联实现）
 └── SettingsModal（设置弹窗）
-    └── ModelEntryEditor（模型编辑器子组件）
+    └── ProviderEditor（提供商编辑器子组件）
+    └── ModelEditor（模型编辑器子组件）
 ```
 
 ## App.tsx — 状态管理中心
@@ -24,7 +25,7 @@ App.tsx
 **核心状态**：
 - `sessions` — 所有聊天会话
 - `currentSessionId` — 当前选中会话
-- `settings` — 用户设置
+- `settings` — 用户设置（含 providers + models）
 - `generatingSessions` — Set<string>，正在生成的会话 ID 集合
 - `isReady` — 初始化完成标记
 - `isSettingsOpen` — 设置弹窗显示状态
@@ -77,7 +78,7 @@ App.tsx
 ### MessageItem 子组件
 
 **思考过程处理**：
-- 使用正则 `/<details(?: open)?>\n<summary>Thinking Process<\/summary>\n\n```text\n([\s\S]*?)(?:\n```\n\n<\/details>|$)/g` 提取思考内容
+- 使用正则 `/<details(?: open)?>\n<summary>Thinking Process<\/summary>\n\n\`\`\`text\n([\s\S]*?)(?:\n\`\`\`\n\n<\/details>|$)/g` 提取思考内容
 - 思考过程可折叠/展开
 - 完成后自动折叠（`collapseThinkingFinished` 设置）
 - Gemma 系列可去除前导空格（`gemmaTrimThinkingSpaces`）
@@ -106,27 +107,31 @@ App.tsx
 **3 Tab 设计**：
 
 ### General Tab
-- 活跃模型选择（下拉列表，从模型池中选择）
+- 活跃模型选择（下拉列表，从 models 中选择）
 - 系统提示词
-- 显示开关：自动滚动、折叠思考、渲染思考为 Markdown、Gemma 去空格
+- 显示开关：自动滚动、折叠思考、渲染思考为 Markdown、Gemma 去空格、注入 thinking mode
+
+### Providers Tab
+- 提供商实例列表
+- 添加/编辑/删除提供商实例
+- ProviderEditor 子组件：
+  - 类型选择（google / nvidia / openai-compatible）
+  - 名称、Base URL、API Key
+  - Env Key Prefix
+  - Extra Config JSON
 
 ### Models Tab
-- 模型池列表（显示每个模型的 provider、温度、maxTokens）
+- 模型实例列表
 - 添加/编辑/删除模型条目
-- ModelEntryEditor 子组件：
+- ModelEditor 子组件：
+  - 提供商选择（从 providers 列表）
+  - Model ID（支持 Fetch 获取远程列表）
   - Display Name（可选）
-  - Provider 选择（6 个预设 + Custom）
-  - Base URL / API Key（Custom 或自定义覆盖时显示）
-  - Model 选择（datalist + Fetch 按钮获取远程列表）
   - Temperature / Max Tokens
   - Reasoning Effort（low/medium/high/Unset）
-  - Thinking Level（Gemini 专用：none/minimal/low/medium/high/Unset）
+  - Thinking Level（Gemini 专用）
   - Enable Math Tools + 选择性禁用具体工具
   - Extra Body JSON
-
-### Tools Tab
-- 显示 3 个内置数学工具列表
-- 提示在 Models tab 中按模型配置工具权限
 
 ## Tools Sidebar — 右侧工具面板
 

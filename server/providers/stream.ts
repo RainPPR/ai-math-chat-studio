@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
-import { getProviderById, resolveBaseURL, resolveApiKey } from './config';
+import { resolveBaseURL, resolveApiKey } from './config';
 import { executeMathTool, buildOpenAITools, buildGeminiTools, MATH_INSTRUCTIONS } from './tools';
 
 export interface StreamRequest {
@@ -14,8 +14,7 @@ export interface StreamRequest {
   thinkingLevel?: string;
   enableTools: boolean;
   disabledTools: string[];
-  overrideBaseURL?: string;
-  overrideApiKey?: string;
+  injectThinkingTemplate?: boolean;
 }
 
 export interface StreamChunk {
@@ -28,63 +27,28 @@ export interface StreamChunk {
   toolCallIndex?: number;
 }
 
-export async function* streamChat(providerId: string, req: StreamRequest): AsyncGenerator<StreamChunk> {
-  if (providerId === 'gemini') {
-    yield* streamGemini(req);
-  } else {
-    yield* streamOpenAI(providerId, req);
+export async function* streamChat(
+  providerType: string,
+  provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string },
+  req: StreamRequest
+): AsyncGenerator<StreamChunk> {
+  switch (providerType) {
+    case 'google':
+      yield* streamGoogle(req);
+      break;
+    case 'nvidia':
+      yield* streamNvidia(req, provider);
+      break;
+    case 'openai-compatible':
+    default:
+      yield* streamOpenAICompatible(req, provider);
   }
 }
 
-async function* streamOpenAI(providerId: string, req: StreamRequest): AsyncGenerator<StreamChunk> {
-  const p = getProviderById(providerId);
-  if (!p) throw new Error(`Unknown provider: ${providerId}`);
+// ---- Google Gemini ----
 
-  const baseURL = req.overrideBaseURL || resolveBaseURL(p);
-  const apiKey = req.overrideApiKey || resolveApiKey(p);
-  if (!apiKey) throw new Error(`No API key for ${providerId}`);
-  if (!baseURL) throw new Error(`No baseURL for ${providerId}`);
-
-  const client = new OpenAI({ baseURL, apiKey });
-
-  const messages: any[] = [];
-  if (req.systemPrompt) messages.push({ role: 'system', content: req.systemPrompt });
-
-  const history = req.messages.length > 40 ? req.messages.slice(-40) : req.messages;
-  for (const msg of history) {
-    if (msg.role === 'tool') {
-      messages.push({ role: 'tool', content: msg.content, tool_call_id: msg.tool_call_id });
-    } else if (msg.role === 'assistant' || msg.role === 'model') {
-      messages.push({ role: 'assistant', content: msg.content, ...(msg.tool_calls ? { tool_calls: msg.tool_calls } : {}) });
-    } else {
-      messages.push({ role: msg.role, content: msg.content });
-    }
-  }
-
-  const payload: any = { model: req.model, messages, stream: true };
-  if (req.temperature != null) payload.temperature = req.temperature;
-  if (req.maxTokens != null) payload.max_tokens = req.maxTokens;
-  if (req.reasoningEffort) payload.reasoning_effort = req.reasoningEffort;
-  if (req.enableTools) payload.tools = buildOpenAITools(req.disabledTools);
-
-  const response = await client.chat.completions.create({ ...payload, ...(req.extraBody || {}) } as any) as any;
-
-  for await (const chunk of response) {
-    const delta = chunk.choices?.[0]?.delta;
-    if (!delta) continue;
-    const reasoning = (delta as any).reasoning || (delta as any).reasoning_content;
-    if (reasoning) yield { type: 'reasoning', content: reasoning };
-    if (delta.content) yield { type: 'content', content: delta.content };
-    if (delta.tool_calls) {
-      for (const tc of delta.tool_calls) {
-        yield { type: 'tool_call_delta', toolCallIndex: tc.index, toolCallId: tc.id, name: tc.function?.name, args: tc.function?.arguments };
-      }
-    }
-  }
-}
-
-async function* streamGemini(req: StreamRequest): AsyncGenerator<StreamChunk> {
-  const apiKey = req.overrideApiKey || process.env.GEMINI_API_KEY;
+async function* streamGoogle(req: StreamRequest): AsyncGenerator<StreamChunk> {
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY is not set.');
 
   const ai = new GoogleGenAI({ apiKey });
@@ -100,7 +64,9 @@ async function* streamGemini(req: StreamRequest): AsyncGenerator<StreamChunk> {
 
   if (req.thinkingLevel && req.thinkingLevel !== 'none') {
     const valid = ['minimal', 'low', 'medium', 'high'];
-    if (valid.includes(req.thinkingLevel)) config.thinkingConfig = { thinkingLevel: req.thinkingLevel.toUpperCase() };
+    if (valid.includes(req.thinkingLevel)) {
+      config.thinkingConfig = { thinkingLevel: req.thinkingLevel.toUpperCase(), includeThoughts: true };
+    }
   }
 
   const geminiTools = buildGeminiTools(req.disabledTools);
@@ -138,4 +104,68 @@ async function* streamGemini(req: StreamRequest): AsyncGenerator<StreamChunk> {
       keepResolving = false;
     }
   }
+}
+
+// ---- Generic OpenAI SDK helper ----
+
+async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: string): AsyncGenerator<StreamChunk> {
+  const client = new OpenAI({ baseURL, apiKey });
+
+  const messages: any[] = [];
+  if (req.systemPrompt) messages.push({ role: 'system', content: req.systemPrompt });
+
+  const history = req.messages.length > 40 ? req.messages.slice(-40) : req.messages;
+  for (const msg of history) {
+    if (msg.role === 'tool') {
+      messages.push({ role: 'tool', content: msg.content, tool_call_id: msg.tool_call_id });
+    } else if (msg.role === 'assistant' || msg.role === 'model') {
+      messages.push({ role: 'assistant', content: msg.content, ...(msg.tool_calls ? { tool_calls: msg.tool_calls } : {}) });
+    } else {
+      messages.push({ role: msg.role, content: msg.content });
+    }
+  }
+
+  const payload: any = { model: req.model, messages, stream: true };
+  if (req.temperature != null) payload.temperature = req.temperature;
+  if (req.maxTokens != null) payload.max_tokens = req.maxTokens;
+  if (req.reasoningEffort) payload.reasoning_effort = req.reasoningEffort;
+  if (req.enableTools) payload.tools = buildOpenAITools(req.disabledTools);
+  if (req.injectThinkingTemplate) payload.chat_template_kwargs = { thinking: true };
+
+  const response = await client.chat.completions.create({ ...payload, ...(req.extraBody || {}) } as any) as any;
+
+  for await (const chunk of response) {
+    const delta = chunk.choices?.[0]?.delta;
+    if (!delta) continue;
+    const reasoning = (delta as any).reasoning || (delta as any).reasoning_content;
+    if (reasoning) yield { type: 'reasoning', content: reasoning };
+    if (delta.content) yield { type: 'content', content: delta.content };
+    if (delta.tool_calls) {
+      for (const tc of delta.tool_calls) {
+        yield { type: 'tool_call_delta', toolCallIndex: tc.index, toolCallId: tc.id, name: tc.function?.name, args: tc.function?.arguments };
+      }
+    }
+  }
+}
+
+// ---- Nvidia ----
+
+async function* streamNvidia(req: StreamRequest, provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string }): AsyncGenerator<StreamChunk> {
+  const apiKey = resolveApiKey(provider);
+  const baseURL = resolveBaseURL(provider);
+  if (!apiKey) throw new Error('Nvidia API key is not configured.');
+  if (!baseURL) throw new Error('Nvidia Base URL is not configured.');
+
+  yield* streamOpenAIHelper(req, apiKey, baseURL);
+}
+
+// ---- OpenAI Compatible ----
+
+async function* streamOpenAICompatible(req: StreamRequest, provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string }): AsyncGenerator<StreamChunk> {
+  const apiKey = resolveApiKey(provider);
+  const baseURL = resolveBaseURL(provider);
+  if (!apiKey) throw new Error(`API key is not configured for ${provider.baseURL || 'this provider'}.`);
+  if (!baseURL) throw new Error(`Base URL is not configured for this provider.`);
+
+  yield* streamOpenAIHelper(req, apiKey, baseURL);
 }

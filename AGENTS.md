@@ -18,7 +18,7 @@
 
 ## 项目概述
 
-**AI Math & Chat Studio** 是一个多会话 AI 聊天应用，支持 6 个 AI 供应商（Gemini、Nvidia、Cloudflare、AIHubMix、Poe、Opengateway）+ 自定义供应商，内置数学计算工具（表达式求值、方程求解、求导），并支持 KaTeX 数学公式和 mhchem 化学公式渲染。数据以 JSON 文件形式存储在本地 `/data` 目录。
+**AI Math & Chat Studio** 是一个多会话 AI 聊天应用，内置 3 种提供商类型（Google Gemini、Nvidia NIM、OpenAI Compatible），支持提供商和模型的分离配置，内置数学计算工具（表达式求值、方程求解、求导），并支持 KaTeX 数学公式和 mhchem 化学公式渲染。数据以 JSON 文件形式存储在本地 `/data` 目录。
 
 **文档入口**：`docs/` 目录包含完整的架构、技术栈、组件、数据模型等文档。
 
@@ -37,6 +37,7 @@
 ## 开发规范
 
 ### 代码风格
+
 - **TypeScript 项目**，所有类型定义在 `src/types.ts`
 - **React 函数组件**，不使用 class 组件
 - **Tailwind CSS** 样式，使用 `cn()` 工具函数（`src/lib/utils.ts`）合并条件样式
@@ -44,6 +45,7 @@
 - **ES Module**：项目使用 `"type": "module"`
 
 ### 状态管理
+
 - **无外部状态库**：使用 React `useState` + `useEffect` 管理所有状态
 - **App.tsx 是状态中心**：所有共享状态和业务逻辑集中在 `App.tsx`
 - **乐观更新**：先更新 UI 再通过 `api.settings.save()` / `api.sessions.*` 持久化到服务端 JSON 文件
@@ -52,12 +54,14 @@
 - **`isToolsSidebarOpen`**：控制右侧 Tools Sidebar 的展开/折叠
 
 ### 命名约定
+
 - 组件文件：`PascalCase.tsx`（如 `ChatArea.tsx`）
 - 工具库文件：`camelCase.ts`（如 `api.ts`）
 - 组件导出：具名导出 `export const Component`（除 `App.tsx` 使用 `export default`）
 - 类型/接口：`PascalCase`（如 `ChatSession`）
 
 ### 样式约定
+
 - 暗色主题：`bg-gray-900`、`bg-gray-800`、`text-gray-100`
 - 强调色：`blue-600`、`blue-400`
 - 错误/危险：`red-600`、`red-400`
@@ -68,29 +72,27 @@
 
 ### 1. 添加新的 AI 供应商
 
-遵循以下步骤：
+新架构下有两种方式添加供应商：
 
-1. **提供商配置**（`server/providers/config.ts`）：
+**方式一：配置 OpenAI 兼容实例（推荐）**
+1. 打开 Settings → Providers tab
+2. 点击 Add Provider，选择类型 `openai-compatible`
+3. 填写名称、Base URL、API Key
+4. 在 Models tab 中添加绑定到该提供商的模型
+
+**方式二：添加内置类型（需要代码修改）**
+1. **`server/providers/built-in.ts`**：添加新的内置类型定义
    ```typescript
-   // 在 PROVIDERS 数组中添加
-   { id: 'newprovider', name: 'New Provider', baseURL: 'https://api.newprovider.com/v1', envKey: 'NEWPROVIDER_API_KEY' }
+   'new-type': { type: 'new-type', name: 'New Name', defaultBaseURL: '...', defaultEnvKey: 'ENV_KEY' }
    ```
-
-2. **流式调用**（`server/providers/stream.ts`）：
-   - 如果是 OpenAI 兼容 API，无需额外代码（`streamOpenAI()` 自动处理）
-   - 如果需要特殊处理，添加新的流式函数并在 `streamChat()` 中分发
-
-3. **前端自动适配**：
-   - `api.providers.list()` 自动获取新供应商
-   - SettingsModal 的 Models tab 自动显示新供应商选项
-   - 无需修改前端代码
-
-4. **环境变量**：
-   - 在 `.env` 和 `.env.example` 中添加新的 API Key
+2. **`server/providers/stream.ts`**：添加独立的流式函数
+3. **`server/routes/models.ts`**：添加该类型的模型列表获取逻辑
+4. 前端自动适配：SettingsModal 无需修改，类型自动出现在下拉框中
 
 ### 2. 思考过程格式统一
 
 所有供应商的 reasoning/thinking 内容统一包装为：
+
 ```html
 <details>
 <summary>Thinking Process</summary>
@@ -107,6 +109,7 @@
 ### 3. SSE 订阅模式
 
 前端通过 `api.subscribeGeneration()` 订阅生成进度：
+
 ```typescript
 const unsubscribe = api.subscribeGeneration(sessionId, {
   onDelta: (content) => setStreamingContent(content),
@@ -124,46 +127,60 @@ return unsubscribe; // useEffect cleanup
 - **OpenAI 兼容供应商**：`streamOpenAI()` 返回 `tool_call_delta`，`GenerationManager` 累积参数并执行工具
 - **工具执行**：统一在 `server/providers/tools.ts` 的 `executeMathTool()` 中
 
-### 5. 模型池架构
+### 5. Provider + Model 分离架构
 
-用户在 Settings → Models tab 配置模型：
-1. 添加 provider + model → 创建 `ModelPoolEntry`
-2. 配置参数（temperature、maxTokens、reasoningEffort 等）
+用户在 Settings 中分两级配置：
+
+**Providers tab**：
+1. 添加/管理提供商实例（Google / Nvidia / OpenAI Compatible）
+2. 配置每个提供商的 API Key、Base URL、Env Key Prefix
+
+**Models tab**：
+1. 选择关联的提供商实例
+2. 配置模型参数（temperature、maxTokens、reasoningEffort 等）
 3. 配置工具权限（enableTools、disabledTools）
-4. 在 General tab 选择活跃模型
+
+**General tab**：
+4. 选择活跃模型
 
 所有参数 "Unset" 时不传给 API（不传默认值）。
 
 ## 常见修改场景
 
 ### 修改数学工具
+
 - 工具声明和执行：`server/providers/tools.ts`
 - 工具配置 UI：`src/components/SettingsModal.tsx`（Tools tab + Models tab 中的工具开关）
 - 工具展示：`src/App.tsx` 中的 Tools Sidebar 部分（App.tsx 内联实现，非独立组件）
 
 ### 修改 Markdown 渲染
+
 - 渲染管线：`src/components/MarkdownRenderer.tsx`
 - 预处理逻辑：同上文件中的 `processedContent` 替换
 - KaTeX 配置：`rehype-katex` 选项
 
 ### 修改 UI 布局
+
 - 整体布局：`src/App.tsx` 的 `return` 部分（flex 布局）
 - 左侧栏：`src/components/Sidebar.tsx`
 - 聊天区域：`src/components/ChatArea.tsx`
 - 设置弹窗：`src/components/SettingsModal.tsx`
 
 ### 修改数据存储
+
 - 数据服务：`src/lib/api.ts`（统一 API 客户端）
-- 服务端路由：`server/routes/settings.ts`、`server/routes/sessions.ts`
+- 服务端路由：`server/routes/settings.ts`、`server/routes/sessions.ts`、`server/routes/chat.ts`、`server/routes/models.ts`
 - 生成管理：`server/services/generation-manager.ts`
 - 数据文件：`/data/settings.json`、`/data/sessions/*.json`
 
 ### 修改供应商行为
+
 - 提供商配置：`server/providers/config.ts`
 - 流式调用逻辑：`server/providers/stream.ts`
 - API 路由：`server/routes/chat.ts`、`server/routes/models.ts`
 
 ### 修改生成流程
+
 - 核心服务：`server/services/generation-manager.ts`
 - SSE 路由：`server/routes/chat.ts`（`GET /api/sessions/:id/generation`）
 - 前端订阅：`src/lib/api.ts`（`subscribeGeneration()`）+ `src/components/ChatArea.tsx`
@@ -171,6 +188,7 @@ return unsubscribe; // useEffect cleanup
 ## 环境配置
 
 ### 开发
+
 ```bash
 npm install          # 安装依赖
 npm run dev          # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
@@ -178,15 +196,11 @@ npm run lint         # TypeScript 类型检查
 ```
 
 ### 环境变量
+
 ```env
-GEMINI_API_KEY=          # Gemini API Key
-NVIDIA_API_KEY=          # 可选，Nvidia API
-CLOUDFLARE_API_KEY=      # 可选，Cloudflare
-CLOUDFLARE_ACCOUNT_ID=   # 可选，Cloudflare
-AIHUBMIX_API_KEY=        # 可选，AIHubMix
-POE_API_KEY=             # 可选，Poe
-OPENGATEWAY_API_KEY=     # 可选，Opengateway
-OPENAI_API_KEY=          # 可选，所有供应商的 API Key 回退
+GEMINI_API_KEY=          # Google Gemini API Key
+NVIDIA_API_KEY=          # Nvidia NIM API Key
+OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
 ```
 
 > 所有 API Key 通过 dotenv 在 `server.ts` 中加载，前端不暴露任何 Key。

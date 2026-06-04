@@ -7,17 +7,20 @@
 ## 工具列表
 
 ### 1. evaluate_expression（表达式求值）
+
 - **库**：math.js
 - **功能**：安全计算数学表达式
 - **支持**：基本运算、三角函数、对数、矩阵运算等
 - **示例**：`sin(pi/4)`, `sqrt(16)`, `2^10`
 
 ### 2. solve_equation（方程求解）
+
 - **库**：nerdamer（Algebra + Calculus + Solve 模块）
 - **功能**：求解代数方程，返回精确代数解
 - **示例**：`x^2 - 4 = 0` → `x = 2, x = -2`
 
 ### 3. calculate_derivative（求导）
+
 - **库**：math.js（`derivative` 函数）
 - **功能**：计算数学表达式的导数
 - **示例**：`x^2 + 2*x` 对 `x` 求导 → `2*x + 2`
@@ -29,29 +32,31 @@
 所有供应商的工具调用通过 `streamChat()` 统一处理：
 
 ```
-streamChat(providerId, request)
-  ├── Gemini → streamGemini()
+streamChat(providerType, provider, request)
+  ├── Google → streamGoogle()
   │     ├── 使用 @google/genai 原生 Function Calling
   │     ├── 检测 functionCalls → executeMathTool() → functionResponse
   │     └── 循环直到无更多工具调用
-  └── 其他 → streamOpenAI()
+  └── 其他 → streamOpenAIHelper()
         ├── 使用 OpenAI SDK 的 tools 参数
         ├── 检测 delta.tool_calls → 累积参数
         └── GenerationManager 处理工具执行循环
 ```
 
-### Gemini（原生 Function Calling）
+### Google Gemini（原生 Function Calling）
+
 ```
-streamGemini() → Google GenAI API（带 functionDeclarations）
+streamGoogle() → Google GenAI API（带 functionDeclarations）
      ← functionCall（如 {name: "evaluate_expression", args: {expression: "2+2"}}）
 executeMathTool("evaluate_expression", {expression: "2+2"}) → "4"
      → functionResponse（{result: "4"}）
      ← 最终文本响应
 ```
 
-### OpenAI 兼容供应商（Nvidia/Cloudflare/AIHubMix/Poe/Opengateway）
+### OpenAI 兼容（Nvidia / 自定义 OpenAI Compatible）
+
 ```
-streamOpenAI() → OpenAI API（带 tools 定义）
+streamOpenAIHelper() → OpenAI API（带 tools 定义）
      ← delta.tool_calls（累积完整参数）
 GenerationManager.runGeneration() 执行工具
      → tool 消息（{role: "tool", content: "4"}）
@@ -61,18 +66,21 @@ GenerationManager.runGeneration() 执行工具
 ## 工具配置
 
 ### 全局开关
-每个 `ModelPoolEntry` 有 `enableTools` 字段控制是否启用工具。
+
+每个 `ModelInstance` 有 `enableTools` 字段控制是否启用工具。
 
 ### 选择性禁用
+
 `disabledTools` 数组可禁用具体工具，如 `["solve_equation"]`。
 
 ### 工具定义格式
-- **Gemini**：`buildGeminiTools()` 生成 `FunctionDeclaration` 格式
+
+- **Google**：`buildGeminiTools()` 生成 `FunctionDeclaration` 格式
 - **OpenAI**：`buildOpenAITools()` 生成 `tools` 数组格式
 
 ## 系统提示词注入
 
-`MATH_INSTRUCTIONS` 由 `GenerationManager.buildSystemPrompt()` 统一注入到系统提示词中（所有供应商），而非由 `streamGemini()` 单独处理。Gemini 收到的系统提示词 = 用户自定义 systemPrompt + MATH_INSTRUCTIONS（由 GenerationManager 拼接）。
+`MATH_INSTRUCTIONS` 由 `GenerationManager` 统一注入到系统提示词中（Google Gemini），而非由 `streamGoogle()` 单独处理。收到的系统提示词 = 用户自定义 systemPrompt + MATH_INSTRUCTIONS。
 
 ```
 CRITICAL INSTRUCTION: You have access to mathematical tools: 
@@ -84,7 +92,7 @@ For block math, use double dollar signs: $$x^2$$.
 For chemistry formulas, use the mhchem extension: $\ce{H2O}$
 ```
 
-> 工具可用性取决于 `enableTools` 配置。Gemini 的工具声明不受 `enableTools` 控制，始终通过 `buildGeminiTools()` 构建。
+> 工具可用性取决于 `enableTools` 配置。Google Gemini 的工具声明不受 `enableTools` 控制，始终通过 `buildGeminiTools()` 构建。
 
 ### ALL_TOOL_NAMES 导出
 
@@ -101,5 +109,6 @@ AI 输出（含 $...$ 或 $$...$$）
 ```
 
 **LaTeX 预处理**：
+
 - `\[...\]` → `$$...$$`（块级数学）
 - `\(...)` → `$...$`（行内数学）

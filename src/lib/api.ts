@@ -35,6 +35,7 @@ export const api = {
       body: JSON.stringify({ messageId }),
     }),
     continue: (sessionId: string) => request<{ ok: true }>(`/api/sessions/${sessionId}/continue`, { method: 'POST' }),
+    getRunningSessions: () => request<{ runningSessionIds: string[] }>('/api/generation-status'),
   },
 
   providers: {

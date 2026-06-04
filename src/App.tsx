@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './lib/api';
-import { ChatSession, UserSettings, DEFAULT_SETTINGS } from './types';
+import { ChatSession, ChatMessage, UserSettings, DEFAULT_SETTINGS } from './types';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
@@ -17,13 +17,26 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
-      const [loadedSessions, loadedSettings] = await Promise.all([
+      const [loadedSessions, loadedSettings, { runningSessionIds }] = await Promise.all([
         api.sessions.list(),
         api.settings.get(),
+        api.chat.getRunningSessions().catch(() => ({ runningSessionIds: [] as string[] })),
       ]);
       setSessions(loadedSessions);
       if (loadedSessions.length > 0) setCurrentSessionId(loadedSessions[0].id);
-      if (loadedSettings) setSettings({ ...DEFAULT_SETTINGS, ...loadedSettings });
+      if (loadedSettings) {
+        const merged = { ...DEFAULT_SETTINGS, ...loadedSettings };
+        // Detect old format (modelPool instead of providers/models)
+        if ((merged as any).modelPool && !merged.providers) {
+          merged.providers = [];
+          merged.models = [];
+          merged.activeModelId = undefined;
+        }
+        setSettings(merged);
+      }
+      if (runningSessionIds.length > 0) {
+        setGeneratingSessions(new Set(runningSessionIds));
+      }
       setIsReady(true);
     })();
   }, []);
@@ -71,6 +84,17 @@ export default function App() {
       setSessions(prev => [session, ...prev]);
       setCurrentSessionId(sessionId);
     }
+
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content,
+      createdAt: new Date().toISOString(),
+    };
+    setSessions(prev => prev.map(s => s.id === sessionId
+      ? { ...s, messages: [...s.messages, userMsg], updatedAt: new Date().toISOString() }
+      : s
+    ));
 
     try {
       await api.chat.send(sessionId, content);

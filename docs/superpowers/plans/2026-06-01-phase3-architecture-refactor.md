@@ -4,7 +4,8 @@
 
 **Goal:** 将项目从"前端驱动AI逻辑"重构为"后端驱动、前端薄客户端"的标准 React 架构。所有 AI 调用、tool calling、math 计算、会话持久化均在后端完成。前端仅通过统一 `/api` 接口通信。支持多窗口并发、断线续传。
 
-**Architecture:** 
+**Architecture:**
+
 - 后端拆分为模块化结构：`server/` 目录包含 providers、routes、services
 - 引入 `GenerationManager` 管理所有活跃的 AI 生成任务，支持 per-session 并发和 SSE 重连
 - 前端删除所有 provider-specific 代码（`src/lib/gemini.ts` 等），统一使用 `src/lib/api.ts`
@@ -24,7 +25,7 @@
 │   │   ├── types.ts                   # Provider 统一接口类型
 │   │   ├── registry.ts                # Provider 注册和分发
 │   │   ├── gemini.ts                  # Gemini provider
-│   │   ├── openai-compatible.ts       # Nvidia/Cloudflare/AIHubMix/Opengateway 共用
+│   │   ├── openai-compatible.ts       # Nvidia/Cloudflare/AIHubMix/Onerouter 共用
 │   │   └── poe.ts                     # Poe provider（支持 tool_calls）
 │   ├── services/
 │   │   ├── math-tools.ts              # mathjs + nerdamer 工具定义和执行
@@ -115,6 +116,7 @@ es.onmessage = (e) => { /* 更新 UI */ };
 ## Task 1: 创建后端模块化结构 — types 和 math-tools
 
 **Files:**
+
 - Create: `server/providers/types.ts`
 - Create: `server/services/math-tools.ts`
 
@@ -202,6 +204,7 @@ git add server/ && git commit -m "feat: add backend module structure - types and
 ## Task 2: 创建 Provider Adapters
 
 **Files:**
+
 - Create: `server/providers/gemini.ts`
 - Create: `server/providers/openai-compatible.ts`
 - Create: `server/providers/poe.ts`
@@ -213,7 +216,7 @@ git add server/ && git commit -m "feat: add backend module structure - types and
 
 - [ ] **Step 2: 创建 OpenAI-compatible provider adapter**
 
-Nvidia、Cloudflare、AIHubMix、Opengateway 均使用 OpenAI SDK，共用一个 adapter，通过配置 `baseURL` 和 `apiKey` 区分。
+Nvidia、Cloudflare、AIHubMix、Onerouter 均使用 OpenAI SDK，共用一个 adapter，通过配置 `baseURL` 和 `apiKey` 区分。
 
 - [ ] **Step 3: 创建 Poe provider adapter**
 
@@ -237,6 +240,7 @@ export function getProviderModels(name: string): Promise<string[]> { ... }
 ## Task 3: 创建 GenerationManager
 
 **Files:**
+
 - Create: `server/services/generation-manager.ts`
 
 这是整个重构的核心组件。
@@ -289,6 +293,7 @@ class GenerationManager {
 ## Task 4: 创建后端 Routes
 
 **Files:**
+
 - Create: `server/routes/settings.ts`
 - Create: `server/routes/sessions.ts`
 - Create: `server/routes/chat.ts`
@@ -357,6 +362,7 @@ router.get('/api/models/:provider', async (req, res) => {
 ## Task 5: 重构 server.ts 入口
 
 **Files:**
+
 - Modify: `server.ts`
 - Create: `server/app.ts`
 
@@ -384,8 +390,9 @@ startApp();
 ## Task 6: 创建前端统一 API 客户端
 
 **Files:**
+
 - Create: `src/lib/api.ts`
-- Delete: `src/lib/gemini.ts`, `src/lib/nvidia.ts`, `src/lib/cloudflare.ts`, `src/lib/aihubmix.ts`, `src/lib/poe.ts`, `src/lib/opengateway.ts`
+- Delete: `src/lib/gemini.ts`, `src/lib/nvidia.ts`, `src/lib/cloudflare.ts`, `src/lib/aihubmix.ts`, `src/lib/poe.ts`, `src/lib/Onerouter.ts`
 
 - [ ] **Step 1: 创建 src/lib/api.ts**
 
@@ -422,6 +429,7 @@ export async function continueGeneration(sessionId: string): Promise<void> { ...
 ## Task 7: 更新 types.ts
 
 **Files:**
+
 - Modify: `src/types.ts`
 
 - [ ] **Step 1: 添加 GenerationStatus 类型**
@@ -443,9 +451,11 @@ export interface GenerationStatus {
 ## Task 8: 重构 App.tsx
 
 **Files:**
+
 - Modify: `src/App.tsx`
 
 这是前端改动最大的文件。需要：
+
 1. 删除所有 provider-specific 导入和逻辑
 2. 删除 `runLLM` 函数
 3. 使用新的 `api.ts` 替代 `dataService.ts`
@@ -519,6 +529,7 @@ export default function App() {
 ## Task 9: 重构 ChatArea 组件
 
 **Files:**
+
 - Modify: `src/components/ChatArea.tsx`
 
 - [ ] **Step 1: 更新 ChatArea 使用 SSE 订阅**
@@ -579,6 +590,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 ## Task 10: 重构 SettingsModal 组件
 
 **Files:**
+
 - Modify: `src/components/SettingsModal.tsx`
 
 - [ ] **Step 1: 更新模型列表获取方式**
@@ -594,6 +606,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 ## Task 11: 清理旧代码和更新配置
 
 **Files:**
+
 - Delete: `src/lib/dataService.ts`
 - Modify: `package.json`（如果需要）
 - Modify: `vite.config.ts`（删除 `process.env.GEMINI_API_KEY` define，因为不再需要在前端暴露）
@@ -621,6 +634,7 @@ npm run dev
 ```
 
 测试清单：
+
 - [ ] 创建新对话
 - [ ] 发送消息（Gemini provider）
 - [ ] 观察流式响应

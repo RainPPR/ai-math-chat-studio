@@ -20,13 +20,13 @@ export interface ServerChatSession {
   updatedAt: string;
 }
 
-export interface ModelPoolEntry {
+// Generation configs - must be serializable plain objects
+export interface GenerationModel {
   id: string;
   providerId: string;
+  providerType: string;
   modelId: string;
   displayName?: string;
-  baseURL?: string;
-  apiKey?: string;
   temperature?: number;
   maxTokens?: number;
   reasoningEffort?: string;
@@ -34,6 +34,14 @@ export interface ModelPoolEntry {
   thinkingLevel?: string;
   enableTools: boolean;
   disabledTools: string[];
+}
+
+export interface GenerationProvider {
+  baseURL?: string;
+  apiKey?: string;
+  envKey?: string;
+  type: string;
+  name: string;
 }
 
 export interface GenerationTask {
@@ -68,7 +76,7 @@ export class GenerationManager {
   }
 
   async writeSession(session: ServerChatSession): Promise<void> {
-    await fs.writeFile(this.sessionPath(id(session)), JSON.stringify(session, null, 2));
+    await fs.writeFile(this.sessionPath(session.id), JSON.stringify(session, null, 2));
   }
 
   async listSessions(): Promise<ServerChatSession[]> {
@@ -88,7 +96,7 @@ export class GenerationManager {
     try { await fs.unlink(this.sessionPath(id)); } catch {}
   }
 
-  async sendMessage(sessionId: string, content: string, modelEntry: ModelPoolEntry, systemPrompt: string): Promise<void> {
+  async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
     let session = await this.readSession(sessionId);
     if (!session) {
       session = {
@@ -114,10 +122,10 @@ export class GenerationManager {
     session.updatedAt = new Date().toISOString();
     await this.writeSession(session);
 
-    this.startGeneration(session, modelEntry, systemPrompt);
+    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
   }
 
-  async retryMessage(sessionId: string, messageId: string, modelEntry: ModelPoolEntry, systemPrompt: string): Promise<void> {
+  async retryMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
     const session = await this.readSession(sessionId);
     if (!session) return;
 
@@ -132,10 +140,10 @@ export class GenerationManager {
     session.updatedAt = new Date().toISOString();
     await this.writeSession(session);
 
-    this.startGeneration(session, modelEntry, systemPrompt);
+    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
   }
 
-  async continueGeneration(sessionId: string, modelEntry: ModelPoolEntry, systemPrompt: string): Promise<void> {
+  async continueGeneration(sessionId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
     const session = await this.readSession(sessionId);
     if (!session || session.messages.length === 0) return;
 
@@ -149,10 +157,10 @@ export class GenerationManager {
     session.updatedAt = new Date().toISOString();
     await this.writeSession(session);
 
-    this.startGeneration(session, modelEntry, systemPrompt);
+    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
   }
 
-  private startGeneration(session: ServerChatSession, modelEntry: ModelPoolEntry, systemPrompt: string): void {
+  private startGeneration(session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): void {
     const existing = this.tasks.get(session.id);
     if (existing && existing.status === 'running') {
       existing.abortController.abort();
@@ -169,7 +177,7 @@ export class GenerationManager {
     };
     this.tasks.set(session.id, task);
 
-    this.runGeneration(task, session, modelEntry, systemPrompt).catch(err => {
+    this.runGeneration(task, session, model, provider, systemPrompt, injectThinkingTemplate).catch(err => {
       console.error(`[Generation] Error for session ${session.id}:`, err);
       task.status = 'error';
       task.error = err.message;
@@ -177,8 +185,8 @@ export class GenerationManager {
     });
   }
 
-  private async runGeneration(task: GenerationTask, session: ServerChatSession, modelEntry: ModelPoolEntry, systemPrompt: string): Promise<void> {
-    console.log(`[Generation] Starting for session ${session.id}, provider=${modelEntry.providerId}, model=${modelEntry.modelId}, messages=${session.messages.length}`);
+  private async runGeneration(task: GenerationTask, session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
+    console.log(`[Generation] Starting for session ${session.id}, provider=${model.providerType}, model=${model.modelId}, messages=${session.messages.length}`);
 
     const messages = session.messages.map(m => ({
       role: m.role as string,
@@ -192,7 +200,7 @@ export class GenerationManager {
     let isThinking = false;
 
     const buildSystemPrompt = () => {
-      if (modelEntry.providerId === 'gemini') {
+      if (model.providerType === 'google') {
         return systemPrompt ? systemPrompt + '\n\n' + MATH_INSTRUCTIONS : MATH_INSTRUCTIONS;
       }
       return systemPrompt;
@@ -217,19 +225,18 @@ export class GenerationManager {
       }));
 
       try {
-        for await (const chunk of streamChat(modelEntry.providerId, {
-          model: modelEntry.modelId,
+        for await (const chunk of streamChat(model.providerType, provider, {
+          model: model.modelId,
           messages: reqMessages,
           systemPrompt: buildSystemPrompt(),
-          temperature: modelEntry.temperature,
-          maxTokens: modelEntry.maxTokens,
-          reasoningEffort: modelEntry.reasoningEffort,
-          extraBody: modelEntry.extraBody,
-          thinkingLevel: modelEntry.thinkingLevel,
-          enableTools: modelEntry.enableTools,
-          disabledTools: modelEntry.disabledTools || [],
-          overrideBaseURL: modelEntry.baseURL,
-          overrideApiKey: modelEntry.apiKey,
+          temperature: model.temperature,
+          maxTokens: model.maxTokens,
+          reasoningEffort: model.reasoningEffort,
+          extraBody: model.extraBody,
+          thinkingLevel: model.thinkingLevel,
+          enableTools: model.enableTools,
+          disabledTools: model.disabledTools || [],
+          injectThinkingTemplate,
         })) {
           if (task.abortController.signal.aborted) break;
 
@@ -276,7 +283,7 @@ export class GenerationManager {
       }
 
       const validToolCalls = pendingToolCalls.filter(tc => tc.name);
-      if (validToolCalls.length > 0 && modelEntry.enableTools) {
+      if (validToolCalls.length > 0 && model.enableTools) {
         const toolMessages: any[] = [];
         toolMessages.push({
           role: 'assistant',
@@ -336,7 +343,14 @@ export class GenerationManager {
 
     task.subscribers.add(callback);
 
-    if (task.status === 'done' || task.status === 'error' || task.status === 'stopped') {
+    if (task.status === 'running') {
+      queueMicrotask(() => {
+        for (const tc of task.toolCalls) {
+          callback('tool_call', { name: tc.name, args: JSON.stringify(tc.args), result: tc.result });
+        }
+        if (task.content) callback('delta', { content: task.content });
+      });
+    } else if (task.status === 'done' || task.status === 'error' || task.status === 'stopped') {
       queueMicrotask(() => {
         if (task.status === 'done') callback('done', { content: task.content, toolCalls: task.toolCalls });
         else if (task.status === 'error') callback('error', { message: task.error });
@@ -360,6 +374,14 @@ export class GenerationManager {
     return { status: task.status, content: task.content, toolCalls: task.toolCalls };
   }
 
+  getRunningSessionIds(): string[] {
+    const result: string[] = [];
+    for (const [sessionId, task] of this.tasks) {
+      if (task.status === 'running') result.push(sessionId);
+    }
+    return result;
+  }
+
   cleanup(sessionId: string): void {
     const task = this.tasks.get(sessionId);
     if (task && task.status !== 'running') {
@@ -367,5 +389,3 @@ export class GenerationManager {
     }
   }
 }
-
-function id(session: ServerChatSession): string { return session.id; }
