@@ -1,0 +1,64 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - desktop
+  workflow_dispatch:
+
+jobs:
+  build-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install
+
+      - run: bun scripts/build-bundle.ts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-bundle
+          path: dist-server/
+
+  build-electron:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install
+
+      - run: bun scripts/build-bundle.ts
+
+      - run: bun scripts/build-electron.ts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-electron
+          path: release/*.exe
+
+  build-bun-compile:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install
+
+      - run: bun scripts/build-bun-compile.ts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bun-compile-windows
+          path: release/*.exe
