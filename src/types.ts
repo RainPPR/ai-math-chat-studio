@@ -10,6 +10,7 @@ export interface ProviderInstance {
   apiKey?: string;
   envKey?: string;
   extra?: Record<string, any>;
+  modelSource?: string; // 远程模型列表 JSON URL（仅适用于 nvidia/openai-compatible，启动时自动同步）
 }
 
 // 用户配置的模型实例

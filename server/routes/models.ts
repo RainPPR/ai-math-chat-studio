@@ -15,7 +15,7 @@ export function createModelsRouter() {
 
   router.get('/api/providers/:type/models', async (req, res) => {
     const { type } = req.params;
-    const { baseURL, apiKey } = req.query;
+    const { baseURL, apiKey, envKey } = req.query;
 
     try {
       let models: string[] = [];
@@ -37,14 +37,23 @@ export function createModelsRouter() {
       }
 
       // For nvidia and openai-compatible, need baseURL and apiKey
-      const resolvedBaseURL = (baseURL as string | undefined) || BUILT_IN_PROVIDERS[type]?.defaultBaseURL;
-      if (!resolvedBaseURL || !apiKey) {
+      let resolvedBaseURL = (baseURL as string | undefined) || BUILT_IN_PROVIDERS[type]?.defaultBaseURL;
+      // Nvidia baseURL is fixed and cannot be overridden
+      if (type === 'nvidia') {
+        resolvedBaseURL = BUILT_IN_PROVIDERS.nvidia.defaultBaseURL;
+      }
+      let resolvedApiKey = (apiKey as string | undefined);
+      if (!resolvedApiKey) {
+        const envVarKey = (envKey as string | undefined) || BUILT_IN_PROVIDERS[type]?.defaultEnvKey;
+        if (envVarKey) resolvedApiKey = process.env[envVarKey];
+      }
+      if (!resolvedBaseURL || !resolvedApiKey) {
         return res.status(400).json({
           models: [],
           error: 'baseURL and apiKey are required for this provider type (or provider type not found)',
         });
       }
-      const client = new OpenAI({ baseURL: resolvedBaseURL, apiKey: apiKey as string });
+      const client = new OpenAI({ baseURL: resolvedBaseURL, apiKey: resolvedApiKey });
       const list = await client.models.list();
       for await (const m of list) {
         models.push((m as any).id);

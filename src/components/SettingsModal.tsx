@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, BuiltInProviderType, DEFAULT_SETTINGS } from '../types';
 import { api } from '../lib/api';
-import { X, Plus, Trash2, Save, ChevronDown, Wrench } from 'lucide-react';
+import { X, Plus, Trash2, Save, ChevronDown, Wrench, Pencil, Check } from 'lucide-react';
 
 interface SettingsModalProps {
   settings: UserSettings;
@@ -10,6 +10,248 @@ interface SettingsModalProps {
 }
 
 type Tab = 'general' | 'providers' | 'models';
+
+// ===== Active Model Dropdown Component =====
+
+interface ActiveModelDropdownProps {
+  models: ModelInstance[];
+  providers: ProviderInstance[];
+  activeModelId?: string;
+  onChange: (id: string) => void;
+}
+
+const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
+  models,
+  providers,
+  activeModelId,
+  onChange,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Group models by provider
+  const modelsByProvider = new Map<string, ModelInstance[]>();
+  const modelsWithoutProvider: ModelInstance[] = [];
+
+  models.forEach(m => {
+    const provider = providers.find(p => p.id === m.providerId);
+    if (provider) {
+      const list = modelsByProvider.get(provider.id) || [];
+      list.push(m);
+      modelsByProvider.set(provider.id, list);
+    } else {
+      modelsWithoutProvider.push(m);
+    }
+  });
+
+  const activeModel = models.find(m => m.id === activeModelId);
+  const activeProvider = activeModel && providers.find(p => p.id === activeModel.providerId);
+
+  const getToolInfo = (m: ModelInstance) => {
+    if (!m.enableTools) return { count: 0, label: 'off' };
+    const enabledCount = 3 - (m.disabledTools?.length || 0);
+    return { count: enabledCount, label: `${enabledCount}/3` };
+  };
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      {/* Trigger Button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full bg-gray-800 border border-gray-700 hover:border-gray-600 text-white rounded-lg p-3 pr-10 focus:outline-none focus:border-blue-500 transition-colors text-left flex items-center justify-between"
+      >
+        {activeModel ? (
+          <div className="flex items-center justify-between w-full min-w-0">
+            <span className="truncate">{activeModel.displayName || activeModel.modelId}</span>
+            <span className="text-xs text-gray-500 ml-2 shrink-0">
+              {activeProvider?.name}
+            </span>
+          </div>
+        ) : (
+          <span className="text-gray-500">-- Select a model --</span>
+        )}
+      </button>
+      <ChevronDown
+        className={`absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        size={18}
+      />
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-80 overflow-auto">
+          {/* Grouped by Provider */}
+          {providers.map(provider => {
+            const providerModels = modelsByProvider.get(provider.id) || [];
+            if (providerModels.length === 0) return null;
+
+            return (
+              <div key={provider.id} className="border-b border-gray-700/50 last:border-b-0">
+                {/* Provider Header */}
+                <div className="px-3 py-2 bg-gray-800/80 sticky top-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-400">{provider.name}</span>
+                    <span className="text-xs text-gray-600">{providerModels.length} models</span>
+                  </div>
+                </div>
+                {/* Models */}
+                <div>
+                  {providerModels.map(m => {
+                    const toolInfo = getToolInfo(m);
+                    const isSelected = m.id === activeModelId;
+
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => {
+                          onChange(m.id);
+                          setIsOpen(false);
+                        }}
+                        className={`w-full px-3 py-2.5 flex items-center justify-between hover:bg-gray-700/50 transition-colors text-left ${
+                          isSelected ? 'bg-blue-600/20 hover:bg-blue-600/30' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          {isSelected && <Check size={14} className="text-blue-400 shrink-0" />}
+                          <span className={`text-sm truncate ${isSelected ? 'text-blue-300' : 'text-gray-300'}`}>
+                            {m.displayName || m.modelId}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0 ml-2">
+                          <div className="flex items-center gap-1">
+                            <Wrench size={10} className={toolInfo.count > 0 ? 'text-green-400' : 'text-gray-600'} />
+                            <span className={`text-xs ${toolInfo.count > 0 ? 'text-green-400' : 'text-gray-500'}`}>
+                              {toolInfo.label}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Models without provider (orphaned) */}
+          {modelsWithoutProvider.length > 0 && (
+            <div className="border-b border-gray-700/50 last:border-b-0">
+              <div className="px-3 py-2 bg-gray-800/80 sticky top-0">
+                <span className="text-xs font-medium text-yellow-600">Unknown Provider</span>
+              </div>
+              {modelsWithoutProvider.map(m => {
+                const toolInfo = getToolInfo(m);
+                const isSelected = m.id === activeModelId;
+
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      onChange(m.id);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full px-3 py-2.5 flex items-center justify-between hover:bg-gray-700/50 transition-colors text-left ${
+                      isSelected ? 'bg-blue-600/20 hover:bg-blue-600/30' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {isSelected && <Check size={14} className="text-blue-400 shrink-0" />}
+                      <span className={`text-sm truncate ${isSelected ? 'text-blue-300' : 'text-gray-300'}`}>
+                        {m.displayName || m.modelId}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-2">
+                      <div className="flex items-center gap-1">
+                        <Wrench size={10} className={toolInfo.count > 0 ? 'text-green-400' : 'text-gray-600'} />
+                        <span className={`text-xs ${toolInfo.count > 0 ? 'text-green-400' : 'text-gray-500'}`}>
+                          {toolInfo.label}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ===== Extra Body Textarea Component with Python dict normalization =====
+
+interface ExtraBodyTextareaProps {
+  value?: Record<string, any>;
+  onChange: (v: Record<string, any> | undefined) => void;
+  placeholder?: string;
+}
+
+const ExtraBodyTextarea: React.FC<ExtraBodyTextareaProps> = ({ value, onChange, placeholder }) => {
+  const [text, setText] = useState(() => value ? JSON.stringify(value, null, 2) : '');
+
+  useEffect(() => {
+    setText(value ? JSON.stringify(value, null, 2) : '');
+  }, [value]);
+
+  const normalizePythonToJson = (input: string): string => {
+    let normalized = input;
+    // Replace Python True/False/None with JSON true/false/null
+    normalized = normalized.replace(/\bTrue\b/g, 'true');
+    normalized = normalized.replace(/\bFalse\b/g, 'false');
+    normalized = normalized.replace(/\bNone\b/g, 'null');
+    // Replace single quotes with double quotes (basic handling)
+    normalized = normalized.replace(/'/g, '"');
+    return normalized;
+  };
+
+  const handleBlur = () => {
+    if (!text.trim()) {
+      onChange(undefined);
+      return;
+    }
+    try {
+      // First try normalized Python-style dict
+      const normalized = normalizePythonToJson(text);
+      const parsed = JSON.parse(normalized);
+      setText(JSON.stringify(parsed, null, 2));
+      onChange(parsed);
+    } catch {
+      // If normalization fails, try original JSON
+      try {
+        const parsed = JSON.parse(text);
+        setText(JSON.stringify(parsed, null, 2));
+        onChange(parsed);
+      } catch {
+        // Invalid JSON - keep text as is, don't update value
+      }
+    }
+  };
+
+  return (
+    <textarea
+      value={text}
+      onChange={e => setText(e.target.value)}
+      onBlur={handleBlur}
+      placeholder={placeholder}
+      className="w-full bg-gray-950 border border-gray-700 font-mono text-green-400 text-sm rounded-lg p-3 focus:outline-none focus:border-blue-500 h-24 resize-y"
+      spellCheck={false}
+    />
+  );
+};
 
 const TOOL_NAMES = ['evaluate_expression', 'solve_equation', 'calculate_derivative'];
 const TOOL_LABELS: Record<string, string> = {
@@ -104,7 +346,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     setLoadingModels(true);
     setFetchError(null);
     try {
-      const result = await api.providers.models(provider.type, provider.baseURL, provider.apiKey);
+      const result = await api.providers.models(provider.type, provider.baseURL, provider.apiKey, provider.envKey);
       setAvailableModels(result.models);
       if (result.error) setFetchError(result.error);
     } catch (e: any) {
@@ -159,16 +401,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
             <>
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-300">Active Model</label>
-                <select
-                  value={local.activeModelId || ''}
-                  onChange={e => setLocal(s => ({ ...s, activeModelId: e.target.value || undefined }))}
-                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
-                >
-                  <option value="">-- Select a model --</option>
-                  {local.models.map(m => (
-                    <option key={m.id} value={m.id}>{m.displayName || m.modelId}</option>
-                  ))}
-                </select>
+                <ActiveModelDropdown
+                  models={local.models}
+                  providers={local.providers}
+                  activeModelId={local.activeModelId}
+                  onChange={id => setLocal(s => ({ ...s, activeModelId: id || undefined }))}
+                />
                 {local.models.length === 0 && <p className="text-xs text-gray-500">Add models in the Models tab first.</p>}
               </div>
 
@@ -217,7 +455,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <div key={p.id} className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex items-center justify-between">
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-white truncate">{p.name}</div>
-                        <div className="text-xs text-gray-400">{builtInTypes.find(b => b.id === p.type)?.name || p.type} {(p.baseURL || 'Custom Base URL')}</div>
+                        <div className="text-xs text-gray-400">
+                          {builtInTypes.find(b => b.id === p.type)?.name || p.type}
+                          {' '}
+                          {p.type === 'nvidia'
+                            ? '(https://integrate.api.nvidia.com/v1)'
+                            : p.type === 'google'
+                              ? '(https://generativelanguage.googleapis.com/v1beta)'
+                              : (p.baseURL || 'Custom Base URL')}
+                          {p.modelSource && ' · Auto-sync enabled'}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <button onClick={() => setEditingProvider({ ...p })} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
@@ -249,24 +496,71 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   onCancel={() => { setEditingModel(null); setAvailableModels([]); }}
                 />
               ) : (
-                <>
+                <div className="space-y-4">
                   {local.models.length === 0 && <p className="text-xs text-gray-500">No models configured.</p>}
-                  {local.models.map(entry => (
-                    <div key={entry.id} className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex items-center justify-between">
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium text-white truncate">{entry.displayName || entry.modelId}</div>
-                        <div className="text-xs text-gray-400">{local.providers.find(p => p.id === entry.providerId)?.name || entry.providerId} · temp={entry.temperature ?? 'unset'} · maxTokens={entry.maxTokens ?? 'unset'}</div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button onClick={() => setEditingModel({ ...entry })} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
-                        <button onClick={() => deleteModelEntry(entry.id)} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
-                      </div>
-                    </div>
-                  ))}
-                  <button onClick={addModel} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-4 transition-colors">
-                    <Plus size={18} /> Add Model
+                  {(() => {
+                    const modelsByProvider = new Map<string, typeof local.models>();
+                    local.models.forEach(m => {
+                      const list = modelsByProvider.get(m.providerId) || [];
+                      list.push(m);
+                      modelsByProvider.set(m.providerId, list);
+                    });
+
+                    return local.providers.map(provider => {
+                      const providerModels = modelsByProvider.get(provider.id) || [];
+                      if (providerModels.length === 0) return null;
+
+                      return (
+                        <div key={provider.id} className="bg-gray-800/50 rounded-lg border border-gray-700/50 overflow-hidden">
+                          <div className="bg-gray-800 px-3 py-2 border-b border-gray-700/50 flex items-center justify-between">
+                            <div className="text-xs font-medium text-gray-300">{provider.name}</div>
+                            <div className="text-xs text-gray-500">{providerModels.length} models</div>
+                          </div>
+                          <div className="divide-y divide-gray-700/30">
+                            {providerModels.map(m => {
+                              const enabledTools = m.enableTools
+                                ? 3 - (m.disabledTools?.length || 0)
+                                : 0;
+
+                              return (
+                                <div key={m.id} className="px-3 py-2 flex items-center justify-between hover:bg-gray-700/30 transition-colors">
+                                  <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                                    <div className="col-span-5 text-xs text-white truncate">{m.displayName || m.modelId}</div>
+                                    <div className="col-span-2 text-xs text-gray-500 text-center">
+                                      {m.temperature !== undefined ? `T=${m.temperature}` : '-'}
+                                    </div>
+                                    <div className="col-span-2 text-xs text-gray-500 text-center">
+                                      {m.maxTokens !== undefined ? `M=${m.maxTokens}` : '-'}
+                                    </div>
+                                    <div className="col-span-3 flex items-center justify-center gap-1">
+                                      {m.enableTools ? (
+                                        <>
+                                          <Wrench size={10} className={enabledTools > 0 ? 'text-green-400' : 'text-gray-500'} />
+                                          <span className={`text-xs ${enabledTools > 0 ? 'text-green-400' : 'text-gray-500'}`}>
+                                            {enabledTools}/3
+                                          </span>
+                                        </>
+                                      ) : (
+                                        <span className="text-xs text-gray-500">off</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1 ml-2 shrink-0">
+                                    <button onClick={() => setEditingModel({ ...m })} className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><Pencil size={14} /></button>
+                                    <button onClick={() => deleteModelEntry(m.id)} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                  <button onClick={addModel} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-3 text-sm transition-colors">
+                    <Plus size={16} /> Add Model
                   </button>
-                </>
+                </div>
               )}
             </>
           )}
@@ -321,15 +615,27 @@ const ProviderEditor: React.FC<{
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-300">Base URL (optional)</label>
-        <input
-          value={entry.baseURL || ''}
-          onChange={e => onChange({ ...entry, baseURL: e.target.value || undefined })}
-          placeholder={getDefaultBaseURL(entry.type) || 'https://api.example.com/v1'}
-          className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
-        />
-      </div>
+      {entry.type === 'nvidia' ? (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Base URL</label>
+          <input
+            value={getDefaultBaseURL('nvidia') || ''}
+            disabled
+            className="w-full bg-gray-800 border border-gray-700 text-gray-500 rounded-lg p-3 font-mono text-sm cursor-not-allowed"
+          />
+          <p className="text-xs text-gray-500">Nvidia base URL is fixed and cannot be changed.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Base URL (optional)</label>
+          <input
+            value={entry.baseURL || ''}
+            onChange={e => onChange({ ...entry, baseURL: e.target.value || undefined })}
+            placeholder={getDefaultBaseURL(entry.type) || 'https://api.example.com/v1'}
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-300">API Key (optional, overrides env variable)</label>
@@ -355,19 +661,37 @@ const ProviderEditor: React.FC<{
 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-300">Extra Config (JSON, optional)</label>
-        <textarea
-          value={entry.extra ? JSON.stringify(entry.extra, null, 2) : ''}
-          onChange={e => {
-            try {
-              onChange({ ...entry, extra: JSON.parse(e.target.value) });
-            } catch {
-              onChange({ ...entry, extra: {} });
-            }
-          }}
+        <ExtraBodyTextarea
+          value={entry.extra}
+          onChange={v => onChange({ ...entry, extra: v })}
           placeholder='{"customHeader": "value"}'
-          className="w-full bg-gray-950 border border-gray-700 font-mono text-green-400 text-sm rounded-lg p-3 focus:outline-none focus:border-blue-500 h-24 resize-y"
         />
       </div>
+
+      {entry.type !== 'google' && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Model Source URL (optional)</label>
+          <input
+            value={entry.modelSource || ''}
+            onChange={e => onChange({ ...entry, modelSource: e.target.value || undefined })}
+            placeholder="https://example.com/models.json"
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
+          />
+          <p className="text-xs text-gray-500">Remote JSON URL for auto-syncing model list on startup. Will replace all existing models for this provider.</p>
+        </div>
+      )}
+
+      {entry.type === 'google' && entry.modelSource && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Model Source URL</label>
+          <input
+            value="Not applicable for Google Gemini"
+            disabled
+            className="w-full bg-gray-800 border border-gray-700 text-gray-500 rounded-lg p-3 font-mono text-sm cursor-not-allowed"
+          />
+          <p className="text-xs text-gray-500">Google Gemini does not support remote model source. Use the Fetch button in Models tab.</p>
+        </div>
+      )}
 
       <div className="flex justify-end gap-3 pt-4">
         <button onClick={onCancel} className="px-4 py-2 text-gray-300 hover:text-white transition-colors">Cancel</button>
@@ -391,21 +715,6 @@ const ModelEditor: React.FC<{
   onCancel: () => void;
 }> = ({ entry, providers, availableModels, loadingModels, fetchError, onChange, onLoadModels, onSave, onCancel }) => {
   const selectedProvider = providers.find(p => p.id === entry.providerId);
-  const [extraBodyText, setExtraBodyText] = useState(() => entry.extraBody ? JSON.stringify(entry.extraBody, null, 2) : '');
-
-  useEffect(() => {
-    setExtraBodyText(entry.extraBody ? JSON.stringify(entry.extraBody, null, 2) : '');
-  }, [entry.id]);
-
-  const handleExtraBodyBlur = () => {
-    if (!extraBodyText.trim()) {
-      onChange({ ...entry, extraBody: undefined });
-      return;
-    }
-    try {
-      onChange({ ...entry, extraBody: JSON.parse(extraBodyText) });
-    } catch { /* keep raw text */ }
-  };
 
   const handleProviderChange = (providerId: string) => {
     const p = providers.find(x => x.id === providerId);
@@ -548,13 +857,10 @@ const ModelEditor: React.FC<{
         <div className="flex items-center justify-between">
           <label className="block text-sm font-medium text-gray-300">Extra Body (JSON)</label>
         </div>
-        <textarea
-          value={extraBodyText}
-          onChange={e => setExtraBodyText(e.target.value)}
-          onBlur={handleExtraBodyBlur}
+        <ExtraBodyTextarea
+          value={entry.extraBody}
+          onChange={v => onChange({ ...entry, extraBody: v })}
           placeholder='{"chat_template_kwargs":{"thinking":true}}'
-          className="w-full bg-gray-950 border border-gray-700 font-mono text-green-400 text-sm rounded-lg p-3 focus:outline-none focus:border-blue-500 h-24 resize-y"
-          spellCheck={false}
         />
       </div>
 
