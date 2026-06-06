@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
-    "build:bundle": "node scripts/build-bundle.mjs",
-    "build:electron": "node scripts/build-electron.mjs",
+    "build:bundle": "bun scripts/build-bundle.ts",
+    "build:electron": "bun scripts/build-electron.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist dist-server build-electron release",
     "lint": "tsc --noEmit --strict"

@@ -10,11 +10,17 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - run: bun install
-      - run: bun scripts/build-bundle.mjs
-      - name: Build Electron app
-        run: bunx electron-builder --win --config electron-builder.yml --publish=never
+
+      - run: bun scripts/build-bundle.ts
+
+      - run: bun scripts/build-electron.ts
+
       - uses: actions/upload-artifact@v4
         with:
           name: windows-exe

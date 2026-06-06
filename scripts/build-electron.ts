@@ -1,11 +1,11 @@
-import { execSync } from 'child_process';
-import { mkdirSync, existsSync, cpSync, writeFileSync, rmSync } from 'fs';
+import { $ } from 'bun';
+import { mkdirSync, existsSync, cpSync, writeFileSync, rmSync, statSync } from 'fs';
 import { join } from 'path';
 
 const buildDir = 'build-electron';
 
 if (!existsSync('dist-server/server.bundle.mjs')) {
-  console.error('dist-server/server.bundle.mjs not found. Run: node scripts/build-bundle.mjs');
+  console.error('dist-server/server.bundle.mjs not found. Run: bun run build:bundle');
   process.exit(1);
 }
 
@@ -24,9 +24,6 @@ writeFileSync(join(buildDir, 'package.json'), JSON.stringify({
 }, null, 2));
 
 console.log('[2/2] Running electron-builder...');
-execSync('npx electron-builder --win --config electron-builder.yml', {
-  stdio: 'inherit',
-  env: { ...process.env, CSC_IDENTITY_AUTO_DISCOVERY: 'false' },
-});
+await $`bunx electron-builder --win --config electron-builder.yml`;
 
 console.log('\nElectron build complete! Output: release/');
