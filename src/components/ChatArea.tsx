@@ -103,12 +103,84 @@ const estimateTokens = (text: string) => {
   return Math.ceil(ascii / 4 + nonAscii * 0.8);
 };
 
+const DRAFT_STORAGE_KEY = 'chat_drafts';
+
+const saveDraft = (sessionId: string, content: string) => {
+  try {
+    const drafts = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || '{}');
+    drafts[sessionId] = { content, timestamp: Date.now() };
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
+  } catch { /* ignore storage errors */ }
+};
+
+const loadDraft = (sessionId: string): string => {
+  try {
+    const drafts = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || '{}');
+    const draft = drafts[sessionId];
+    // Draft expires after 7 days
+    if (draft && Date.now() - draft.timestamp < 7 * 24 * 60 * 60 * 1000) {
+      return draft.content || '';
+    }
+  } catch { /* ignore storage errors */ }
+  return '';
+};
+
+const clearDraft = (sessionId: string) => {
+  try {
+    const drafts = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || '{}');
+    delete drafts[sessionId];
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
+  } catch { /* ignore storage errors */ }
+};
+
 export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue, onGenerationEnd }) => {
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
   const [streamingToolCalls, setStreamingToolCalls] = useState<ToolCallRecord[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastInputRef = useRef<string>('');
+
+  // Load draft on session change
+  useEffect(() => {
+    if (session) {
+      const draft = loadDraft(session.id);
+      setInput(draft);
+      lastInputRef.current = draft;
+      // Reset textarea height
+      const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
+      if (textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 256)}px`;
+      }
+    }
+  }, [session?.id]);
+
+  // Auto-save draft with debounce (500ms) - only save when composition is finished
+  const handleInputChange = (value: string) => {
+    setInput(value);
+
+    if (draftTimeoutRef.current) {
+      clearTimeout(draftTimeoutRef.current);
+    }
+
+    draftTimeoutRef.current = setTimeout(() => {
+      if (session && value !== lastInputRef.current) {
+        saveDraft(session.id, value);
+        lastInputRef.current = value;
+      }
+    }, 500);
+  };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (draftTimeoutRef.current) {
+        clearTimeout(draftTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!session) { setStreamingContent(''); setStreamingToolCalls([]); return; }
@@ -144,7 +216,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const handleSend = () => {
     if (input.trim() && !isGenerating) {
       onSendMessage(input);
+      if (session) clearDraft(session.id);
       setInput('');
+      lastInputRef.current = '';
       const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
       if (textarea) textarea.style.height = 'auto';
     }
@@ -227,13 +301,18 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           <textarea
             id="chat-input"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message... (Enter for newline, click Send to submit)"
+            onChange={(e) => handleInputChange(e.target.value)}
+            placeholder="Type a message... (Ctrl+Enter to send, Enter/Shift+Enter for newline)"
             className="flex-1 bg-transparent text-white resize-none max-h-64 min-h-[44px] p-3 focus:outline-none placeholder-gray-500"
             rows={1}
             style={{ height: 'auto' }}
             onInput={(e) => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = `${Math.min(t.scrollHeight, 256)}px`; }}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
           />
           {isGenerating ? (
             <button onClick={onStop} className="p-3.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm">

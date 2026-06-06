@@ -15,6 +15,7 @@ export interface StreamRequest {
   enableTools: boolean;
   disabledTools: string[];
   injectThinkingTemplate?: boolean;
+  signal?: AbortSignal;
 }
 
 export interface StreamChunk {
@@ -30,24 +31,25 @@ export interface StreamChunk {
 export async function* streamChat(
   providerType: string,
   provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string },
-  req: StreamRequest
+  req: StreamRequest,
+  signal?: AbortSignal
 ): AsyncGenerator<StreamChunk> {
   switch (providerType) {
     case 'google':
-      yield* streamGoogle(req);
+      yield* streamGoogle(req, signal);
       break;
     case 'nvidia':
-      yield* streamNvidia(req, provider);
+      yield* streamNvidia(req, provider, signal);
       break;
     case 'openai-compatible':
     default:
-      yield* streamOpenAICompatible(req, provider);
+      yield* streamOpenAICompatible(req, provider, signal);
   }
 }
 
 // ---- Google Gemini ----
 
-async function* streamGoogle(req: StreamRequest): AsyncGenerator<StreamChunk> {
+async function* streamGoogle(req: StreamRequest, signal?: AbortSignal): AsyncGenerator<StreamChunk> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY is not set.');
 
@@ -72,14 +74,23 @@ async function* streamGoogle(req: StreamRequest): AsyncGenerator<StreamChunk> {
   const geminiTools = buildGeminiTools(req.disabledTools);
   if (geminiTools.length) config.tools = [{ functionDeclarations: geminiTools }];
 
+  // Check abort before starting
+  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
   let currentStream = await ai.models.generateContentStream({ model: req.model, contents, config });
 
   let keepResolving = true;
   while (keepResolving) {
+    // Check abort at the start of each iteration
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
     let functionCalls: any[] = [];
     let modelParts: any[] = [];
 
     for await (const chunk of currentStream) {
+      // Check abort during streaming
+      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
       if (chunk.functionCalls?.length) functionCalls.push(...chunk.functionCalls);
       const parts = chunk.candidates?.[0]?.content?.parts || [];
       for (const part of parts) {
@@ -88,6 +99,9 @@ async function* streamGoogle(req: StreamRequest): AsyncGenerator<StreamChunk> {
         else if (part.text) yield { type: 'content', content: part.text };
       }
     }
+
+    // Check abort before tool execution
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
 
     if (functionCalls.length > 0 && req.enableTools) {
       const toolResponses: any[] = [];
@@ -108,7 +122,7 @@ async function* streamGoogle(req: StreamRequest): AsyncGenerator<StreamChunk> {
 
 // ---- Generic OpenAI SDK helper ----
 
-async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: string): AsyncGenerator<StreamChunk> {
+async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: string, signal?: AbortSignal): AsyncGenerator<StreamChunk> {
   const client = new OpenAI({ baseURL, apiKey });
 
   const messages: any[] = [];
@@ -132,9 +146,13 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
   if (req.enableTools) payload.tools = buildOpenAITools(req.disabledTools);
   if (req.injectThinkingTemplate) payload.chat_template_kwargs = { thinking: true };
 
-  const response = await client.chat.completions.create({ ...payload, ...(req.extraBody || {}) } as any) as any;
+  const response = await client.chat.completions.create(
+    { ...payload, ...(req.extraBody || {}) } as any,
+    { signal }
+  ) as any;
 
   for await (const chunk of response) {
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
     const delta = chunk.choices?.[0]?.delta;
     if (!delta) continue;
     const reasoning = (delta as any).reasoning || (delta as any).reasoning_content;
@@ -150,22 +168,22 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
 
 // ---- Nvidia ----
 
-async function* streamNvidia(req: StreamRequest, provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string }): AsyncGenerator<StreamChunk> {
+async function* streamNvidia(req: StreamRequest, provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string }, signal?: AbortSignal): AsyncGenerator<StreamChunk> {
   const apiKey = resolveApiKey(provider);
   const baseURL = resolveBaseURL(provider);
   if (!apiKey) throw new Error('Nvidia API key is not configured.');
   if (!baseURL) throw new Error('Nvidia Base URL is not configured.');
 
-  yield* streamOpenAIHelper(req, apiKey, baseURL);
+  yield* streamOpenAIHelper(req, apiKey, baseURL, signal);
 }
 
 // ---- OpenAI Compatible ----
 
-async function* streamOpenAICompatible(req: StreamRequest, provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string }): AsyncGenerator<StreamChunk> {
+async function* streamOpenAICompatible(req: StreamRequest, provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string }, signal?: AbortSignal): AsyncGenerator<StreamChunk> {
   const apiKey = resolveApiKey(provider);
   const baseURL = resolveBaseURL(provider);
   if (!apiKey) throw new Error(`API key is not configured for ${provider.baseURL || 'this provider'}.`);
   if (!baseURL) throw new Error(`Base URL is not configured for this provider.`);
 
-  yield* streamOpenAIHelper(req, apiKey, baseURL);
+  yield* streamOpenAIHelper(req, apiKey, baseURL, signal);
 }

@@ -40,13 +40,13 @@ export const api = {
 
   providers: {
     list: () => request<{ id: string; name: string }[]>('/api/providers'),
-    models: async (providerId: string, baseURL?: string, apiKey?: string, envKey?: string): Promise<{ models: string[]; error?: string }> => {
+    models: async (providerType: string, baseURL?: string, apiKey?: string, envKey?: string): Promise<{ models: string[]; error?: string }> => {
       const params = new URLSearchParams();
       if (baseURL) params.set('baseURL', baseURL);
       if (apiKey) params.set('apiKey', apiKey);
       if (envKey) params.set('envKey', envKey);
       const qs = params.toString();
-      const res = await fetch(`/api/providers/${providerId}/models${qs ? '?' + qs : ''}`);
+      const res = await fetch(`/api/providers/${providerType}/models${qs ? '?' + qs : ''}`);
       const data = await res.json();
       if (!res.ok) return { models: [], error: data.error || `HTTP ${res.status}` };
       return data;

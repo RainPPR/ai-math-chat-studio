@@ -107,18 +107,19 @@ App.tsx
 **3 Tab 设计**：
 
 ### General Tab
-- 活跃模型选择（下拉列表，从 models 中选择）
+- 活跃模型选择（自定义下拉组件，按提供商分组，左侧模型名称左对齐，右侧工具状态右对齐且显示启用工具数 `x/3`）
 - 系统提示词
-- 显示开关：自动滚动、折叠思考、渲染思考为 Markdown、Gemma 去空格、注入 thinking mode
+- 显示开关：自动滚动、折叠思考、渲染思考为 Markdown、Gemma 去空格
 
 ### Providers Tab
-- 提供商实例列表
+- 提供商实例列表（显示 Auto-sync 状态）
 - 添加/编辑/删除提供商实例
 - ProviderEditor 子组件：
   - 类型选择（google / nvidia / openai-compatible）
-  - 名称、Base URL、API Key
-  - Env Key Prefix
-  - Extra Config JSON
+  - 名称、API Key、Env Key Prefix
+  - Base URL（nvidia 固定且不可编辑，其他可选）
+  - Extra Config JSON（支持 Python 字典格式自动转换 `True`→`true`、`False`→`false`、`'`→`"`）
+  - Model Source URL（仅 nvidia/openai-compatible，启动时自动获取远程模型列表并替换本地）
 
 ### Models Tab
 - 模型实例列表

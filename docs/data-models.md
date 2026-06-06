@@ -13,8 +13,13 @@ interface ProviderInstance {
   apiKey?: string;      // 自定义 API Key（覆盖环境变量）
   envKey?: string;      // 环境变量前缀（如 NVIDIA_API_KEY）
   extra?: Record<string, any>;  // 额外配置（高拓展性）
+  modelSource?: string; // 远程模型列表 JSON URL（仅适用于 nvidia/openai-compatible，启动时自动同步）
 }
 ```
+
+> **特殊行为**：
+> - `nvidia` 类型的 `baseURL` 固定为 `https://integrate.api.nvidia.com/v1`，无法覆盖
+> - `google` 类型不支持 `modelSource`（模型列表通过 API 获取）
 
 ### ModelInstance（模型实例）
 
@@ -138,6 +143,7 @@ interface GenerationProvider {
 - `POST /api/sessions/:id/messages` — 发送消息并触发生成
 - `GET /api/sessions/:id/generation` — SSE 订阅生成进度
 - `DELETE /api/sessions/:id/generation` — 停止生成
+- `GET /api/generation-status` — 获取正在运行的会话 ID 列表（页面刷新后恢复状态用）
 - `POST /api/sessions/:id/retry` — 重试消息
 - `POST /api/sessions/:id/continue` — 继续生成
 - `GET /api/providers` — 获取内置提供商类型列表

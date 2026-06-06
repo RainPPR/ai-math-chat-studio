@@ -237,7 +237,7 @@ export class GenerationManager {
           enableTools: model.enableTools,
           disabledTools: model.disabledTools || [],
           injectThinkingTemplate,
-        })) {
+        }, task.abortController.signal)) {
           if (task.abortController.signal.aborted) break;
 
           if (chunk.type === 'reasoning') {

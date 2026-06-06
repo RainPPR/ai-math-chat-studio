@@ -33,8 +33,9 @@
 │  │  GET/DELETE /api/sessions, /api/sessions/:id        │ │
 │  │  POST       /api/sessions/:id/messages              │ │
 │  │  GET(SSE)   /api/sessions/:id/generation            │ │
-│  │  DELETE      /api/sessions/:id/generation (stop)     │ │
-│  │  POST       /api/sessions/:id/retry                 │ │
+  │  │  DELETE      /api/sessions/:id/generation (stop)     │ │
+  │  │  GET        /api/generation-status                 │ │
+  │  │  POST       /api/sessions/:id/retry                 │ │
 │  │  POST       /api/sessions/:id/continue              │ │
 │  │  GET        /api/providers                          │ │
 │  │  GET        /api/providers/:type/models               │ │
