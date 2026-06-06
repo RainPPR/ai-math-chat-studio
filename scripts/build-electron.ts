@@ -24,6 +24,6 @@ writeFileSync(join(buildDir, 'package.json'), JSON.stringify({
 }, null, 2));
 
 console.log('[2/2] Running electron-builder...');
-await $`bunx electron-builder --win --config electron-builder.yml`;
+await $`bunx electron-builder --win --config electron-builder.yml --publish=never`;
 
 console.log('\nElectron build complete! Output: release/');
