@@ -50,6 +50,7 @@ const result = await Bun.build({
   outdir: 'dist-server',
   target: 'node',
   minify: true,
+  sourcemap: 'linked',
   format: 'esm',
   define: {
     'process.env.NODE_ENV': '"production"',

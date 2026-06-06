@@ -1,0 +1,116 @@
+name: Build with Bun Compile
+
+on:
+  push:
+    branches:
+      - desktop
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install
+
+      - run: bun scripts/build-bun-compile.ts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bun-compile-exe
+          path: release/*.exe
+
+  build-cross-platform:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - bun-linux-x64
+          - bun-linux-x64-baseline
+          - bun-linux-arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install
+
+      - name: Build frontend and prepare assets
+        run: |
+          bunx vite build
+        shell: bash
+
+      - name: Create server entry with embedded assets
+        run: |
+          mkdir -p dist-compile release
+
+          # Generate assets JSON
+          bun -e "
+          const fs = require('fs');
+          const path = require('path');
+
+          function walkDir(dir, base = dir) {
+            const files = [];
+            for (const entry of fs.readdirSync(dir)) {
+              const full = path.join(dir, entry);
+              const rel = path.relative(base, full).replace(/\\\\/g, '/');
+              const stat = fs.statSync(full);
+              if (stat.isDirectory()) {
+                files.push(...walkDir(full, base));
+              } else {
+                files.push({ path: rel, content: fs.readFileSync(full) });
+              }
+            }
+            return files;
+          }
+
+          const distFiles = walkDir('dist');
+          const assets = Object.fromEntries(
+            distFiles.map(f => [f.path, f.content.toString('base64')])
+          );
+
+          const code = \`import 'dotenv/config';
+import { mkdtempSync, writeFileSync, mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { tmpdir } from 'os';
+
+const ASSETS = \${JSON.stringify(assets)};
+
+const tempDir = mkdtempSync(join(tmpdir(), 'ai-math-'));
+for (const [relPath, b64] of Object.entries(ASSETS)) {
+  const fullPath = join(tempDir, relPath);
+  mkdirSync(dirname(fullPath), { recursive: true });
+  writeFileSync(fullPath, Buffer.from(b64, 'base64'));
+}
+process.env.DIST_DIR = tempDir;
+
+import('./server/app.ts').then(({ startApp }) => startApp());
+\`;
+
+          fs.writeFileSync('dist-compile/server-entry.ts', code);
+          console.log('Created server-entry.ts');
+          "
+        shell: bash
+
+      - name: Compile to ${{ matrix.target }}
+        run: |
+          bun build dist-compile/server-entry.ts \
+            --compile \
+            --minify \
+            --sourcemap \
+            --bytecode \
+            --target ${{ matrix.target }} \
+            --outfile release/ai-math-chat-studio-${{ matrix.target }}
+        shell: bash
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bun-compile-${{ matrix.target }}
+          path: release/ai-math-chat-studio-${{ matrix.target }}
