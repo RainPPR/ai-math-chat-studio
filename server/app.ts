@@ -11,9 +11,14 @@ import { createModelsRouter } from './routes/models';
 interface RemoteModelDef {
   id: string;
   modelId: string;
-  enableTools: boolean;
-  disabledTools: string[];
-  displayName: string;
+  displayName?: string;
+  temperature?: number;
+  maxTokens?: number;
+  reasoningEffort?: string;
+  thinkingLevel?: string;
+  extraBody?: Record<string, any>;
+  injectThinkingTemplate?: boolean;
+  [key: string]: any;
 }
 
 interface ProviderInstance {
@@ -37,8 +42,6 @@ interface ModelInstance {
   maxTokens?: number;
   reasoningEffort?: string;
   thinkingLevel?: string;
-  enableTools: boolean;
-  disabledTools: string[];
   extraBody?: Record<string, any>;
   injectThinkingTemplate?: boolean;
 }
@@ -110,8 +113,12 @@ async function syncRemoteModels(settingsFile: string) {
           providerType: provider.type,
           modelId: remote.modelId,
           displayName: remote.displayName,
-          enableTools: remote.enableTools ?? true,
-          disabledTools: remote.disabledTools ?? [],
+          temperature: remote.temperature,
+          maxTokens: remote.maxTokens,
+          reasoningEffort: remote.reasoningEffort,
+          thinkingLevel: remote.thinkingLevel,
+          extraBody: remote.extraBody,
+          injectThinkingTemplate: remote.injectThinkingTemplate,
         }));
 
         settings.models.push(...newModels);

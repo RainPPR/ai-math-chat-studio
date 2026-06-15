@@ -9,13 +9,17 @@ interface SidebarProps {
   onNewChat: () => void;
   onDeleteChat: (id: string) => void;
   onOpenSettings: () => void;
+  width: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  sessions, currentSessionId, onSelectSession, onNewChat, onDeleteChat, onOpenSettings
+  sessions, currentSessionId, onSelectSession, onNewChat, onDeleteChat, onOpenSettings, width
 }) => {
   return (
-    <div className="w-64 bg-gray-950 flex flex-col h-full border-r border-gray-800 shrink-0">
+    <div 
+      className="bg-gray-950 flex flex-col h-full shrink-0"
+      style={{ width: `${width}px` }}
+    >
       <div className="p-4">
         <button 
           onClick={onNewChat}

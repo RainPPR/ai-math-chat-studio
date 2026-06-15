@@ -2,7 +2,7 @@
 
 ## 项目名称
 
-**AI Math & Chat Studio** — 多会话 AI 聊天工具，支持数学计算、KaTeX 渲染和多供应商接入。
+**AI Math & Chat Studio** — 多会话 AI 聊天工具，支持 KaTeX 数学公式渲染和多供应商接入。
 
 ## 整体架构
 
@@ -45,9 +45,8 @@
 │  ├─────────────────────────────────────────────────────┤ │
 │  │  Providers:                                         │ │
 │  │  built-in.ts — 内置提供商类型定义                     │ │
-│  │  config.ts   — 提供商配置解析（apiKey、baseURL）       │ │
+│  │  config.ts   — 提供商配置解析及基础数学指令           │ │
 │  │  stream.ts   — 流式 API 调用（3 种独立实现）          │ │
-│  │  tools.ts    — 数学工具定义与执行                      │ │
 │  └─────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────┘
          │
@@ -97,20 +96,7 @@
   │     └── startGeneration() 启动生成任务
   └── 前端 SSE 订阅 /api/sessions/:id/generation
         ├── delta 事件 → 实时更新流式内容
-        ├── tool_call 事件 → 显示工具调用
         └── done/error/stopped 事件 → 刷新会话数据
-```
-
-### Tool Calling 循环
-
-```
-1. GenerationManager 调用 streamChat(providerType, provider, request)
-2. stream.ts 根据 providerType 分发到对应流式函数
-3. AI 返回 tool_call（如 evaluate_expression）
-4. server/providers/tools.ts 执行数学计算
-5. 结果作为 tool message 返回给 AI
-6. AI 继续生成直到无更多工具调用
-7. 最终内容保存到 JSON 文件，通知所有 SSE 订阅者
 ```
 
 ## 核心设计决策

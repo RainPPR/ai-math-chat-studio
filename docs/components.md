@@ -8,7 +8,7 @@ App.tsx
 ├── ChatArea（聊天主区域）
 │   └── MessageItem（单条消息）
 │       └── MarkdownRenderer（Markdown 渲染）
-├── Tools Sidebar（右侧工具调用面板，App.tsx 内联实现）
+
 └── SettingsModal（设置弹窗）
     └── ProviderEditor（提供商编辑器子组件）
     └── ModelEditor（模型编辑器子组件）
@@ -29,7 +29,7 @@ App.tsx
 - `generatingSessions` — Set<string>，正在生成的会话 ID 集合
 - `isReady` — 初始化完成标记
 - `isSettingsOpen` — 设置弹窗显示状态
-- `isToolsSidebarOpen` — Tools Sidebar 展开/折叠状态
+  - `sidebarWidth` — 左侧栏宽度（可拖动调整）
 
 **核心函数**：
 - `handleSendMessage()` — 发送消息，调用 `api.chat.send()`，触发后端生成
@@ -64,10 +64,9 @@ App.tsx
 - `onGenerationEnd` — 生成结束回调（刷新会话数据）
 
 **功能**：
-- **SSE 订阅**：通过 `api.subscribeGeneration()` 实时接收流式内容
-  - `delta` 事件 → 更新 `streamingContent`
-  - `tool_call` 事件 → 累积 `streamingToolCalls`
-  - `done` / `error` / `stopped` 事件 → 清理状态，触发 `onGenerationEnd`
+  - **SSE 订阅**：通过 `api.subscribeGeneration()` 实时接收流式内容
+   - `delta` 事件 → 更新 `streamingContent`
+   - `done` / `error` / `stopped` 事件 → 清理状态，触发 `onGenerationEnd`
 - 消息列表渲染（通过 `MessageItem` 子组件）
 - 流式消息拼接：`streamingContent` 作为临时消息追加到消息列表
 - 输入框（自动扩展高度，Enter 发送，Shift+Enter 换行）
@@ -131,17 +130,6 @@ App.tsx
   - Temperature / Max Tokens
   - Reasoning Effort（low/medium/high/Unset）
   - Thinking Level（Gemini 专用）
-  - Enable Math Tools + 选择性禁用具体工具
-  - Extra Body JSON
+   - Extra Body JSON
 
-## Tools Sidebar — 右侧工具面板
 
-**功能**：
-- 显示当前会话中所有 Tool Call 记录
-- 按消息分组显示
-- 特殊展示 `evaluate_expression` 的输入和结果
-- 通用展示其他工具的 JSON 参数和结果
-- 可折叠（默认展开 320px 宽度）
-- 展开/折叠按钮位于聊天区域右上角，图标为扳手（Wrench）
-
-> 注意：Tools Sidebar 在 `App.tsx` 中内联实现，不是独立组件文件。

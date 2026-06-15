@@ -24,8 +24,6 @@ export interface ModelInstance {
   maxTokens?: number;
   reasoningEffort?: string;
   thinkingLevel?: string;
-  enableTools: boolean;
-  disabledTools: string[];
   extraBody?: Record<string, any>;
   injectThinkingTemplate?: boolean;
 }
@@ -64,15 +62,6 @@ export interface ModelPoolEntry {
   reasoningEffort?: string;
   extraBody?: Record<string, any>;
   thinkingLevel?: string;
-  enableTools: boolean;
-  disabledTools: string[];
-}
-
-export interface ToolCallRecord {
-  name: string;
-  args: any;
-  result: string;
-  messageId?: string;
 }
 
 export interface ChatMessage {
@@ -80,7 +69,6 @@ export interface ChatMessage {
   role: 'user' | 'model';
   content: string;
   createdAt: string;
-  toolCalls?: ToolCallRecord[];
 }
 
 export interface ChatSession {

@@ -21,8 +21,6 @@
 | 技术 | 版本 | 用途 |
 |------|------|------|
 | @google/genai | 2.x | Google Gemini API 客户端 |
-| mathjs | 15.x | 数学表达式求值 |
-| nerdamer | 1.x | 符号计算（方程求解、微积分） |
 
 ## Markdown 渲染管线
 | 技术 | 用途 |

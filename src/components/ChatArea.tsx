@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatSession, UserSettings, ToolCallRecord } from '../types';
+import { ChatSession, UserSettings } from '../types';
 import { api } from '../lib/api';
 import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
@@ -45,9 +45,23 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
     return true;
   });
 
+  const hasAutoCollapsed = useRef(false);
+
   useEffect(() => {
-    if (settings.collapseThinkingFinished) {
-      if (mainContent || (!isGenerating && !isLast)) setIsThoughtOpen(false);
+    if (!settings.collapseThinkingFinished) return;
+    if (hasAutoCollapsed.current) return;
+
+    if (isLast && isGenerating) {
+      // 对于正在生成的最后一条消息，只在 mainContent 首次出现时自动折叠一次
+      if (mainContent) {
+        hasAutoCollapsed.current = true;
+        setIsThoughtOpen(false);
+      }
+    } else {
+      // 对于其他消息，保持原始行为
+      if (mainContent || (!isGenerating && !isLast)) {
+        setIsThoughtOpen(false);
+      }
     }
   }, [mainContent, isGenerating, isLast, settings.collapseThinkingFinished]);
 
@@ -137,7 +151,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
-  const [streamingToolCalls, setStreamingToolCalls] = useState<ToolCallRecord[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<string>('');
@@ -183,25 +196,18 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   }, []);
 
   useEffect(() => {
-    if (!session) { setStreamingContent(''); setStreamingToolCalls([]); return; }
-    if (!isGenerating) { setStreamingContent(''); setStreamingToolCalls([]); return; }
+    if (!session) { setStreamingContent(''); return; }
+    if (!isGenerating) { setStreamingContent(''); return; }
 
     const unsubscribe = api.subscribeGeneration(session.id, {
       onDelta: (content) => setStreamingContent(content),
-      onToolCall: (name, args, result) => {
-        setStreamingToolCalls(prev => [...prev, { name, args: JSON.parse(args || '{}'), result }]);
-      },
       onDone: () => {
-        setStreamingContent('');
-        setStreamingToolCalls([]);
         onGenerationEnd?.(session.id);
       },
       onError: () => {
-        setStreamingContent('');
         onGenerationEnd?.(session.id);
       },
       onStopped: () => {
-        setStreamingContent('');
         onGenerationEnd?.(session.id);
       },
     });
@@ -252,13 +258,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   }
 
   const displayMessages = [...session.messages];
-  if (isGenerating && streamingContent) {
+  const lastMsg = session.messages.length > 0 ? session.messages[session.messages.length - 1] : null;
+  let isStreamSaved = false;
+  if (lastMsg && lastMsg.role === 'model' && streamingContent) {
+    const normalizedSaved = lastMsg.content.replace(/<details>/g, '<details open>');
+    const normalizedStream = streamingContent.replace(/<details>/g, '<details open>');
+    isStreamSaved = normalizedSaved.includes(normalizedStream.substring(0, Math.min(normalizedStream.length, 500)));
+  }
+  if (isGenerating && streamingContent && !isStreamSaved) {
     displayMessages.push({
       id: '__streaming__',
       role: 'model',
       content: streamingContent,
       createdAt: new Date().toISOString(),
-      toolCalls: streamingToolCalls.length > 0 ? streamingToolCalls : undefined,
     });
   }
 

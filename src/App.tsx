@@ -4,7 +4,7 @@ import { ChatSession, ChatMessage, UserSettings, DEFAULT_SETTINGS } from './type
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
-import { Loader2, Wrench, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function App() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -12,7 +12,7 @@ export default function App() {
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const [isToolsSidebarOpen, setIsToolsSidebarOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(256);
   const [generatingSessions, setGeneratingSessions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -113,6 +113,11 @@ export default function App() {
     if (!currentSessionId) return;
     try {
       await api.chat.retry(currentSessionId, msgId);
+      try {
+        await refreshSession(currentSessionId);
+      } catch (e) {
+        console.error('Refresh session failed:', e);
+      }
       markGenerating(currentSessionId, true);
     } catch (e: any) {
       console.error('Retry failed:', e);
@@ -123,6 +128,11 @@ export default function App() {
     if (!currentSessionId) return;
     try {
       await api.chat.continue(currentSessionId);
+      try {
+        await refreshSession(currentSessionId);
+      } catch (e) {
+        console.error('Refresh session failed:', e);
+      }
       markGenerating(currentSessionId, true);
     } catch (e: any) {
       console.error('Continue failed:', e);
@@ -134,6 +144,26 @@ export default function App() {
     setIsSettingsOpen(false);
     await api.settings.save(newSettings);
   };
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const newWidth = Math.max(180, Math.min(480, startWidth + deltaX));
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [sidebarWidth]);
 
   if (!isReady) {
     return <div className="flex h-screen items-center justify-center bg-gray-900"><Loader2 className="animate-spin text-white" /></div>;
@@ -150,6 +180,12 @@ export default function App() {
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        width={sidebarWidth}
+      />
+
+      <div
+        className="w-[2px] hover:bg-blue-500 bg-gray-800/80 cursor-col-resize transition-colors h-full shrink-0 z-20"
+        onMouseDown={handleMouseDown}
       />
 
       <main className="flex-1 flex flex-col min-w-0">
@@ -161,61 +197,17 @@ export default function App() {
           onStop={handleStop}
           onRetry={handleRetry}
           onContinue={handleContinue}
-          onGenerationEnd={(id) => { markGenerating(id, false); refreshSession(id); }}
+          onGenerationEnd={async (id) => {
+            try {
+              await refreshSession(id);
+            } catch (e) {
+              console.error('Refresh session failed:', e);
+            } finally {
+              markGenerating(id, false);
+            }
+          }}
         />
       </main>
-
-      <div className={`bg-gray-800 border-l border-gray-700 flex flex-col transition-all duration-300 ease-in-out ${isToolsSidebarOpen ? 'w-80' : 'w-0'}`}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-700 whitespace-nowrap overflow-hidden">
-          <div className="flex items-center gap-2 font-medium">
-            <Wrench className="w-4 h-4 text-blue-400" />
-            <span>Tool Calls</span>
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {currentSession?.messages.filter(m => m.toolCalls?.length).length === 0 ? (
-            <div className="text-sm text-gray-500 text-center mt-10">No tools called yet.</div>
-          ) : (
-            currentSession?.messages.map((msg, msgIdx) => {
-              if (!msg.toolCalls?.length) return null;
-              return (
-                <div key={msg.id} className="space-y-3">
-                  <div className="text-xs text-gray-500 flex items-center gap-2">
-                    <div className="h-px bg-gray-700 flex-1" />
-                    <span>Message {msgIdx + 1}</span>
-                    <div className="h-px bg-gray-700 flex-1" />
-                  </div>
-                  {msg.toolCalls.map((call, idx) => (
-                    <div key={idx} className="bg-gray-900 rounded-lg border border-gray-700 overflow-hidden text-sm">
-                      <div className="bg-gray-800 px-3 py-2 border-b border-gray-700 font-mono text-xs text-blue-400 flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                        {call.name}
-                      </div>
-                      <div className="p-3 space-y-3">
-                        <div>
-                          <span className="text-gray-500 text-xs uppercase tracking-wider">Arguments</span>
-                          <pre className="mt-1 font-mono text-xs text-gray-300 whitespace-pre-wrap break-all bg-gray-800/50 p-2 rounded">{JSON.stringify(call.args, null, 2)}</pre>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 text-xs uppercase tracking-wider">Result</span>
-                          <pre className="mt-1 font-mono text-xs text-green-400 whitespace-pre-wrap break-all bg-gray-800/50 p-2 rounded">{call.result}</pre>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      <button
-        onClick={() => setIsToolsSidebarOpen(!isToolsSidebarOpen)}
-        className={`absolute top-1/2 -translate-y-1/2 bg-gray-800 border border-gray-700 text-gray-400 hover:text-white p-1 rounded-l-md transition-all duration-300 z-10 ${isToolsSidebarOpen ? 'right-80' : 'right-0'}`}
-      >
-        {isToolsSidebarOpen ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-      </button>
 
       {isSettingsOpen && (
         <SettingsModal

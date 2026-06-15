@@ -1,14 +1,13 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { streamChat, StreamChunk } from '../providers/stream';
-import { MATH_INSTRUCTIONS } from '../providers/tools';
+import { MATH_INSTRUCTIONS } from '../providers/config';
 
 export interface ServerChatMessage {
   id: string;
   role: 'user' | 'model';
   content: string;
   createdAt: string;
-  toolCalls?: { name: string; args: any; result: string; messageId?: string }[];
 }
 
 export interface ServerChatSession {
@@ -32,8 +31,6 @@ export interface GenerationModel {
   reasoningEffort?: string;
   extraBody?: Record<string, any>;
   thinkingLevel?: string;
-  enableTools: boolean;
-  disabledTools: string[];
 }
 
 export interface GenerationProvider {
@@ -48,7 +45,6 @@ export interface GenerationTask {
   sessionId: string;
   status: 'running' | 'done' | 'error' | 'stopped';
   content: string;
-  toolCalls: { name: string; args: any; result: string }[];
   subscribers: Set<(event: string, data: any) => void>;
   abortController: AbortController;
   error?: string;
@@ -171,7 +167,6 @@ export class GenerationManager {
       sessionId: session.id,
       status: 'running',
       content: '',
-      toolCalls: [],
       subscribers: new Set(),
       abortController,
     };
@@ -191,12 +186,9 @@ export class GenerationManager {
     const messages = session.messages.map(m => ({
       role: m.role as string,
       content: m.content,
-      ...(m.toolCalls ? { tool_calls: m.toolCalls } : {}),
     }));
 
     let fullContent = '';
-    const allToolCalls: { name: string; args: any; result: string }[] = [];
-    let pendingToolCalls: { index: number; id: string; name: string; args: string }[] = [];
     let isThinking = false;
 
     const buildSystemPrompt = () => {
@@ -206,112 +198,55 @@ export class GenerationManager {
       return systemPrompt;
     };
 
-    let keepResolving = true;
-    let currentMessages = [...messages];
+    const reqMessages = messages.map((m: any) => ({
+      role: m.role === 'model' ? 'assistant' : m.role,
+      content: m.content,
+    }));
 
-    while (keepResolving) {
-      if (task.abortController.signal.aborted) {
-        task.status = 'stopped';
-        break;
-      }
+    try {
+      for await (const chunk of streamChat(model.providerType, provider, {
+        model: model.modelId,
+        messages: reqMessages,
+        systemPrompt: buildSystemPrompt(),
+        temperature: model.temperature,
+        maxTokens: model.maxTokens,
+        reasoningEffort: model.reasoningEffort,
+        extraBody: model.extraBody,
+        thinkingLevel: model.thinkingLevel,
+        injectThinkingTemplate,
+      }, task.abortController.signal)) {
+        if (task.abortController.signal.aborted) break;
 
-      pendingToolCalls = [];
-
-      const reqMessages = currentMessages.map((m: any) => ({
-        role: m.role === 'model' ? 'assistant' : m.role,
-        content: m.content,
-        ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
-        ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
-      }));
-
-      try {
-        for await (const chunk of streamChat(model.providerType, provider, {
-          model: model.modelId,
-          messages: reqMessages,
-          systemPrompt: buildSystemPrompt(),
-          temperature: model.temperature,
-          maxTokens: model.maxTokens,
-          reasoningEffort: model.reasoningEffort,
-          extraBody: model.extraBody,
-          thinkingLevel: model.thinkingLevel,
-          enableTools: model.enableTools,
-          disabledTools: model.disabledTools || [],
-          injectThinkingTemplate,
-        }, task.abortController.signal)) {
-          if (task.abortController.signal.aborted) break;
-
-          if (chunk.type === 'reasoning') {
-            if (!isThinking) {
-              isThinking = true;
-              fullContent += '<details open>\n<summary>Thinking Process</summary>\n\n```text\n';
-            }
-            fullContent += chunk.content;
-          } else if (chunk.type === 'content') {
-            if (isThinking) {
-              isThinking = false;
-              fullContent += '\n```\n\n</details>\n\n';
-            }
-            fullContent += chunk.content;
-          } else if (chunk.type === 'tool_call_delta') {
-            const idx = chunk.toolCallIndex!;
-            while (pendingToolCalls.length <= idx) pendingToolCalls.push({ index: pendingToolCalls.length, id: '', name: '', args: '' });
-            if (chunk.toolCallId) pendingToolCalls[idx].id = chunk.toolCallId;
-            if (chunk.name) pendingToolCalls[idx].name = chunk.name;
-            if (chunk.args) pendingToolCalls[idx].args += chunk.args;
-          } else if (chunk.type === 'tool_call') {
-            allToolCalls.push({ name: chunk.name!, args: JSON.parse(chunk.args || '{}'), result: chunk.result! });
-            task.toolCalls = [...allToolCalls];
-            task.subscribers.forEach(cb => cb('tool_call', { name: chunk.name, args: chunk.args, result: chunk.result }));
+        if (chunk.type === 'reasoning') {
+          if (!isThinking) {
+            isThinking = true;
+            fullContent += '<details open>\n<summary>Thinking Process</summary>\n\n```text\n';
           }
-
-          task.content = fullContent;
-          task.subscribers.forEach(cb => cb('delta', { content: fullContent }));
+          fullContent += chunk.content;
+        } else if (chunk.type === 'content') {
+          if (isThinking) {
+            isThinking = false;
+            fullContent += '\n```\n\n</details>\n\n';
+          }
+          fullContent += chunk.content;
         }
-      } catch (err: any) {
-        if (err.name === 'AbortError') {
-          task.status = 'stopped';
-          break;
-        }
-        throw err;
-      }
 
-      if (isThinking) {
-        fullContent += '\n```\n\n</details>\n\n';
-        isThinking = false;
         task.content = fullContent;
         task.subscribers.forEach(cb => cb('delta', { content: fullContent }));
       }
-
-      const validToolCalls = pendingToolCalls.filter(tc => tc.name);
-      if (validToolCalls.length > 0 && model.enableTools) {
-        const toolMessages: any[] = [];
-        toolMessages.push({
-          role: 'assistant',
-          content: null,
-          tool_calls: validToolCalls.map(tc => ({
-            id: tc.id,
-            type: 'function',
-            function: { name: tc.name, arguments: tc.args },
-          })),
-        });
-
-        for (const tc of validToolCalls) {
-          let parsedArgs: Record<string, any>;
-          try { parsedArgs = JSON.parse(tc.args); } catch { parsedArgs = {}; }
-
-          const { executeMathTool } = await import('../providers/tools');
-          const result = executeMathTool(tc.name, parsedArgs);
-          allToolCalls.push({ name: tc.name, args: parsedArgs, result });
-          task.toolCalls = [...allToolCalls];
-          task.subscribers.forEach(cb => cb('tool_call', { name: tc.name, args: parsedArgs, result }));
-
-          toolMessages.push({ role: 'tool', tool_call_id: tc.id, content: result });
-        }
-
-        currentMessages.push(...toolMessages);
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        task.status = 'stopped';
       } else {
-        keepResolving = false;
+        throw err;
       }
+    }
+
+    if (isThinking) {
+      fullContent += '\n```\n\n</details>\n\n';
+      isThinking = false;
+      task.content = fullContent;
+      task.subscribers.forEach(cb => cb('delta', { content: fullContent }));
     }
 
     fullContent = fullContent.replace(/<details open>/g, '<details>');
@@ -321,20 +256,19 @@ export class GenerationManager {
       task.status = 'done';
     }
 
-    console.log(`[Generation] Finished for session ${session.id}, status=${task.status}, contentLen=${fullContent.length}, toolCalls=${allToolCalls.length}`);
+    console.log(`[Generation] Finished for session ${session.id}, status=${task.status}, contentLen=${fullContent.length}`);
 
     const modelMsg: ServerChatMessage = {
       id: crypto.randomUUID(),
       role: 'model',
       content: fullContent,
       createdAt: new Date().toISOString(),
-      toolCalls: allToolCalls.length > 0 ? allToolCalls : undefined,
     };
     session.messages.push(modelMsg);
     session.updatedAt = new Date().toISOString();
     await this.writeSession(session);
 
-    task.subscribers.forEach(cb => cb('done', { content: fullContent, toolCalls: allToolCalls }));
+    task.subscribers.forEach(cb => cb('done', { content: fullContent }));
   }
 
   subscribe(sessionId: string, callback: (event: string, data: any) => void): (() => void) | null {
@@ -345,14 +279,11 @@ export class GenerationManager {
 
     if (task.status === 'running') {
       queueMicrotask(() => {
-        for (const tc of task.toolCalls) {
-          callback('tool_call', { name: tc.name, args: JSON.stringify(tc.args), result: tc.result });
-        }
         if (task.content) callback('delta', { content: task.content });
       });
     } else if (task.status === 'done' || task.status === 'error' || task.status === 'stopped') {
       queueMicrotask(() => {
-        if (task.status === 'done') callback('done', { content: task.content, toolCalls: task.toolCalls });
+        if (task.status === 'done') callback('done', { content: task.content });
         else if (task.status === 'error') callback('error', { message: task.error });
         else callback('stopped', {});
       });
@@ -368,10 +299,10 @@ export class GenerationManager {
     }
   }
 
-  getStatus(sessionId: string): { status: string; content?: string; toolCalls?: any[] } | null {
+  getStatus(sessionId: string): { status: string; content?: string } | null {
     const task = this.tasks.get(sessionId);
     if (!task) return null;
-    return { status: task.status, content: task.content, toolCalls: task.toolCalls };
+    return { status: task.status, content: task.content };
   }
 
   getRunningSessionIds(): string[] {

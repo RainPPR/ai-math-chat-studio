@@ -11,14 +11,14 @@
    - AI 供应商变更 → `docs/api-providers.md`
    - 数据模型变更 → `docs/data-models.md`
    - 组件结构变更 → `docs/components.md`
-   - 数学工具变更 → `docs/math-tools.md`
+   - 数学渲染变更 → `docs/tech-stack.md`
    - 文件增删 → `docs/file-structure.md`
 
 **示例**：添加新的 AI 供应商时，需同步更新 `docs/api-providers.md`、`docs/architecture.md`、`docs/file-structure.md`、`AGENTS.md`。
 
 ## 项目概述
 
-**AI Math & Chat Studio** 是一个多会话 AI 聊天应用，内置 3 种提供商类型（Google Gemini、Nvidia NIM、OpenAI Compatible），支持提供商和模型的分离配置，内置数学计算工具（表达式求值、方程求解、求导），并支持 KaTeX 数学公式和 mhchem 化学公式渲染。数据以 JSON 文件形式存储在本地 `/data` 目录。
+**AI Math & Chat Studio** 是一个多会话 AI 聊天应用，内置 3 种提供商类型（Google Gemini、Nvidia NIM、OpenAI Compatible），支持提供商和模型的分离配置，以及 KaTeX 数学公式和 mhchem 化学公式渲染。数据以 JSON 文件形式存储在本地 `/data` 目录。
 
 **文档入口**：`docs/` 目录包含完整的架构、技术栈、组件、数据模型等文档。
 
@@ -31,7 +31,7 @@
 | AI 供应商集成方式 | `docs/api-providers.md` |
 | 数据模型和存储 | `docs/data-models.md` |
 | 组件结构和职责 | `docs/components.md` |
-| 数学工具系统 | `docs/math-tools.md` |
+| 数学公式渲染 | `docs/tech-stack.md` |
 | 文件结构 | `docs/file-structure.md` |
 
 ## 开发规范
@@ -113,19 +113,20 @@
 ```typescript
 const unsubscribe = api.subscribeGeneration(sessionId, {
   onDelta: (content) => setStreamingContent(content),
-  onToolCall: (name, args, result) => { ... },
-  onDone: (content, toolCalls) => { ... },
+  onDone: (content) => { ... },
   onError: (message) => { ... },
   onStopped: () => { ... },
 });
 return unsubscribe; // useEffect cleanup
 ```
 
-### 4. Tool Calling 模式
+### 4. SSE 流式协议
 
-- **Gemini**：`streamGemini()` 内部处理原生 `functionDeclarations` + `functionCalls` + `functionResponse`
-- **OpenAI 兼容供应商**：`streamOpenAI()` 返回 `tool_call_delta`，`GenerationManager` 累积参数并执行工具
-- **工具执行**：统一在 `server/providers/tools.ts` 的 `executeMathTool()` 中
+前端通过 `EventSource` 订阅 `/api/sessions/:id/generation`，服务端发送以下事件：
+- `delta` — 内容更新
+- `done` — 生成完成
+- `error` — 错误
+- `stopped` — 已停止
 
 ### 5. Provider + Model 分离架构
 
@@ -138,7 +139,7 @@ return unsubscribe; // useEffect cleanup
 **Models tab**：
 1. 选择关联的提供商实例
 2. 配置模型参数（temperature、maxTokens、reasoningEffort 等）
-3. 配置工具权限（enableTools、disabledTools）
+   3. 选择活跃模型
 
 **General tab**：
 4. 选择活跃模型
@@ -146,12 +147,6 @@ return unsubscribe; // useEffect cleanup
 所有参数 "Unset" 时不传给 API（不传默认值）。
 
 ## 常见修改场景
-
-### 修改数学工具
-
-- 工具声明和执行：`server/providers/tools.ts`
-- 工具配置 UI：`src/components/SettingsModal.tsx`（Tools tab + Models tab 中的工具开关）
-- 工具展示：`src/App.tsx` 中的 Tools Sidebar 部分（App.tsx 内联实现，非独立组件）
 
 ### 修改 Markdown 渲染
 

@@ -4,11 +4,11 @@
 
 本项目内置 3 种提供商类型，均通过服务端代理调用：
 
-| 类型 | ID | 默认 Base URL | 默认 Env Key | Tool Calling |
-|------|-------------|----------|----------|-------------|
-| Google Gemini | `google` | generativelanguage.googleapis.com/v1beta | `GEMINI_API_KEY` | ✓（原生 Function Calling） |
-| Nvidia NIM | `nvidia` | integrate.api.nvidia.com/v1 | `NVIDIA_API_KEY` | ✓（OpenAI 格式） |
-| OpenAI Compatible | `openai-compatible` | 用户配置 | `OPENAI_API_KEY` | ✓（OpenAI 格式） |
+| 类型 | ID | 默认 Base URL | 默认 Env Key |
+|------|-------------|----------|----------|
+| Google Gemini | `google` | generativelanguage.googleapis.com/v1beta | `GEMINI_API_KEY` |
+| Nvidia NIM | `nvidia` | integrate.api.nvidia.com/v1 | `NVIDIA_API_KEY` |
+| OpenAI Compatible | `openai-compatible` | 用户配置 | `OPENAI_API_KEY` |
 
 > 用户可自行添加任意数量的 `openai-compatible` 提供商实例。
 
@@ -25,16 +25,10 @@
 
 - **`server/providers/stream.ts`** — 流式 API 调用
   - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
-  - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`），含工具调用循环
+  - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
   - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK）
   - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用
   - `StreamRequest` / `StreamChunk` 类型定义
-
-- **`server/providers/tools.ts`** — 数学工具
-  - `executeMathTool()` — 执行数学工具（math.js + nerdamer）
-  - `buildOpenAITools()` — 构建 OpenAI 格式工具定义
-  - `buildGeminiTools()` — 构建 Gemini 格式工具定义
-  - `MATH_INSTRUCTIONS` — 数学工具系统提示词
 
 ### 前端统一客户端
 
@@ -49,12 +43,9 @@
 
 - **SDK**：`@google/genai`
 - **特殊功能**：
-  - 原生 Function Calling（3 个数学工具）
   - Thinking Level 配置（minimal/low/medium/high）
   - `includeThoughts: true` 确保思考过程可见
   - 流式响应 + 思考过程分段（`part.thought` 标记）
-- **工具声明**：使用 `@google/genai` 的 `FunctionDeclaration` 格式
-- **工具执行循环**：在 `streamGoogle()` 中检测 `functionCalls` → 本地执行 → 返回 `functionResponse` → 继续流式生成
 
 ## Nvidia NIM
 
@@ -77,11 +68,8 @@
 event: delta
 data: {"content": "完整内容（含思考过程包装）"}
 
-event: tool_call
-data: {"name": "evaluate_expression", "args": "{\"expression\":\"2+2\"}", "result": "4"}
-
 event: done
-data: {"content": "最终内容", "toolCalls": [...]}
+data: {"content": "最终内容"}
 
 event: error
 data: {"message": "错误信息"}

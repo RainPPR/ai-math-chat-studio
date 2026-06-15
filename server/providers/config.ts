@@ -34,3 +34,11 @@ export function resolveBaseURL(provider: ProviderInstance): string | undefined {
   if (provider.baseURL) return provider.baseURL;
   return BUILT_IN_PROVIDERS[provider.type]?.defaultBaseURL;
 }
+
+export const MATH_INSTRUCTIONS = `
+When outputting math equations, ALWAYS use KaTeX formatting. 
+For inline math, use single dollar signs: $x^2$.
+For block math, use double dollar signs: $$x^2$$.
+For chemistry formulas, use the mhchem extension syntax inside KaTeX blocks: $\\ce{H2O}$ or $$\\ce{CO2 + C -> 2 CO}$$.
+`;
+

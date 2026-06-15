@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, BuiltInProviderType, DEFAULT_SETTINGS } from '../types';
 import { api } from '../lib/api';
-import { X, Plus, Trash2, Save, ChevronDown, Wrench, Pencil, Check } from 'lucide-react';
+import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check } from 'lucide-react';
 
 interface SettingsModalProps {
   settings: UserSettings;
@@ -58,12 +58,6 @@ const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
   const activeModel = models.find(m => m.id === activeModelId);
   const activeProvider = activeModel && providers.find(p => p.id === activeModel.providerId);
 
-  const getToolInfo = (m: ModelInstance) => {
-    if (!m.enableTools) return { count: 0, label: 'off' };
-    const enabledCount = 3 - (m.disabledTools?.length || 0);
-    return { count: enabledCount, label: `${enabledCount}/3` };
-  };
-
   return (
     <div ref={dropdownRef} className="relative">
       {/* Trigger Button */}
@@ -108,7 +102,6 @@ const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
                 {/* Models */}
                 <div>
                   {providerModels.map(m => {
-                    const toolInfo = getToolInfo(m);
                     const isSelected = m.id === activeModelId;
 
                     return (
@@ -129,14 +122,6 @@ const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
                             {m.displayName || m.modelId}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 shrink-0 ml-2">
-                          <div className="flex items-center gap-1">
-                            <Wrench size={10} className={toolInfo.count > 0 ? 'text-green-400' : 'text-gray-600'} />
-                            <span className={`text-xs ${toolInfo.count > 0 ? 'text-green-400' : 'text-gray-500'}`}>
-                              {toolInfo.label}
-                            </span>
-                          </div>
-                        </div>
                       </button>
                     );
                   })}
@@ -152,7 +137,6 @@ const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
                 <span className="text-xs font-medium text-yellow-600">Unknown Provider</span>
               </div>
               {modelsWithoutProvider.map(m => {
-                const toolInfo = getToolInfo(m);
                 const isSelected = m.id === activeModelId;
 
                 return (
@@ -172,14 +156,6 @@ const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
                       <span className={`text-sm truncate ${isSelected ? 'text-blue-300' : 'text-gray-300'}`}>
                         {m.displayName || m.modelId}
                       </span>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0 ml-2">
-                      <div className="flex items-center gap-1">
-                        <Wrench size={10} className={toolInfo.count > 0 ? 'text-green-400' : 'text-gray-600'} />
-                        <span className={`text-xs ${toolInfo.count > 0 ? 'text-green-400' : 'text-gray-500'}`}>
-                          {toolInfo.label}
-                        </span>
-                      </div>
                     </div>
                   </button>
                 );
@@ -253,13 +229,6 @@ const ExtraBodyTextarea: React.FC<ExtraBodyTextareaProps> = ({ value, onChange, 
   );
 };
 
-const TOOL_NAMES = ['evaluate_expression', 'solve_equation', 'calculate_derivative'];
-const TOOL_LABELS: Record<string, string> = {
-  evaluate_expression: 'Evaluate Expression',
-  solve_equation: 'Solve Equation',
-  calculate_derivative: 'Calculate Derivative',
-};
-
 const makeEmptyProvider = (): ProviderInstance => ({
   id: crypto.randomUUID(),
   type: 'openai-compatible',
@@ -273,8 +242,6 @@ const makeEmptyModel = (): ModelInstance => ({
   providerId: '',
   providerType: 'openai-compatible',
   modelId: '',
-  enableTools: true,
-  disabledTools: [],
 });
 
 const getDefaultEnvKey = (type: string): string => {
@@ -518,31 +485,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                           </div>
                           <div className="divide-y divide-gray-700/30">
                             {providerModels.map(m => {
-                              const enabledTools = m.enableTools
-                                ? 3 - (m.disabledTools?.length || 0)
-                                : 0;
-
                               return (
                                 <div key={m.id} className="px-3 py-2 flex items-center justify-between hover:bg-gray-700/30 transition-colors">
                                   <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
-                                    <div className="col-span-5 text-xs text-white truncate">{m.displayName || m.modelId}</div>
-                                    <div className="col-span-2 text-xs text-gray-500 text-center">
+                                    <div className="col-span-6 text-xs text-white truncate">{m.displayName || m.modelId}</div>
+                                    <div className="col-span-3 text-xs text-gray-500 text-center">
                                       {m.temperature !== undefined ? `T=${m.temperature}` : '-'}
                                     </div>
-                                    <div className="col-span-2 text-xs text-gray-500 text-center">
+                                    <div className="col-span-3 text-xs text-gray-500 text-center">
                                       {m.maxTokens !== undefined ? `M=${m.maxTokens}` : '-'}
-                                    </div>
-                                    <div className="col-span-3 flex items-center justify-center gap-1">
-                                      {m.enableTools ? (
-                                        <>
-                                          <Wrench size={10} className={enabledTools > 0 ? 'text-green-400' : 'text-gray-500'} />
-                                          <span className={`text-xs ${enabledTools > 0 ? 'text-green-400' : 'text-gray-500'}`}>
-                                            {enabledTools}/3
-                                          </span>
-                                        </>
-                                      ) : (
-                                        <span className="text-xs text-gray-500">off</span>
-                                      )}
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-1 ml-2 shrink-0">
@@ -822,36 +773,7 @@ const ModelEditor: React.FC<{
         </div>
       )}
 
-      <div className="space-y-3 pt-4 border-t border-gray-800">
-        <label className="flex items-center space-x-3 cursor-pointer">
-          <input type="checkbox" checked={entry.enableTools} onChange={e => onChange({ ...entry, enableTools: e.target.checked })} className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900" />
-          <span className="text-sm font-medium text-gray-300">Enable Math Tools</span>
-        </label>
-        {entry.enableTools && (
-          <div className="pl-8 space-y-2">
-            {TOOL_NAMES.map(name => (
-              <label key={name} className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!entry.disabledTools?.includes(name)}
-                  onChange={e => {
-                    const disabled = [...(entry.disabledTools || [])];
-                    if (e.target.checked) {
-                      const i = disabled.indexOf(name);
-                      if (i >= 0) disabled.splice(i, 1);
-                    } else {
-                      if (!disabled.includes(name)) disabled.push(name);
-                    }
-                    onChange({ ...entry, disabledTools: disabled });
-                  }}
-                  className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-xs text-gray-400">{TOOL_LABELS[name]}</span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
+
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">

@@ -34,10 +34,8 @@ interface ModelInstance {
   maxTokens?: number;               // 最大 token 数（Unset 时不传给 API）
   reasoningEffort?: string;         // 推理努力程度（low/medium/high，OpenAI 兼容用）
   thinkingLevel?: string;           // 思考级别（Gemini 专用）
-  enableTools: boolean;             // 是否启用数学工具
-  disabledTools: string[];          // 禁用的工具名称列表
-  extraBody?: Record<string, any>;  // 额外请求体（JSON 对象，合并到 API 请求中）
-  injectThinkingTemplate?: boolean; // 注入 chat_template_kwargs thinking（Nvidia 用）
+   extraBody?: Record<string, any>;  // 额外请求体（JSON 对象，合并到 API 请求中）
+   injectThinkingTemplate?: boolean; // 注入 chat_template_kwargs thinking（Nvidia 用）
 }
 ```
 
@@ -64,19 +62,7 @@ interface ChatMessage {
   role: 'user' | 'model';          // 角色
   content: string;                   // 消息内容（含 Markdown 和思考过程包装）
   createdAt: string;                // ISO 时间戳
-  toolCalls?: ToolCallRecord[];    // 工具调用记录
-}
-```
-
-### ToolCallRecord（工具调用记录）
-
-```typescript
-interface ToolCallRecord {
-  name: string;       // 工具名称
-  args: any;          // 调用参数
-  result: string;     // 执行结果
-  messageId?: string; // 关联消息 ID
-}
+ }
 ```
 
 ### ChatSession（聊天会话）
@@ -104,11 +90,9 @@ interface GenerationModel {
   temperature?: number;
   maxTokens?: number;
   reasoningEffort?: string;
-  extraBody?: Record<string, any>;
+   extraBody?: Record<string, any>;
   thinkingLevel?: string;
-  enableTools: boolean;
-  disabledTools: string[];
-}
+ }
 
 interface GenerationProvider {
   baseURL?: string;

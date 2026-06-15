@@ -1,6 +1,6 @@
 # AI Math & Chat Studio
 
-一款专为数学和科学计算设计的多会话 AI 聊天应用。支持多种 AI 供应商接入、智能数学工具调用以及丰富的数学公式渲染能力。
+一款专注于对话体验的多会话 AI 聊天应用。支持多种 AI 供应商接入以及丰富的数学公式渲染能力。
 
 ## 核心特性
 
@@ -17,16 +17,6 @@
 - 支持同一供应商下多个模型实例
 - 支持远程模型列表自动同步
 
-### 🔢 内置数学工具
-
-AI 可以调用以下工具进行精确计算：
-
-| 工具 | 功能 | 库 |
-|------|------|------|
-| `evaluate_expression` | 数学表达式求值 | math.js |
-| `solve_equation` | 方程求解（精确代数解） | nerdamer |
-| `calculate_derivative` | 导数计算 | math.js |
-
 ### 📈 数学公式渲染
 
 - **KaTeX** 渲染 - 支持行内 `$...$` 和块级 `$$...$$`
@@ -37,7 +27,6 @@ AI 可以调用以下工具进行精确计算：
 
 - 实时显示 AI 生成过程
 - 支持思考过程展示（可折叠/展开）
-- 工具调用实时可视化
 
 ### 💡 后端驱动架构
 
@@ -78,8 +67,7 @@ AI 可以调用以下工具进行精确计算：
 
 | 技术 | 版本 | 用途 |
 |------|------|------|
-| mathjs | 15.x | 数学表达式求值 |
-| nerdamer | 1.x | 符号计算（方程求解、微积分） |
+
 
 ### Markdown 渲染
 
@@ -148,8 +136,7 @@ npm run dev
 3. 选择关联的供应商
 4. 填写模型 ID（如 `gemini-2.5-flash`）
 5. 配置模型参数（temperature、maxTokens 等）
-6. 配置工具权限
-7. 保存
+6. 保存
 
 ### 选择活跃模型
 
@@ -209,7 +196,7 @@ ai-math-chat-studio/
 │   ├── api-providers.md          # AI 供应商集成
 │   ├── components.md            # 组件结构
 │   ├── data-models.md           # 数据模型
-│   ├── math-tools.md            # 数学工具系统
+│   ├── components.md            # 组件结构
 │   ├── tech-stack.md            # 技术栈详情
 │   └── file-structure.md         # 文件结构
 ├── src/
@@ -233,7 +220,7 @@ ai-math-chat-studio/
 │   │   ├── built-in.ts         # 内置供应商定义
 │   │   ├── config.ts           # 配置解析
 │   │   ├── stream.ts           # 流式 API 调用
-│   │   └── tools.ts            # 数学工具
+│   │   ├── config.ts           # 提供商配置解析
 │   └── services/
 │       └── generation-manager.ts # 生成任务管理
 ├── data/                       # 数据存储（不提交）
@@ -302,9 +289,7 @@ interface ModelInstance {
   maxTokens?: number;
   reasoningEffort?: string;
   thinkingLevel?: string;
-  enableTools: boolean;
-  disabledTools: string[];
-}
+ }
 
 // ChatSession - 聊天会话
 interface ChatSession {
@@ -343,7 +328,7 @@ interface ChatSession {
 SSE 事件类型：
 
 - `delta` - 内容更新
-- `tool_call` - 工具调用
+
 - `done` - 生成完成
 - `error` - 错误
 - `stopped` - 已停止
@@ -356,7 +341,7 @@ SSE 事件类型：
 - [api-providers.md](docs/api-providers.md) - AI 供应商集成
 - [components.md](docs/components.md) - 组件结构
 - [data-models.md](docs/data-models.md) - 数据模型
-- [math-tools.md](docs/math-tools.md) - 数学工具系统
+
 - [tech-stack.md](docs/tech-stack.md) - 技术栈详情
 - [file-structure.md](docs/file-structure.md) - 文件结构
 

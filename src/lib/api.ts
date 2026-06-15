@@ -57,8 +57,7 @@ export const api = {
     sessionId: string,
     callbacks: {
       onDelta?: (content: string) => void;
-      onToolCall?: (name: string, args: string, result: string) => void;
-      onDone?: (content: string, toolCalls: any[]) => void;
+      onDone?: (content: string) => void;
       onError?: (message: string) => void;
       onStopped?: () => void;
     },
@@ -70,14 +69,9 @@ export const api = {
       callbacks.onDelta?.(data.content);
     });
 
-    es.addEventListener('tool_call', (e) => {
-      const data = JSON.parse(e.data);
-      callbacks.onToolCall?.(data.name, data.args, data.result);
-    });
-
     es.addEventListener('done', (e) => {
       const data = JSON.parse(e.data);
-      callbacks.onDone?.(data.content, data.toolCalls);
+      callbacks.onDone?.(data.content);
       es.close();
     });
 

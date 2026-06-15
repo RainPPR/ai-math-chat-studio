@@ -11,7 +11,6 @@ ai-math-chat-studio/
 │   ├── api-providers.md      # AI 供应商集成
 │   ├── components.md         # 组件结构
 │   ├── data-models.md        # 数据模型
-│   ├── math-tools.md         # 数学工具系统
 │   ├── tech-stack.md         # 技术栈
 │   ├── file-structure.md     # 本文件
 │   └── superpowers/          # Superpowers 计划文档
@@ -31,7 +30,7 @@ ai-math-chat-studio/
 │   │   ├── built-in.ts         # 内置提供商类型定义
 │   │   ├── config.ts           # 提供商配置解析（apiKey、baseURL）
 │   │   ├── stream.ts           # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
-│   │   └── tools.ts            # 数学工具定义与执行
+│   │   ├── config.ts           # 提供商配置解析
 │   ├── routes/                 # API 路由
 │   │   ├── settings.ts         # /api/settings GET/PUT
 │   │   ├── sessions.ts         # /api/sessions GET/GET/:id/DELETE
@@ -67,7 +66,7 @@ ai-math-chat-studio/
 | `server/providers/built-in.ts` | 内置 3 种提供商类型定义（google / nvidia / openai-compatible） |
 | `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
 | `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
-| `server/providers/tools.ts` | 数学工具定义（evaluate_expression, solve_equation, calculate_derivative）、执行、MATH_INSTRUCTIONS |
+| `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey）及数学格式化指令 |
 | `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、断线续传、会话 CRUD |
 | `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
 | `server/routes/settings.ts` | `/api/settings` GET/PUT |
