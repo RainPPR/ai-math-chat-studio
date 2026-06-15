@@ -10,15 +10,10 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import rehypeExternalLinks from 'rehype-external-links';
 import rehypeSanitize from 'rehype-sanitize';
-import katex from 'katex';
 import 'katex/dist/katex-swap.min.css';
 
-// Make katex global for mhchem
-if (typeof window !== 'undefined') {
-  (window as any).katex = katex;
-}
-// @ts-ignore
-import 'katex/contrib/mhchem/mhchem';
+// 注册 mhchem 化学公式扩展（ESM 正确入口）
+import 'katex/contrib/mhchem';
 
 interface MarkdownRendererProps {
   content: string;
