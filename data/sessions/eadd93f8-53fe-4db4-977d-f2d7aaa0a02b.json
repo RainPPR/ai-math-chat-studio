@@ -1,0 +1,15 @@
+{
+  "id": "eadd93f8-53fe-4db4-977d-f2d7aaa0a02b",
+  "uid": "local",
+  "title": "已知 $f(x)=(1+x)^n,(|x|<1)$，证明 $...",
+  "messages": [
+    {
+      "id": "d9c6d8fb-4ca3-431d-b944-138c642e3fb5",
+      "role": "user",
+      "content": "已知 $f(x)=(1+x)^n,(|x|<1)$，证明 $f(x)+f(-x)<2^n$。",
+      "createdAt": "2026-06-13T05:15:30.113Z"
+    }
+  ],
+  "createdAt": "2026-06-13T05:15:30.113Z",
+  "updatedAt": "2026-06-13T05:15:30.113Z"
+}

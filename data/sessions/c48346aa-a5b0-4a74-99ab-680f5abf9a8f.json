@@ -1,0 +1,21 @@
+{
+  "id": "c48346aa-a5b0-4a74-99ab-680f5abf9a8f",
+  "uid": "local",
+  "title": "已知 $f(x)=(1+x)^n,(|x|<1)$，证明 $...",
+  "messages": [
+    {
+      "id": "861fa893-a570-47dd-b961-3da720bc0251",
+      "role": "user",
+      "content": "已知 $f(x)=(1+x)^n,(|x|<1)$，证明 $f(x)+f(-x)<2^n$。",
+      "createdAt": "2026-06-13T10:51:05.799Z"
+    },
+    {
+      "id": "2f180a1d-1e98-4845-8b3a-9b2f19ea3c25",
+      "role": "model",
+      "content": "<details>\n<summary>Thinking Process</summary>\n\n```text\nWe need to prove that $f(x) + f(-x) < 2^n$ where $f(x) = (1+x)^n$ for $|x| < 1$ (and presumably $n \\geq 2$ is a positive integer, or at least $n$ is a natural number).\n\nLet\n```\n\n</details>\n\n",
+      "createdAt": "2026-06-13T10:53:32.881Z"
+    }
+  ],
+  "createdAt": "2026-06-13T10:51:05.799Z",
+  "updatedAt": "2026-06-13T10:53:32.881Z"
+}

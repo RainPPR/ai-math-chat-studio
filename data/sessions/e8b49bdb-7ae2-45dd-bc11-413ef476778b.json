@@ -1,0 +1,15 @@
+{
+  "id": "e8b49bdb-7ae2-45dd-bc11-413ef476778b",
+  "uid": "local",
+  "title": "若 $a,b>0$ 则 $\\max\\left\\{a,b,\\d...",
+  "messages": [
+    {
+      "id": "3cfbb513-2d26-4d9f-8d1e-b2dd5260e217",
+      "role": "user",
+      "content": "若 $a,b>0$ 则 $\\max\\left\\{a,b,\\dfrac{1}{a}+\\dfrac{3}{b}\\right\\}$ 的最小值为？",
+      "createdAt": "2026-06-11T04:33:39.388Z"
+    }
+  ],
+  "createdAt": "2026-06-11T04:33:39.388Z",
+  "updatedAt": "2026-06-11T04:33:39.388Z"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "6d0cc56f-2083-4826-8a7c-fa5862dee737",
+  "uid": "local",
+  "title": "已知随机变量 $\\xi\\sim B(2n,p)$，其中 $n...",
+  "messages": [
+    {
+      "id": "fe3050c4-e5ac-4d79-852f-611890f4407b",
+      "role": "user",
+      "content": "已知随机变量 $\\xi\\sim B(2n,p)$，其中 $n\\in\\mathbb Z\\cap[2,+\\infty),p\\in(0,1)$，证明若 $np=6$，则 $P(\\xi=t)\\le P(\\xi=12),t\\in\\mathbb Z\\cap[0,2n]$。",
+      "createdAt": "2026-06-07T05:14:58.294Z"
+    }
+  ],
+  "createdAt": "2026-06-07T05:14:58.294Z",
+  "updatedAt": "2026-06-07T05:14:58.294Z"
+}

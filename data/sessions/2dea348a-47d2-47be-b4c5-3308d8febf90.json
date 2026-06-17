@@ -1,0 +1,21 @@
+{
+  "id": "2dea348a-47d2-47be-b4c5-3308d8febf90",
+  "uid": "local",
+  "title": "已知 $3^x=4^y=6^z$，求证 $x+y>\\left...",
+  "messages": [
+    {
+      "id": "45388a6b-123f-4476-9553-d40f526e7947",
+      "role": "user",
+      "content": "已知 $3^x=4^y=6^z$，求证 $x+y>\\left(\\dfrac{3}{2}+\\sqrt{2}\\right)z$。",
+      "createdAt": "2026-06-14T03:39:08.139Z"
+    },
+    {
+      "id": "0e66ae51-1567-4f3a-98a4-7f0408cd6333",
+      "role": "model",
+      "content": "<details>\n<summary>Thinking Process</summary>\n\n```text\nWe\n```\n\n</details>\n\n",
+      "createdAt": "2026-06-14T03:39:17.875Z"
+    }
+  ],
+  "createdAt": "2026-06-14T03:39:08.139Z",
+  "updatedAt": "2026-06-14T03:39:17.875Z"
+}
