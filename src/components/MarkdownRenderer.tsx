@@ -12,8 +12,8 @@ import rehypeExternalLinks from 'rehype-external-links';
 import rehypeSanitize from 'rehype-sanitize';
 import 'katex/dist/katex-swap.min.css';
 
-// 注册 mhchem 化学公式扩展（ESM 正确入口）
-import 'katex/contrib/mhchem';
+// @ts-ignore
+import "katex/dist/contrib/mhchem";
 
 interface MarkdownRendererProps {
   content: string;
@@ -41,7 +41,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content
         rehypePlugins={[
           rehypeRaw, 
           rehypeSanitize, 
-          [rehypeKatex, { strict: false, throwOnError: false }], 
+          [rehypeKatex, { strict: false, throwOnError: false, macros: { '\\tag': '\\qquad (#1)' } }], 
           [rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }]
         ]}
       >

@@ -73,7 +73,6 @@ export interface ChatMessage {
 
 export interface ChatSession {
   id: string;
-  uid: string;
   title: string;
   messages: ChatMessage[];
   createdAt: string;

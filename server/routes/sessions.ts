@@ -24,5 +24,14 @@ export function createSessionRouter(gm: GenerationManager) {
     res.json({ ok: true });
   });
 
+  router.post('/api/sessions/clean', async (req, res) => {
+    try {
+      const result = await gm.cleanSessions();
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Clean failed' });
+    }
+  });
+
   return router;
 }

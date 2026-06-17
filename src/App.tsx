@@ -57,7 +57,7 @@ export default function App() {
   const handleNewChat = async () => {
     const id = crypto.randomUUID();
     const session: ChatSession = {
-      id, uid: 'local', title: 'New Chat',
+      id, title: 'New Chat',
       messages: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
     setSessions(prev => [session, ...prev]);
@@ -77,7 +77,7 @@ export default function App() {
     if (!sessionId) {
       sessionId = crypto.randomUUID();
       const session: ChatSession = {
-        id: sessionId, uid: 'local',
+        id: sessionId,
         title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
         messages: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       };

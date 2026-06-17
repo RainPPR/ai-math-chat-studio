@@ -12,7 +12,6 @@ export interface ServerChatMessage {
 
 export interface ServerChatSession {
   id: string;
-  uid: string;
   title: string;
   messages: ServerChatMessage[];
   createdAt: string;
@@ -97,7 +96,6 @@ export class GenerationManager {
     if (!session) {
       session = {
         id: sessionId,
-        uid: 'local',
         title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
         messages: [],
         createdAt: new Date().toISOString(),
@@ -269,6 +267,36 @@ export class GenerationManager {
     await this.writeSession(session);
 
     task.subscribers.forEach(cb => cb('done', { content: fullContent }));
+  }
+
+  private sanitizeSession(raw: any): ServerChatSession {
+    return {
+      id: raw.id ?? crypto.randomUUID(),
+      title: raw.title ?? 'Untitled',
+      messages: (raw.messages || []).map((m: any) => ({
+        id: m.id ?? crypto.randomUUID(),
+        role: m.role === 'model' || m.role === 'user' ? m.role : 'user',
+        content: m.content ?? '',
+        createdAt: m.createdAt ?? new Date().toISOString(),
+      })),
+      createdAt: raw.createdAt ?? new Date().toISOString(),
+      updatedAt: raw.updatedAt ?? new Date().toISOString(),
+    };
+  }
+
+  async cleanSessions(): Promise<{ cleaned: number; total: number; details: string[] }> {
+    const sessions = await this.listSessions();
+    const details: string[] = [];
+    let cleaned = 0;
+
+    for (const session of sessions) {
+      const clean = this.sanitizeSession(session);
+      await this.writeSession(clean);
+      cleaned++;
+      details.push(clean.title);
+    }
+
+    return { cleaned, total: sessions.length, details };
   }
 
   subscribe(sessionId: string, callback: (event: string, data: any) => void): (() => void) | null {

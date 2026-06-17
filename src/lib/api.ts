@@ -20,6 +20,7 @@ export const api = {
     list: () => request<ChatSession[]>('/api/sessions'),
     get: (id: string) => request<ChatSession>(`/api/sessions/${id}`),
     delete: (id: string) => request<{ ok: true }>(`/api/sessions/${id}`, { method: 'DELETE' }),
+    clean: () => request<{ cleaned: number; total: number; details: string[] }>('/api/sessions/clean', { method: 'POST' }),
   },
 
   chat: {

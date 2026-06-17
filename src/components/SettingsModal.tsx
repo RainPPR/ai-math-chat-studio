@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, BuiltInProviderType, DEFAULT_SETTINGS } from '../types';
 import { api } from '../lib/api';
-import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check } from 'lucide-react';
+import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle } from 'lucide-react';
 
 interface SettingsModalProps {
   settings: UserSettings;
@@ -273,6 +273,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const [loadingModels, setLoadingModels] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  const [cleaning, setCleaning] = useState(false);
+  const [cleanResult, setCleanResult] = useState<{ cleaned: number; total: number } | null>(null);
+
+  const handleCleanClick = async () => {
+    if (!window.confirm('警告：这将重写所有会话数据，移除任何已废弃的字段。此操作不可撤销。确定要继续吗？')) {
+      return;
+    }
+    setCleaning(true);
+    setCleanResult(null);
+    try {
+      const result = await api.sessions.clean();
+      setCleanResult({ cleaned: result.cleaned, total: result.total });
+    } catch (err: any) {
+      setCleanResult({ cleaned: 0, total: 0 });
+    }
+  };
+
   useEffect(() => { api.providers.list().then(setBuiltInTypes).catch(() => { }); }, []);
 
   // ----- Provider CRUD -----
@@ -401,6 +418,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   </label>
                 ))}
               </div>
+
+              <div className="space-y-3 pt-4 border-t border-red-900/50">
+                <h3 className="text-sm font-medium text-red-400 flex items-center gap-2">
+                  <AlertTriangle size={14} />
+                  Danger Zone
+                </h3>
+                <button onClick={handleCleanClick} className="w-full bg-red-600/90 hover:bg-red-600 text-white rounded-lg p-3 font-medium transition-colors flex items-center justify-center gap-2">
+                  <AlertTriangle size={16} />
+                  强制清洗数据
+                </button>
+              </div>
             </>
           )}
 
@@ -522,6 +550,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
           <button onClick={() => onSave(local)} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"><Save size={16} /> Save</button>
         </div>
       </div>
+      {cleaning && (
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-[60]">
+          {!cleanResult ? (
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-white text-lg">正在清洗数据...</p>
+            </div>
+          ) : (
+            <div className="text-center bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-md mx-4">
+              <AlertTriangle size={40} className="text-green-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">清洗完成</h3>
+              <p className="text-gray-400">
+                共清洗 {cleanResult.total} 个会话，其中 {cleanResult.cleaned} 个完成规范化。
+              </p>
+              <button
+                onClick={() => { setCleaning(false); setCleanResult(null); }}
+                className="mt-6 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              >
+                确定
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
