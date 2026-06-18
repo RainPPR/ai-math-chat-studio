@@ -48,43 +48,44 @@
 
 ### 前端
 
-| 技术                    | 版本  | 用途                  |
-| ----------------------- | ----- | --------------------- |
-| React                   | 19.x  | UI 框架               |
-| TypeScript              | ~6.0  | 类型系统              |
-| Vite                    | 8.x   | 构建工具 + 开发服务器 |
-| Tailwind CSS            | 4.x   | 样式系统              |
-| @tailwindcss/typography | 0.5.x | Markdown 排版         |
+| 技术 | 版本 |
+|---|---|
+| React | ^19.2.7 |
+| TypeScript | ~6.0.3 |
+| Vite | ^8.0.16 |
+| Tailwind CSS | ^4.3.1 |
+| @tailwindcss/typography | ^0.5.20 |
 
 ### 后端
 
-| 技术          | 版本 | 用途                |
-| ------------- | ---- | ------------------- |
-| Express       | 5.x  | API 服务器          |
-| tsx           | 4.x  | TypeScript 直接运行 |
-| @google/genai | 2.x  | Gemini API 客户端   |
-| OpenAI SDK    | 6.x  | OpenAI 兼容 API     |
+| 技术 | 版本 |
+|---|---|
+| Express | ^5.2.1 |
+| tsx | ^4.22.4 |
+| @google/genai | ^2.8.0 |
+| OpenAI SDK | ^6.44.0 |
 
 ### 数学库
 
-| 技术 | 版本 | 用途 |
-| ---- | ---- | ---- |
+| 技术 | 版本 |
+|---|---|
+| KaTeX | ^0.17.0 |
+| remark-math | ^6.0.0 |
+| rehype-katex | ^7.0.1 |
+| katex/contrib/mhchem | (bundled with KaTeX) |
 
 ### Markdown 渲染
 
-| 技术                 | 用途                               |
-| -------------------- | ---------------------------------- |
-| react-markdown       | Markdown 解析渲染                  |
-| remark-math          | 识别 `$...$` 和 `$$...$$` 数学公式 |
-| rehype-katex         | KaTeX 数学公式渲染                 |
-| katex/contrib/mhchem | 化学公式支持                       |
+| 技术 | 版本 |
+|---|---|
+| react-markdown | ^10.1.0 |
+| remark-gfm | ^4.0.1 |
 
 ## 快速开始
 
 ### 环境要求
 
-- Node.js 18+
-- npm 或 pnpm
+- Bun
 
 ### 安装
 
@@ -94,7 +95,7 @@ git clone <repository-url>
 cd ai-math-chat-studio
 
 # 安装依赖
-npm install
+bun install
 
 # 配置环境变量
 cp .env.example .env
@@ -114,7 +115,7 @@ OPENAI_API_KEY=your_openai_api_key
 ### 启动开发服务器
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 访问 <http://localhost:3000>
@@ -164,26 +165,37 @@ npm run dev
 
 ## 架构概览
 
-```tree
-前端 (React SPA)
-  │
-  ├── Sidebar (会话列表)
-  ├── ChatArea (聊天区域)
-  ├── SettingsModal (设置弹窗)
-  └── Tools Sidebar (工具调用展示)
-  │
-  └── src/lib/api.ts (统一 API 客户端)
-  │
-后端 (Express 5)
-  │
-  ├── server/routes/────────── API 路由
-  ├── server/providers/─────── AI 供应商逻辑
-  └── server/services/─────── 核心服务
-  │
-数据层
-  │
-  ├── /data/settings.json ────── 用户设置
-  └── /data/sessions/*.json ─────会话数据
+```mermaid
+graph TD
+    subgraph 前端 (React SPA)
+        A[Sidebar - 会话列表]
+        B[ChatArea - 聊天区域]
+        C[SettingsModal - 设置弹窗]
+        D[Tools Sidebar - 工具调用展示]
+        E[src/lib/api.ts - 统一 API 客户端]
+    end
+
+    subgraph 后端 (Express 5)
+        F[server/routes/ - API 路由]
+        G[server/providers/ - AI 供应商逻辑]
+        H[server/services/ - 核心服务]
+    end
+
+    subgraph 数据层
+        I[/data/settings.json - 用户设置]
+        J[/data/sessions/*.json - 会话数据]
+    end
+
+    A --> E
+    B --> E
+    C --> E
+    D --> E
+    E --> F
+    F --> G
+    F --> H
+    H --> G
+    F --> I
+    F --> J
 ```
 
 ## 项目结构
@@ -195,7 +207,6 @@ ai-math-chat-studio/
 │   ├── api-providers.md          # AI 供应商集成
 │   ├── components.md            # 组件结构
 │   ├── data-models.md           # 数据模型
-│   ├── components.md            # 组件结构
 │   ├── tech-stack.md            # 技术栈详情
 │   └── file-structure.md         # 文件结构
 ├── src/
@@ -203,9 +214,9 @@ ai-math-chat-studio/
 │   ├── types.ts                 # TypeScript 类型定义
 │   ├── components/
 │   │   ├── Sidebar.tsx           # 会话列表
-│   ├─── ChatArea.tsx           # 聊天区域
-│   ├─── SettingsModal.tsx      # 设置弹窗
-│   └── MarkdownRenderer.tsx    # Markdown 渲染
+│   │   ├── ChatArea.tsx          # 聊天区域
+│   │   ├── SettingsModal.tsx     # 设置弹窗
+│   │   └── MarkdownRenderer.tsx    # Markdown 渲染
 │   └── lib/
 │       └── api.ts               # 统一 API 客户端
 ├── server/
@@ -218,8 +229,7 @@ ai-math-chat-studio/
 │   ├── providers/
 │   │   ├── built-in.ts         # 内置供应商定义
 │   │   ├── config.ts           # 配置解析
-│   │   ├── stream.ts           # 流式 API 调用
-│   │   ├── config.ts           # 提供商配置解析
+│   │   └── stream.ts           # 流式 API 调用
 │   └── services/
 │       └── generation-manager.ts # 生成任务管理
 ├── data/                       # 数据存储（不提交）
@@ -232,10 +242,10 @@ ai-math-chat-studio/
 ### 命令
 
 ```bash
-npm run dev      # 启动开发服务器
-npm run build    # 生产构建
-npm run lint     # TypeScript 类型检查
-npm run clean    # 清除构建目录
+bun run dev      # 启动开发服务器
+bun run build    # 生产构建
+bun run lint     # TypeScript 类型检查
+bun run clean    # 清除构建目录
 ```
 
 ### 代码规范

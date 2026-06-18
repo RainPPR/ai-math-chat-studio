@@ -51,7 +51,6 @@
 - **乐观更新**：先更新 UI 再通过 `api.settings.save()` / `api.sessions.*` 持久化到服务端 JSON 文件
 - **per-session generating**：使用 `Set<string>` 跟踪每个会话的生成状态
 - **`isSettingsOpen`**：控制设置弹窗的显示/隐藏
-- **`isToolsSidebarOpen`**：控制右侧 Tools Sidebar 的展开/折叠
 
 ### 命名约定
 
@@ -97,9 +96,9 @@
 <details>
 <summary>Thinking Process</summary>
 
-```text
+​```text
 思考内容...
-```
+​```
 
 </details>
 ```
@@ -185,9 +184,9 @@ return unsubscribe; // useEffect cleanup
 ### 开发
 
 ```bash
-npm install          # 安装依赖
-npm run dev          # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
-npm run lint         # TypeScript 类型检查
+bun install          # 安装依赖
+bun run dev          # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
+bun run lint         # TypeScript 类型检查
 ```
 
 ### 环境变量
