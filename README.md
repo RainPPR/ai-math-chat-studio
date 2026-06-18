@@ -42,41 +42,42 @@
 - `/data/sessions/*.json` - 会话数据
 - 支持导出聊天记录为 Markdown
 
+警告：不要把可能导致安全问题的密钥写入 `settings.json` 并推送到远程！
+
 ## 技术栈
 
 ### 前端
 
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| React | 19.x | UI 框架 |
-| TypeScript | ~6.0 | 类型系统 |
-| Vite | 8.x | 构建工具 + 开发服务器 |
-| Tailwind CSS | 4.x | 样式系统 |
-| @tailwindcss/typography | 0.5.x | Markdown 排版 |
+| 技术                    | 版本  | 用途                  |
+| ----------------------- | ----- | --------------------- |
+| React                   | 19.x  | UI 框架               |
+| TypeScript              | ~6.0  | 类型系统              |
+| Vite                    | 8.x   | 构建工具 + 开发服务器 |
+| Tailwind CSS            | 4.x   | 样式系统              |
+| @tailwindcss/typography | 0.5.x | Markdown 排版         |
 
 ### 后端
 
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| Express | 5.x | API 服务器 |
-| tsx | 4.x | TypeScript 直接运行 |
-| @google/genai | 2.x | Gemini API 客户端 |
-| OpenAI SDK | 6.x | OpenAI 兼容 API |
+| 技术          | 版本 | 用途                |
+| ------------- | ---- | ------------------- |
+| Express       | 5.x  | API 服务器          |
+| tsx           | 4.x  | TypeScript 直接运行 |
+| @google/genai | 2.x  | Gemini API 客户端   |
+| OpenAI SDK    | 6.x  | OpenAI 兼容 API     |
 
 ### 数学库
 
 | 技术 | 版本 | 用途 |
-|------|------|------|
-
+| ---- | ---- | ---- |
 
 ### Markdown 渲染
 
-| 技术 | 用途 |
-|------|------|
-| react-markdown | Markdown 解析渲染 |
-| remark-math | 识别 `$...$` 和 `$$...$$` 数学公式 |
-| rehype-katex | KaTeX 数学公式渲染 |
-| katex/contrib/mhchem | 化学公式支持 |
+| 技术                 | 用途                               |
+| -------------------- | ---------------------------------- |
+| react-markdown       | Markdown 解析渲染                  |
+| remark-math          | 识别 `$...$` 和 `$$...$$` 数学公式 |
+| rehype-katex         | KaTeX 数学公式渲染                 |
+| katex/contrib/mhchem | 化学公式支持                       |
 
 ## 快速开始
 
@@ -153,19 +154,17 @@ npm run dev
 
 ### 数学公式示例
 
-输入包含数学公式的消息，会自动渲染：
+- 输入包含数学公式的消息，会自动渲染：
 
-```
-解这个方程：$$x^2 - 4 = 0$$
+    解这个方程：$$x^2 - 4 = 0$$
 
-计算导数：$d/dx(x^2 + 2x)$
+    计算导数：$d/dx(x^2 + 2x)$
 
-化学反应：$\ce{2H2 + O2 -> 2H2O}$
-```
+    化学反应：$\ce{2H2 + O2 -> 2H2O}$
 
 ## 架构概览
 
-```
+```tree
 前端 (React SPA)
   │
   ├── Sidebar (会话列表)
@@ -189,7 +188,7 @@ npm run dev
 
 ## 项目结构
 
-```
+```tree
 ai-math-chat-studio/
 ├── docs/                       # 项目文档
 │   ├── architecture.md           # 架构概览
@@ -268,36 +267,36 @@ npm run clean    # 清除构建目录
 ```typescript
 // ProviderInstance - 供应商实例
 interface ProviderInstance {
-  id: string;
-  type: 'google' | 'nvidia' | 'openai-compatible';
-  name: string;
-  baseURL?: string;
-  apiKey?: string;
-  envKey?: string;
-  extra?: Record<string, any>;
-  modelSource?: string;
+    id: string;
+    type: "google" | "nvidia" | "openai-compatible";
+    name: string;
+    baseURL?: string;
+    apiKey?: string;
+    envKey?: string;
+    extra?: Record<string, any>;
+    modelSource?: string;
 }
 
 // ModelInstance - 模型实例
 interface ModelInstance {
-  id: string;
-  providerId: string;
-  providerType: 'google' | 'nvidia' | 'openai-compatible';
-  modelId: string;
-  displayName?: string;
-  temperature?: number;
-  maxTokens?: number;
-  reasoningEffort?: string;
-  thinkingLevel?: string;
- }
+    id: string;
+    providerId: string;
+    providerType: "google" | "nvidia" | "openai-compatible";
+    modelId: string;
+    displayName?: string;
+    temperature?: number;
+    maxTokens?: number;
+    reasoningEffort?: string;
+    thinkingLevel?: string;
+}
 
 // ChatSession - 聊天会话
 interface ChatSession {
-  id: string;
-  title: string;
-  messages: ChatMessage[];
-  createdAt: string;
-  updatedAt: string;
+    id: string;
+    title: string;
+    messages: ChatMessage[];
+    createdAt: string;
+    updatedAt: string;
 }
 ```
 
@@ -305,24 +304,24 @@ interface ChatSession {
 
 ### REST API
 
-| 方法 | 端点 | 描述 |
-|------|------|------|
-| GET | `/api/settings` | 获取用户设置 |
-| PUT | `/api/settings` | 保存用户设置 |
-| GET | `/api/sessions` | 获取所有会话 |
-| GET | `/api/sessions/:id` | 获取单个会话 |
-| DELETE | `/api/sessions/:id` | 删除会话 |
-| POST | `/api/sessions/:id/messages` | 发送消息 |
-| POST | `/api/sessions/:id/retry` | 重试消息 |
-| POST | `/api/sessions/:id/continue` | 继续生成 |
-| DELETE | `/api/sessions/:id/generation` | 停止生成 |
-| GET | `/api/providers` | 获取内置供应商类型 |
-| GET | `/api/providers/:type/models` | 获取模型列表 |
+| 方法   | 端点                           | 描述               |
+| ------ | ------------------------------ | ------------------ |
+| GET    | `/api/settings`                | 获取用户设置       |
+| PUT    | `/api/settings`                | 保存用户设置       |
+| GET    | `/api/sessions`                | 获取所有会话       |
+| GET    | `/api/sessions/:id`            | 获取单个会话       |
+| DELETE | `/api/sessions/:id`            | 删除会话           |
+| POST   | `/api/sessions/:id/messages`   | 发送消息           |
+| POST   | `/api/sessions/:id/retry`      | 重试消息           |
+| POST   | `/api/sessions/:id/continue`   | 继续生成           |
+| DELETE | `/api/sessions/:id/generation` | 停止生成           |
+| GET    | `/api/providers`               | 获取内置供应商类型 |
+| GET    | `/api/providers/:type/models`  | 获取模型列表       |
 
 ### SSE 流式端点
 
-| 端点 | 描述 |
-|------|------|
+| 端点                               | 描述         |
+| ---------------------------------- | ------------ |
 | `GET /api/sessions/:id/generation` | 订阅生成进度 |
 
 SSE 事件类型：

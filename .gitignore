@@ -6,7 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
-data/settings.json
 /release
 /build-electron/dist-server
 /dist-server

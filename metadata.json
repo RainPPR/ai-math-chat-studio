@@ -1,5 +1,0 @@
-{
-  "name": "AI Math & Chat Studio",
-  "description": "Multi-session AI chat tool with Gemini API, Markdown, KaTeX, mhchem, and math evaluation capabilities.",
-  "requestFramePermissions": []
-}

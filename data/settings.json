@@ -1,0 +1,310 @@
+{
+  "providers": [
+    {
+      "id": "p-poe-8d3e",
+      "type": "openai-compatible",
+      "name": "Poe",
+      "baseURL": "https://api.poe.com/v1",
+      "envKey": "POE_API_KEY",
+      "modelSource": "https://raw.githubusercontent.com/RainPPR/poe-free-models/refs/heads/main/free_models_ai_math.json"
+    },
+    {
+      "id": "p-google-fc62",
+      "type": "google",
+      "name": "Google Gemini",
+      "envKey": "GEMINI_API_KEY"
+    },
+    {
+      "id": "p-nvidia-9a1b",
+      "type": "nvidia",
+      "name": "Nvidia NIM",
+      "envKey": "NVIDIA_API_KEY"
+    },
+    {
+      "id": "p-kilo-gw",
+      "type": "openai-compatible",
+      "name": "Kilo Gateway",
+      "baseURL": "https://api.kilo.ai/api/gateway",
+      "envKey": "KILO_API_KEY",
+      "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/kilo-free-ai-math.json"
+    },
+    {
+      "id": "3a4e730d-ba37-49e2-bd02-15532f2f85d3",
+      "type": "openai-compatible",
+      "name": "DS2API Local",
+      "apiKey": "sk-ds2api",
+      "baseURL": "http://0.0.0.0:8088/v1"
+    }
+  ],
+  "models": [
+    {
+      "id": "a7cf2ab2-4cc2-4e54-a4ee-84ccbe1c4f76",
+      "providerId": "p-google-fc62",
+      "providerType": "google",
+      "modelId": "gemma-4-31b-it",
+      "displayName": "Gemma 4 31b (Google)",
+      "enableTools": true,
+      "disabledTools": [],
+      "thinkingLevel": "high"
+    },
+    {
+      "id": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89",
+      "providerId": "p-nvidia-9a1b",
+      "providerType": "nvidia",
+      "modelId": "deepseek-ai/deepseek-v4-pro",
+      "displayName": "DeepSeek V4 Pro (Nvidia)",
+      "enableTools": true,
+      "disabledTools": [],
+      "extraBody": {
+        "chat_template_kwargs": {
+          "thinking": true,
+          "reasoning_effort": "max"
+        }
+      }
+    },
+    {
+      "id": "e3567ha8-910c-4d11-a12b-e345gfk47896",
+      "providerId": "p-nvidia-9a1b",
+      "providerType": "nvidia",
+      "modelId": "moonshotai/kimi-k2.6",
+      "displayName": "Kimi K2.6 (Nvidia)",
+      "enableTools": true,
+      "disabledTools": [],
+      "reasoningEffort": "high",
+      "injectThinkingTemplate": true
+    },
+    {
+      "id": "090f132d-1796-47d5-b6fa-32244e602e13",
+      "providerId": "p-google-fc62",
+      "providerType": "google",
+      "modelId": "gemini-3.5-flash",
+      "enableTools": true,
+      "disabledTools": [],
+      "displayName": "Gemini 3.5 Flash (Google)",
+      "thinkingLevel": "high"
+    },
+    {
+      "id": "c4c7ff71-4399-4081-976a-9aa29b282c16",
+      "providerId": "p-nvidia-9a1b",
+      "providerType": "nvidia",
+      "modelId": "z-ai/glm-5.1",
+      "enableTools": true,
+      "disabledTools": [],
+      "displayName": "GLM 5.1 (Nvidia)",
+      "extraBody": {
+        "chat_template_kwargs": {
+          "enable_thinking": true,
+          "clear_thinking": false
+        }
+      }
+    },
+    {
+      "id": "96bf625a-9e90-4d72-95bc-680eb477025d",
+      "providerId": "p-nvidia-9a1b",
+      "providerType": "nvidia",
+      "modelId": "minimaxai/minimax-m3",
+      "enableTools": true,
+      "disabledTools": [],
+      "displayName": "Minimax M3 (Nvidia)",
+      "maxTokens": 16384,
+      "injectThinkingTemplate": true,
+      "extraBody": {
+        "chat_template_kwargs": {
+          "thinking_mode": "enabled"
+        }
+      }
+    },
+    {
+      "id": "fbfbd4f2-c04f-43b3-bf7c-01a44059afcc",
+      "providerId": "p-nvidia-9a1b",
+      "providerType": "nvidia",
+      "modelId": "google/diffusiongemma-26b-a4b-it",
+      "enableTools": true,
+      "disabledTools": [],
+      "displayName": "DiffusionGemma-26b-a4b-it (Nvidia)",
+      "maxTokens": 32768,
+      "injectThinkingTemplate": false,
+      "extraBody": {
+        "chat_template_kwargs": {
+          "enable_thinking": true
+        }
+      }
+    },
+    {
+      "id": "606a5399-ffe0-4c15-9d54-a2dfe649bfae",
+      "providerId": "3a4e730d-ba37-49e2-bd02-15532f2f85d3",
+      "providerType": "openai-compatible",
+      "modelId": "deepseek-expert-thinking-max",
+      "displayName": "DeepSeek Expert Thinking (DS2API)"
+    },
+    {
+      "id": "67195708-61d2-41d2-987d-b48ff164d997",
+      "providerId": "p-nvidia-9a1b",
+      "providerType": "nvidia",
+      "modelId": "nvidia/nemotron-3-ultra-550b-a55b",
+      "displayName": "Nvidia Nemotron 3 Ultra",
+      "maxTokens": 32768,
+      "extraBody": {
+        "chat_template_kwargs": {
+          "enable_thinking": true
+        },
+        "reasoning_budget": -1
+      }
+    },
+    {
+      "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
+      "providerId": "p-poe-8d3e",
+      "providerType": "openai-compatible",
+      "modelId": "gemma-4-31b",
+      "displayName": "Gemma-4-31B (Poe)"
+    },
+    {
+      "id": "906b12a9-7271-54e1-a7af-d9757bc10bee",
+      "providerId": "p-poe-8d3e",
+      "providerType": "openai-compatible",
+      "modelId": "qwen3.5-397b-a17b-t",
+      "displayName": "Qwen3.5-397B-A17B-T (Poe)"
+    },
+    {
+      "id": "b590ac57-34f1-5b38-ada8-0cc97fd89fb0",
+      "providerId": "p-poe-8d3e",
+      "providerType": "openai-compatible",
+      "modelId": "kimi-k2.5-fw",
+      "displayName": "Kimi-K2.5-FW (Poe)"
+    },
+    {
+      "id": "b657c5c4-ab39-5657-a244-37fac1b33a94",
+      "providerId": "p-poe-8d3e",
+      "providerType": "openai-compatible",
+      "modelId": "glm-5.1-t",
+      "displayName": "GLM-5.1-T (Poe)"
+    },
+    {
+      "id": "77fc9549-28c8-5e64-994a-b20990ea22e0",
+      "providerId": "p-poe-8d3e",
+      "providerType": "openai-compatible",
+      "modelId": "gemma-4-31b-t",
+      "displayName": "Gemma-4-31B-T (Poe)"
+    },
+    {
+      "id": "0fb6c7c8-3508-51d8-bdec-9eb7cff92e24",
+      "providerId": "p-poe-8d3e",
+      "providerType": "openai-compatible",
+      "modelId": "glm-5-t",
+      "displayName": "GLM-5-T (Poe)"
+    },
+    {
+      "id": "d9a87420-108a-5121-8ed2-bad9d75f6d9a",
+      "providerId": "p-poe-8d3e",
+      "providerType": "openai-compatible",
+      "modelId": "pearl-gemma-4-31b",
+      "displayName": "Pearl-Gemma-4-31B (Poe)"
+    },
+    {
+      "id": "b6b755ec-18e5-5aaf-b354-c6a18fea0f49",
+      "providerId": "p-poe-8d3e",
+      "providerType": "openai-compatible",
+      "modelId": "qwen3.7-max-t",
+      "displayName": "Qwen3.7-Max-T (Poe)"
+    },
+    {
+      "id": "75803372-dd81-579e-a7f6-394a8f0c5f3c",
+      "providerId": "p-poe-8d3e",
+      "providerType": "openai-compatible",
+      "modelId": "minimax-m3-t",
+      "displayName": "MiniMax-M3-T (Poe)"
+    },
+    {
+      "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "kilo-auto/free",
+      "displayName": "Auto Free (Kilo)"
+    },
+    {
+      "id": "e95fc0cb-3ce7-5503-a2f5-99bfd69160a3",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "poolside/laguna-m.1:free",
+      "displayName": "Poolside: Laguna M.1 (Kilo)"
+    },
+    {
+      "id": "d60d9970-6313-5028-be37-406d86c97f16",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "nex-agi/nex-n2-pro:free",
+      "displayName": "Nex AGI: Nex-N2-Pro (Kilo)"
+    },
+    {
+      "id": "c93e0a30-0931-543b-bb9b-d7c020d6b0b3",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "stepfun/step-3.7-flash:free",
+      "displayName": "StepFun: Step 3.7 Flash (Kilo)",
+      "reasoningEffort": "high"
+    },
+    {
+      "id": "e2c6d1c5-44b3-5bcd-aa30-790edccdc2ed",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "cohere/north-mini-code:free",
+      "displayName": "Cohere: North Mini Code (Kilo)"
+    },
+    {
+      "id": "417ad047-ad35-5d82-a4c1-c0cb371a2da8",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "nvidia/nemotron-3.5-content-safety:free",
+      "displayName": "NVIDIA: Nemotron 3.5 Content Safety (Kilo)"
+    },
+    {
+      "id": "2ef64470-af2c-5d73-ad83-9f3947ba9003",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "displayName": "NVIDIA: Nemotron 3 Ultra (Kilo)"
+    },
+    {
+      "id": "3de9da4d-c9b8-5e79-a12f-6257ab2a7103",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "openrouter/owl-alpha",
+      "displayName": "Owl Alpha (Kilo)"
+    },
+    {
+      "id": "cfcdca0f-3efd-5c17-9003-8d05a905ce00",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "displayName": "NVIDIA: Nemotron 3 Nano Omni (Kilo)"
+    },
+    {
+      "id": "487fc175-cccb-5edd-ad91-21d3cc13bf20",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "poolside/laguna-xs.2:free",
+      "displayName": "Poolside: Laguna XS.2 (Kilo)"
+    },
+    {
+      "id": "d63a257a-6bab-5b88-9418-46fad53210e1",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "nvidia/nemotron-3-super-120b-a12b:free",
+      "displayName": "NVIDIA: Nemotron 3 Super (Kilo)"
+    },
+    {
+      "id": "14949368-d0cb-5c39-a1bd-8e78a0ef89fa",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "openrouter/free",
+      "displayName": "Free Models Router (Kilo)"
+    }
+  ],
+  "systemPrompt": "# Role：资深高中数学专家/竞赛级导师\n\nBackground：用户通常是寻求高考压轴突破或竞赛入门的学生。他们不仅需要正确答案，更需要一套能够应对复杂变式、打通知识关联的“数学元认知”。你必须超越简单的“题目解答器”，转而成为一个能够揭示数学本质、传授高维视野的智慧导师。\n\nAttention：你的核心价值在于 **“认知揭示”**。面对复杂问题，不要直接给出结论，而应先进行“预研分析（Meta-Analysis）”，展示你如何从杂乱的题干中提取“母函数”或“几何直观”。每一个步骤都应是严密逻辑与直觉洞察的结合，激发用户超越课本的解题视野。\n\nCore Capabilities：\n\n- **深度特征挖掘（Feature Extraction）**：瞬间识别导数不等式中的“指纹”结构（如指对同构、偏移对称性）。\n\n- **多维解法对撞（Cross-Method Analysis）**：能够同时展示“暴力算力解”与“优雅直觉解”，对比其在考试策略中的优劣。\n\n- **精密计算控制（Precision Control）**：极其审慎地对待代数计算。在涉及高阶求导、繁琐通分时，会利用思维链进行多重校验，确保零误差。\n\n- **知识迁移引导（Schema Transfer）**：在总结时不仅是归纳方法，更要建立与其他数学分支（如概率分布、解析几何）的潜在联系。\n\nGoals：\n\n- **深度特征透视（Insight Extraction）**：不仅理解表面题意，更要精准定位题目背后的“结构母题”。识别题目是属于“局部解析式构造”还是“整体性质推导”。\n\n- **全路径方案设计（Multi-Path Design）**：\n    - **基准路径（Standard View）**：提供基于标准考纲、易于在考场上复现的常规步骤。\n    - **高维路径（High-Level View）**：展示通过二级结论、同构、放缩或几何直观秒杀的进阶思路。\n    - **逻辑证伪/检验路径（Self-Correction）**：主动考虑反例，通过特殊值检验或极限验证路径的可行性。\n\n- **精密代数演算（Algebraic Precision）**：在复杂导数、通分、变量替换过程中保持绝对零误差。对于繁琐计算，必须在思维链中预演逻辑，确保每一步的合法性。\n\n- **思想模型提炼（Meta-Cognitive Summary）**：解题后必须完成“认知复盘”。不仅是总结考点，更要提炼出该类问题的“解题逻辑模板”，引导用户建立类似的认知 Schema。\n\nConstrains：\n\n- **深度思维链（Deep CoT）**：在正式输出前，必须在内部思维链中进行“无损预演”。预演包括：特征识别、路径博弈（选择 A 还是 B 解法）、计算边界校验。\n\n- **排版极致美感**：\n    - 严格遵循中英文空格规约（如“对于 $x > 0$”）。\n    - 段落、公式、列表之间保留充分空行。\n    - 公式内排除任何中文，使用加粗（**Strong**）和块级居中增强阅读体验。\n\n- **绝对严谨性**：严禁出现数值计算错误或定理误用。若遇到无法精确解析的问题，必须明确说明并利用数值逼近进行辅助说明。\n\n- **去 AI 化语言**：禁止使用“作为 AI 模型”、“我会为您”等冗余表述。直接以专家导师的口吻直切题目要点。\n\n- **工具审慎调用**：仅在涉及高阶数值计算、导数图像绘制逻辑复杂或需要大规模数值模拟时调用解释器，且必须解释调用原因。\n\nWorkflow：\n\n1. **元解析与特征挖掘（Feature Mining）**：\n    - 在内部思维链中，首先识别题目的“结构分量”（如：是否包含指数函数 $e^x$、是否有双根、是否关于某点对称）。\n    - 检索 `exploration.md` 中的策略，确定是否采用“同构变换”、“偏移构造”或“参变分离”。\n\n2. **基准推导（The Ground Solution）**：\n    - 建立常规解题坐标系，展示基于基本定理（如拉格朗日、零点存在性定理）的标准步骤。\n    - 强调每一步的逻辑连贯性，确保不仅算出结果，更展示出逻辑的必然性。\n\n3. **高维博弈（High-Level Strategy）**：\n    - 思考：“是否存在更本质的数学美感？”。\n    - 尝试构造对偶式、利用凹凸性放缩或算子法。展示专家级解法的简洁与深刻。\n\n4. **精密演算与验证（Verification）**：\n    - 回溯检查所有代数变形。\n    - 若题目涉及复杂根分布，调用解释器绘制图像或计算导数变号临界值。并在回复中以“解析验证”的形式呈现。\n\n5. **元认知总结（Cognitive Reflection）**：\n    - 将解题过程升华为一套“解法模型”。\n    - 提示此类问题的“陷阱点”与“迁移场景”。\n\nOutputFormat：\n\n- **结构化输出**：回答必须包含三个明确部分：【常规解法】、【进阶解法/技巧】、【总结与反思】，确保内容层次分明。\n\n- **公式标准**：所有数学公式，无论是行内短公式还是独立的长公式，都必须用 $...$ 或 $$...$$ 的 LaTeX 格式进行排版，确保渲染清晰美观。\n\n- **清晰易读**：关键步骤需要编号，重要结论或转换思路的地方可以使用加粗进行强调，确保用户能够轻松跟进整个逻辑推理过程。\n\nSuggestions：\n\n- **知识网络关联**：在解题时，主动思考问题与数学知识体系中其他分支的联系，例如，一个代数问题是否能用几何方法直观解决，这有助于发现创新的解题路径。\n\n- **模型化与泛化**：尝试将具体问题抽象成一个数学模型，思考其一般形式的解法。这种从具体到抽象再到具体的思维训练，能极大提升解决一类问题的能力。\n\n- **逆向思维应用**：当正向推理受阻时，果断采用逆向思维，从结论出发，反推需要满足的条件。这种方法往往能发现被忽略的中间环节，打通解题通路。\n\n- **极端化与特例检验**：在推导过程中或得到结论后，代入特殊值或考虑极端情况（如最大/最小值，n→∞）进行快速检验，这是一种高效的自我验证和排错机制。\n\n- **解后反思内化**：每次完成解答后，进行内在的策略复盘，分析哪种方法更具本质性，哪种技巧适用范围更广，并将其归入自己的方法论知识库，不断优化未来的解题决策。\n\nInitialization：作为资深数学教育与解题专家，你必须遵守上述所有约束，使用简体中文与用户交流，适当使用一些表情符号。你需要深度探索各种路径，尽可能将所有可行路径展示给用户，并对比各种做法，总结核心思想和基本做法、题型总结。\n",
+  "renderThinkingAsMarkdown": true,
+  "autoScroll": false,
+  "collapseThinkingFinished": true,
+  "gemmaTrimThinkingSpaces": true,
+  "activeModelId": "e3567ha8-910c-4d11-a12b-e345gfk47896",
+  "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19"
+}
