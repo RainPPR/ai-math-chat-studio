@@ -12,14 +12,15 @@ const PANDOC_OPTIONS = {
 };
 
 async function generateTitleFromMarkdown(markdown: string): Promise<string> {
+  const _markdown = markdown.replaceAll("\\dfrac", "\\frac");
   try {
-    const result = await convert(PANDOC_OPTIONS, markdown, {});
-    const plainText = result.stdout || markdown;
-    const trimmed = plainText.trim();
+    const result = await convert(PANDOC_OPTIONS, _markdown, {});
+    const plainText = result.stdout || _markdown;
+    const trimmed = plainText.trim().replaceAll("$", "");
     if (trimmed.length <= 50) return trimmed;
     return trimmed.slice(0, 50) + '...';
   } catch {
-    const trimmed = markdown.trim();
+    const trimmed = _markdown.trim().replaceAll("$", "");
     if (trimmed.length <= 50) return trimmed;
     return trimmed.slice(0, 50) + '...';
   }
@@ -301,7 +302,7 @@ export class GenerationManager {
     }));
 
     let title = raw.title ?? 'Untitled';
-    if ((title === 'Untitled' || !raw.title) && messages.length > 0) {
+    if (messages.length > 0) {
       const firstUserMsg = messages.find((m: any) => m.role === 'user');
       if (firstUserMsg) {
         title = await generateTitleFromMarkdown(firstUserMsg.content);

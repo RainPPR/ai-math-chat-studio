@@ -1,7 +1,6 @@
 {
   "id": "551ecc80-9146-4e26-a477-b1fd742b67c0",
-  "uid": "local",
-  "title": "已知定义在 $\\mathbb R$ 上的函数 $f(x)$ ...",
+  "title": "已知定义在 ℝ 上的函数 f(x) 满足 f(xy) = y²f(x) + x²f(y)，探究 f(...",
   "messages": [
     {
       "id": "dbc32888-d1ce-4c76-8992-8ec0502aa975",

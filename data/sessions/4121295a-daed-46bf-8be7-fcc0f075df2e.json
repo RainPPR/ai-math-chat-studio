@@ -1,7 +1,6 @@
 {
   "id": "4121295a-daed-46bf-8be7-fcc0f075df2e",
-  "uid": "0wureqSBO9SIfBW5YrY5X6bd7bw2",
-  "title": "已知 $\\dfrac{a+\\ln x}{x}\\le e^x-",
+  "title": "已知 $\\dfrac{a+\\ln x}{x}\\le e^x-1$ 恒成立，求 a 的取值范围。",
   "messages": [
     {
       "id": "229393e7-f004-4ac9-ba05-dc21f34253d7",

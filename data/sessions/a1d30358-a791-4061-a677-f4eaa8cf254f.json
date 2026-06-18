@@ -1,7 +1,6 @@
 {
   "id": "a1d30358-a791-4061-a677-f4eaa8cf254f",
-  "uid": "local",
-  "title": "已知函数 $f(x)=\\begin{cases}4-2^x&...",
+  "title": "已知函数 f(x)=\\begin{cases}4-2^x&x\\ge1\\\\x^2-(m+1)x+2m&...",
   "messages": [
     {
       "id": "207402b9-cb7b-4090-81fb-44412c3c3695",

@@ -1,7 +1,6 @@
 {
   "id": "c48346aa-a5b0-4a74-99ab-680f5abf9a8f",
-  "uid": "local",
-  "title": "已知 $f(x)=(1+x)^n,(|x|<1)$，证明 $...",
+  "title": "已知 f(x) = (1 + x)^(n), (|x| < 1)，证明 f(x) + f(−x) <...",
   "messages": [
     {
       "id": "861fa893-a570-47dd-b961-3da720bc0251",

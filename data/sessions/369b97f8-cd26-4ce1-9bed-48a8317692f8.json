@@ -1,7 +1,6 @@
 {
   "id": "369b97f8-cd26-4ce1-9bed-48a8317692f8",
-  "uid": "local",
-  "title": "比较 $a=0.1e^{0.1}$ 和 $b=\\dfrac{...",
+  "title": "比较 a = 0.1e^(0.1) 和 b=\\frac{1}{9} 的大小关系。",
   "messages": [
     {
       "id": "548a95fc-b672-42ef-835e-366cdfbae2c5",

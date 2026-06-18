@@ -1,7 +1,6 @@
 {
   "id": "ca4cd537-d7c7-4bd5-a94c-2568df22458e",
-  "uid": "0wureqSBO9SIfBW5YrY5X6bd7bw2",
-  "title": "把 3 个 A、3 个 B、3 个 C 放到九宫格中，要求每",
+  "title": "把 3 个 A、3 个 B、3 个 C 放到九宫格中，要求每行每列都是不同的元素，求方案数。",
   "messages": [
     {
       "id": "c373dbc6-aa3c-4a89-85b0-60a4c62c6a99",

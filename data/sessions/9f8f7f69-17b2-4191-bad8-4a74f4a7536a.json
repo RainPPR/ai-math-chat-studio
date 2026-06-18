@@ -1,7 +1,6 @@
 {
   "id": "9f8f7f69-17b2-4191-bad8-4a74f4a7536a",
-  "uid": "0wureqSBO9SIfBW5YrY5X6bd7bw2",
-  "title": "已知函数 $f(x)=\\begin{cases}|\\ln x",
+  "title": "已知函数 $f(x)=\\begin{cases}|\\ln x|&x>0\\\\x^2+2x-1&x\\le...",
   "messages": [
     {
       "id": "ba257610-ddee-4fb7-af44-10fbcee1c07b",

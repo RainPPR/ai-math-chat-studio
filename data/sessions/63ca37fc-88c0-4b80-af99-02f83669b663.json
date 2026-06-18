@@ -1,7 +1,6 @@
 {
   "id": "63ca37fc-88c0-4b80-af99-02f83669b663",
-  "uid": "local",
-  "title": "函数 $f(x)=\\dfrac{ax^2+8x+b}{x^2...",
+  "title": "函数 f(x)=\\frac{ax^2+8x+b}{x^2+1} 的最大值为 9，最小值为 1，求实数...",
   "messages": [
     {
       "id": "b62c7c8e-260e-41fb-a301-749457bf4934",

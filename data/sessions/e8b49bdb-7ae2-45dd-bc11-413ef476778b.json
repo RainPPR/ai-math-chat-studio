@@ -1,7 +1,6 @@
 {
   "id": "e8b49bdb-7ae2-45dd-bc11-413ef476778b",
-  "uid": "local",
-  "title": "若 $a,b>0$ 则 $\\max\\left\\{a,b,\\d...",
+  "title": "若 a, b > 0 则 \\max\\left\\{a,b,\\frac{1}{a}+\\frac{3}{b...",
   "messages": [
     {
       "id": "3cfbb513-2d26-4d9f-8d1e-b2dd5260e217",

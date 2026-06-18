@@ -1,7 +1,6 @@
 {
   "id": "4b587126-ce07-4222-a4f0-b62a095b9b5d",
-  "uid": "local",
-  "title": "对于 $\\forall x>0$ 都有 $e^{ax}+a\\...",
+  "title": "对于 ∀x > 0 都有 e^{ax}+a\\le\\frac{1-\\ln x}{x} 则 a 的最大值...",
   "messages": [
     {
       "id": "86589186-0ba7-4bf2-8e8c-c4603b32a0cd",

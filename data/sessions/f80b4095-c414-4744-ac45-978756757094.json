@@ -1,7 +1,6 @@
 {
   "id": "f80b4095-c414-4744-ac45-978756757094",
-  "uid": "0wureqSBO9SIfBW5YrY5X6bd7bw2",
-  "title": "设 $a=\\log_{0.2}0.3,b=\\log_{2}0",
+  "title": "设 a = log_(0.2)0.3, b = log₂0.3，求出大小顺序 ab, a + b, ...",
   "messages": [
     {
       "id": "697ec60b-48e3-4bc4-8b43-c64dd0538507",

@@ -1,7 +1,6 @@
 {
   "id": "2406bd74-8e37-45b0-8e4d-ba41d3257007",
-  "uid": "0wureqSBO9SIfBW5YrY5X6bd7bw2",
-  "title": "用计算工具（tool call）计算 1～99 所有数字的欧",
+  "title": "用计算工具（tool call）计算 1～99 所有数字的欧拉函数（数论）的平方根的和的平方。",
   "messages": [
     {
       "id": "e9beaf90-4dac-4b38-8f1c-eadbf909d373",

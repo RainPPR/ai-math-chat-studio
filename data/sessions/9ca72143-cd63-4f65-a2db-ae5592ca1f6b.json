@@ -1,7 +1,6 @@
 {
   "id": "9ca72143-cd63-4f65-a2db-ae5592ca1f6b",
-  "uid": "local",
-  "title": "已知函数 $f(x)$ 为偶函数，满足 $f(x+2)=-\\...",
+  "title": "已知函数 f(x) 为偶函数，满足 $f(x+2)=-\\dfrac{1}{f(x)}$，且当 −2 ...",
   "messages": [
     {
       "id": "0f1a643d-56d9-4ad1-80f8-9e0bbeb78b08",

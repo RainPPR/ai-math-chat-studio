@@ -1,7 +1,6 @@
 {
   "id": "744a8585-ec51-40cf-9ed5-50c42429b3f9",
-  "uid": "0wureqSBO9SIfBW5YrY5X6bd7bw2",
-  "title": "已知 A B C 各 6:3:1 数量极大，随机取 $3$ ",
+  "title": "已知 A B C 各 6:3:1 数量极大，随机取 3 个，求至少两个 A 的概率。",
   "messages": [
     {
       "id": "a46bef62-d933-445f-9a4b-6417057bd348",

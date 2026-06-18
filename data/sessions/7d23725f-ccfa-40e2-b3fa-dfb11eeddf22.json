@@ -1,7 +1,6 @@
 {
   "id": "7d23725f-ccfa-40e2-b3fa-dfb11eeddf22",
-  "uid": "0wureqSBO9SIfBW5YrY5X6bd7bw2",
-  "title": "甲乙丙丁分配到ABC三个场所，每个场所至少一人，甲乙不能在同",
+  "title": "甲乙丙丁分配到ABC三个场所，每个场所至少一人，甲乙不能在同一个场所，有多少种分配方案？",
   "messages": [
     {
       "id": "967620a1-8790-41b0-90be-3d27977e4527",

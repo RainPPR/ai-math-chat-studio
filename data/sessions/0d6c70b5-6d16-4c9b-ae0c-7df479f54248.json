@@ -1,7 +1,6 @@
 {
   "id": "0d6c70b5-6d16-4c9b-ae0c-7df479f54248",
-  "uid": "local",
-  "title": "已知函数 $f(x)=\\dfrac{2^x-1}{2^x+1...",
+  "title": "已知函数 f(x)=\\frac{2^x-1}{2^x+1}，若对于任意 x ∈ ℝ，不等式 f\\le...",
   "messages": [
     {
       "id": "eb94c2c0-06b6-4b2c-b59e-1b710077ebd1",
