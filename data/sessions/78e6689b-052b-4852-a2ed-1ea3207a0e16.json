@@ -1,6 +1,6 @@
 {
   "id": "78e6689b-052b-4852-a2ed-1ea3207a0e16",
-  "title": "已知 $c_n=\\dfrac{b_n-1}{b_n(2b_n-3)}$，b_(n) = 2^(n)，...",
+  "title": "已知 c_n=\\frac{b_n-1}{b_n(2b_n-3)}，b_(n) = 2^(n)，求证 ...",
   "messages": [
     {
       "id": "ea6039f7-d907-49cf-83f9-ae8a1b98324f",

@@ -301,13 +301,8 @@ export class GenerationManager {
       createdAt: m.createdAt ?? new Date().toISOString(),
     }));
 
-    let title = raw.title ?? 'Untitled';
-    if (messages.length > 0) {
-      const firstUserMsg = messages.find((m: any) => m.role === 'user');
-      if (firstUserMsg) {
-        title = await generateTitleFromMarkdown(firstUserMsg.content);
-      }
-    }
+    const firstUserMsg = messages.find((m: any) => m.role === 'user') || 'Untitled';
+    const title = await generateTitleFromMarkdown(firstUserMsg.content);
 
     return {
       id: raw.id ?? crypto.randomUUID(),
