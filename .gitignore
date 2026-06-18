@@ -12,3 +12,4 @@ data/settings.json
 /dist-server
 /dist-compile
 ai-math-chat-studio.exe
+/cache

@@ -1,7 +1,29 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { convert } from 'pandoc-wasm';
 import { streamChat, StreamChunk } from '../providers/stream';
 import { MATH_INSTRUCTIONS } from '../providers/config';
+
+const PANDOC_OPTIONS = {
+  from: 'markdown',
+  to: 'plain',
+  standalone: true,
+  wrap: 'none',
+};
+
+async function generateTitleFromMarkdown(markdown: string): Promise<string> {
+  try {
+    const result = await convert(PANDOC_OPTIONS, markdown, {});
+    const plainText = result.stdout || markdown;
+    const trimmed = plainText.trim();
+    if (trimmed.length <= 50) return trimmed;
+    return trimmed.slice(0, 50) + '...';
+  } catch {
+    const trimmed = markdown.trim();
+    if (trimmed.length <= 50) return trimmed;
+    return trimmed.slice(0, 50) + '...';
+  }
+}
 
 export interface ServerChatMessage {
   id: string;
@@ -94,9 +116,10 @@ export class GenerationManager {
   async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
     let session = await this.readSession(sessionId);
     if (!session) {
+      const title = await generateTitleFromMarkdown(content);
       session = {
         id: sessionId,
-        title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
+        title,
         messages: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -111,7 +134,7 @@ export class GenerationManager {
     };
     session.messages.push(userMsg);
     if (session.messages.length === 1) {
-      session.title = content.slice(0, 30) + (content.length > 30 ? '...' : '');
+      session.title = await generateTitleFromMarkdown(content);
     }
     session.updatedAt = new Date().toISOString();
     await this.writeSession(session);
@@ -269,16 +292,26 @@ export class GenerationManager {
     task.subscribers.forEach(cb => cb('done', { content: fullContent }));
   }
 
-  private sanitizeSession(raw: any): ServerChatSession {
+  private async sanitizeSession(raw: any): Promise<ServerChatSession> {
+    const messages = (raw.messages || []).map((m: any) => ({
+      id: m.id ?? crypto.randomUUID(),
+      role: m.role === 'model' || m.role === 'user' ? m.role : 'user',
+      content: m.content ?? '',
+      createdAt: m.createdAt ?? new Date().toISOString(),
+    }));
+
+    let title = raw.title ?? 'Untitled';
+    if ((title === 'Untitled' || !raw.title) && messages.length > 0) {
+      const firstUserMsg = messages.find((m: any) => m.role === 'user');
+      if (firstUserMsg) {
+        title = await generateTitleFromMarkdown(firstUserMsg.content);
+      }
+    }
+
     return {
       id: raw.id ?? crypto.randomUUID(),
-      title: raw.title ?? 'Untitled',
-      messages: (raw.messages || []).map((m: any) => ({
-        id: m.id ?? crypto.randomUUID(),
-        role: m.role === 'model' || m.role === 'user' ? m.role : 'user',
-        content: m.content ?? '',
-        createdAt: m.createdAt ?? new Date().toISOString(),
-      })),
+      title,
+      messages,
       createdAt: raw.createdAt ?? new Date().toISOString(),
       updatedAt: raw.updatedAt ?? new Date().toISOString(),
     };
@@ -290,7 +323,7 @@ export class GenerationManager {
     let cleaned = 0;
 
     for (const session of sessions) {
-      const clean = this.sanitizeSession(session);
+      const clean = await this.sanitizeSession(session);
       await this.writeSession(clean);
       cleaned++;
       details.push(clean.title);
