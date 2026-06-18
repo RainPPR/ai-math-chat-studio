@@ -7,10 +7,9 @@
     "dev": "tsx server.ts",
     "build": "vite build",
     "build:bundle": "bun scripts/build-bundle.ts",
-    "build:electron": "bun scripts/build-electron.ts",
-    "build:bun-compile": "bun scripts/build-bun-compile.ts",
+    "build:compile": "bun scripts/build-bun-compile.ts",
     "preview": "vite preview",
-    "clean": "rm -rf dist dist-server dist-compile build-electron release",
+    "clean": "rm -rf dist dist-server dist-compile release",
     "lint": "tsc --noEmit --strict"
   },
   "dependencies": {
@@ -48,8 +47,6 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.3",
     "autoprefixer": "^10.5.0",
-    "electron": "^42.4.1",
-    "electron-builder": "^26.15.3",
     "esbuild": "^0.28.1",
     "tailwindcss": "^4.3.1",
     "tsx": "^4.22.4",

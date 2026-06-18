@@ -54,11 +54,13 @@
 
 ## 构建命令
 ```bash
-npm run dev      # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
-npm run build    # Vite 生产构建
-npm run preview  # 预览生产构建
-npm run lint     # TypeScript 类型检查
-npm run clean    # 清除 dist 目录
+npm run dev           # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
+npm run build         # Vite 生产构建
+npm run preview       # 预览生产构建
+npm run build:bundle    # 打包服务端代码为单个 bundle
+npm run build:bun-compile  # 使用 Bun 编译为可执行文件
+npm run lint          # TypeScript 类型检查
+npm run clean         # 清除 dist、dist-server、dist-compile、release 目录
 ```
 
 ## 路径别名
