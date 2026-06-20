@@ -29,11 +29,11 @@
       "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/kilo-free-ai-math.json"
     },
     {
-      "id": "3a4e730d-ba37-49e2-bd02-15532f2f85d3",
+      "id": "d687d0d8-349b-4114-81ad-29e752bd49a1",
       "type": "openai-compatible",
-      "name": "DS2API Local",
-      "apiKey": "sk-ds2api",
-      "baseURL": "http://0.0.0.0:8088/v1"
+      "name": "LogFare",
+      "envKey": "LOGFARE_API_KEY",
+      "baseURL": "https://logfare.ai/v1"
     }
   ],
   "models": [
@@ -131,13 +131,6 @@
       }
     },
     {
-      "id": "606a5399-ffe0-4c15-9d54-a2dfe649bfae",
-      "providerId": "3a4e730d-ba37-49e2-bd02-15532f2f85d3",
-      "providerType": "openai-compatible",
-      "modelId": "deepseek-expert-thinking-max",
-      "displayName": "DeepSeek Expert Thinking (DS2API)"
-    },
-    {
       "id": "67195708-61d2-41d2-987d-b48ff164d997",
       "providerId": "p-nvidia-9a1b",
       "providerType": "nvidia",
@@ -150,6 +143,14 @@
         },
         "reasoning_budget": -1
       }
+    },
+    {
+      "id": "a273e2e9-9bdd-4c31-88bf-ce563d4518fb",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "gemini-3.5-flash",
+      "displayName": "Gemini 3.5 Flash (LogFare)",
+      "reasoningEffort": "high"
     },
     {
       "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
@@ -305,6 +306,6 @@
   "autoScroll": false,
   "collapseThinkingFinished": true,
   "gemmaTrimThinkingSpaces": true,
-  "activeModelId": "e3567ha8-910c-4d11-a12b-e345gfk47896",
-  "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19"
+  "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
+  "activeModelId": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89"
 }
