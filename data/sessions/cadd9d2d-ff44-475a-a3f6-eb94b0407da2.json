@@ -1,0 +1,14 @@
+{
+  "id": "cadd9d2d-ff44-475a-a3f6-eb94b0407da2",
+  "title": "已知 m 是正整数，证明 \\left[1+\\frac{1}{2m(m+1)}\\right]^{m+1...",
+  "messages": [
+    {
+      "id": "d6ec217f-8476-4e6f-8473-c42e5f9c2a00",
+      "role": "user",
+      "content": "已知 $m$ 是正整数，证明 $\\left[1+\\dfrac{1}{2m(m+1)}\\right]^{m+1}>\\operatorname{exp}\\left(\\dfrac{1}{2m+2}\\right)$，其中定义 $\\operatorname{exp}(x)=e^x$。",
+      "createdAt": "2026-06-21T05:34:44.881Z"
+    }
+  ],
+  "createdAt": "2026-06-21T05:34:44.881Z",
+  "updatedAt": "2026-06-21T05:34:45.003Z"
+}

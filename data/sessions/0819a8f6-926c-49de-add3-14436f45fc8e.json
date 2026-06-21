@@ -1,0 +1,14 @@
+{
+  "id": "0819a8f6-926c-49de-add3-14436f45fc8e",
+  "title": "已知函数 f(x) = (x − 2)e^(x) − ax + aln x 当实数 a < e 时讨...",
+  "messages": [
+    {
+      "id": "01fcf204-05d6-49c6-85cc-f35dc5f04c52",
+      "role": "user",
+      "content": "已知函数 $f(x)=(x-2)e^x-ax+a\\ln x$ 当实数 $a<e$ 时讨论 $f(x)$ 的零点个数。",
+      "createdAt": "2026-06-21T05:37:33.663Z"
+    }
+  ],
+  "createdAt": "2026-06-21T05:37:33.663Z",
+  "updatedAt": "2026-06-21T05:37:33.785Z"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "625f02ec-dfeb-431b-8aa4-3cd395e94805",
+  "title": "证明 \\ln x>e^{-x}-\\frac{2}{ex}",
+  "messages": [
+    {
+      "id": "09fe7e2f-b106-4120-8108-1e186419045a",
+      "role": "user",
+      "content": "证明 $\\ln x>e^{-x}-\\dfrac{2}{ex}$",
+      "createdAt": "2026-06-21T05:33:18.345Z"
+    }
+  ],
+  "createdAt": "2026-06-21T05:33:18.345Z",
+  "updatedAt": "2026-06-21T05:33:18.504Z"
+}
