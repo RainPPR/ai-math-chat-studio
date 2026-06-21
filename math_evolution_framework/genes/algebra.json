@@ -1,0 +1,50 @@
+[
+  {
+    "id": "gene-algebra-sample-001",
+    "domain": "algebra",
+    "pattern": "quadratic_equation",
+    "content": "遇到二次方程先判断判别式 Δ，如果 Δ<0 直接回答无实根，不要展开计算",
+    "type": "heuristic",
+    "source": {"conversation_ids": ["demo-001"], "derivation": "模板示例"},
+    "strength": 0.85,
+    "success_count": 8,
+    "failure_count": 1,
+    "consecutive_failures": 0,
+    "last_used": "2026-06-15",
+    "evolution_history": [{"version": 1, "date": "2026-06-01", "change": "初始创建"}],
+    "tags": ["quadratic", "discriminant", "shortcut"],
+    "deprecated": false
+  },
+  {
+    "id": "gene-algebra-sample-002",
+    "domain": "algebra",
+    "pattern": "quadratic_equation",
+    "content": "韦达定理可替代求根公式：x₁+x₂=-b/a, x₁x₂=c/a，用于求两根关系时更简洁",
+    "type": "shortcut",
+    "source": {"conversation_ids": ["demo-002"], "derivation": "模板示例"},
+    "strength": 0.78,
+    "success_count": 6,
+    "failure_count": 2,
+    "consecutive_failures": 0,
+    "last_used": "2026-06-14",
+    "evolution_history": [{"version": 1, "date": "2026-06-02", "change": "初始创建"}],
+    "tags": ["quadratic", "vieta", "shortcut"],
+    "deprecated": false
+  },
+  {
+    "id": "gene-algebra-sample-003",
+    "domain": "algebra",
+    "pattern": "inequality",
+    "content": "解不等式时，两边同乘负数要反转不等号方向，这是最常见错误",
+    "type": "warning",
+    "source": {"conversation_ids": ["demo-003"], "derivation": "模板示例"},
+    "strength": 0.92,
+    "success_count": 12,
+    "failure_count": 1,
+    "consecutive_failures": 0,
+    "last_used": "2026-06-16",
+    "evolution_history": [{"version": 1, "date": "2026-06-03", "change": "初始创建"}],
+    "tags": ["inequality", "sign", "common-mistake"],
+    "deprecated": false
+  }
+]

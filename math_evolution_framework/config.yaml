@@ -1,0 +1,63 @@
+# MathEvolution 配置
+
+llm:
+  provider: "openai"       # 支持: openai, anthropic, local
+  model: "gpt-4o"         # 或 claude-sonnet-4-20250514, deepseek-chat 等
+  api_key_env: "OPENAI_API_KEY"
+  temperature: 0.3
+  max_tokens: 1000
+
+data:
+  conversations_dir: "./conversations/"
+  genes_dir: "./genes/"
+  patterns_dir: "./patterns/"
+  pitfalls_dir: "./pitfalls/"
+  evolution_dir: "./evolution/"
+
+evolution:
+  trigger:
+    min_new_conversations: 10       # 最少新对话数才触发进化
+    min_error_rate: 0.4             # 某题型错误率超过此值触发修复
+    max_genes_per_domain: 50        # 每个领域最多 Gene 数
+    max_pitfalls_per_domain: 30     # 每个领域最多 Pitfall 数
+
+  gene:
+    max_length: 100                 # Gene 最大字符数
+    min_strength: 0.3              # 低于此强度标记为 deprecated
+    merge_threshold: 0.8           # 语义相似度超过此值触发合并
+    strength_increment: 0.05       # 每次成功增加的强度
+    strength_decrement: 0.10       # 每次失败减少的强度
+
+  circuit_breaker:
+    max_consecutive_failures: 3     # 连续失败次数触发暂停
+    max_consecutive_failures_degrade: 5  # 连续失败次数触发降级
+    domain_failure_threshold: 3     # 同一领域同时失败的 Gene 数
+
+  validation:
+    retrospective_sample_size: 10   # 回顾测试的样本数
+    prospective_sample_size: 3      # 前瞻测试的样本数
+    min_improvement: 0.0            # 最小改善率
+    max_similarity_threshold: 0.8   # 超过此相似度视为重复
+
+  narrative:
+    enabled: true
+    reflection_interval: 10         # 每 N 次进化生成叙事反思
+    max_narrative_length: 2000      # 叙事记忆最大字符数
+
+  strategy_weights:
+    balanced:
+      explore: 0.5
+      optimize: 0.3
+      repair: 0.2
+    explore:
+      explore: 0.8
+      optimize: 0.15
+      repair: 0.05
+    optimize:
+      explore: 0.2
+      optimize: 0.6
+      repair: 0.2
+    repair:
+      explore: 0.1
+      optimize: 0.2
+      repair: 0.7

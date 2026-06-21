@@ -54,38 +54,38 @@
 
 ### 前端
 
-| 技术 | 版本 |
-|---|---|
-| React | ^19.2.7 |
-| TypeScript | ~6.0.3 |
-| Vite | ^8.0.16 |
-| Tailwind CSS | ^4.3.1 |
+| 技术                    | 版本    |
+| ----------------------- | ------- |
+| React                   | ^19.2.7 |
+| TypeScript              | ~6.0.3  |
+| Vite                    | ^8.0.16 |
+| Tailwind CSS            | ^4.3.1  |
 | @tailwindcss/typography | ^0.5.20 |
 
 ### 后端
 
-| 技术 | 版本 |
-|---|---|
-| Express | ^5.2.1 |
-| tsx | ^4.22.4 |
-| @google/genai | ^2.8.0 |
-| OpenAI SDK | ^6.44.0 |
+| 技术          | 版本    |
+| ------------- | ------- |
+| Express       | ^5.2.1  |
+| tsx           | ^4.22.4 |
+| @google/genai | ^2.8.0  |
+| OpenAI SDK    | ^6.44.0 |
 
 ### 数学库
 
-| 技术 | 版本 |
-|---|---|
-| KaTeX | ^0.17.0 |
-| remark-math | ^6.0.0 |
-| rehype-katex | ^7.0.1 |
+| 技术                 | 版本                 |
+| -------------------- | -------------------- |
+| KaTeX                | ^0.17.0              |
+| remark-math          | ^6.0.0               |
+| rehype-katex         | ^7.0.1               |
 | katex/contrib/mhchem | (bundled with KaTeX) |
 
 ### Markdown 渲染
 
-| 技术 | 版本 |
-|---|---|
+| 技术           | 版本    |
+| -------------- | ------- |
 | react-markdown | ^10.1.0 |
-| remark-gfm | ^4.0.1 |
+| remark-gfm     | ^4.0.1  |
 
 ## 快速开始
 
