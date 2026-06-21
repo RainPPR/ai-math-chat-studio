@@ -1,0 +1,14 @@
+{
+  "id": "3f07de8f-d3bc-4a02-9a3d-63e01c354ab5",
+  "title": "已知函数 f(x) = xe^(x) − asin x，若在 x ∈ [0, π]，f(x) ≥ 0...",
+  "messages": [
+    {
+      "id": "037ccf77-7b1d-4c23-a47c-9449a40fb369",
+      "role": "user",
+      "content": "已知函数 $f(x)=xe^x-a\\sin x$，若在 $x\\in[0,\\pi]$，$f(x)\\ge 0$ 恒成立，求 $a$ 的取值范围。",
+      "createdAt": "2026-06-21T06:14:01.891Z"
+    }
+  ],
+  "createdAt": "2026-06-21T06:14:01.891Z",
+  "updatedAt": "2026-06-21T06:14:19.283Z"
+}
