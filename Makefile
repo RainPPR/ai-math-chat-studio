@@ -9,7 +9,7 @@ all: release
 
 release:
 	@echo "Running bun compile..."
-	bun run build:bun-compile
+	bun run build:compile
 	@echo "Copying $(TARGET) to project root..."
 	cp -f $(TARGET) $(ROOT_EXE)
 	@echo "Done. $(ROOT_EXE) updated."

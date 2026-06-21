@@ -96,8 +96,12 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     const result = resolveActiveModel(settings);
     if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
-    await gm.retryMessage(req.params.id, messageId, result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
-    res.status(202).json({ ok: true });
+    try {
+      await gm.retryMessage(req.params.id, messageId, result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
+      res.status(202).json({ ok: true });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
   });
 
   router.post('/api/sessions/:id/continue', async (req, res) => {
@@ -105,8 +109,28 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     const result = resolveActiveModel(settings);
     if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
-    await gm.continueGeneration(req.params.id, result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
-    res.status(202).json({ ok: true });
+    try {
+      await gm.continueGeneration(req.params.id, result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
+      res.status(202).json({ ok: true });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  router.post('/api/sessions/:id/regenerate', async (req, res) => {
+    const { messageId } = req.body;
+    if (!messageId) return res.status(400).json({ error: 'Missing messageId' });
+
+    const settings = await loadSettings(settingsFile);
+    const result = resolveActiveModel(settings);
+    if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
+
+    try {
+      await gm.regenerateMessage(req.params.id, messageId, result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
+      res.status(202).json({ ok: true });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
   });
 
   return router;

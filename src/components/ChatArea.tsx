@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatSession, UserSettings } from '../types';
 import { api } from '../lib/api';
-import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal } from 'lucide-react';
+import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal, AlertCircle, X } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface ChatAreaProps {
@@ -12,13 +12,16 @@ interface ChatAreaProps {
   onStop?: () => void;
   onRetry?: (msgId: string) => void;
   onContinue?: () => void;
+  onRegenerate?: (msgId: string) => void;
   onGenerationEnd?: (sessionId: string) => void;
+  error?: string | null;
+  onClearError?: () => void;
 }
 
-const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue }: {
+const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue, onRegenerate }: {
   msg: any; isLast: boolean; isGenerating: boolean; settings: UserSettings;
   onCopy: (id: string, content: string) => void; copiedId: string | null;
-  onRetry?: (msgId: string) => void; onContinue?: () => void;
+  onRetry?: (msgId: string) => void; onContinue?: () => void; onRegenerate?: (msgId: string) => void;
 }) => {
   const isUser = msg.role === 'user';
   let thoughts: string[] = [];
@@ -99,6 +102,11 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
               <RefreshCcw size={10} /> Retry
             </button>
           )}
+          {!isGenerating && !isUser && onRegenerate && (
+            <button onClick={() => msg.id && onRegenerate(msg.id)} className="text-[10px] text-gray-400 hover:text-blue-400 flex items-center gap-1 transition-colors">
+              <RefreshCcw size={10} /> Regenerate
+            </button>
+          )}
           {!isGenerating && isLast && !isUser && onContinue && (
             <button onClick={onContinue} className="text-[10px] text-gray-400 hover:text-blue-400 flex items-center gap-1 transition-colors">
               <Play size={10} /> Continue
@@ -147,7 +155,7 @@ const clearDraft = (sessionId: string) => {
   } catch { /* ignore storage errors */ }
 };
 
-export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue, onGenerationEnd }) => {
+export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, error, onClearError }) => {
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
@@ -284,6 +292,21 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
+        {error && (
+          <div className="max-w-4xl mx-auto">
+            <div className="rounded-xl px-4 py-3 bg-red-900/30 border border-red-700/50 flex items-start gap-3">
+              <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-red-200">{error}</p>
+              </div>
+              {onClearError && (
+                <button onClick={onClearError} className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/50 rounded shrink-0">
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         {displayMessages.map((msg, idx) => (
           <MessageItem
             key={msg.id || idx}
@@ -295,6 +318,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             copiedId={copiedId}
             onRetry={onRetry}
             onContinue={onContinue}
+            onRegenerate={onRegenerate}
           />
         ))}
         {isGenerating && !streamingContent && (

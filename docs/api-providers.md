@@ -87,4 +87,4 @@ OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
 ```
 
 > 所有 API Key 均在服务端读取（通过 dotenv），前端不暴露任何 Key。
-> 当某个供应商的专用 Key 未设置时，`resolveApiKey()` 会回退到 `OPENAI_API_KEY`。
+> API Key 解析优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量（如 `GEMINI_API_KEY`）> `OPENAI_API_KEY` 回退。

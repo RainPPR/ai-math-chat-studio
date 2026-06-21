@@ -2,7 +2,10 @@ import { UserSettings, ChatSession } from '../types';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `${res.status} ${res.statusText}`);
+  }
   return res.json();
 }
 
@@ -36,6 +39,11 @@ export const api = {
       body: JSON.stringify({ messageId }),
     }),
     continue: (sessionId: string) => request<{ ok: true }>(`/api/sessions/${sessionId}/continue`, { method: 'POST' }),
+    regenerate: (sessionId: string, messageId: string) => request<{ ok: true }>(`/api/sessions/${sessionId}/regenerate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId }),
+    }),
     getRunningSessions: () => request<{ runningSessionIds: string[] }>('/api/generation-status'),
   },
 

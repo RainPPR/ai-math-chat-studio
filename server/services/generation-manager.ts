@@ -145,37 +145,106 @@ export class GenerationManager {
 
   async retryMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
     const session = await this.readSession(sessionId);
-    if (!session) return;
+    if (!session) throw new Error('Session not found');
 
     const idx = session.messages.findIndex(m => m.id === messageId);
-    if (idx === -1) return;
+    if (idx === -1) throw new Error('Message not found');
 
     let userIdx = idx;
     while (userIdx >= 0 && session.messages[userIdx].role !== 'user') userIdx--;
-    if (userIdx === -1) return;
+    if (userIdx === -1) throw new Error('No user message found before the target message');
 
+    const originalMessages = session.messages;
     session.messages = session.messages.slice(0, userIdx + 1);
     session.updatedAt = new Date().toISOString();
-    await this.writeSession(session);
 
-    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
+    try {
+      await this.writeSession(session);
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
+    } catch (err) {
+      session.messages = originalMessages;
+      await this.writeSession(session);
+      throw err;
+    }
   }
 
   async continueGeneration(sessionId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
     const session = await this.readSession(sessionId);
-    if (!session || session.messages.length === 0) return;
+    if (!session) throw new Error('Session not found');
+    if (session.messages.length === 0) throw new Error('Session has no messages');
 
     const continueMsg: ServerChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: 'continue',
+      content: `The previous response was interrupted due to network error or stream timeout. Please review your previous reasoning and output, then continue to complete the response:
+
+- If you had already started generating the final output (outside thinking tags): Review your previous reasoning and the partial output already generated, then regenerate the COMPLETE final output from the beginning to ensure nothing is missing.
+- If you were still in the thinking/reasoning phase: Review your previous thinking content, continue your analysis from where you left off, and then generate the complete final response.
+
+Do not skip steps or assume previous content was sufficient. Ensure the final response is comprehensive and complete.`,
       createdAt: new Date().toISOString(),
     };
+
+    const originalMessages = session.messages;
     session.messages.push(continueMsg);
     session.updatedAt = new Date().toISOString();
-    await this.writeSession(session);
 
-    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
+    try {
+      await this.writeSession(session);
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
+    } catch (err) {
+      session.messages = originalMessages;
+      await this.writeSession(session);
+      throw err;
+    }
+  }
+
+  async regenerateMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
+    const session = await this.readSession(sessionId);
+    if (!session) throw new Error('Session not found');
+
+    const idx = session.messages.findIndex(m => m.id === messageId);
+    if (idx === -1) throw new Error('Message not found');
+    if (session.messages[idx].role !== 'model') throw new Error('Can only regenerate model messages');
+
+    // Extract thinking process from the message content
+    const messageContent = session.messages[idx].content;
+    let cleanedContent = '';
+
+    const thoughtRegex = /<details(?: open)?>\n<summary>Thinking Process<\/summary>\n\n```text\n([\s\S]*?)(?:\n```\n\n<\/details>|$)/;
+    const match = messageContent.match(thoughtRegex);
+
+    if (match && match[1]) {
+      // Keep only the thinking process, wrapped properly
+      cleanedContent = `<details open>\n<summary>Thinking Process</summary>\n\n\`\`\`text\n${match[1].trim()}\n\`\`\`\n\n</details>\n\n`;
+    }
+
+    // Update the message with cleaned content (only thinking preserved)
+    const originalMessages = session.messages;
+    session.messages[idx].content = cleanedContent;
+
+    // Truncate messages after this one
+    session.messages = session.messages.slice(0, idx + 1);
+
+    // Add regenerate instruction
+    const regenerateMsg: ServerChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: `Based on your previous thinking process above, please continue your analysis and provide a comprehensive response. Review the reasoning you've done so far, identify any gaps or areas that need deeper exploration, and then generate a complete, well-structured output. Do not assume your previous thinking was perfect—critically examine it and extend it where necessary before producing the final response.`,
+      createdAt: new Date().toISOString(),
+    };
+
+    session.messages.push(regenerateMsg);
+    session.updatedAt = new Date().toISOString();
+
+    try {
+      await this.writeSession(session);
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
+    } catch (err) {
+      session.messages = originalMessages;
+      await this.writeSession(session);
+      throw err;
+    }
   }
 
   private startGeneration(session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): void {

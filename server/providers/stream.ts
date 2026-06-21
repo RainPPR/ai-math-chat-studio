@@ -28,7 +28,7 @@ export async function* streamChat(
 ): AsyncGenerator<StreamChunk> {
   switch (providerType) {
     case 'google':
-      yield* streamGoogle(req, signal);
+      yield* streamGoogle(req, provider, signal);
       break;
     case 'nvidia':
       yield* streamNvidia(req, provider, signal);
@@ -41,9 +41,9 @@ export async function* streamChat(
 
 // ---- Google Gemini ----
 
-async function* streamGoogle(req: StreamRequest, signal?: AbortSignal): AsyncGenerator<StreamChunk> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY is not set.');
+async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string }, signal?: AbortSignal): AsyncGenerator<StreamChunk> {
+  const apiKey = resolveApiKey(provider);
+  if (!apiKey) throw new Error('Gemini API key is not configured. Please set it in the provider settings or use the GEMINI_API_KEY environment variable.');
 
   const ai = new GoogleGenAI({ apiKey });
 

@@ -145,6 +145,21 @@ return unsubscribe; // useEffect cleanup
 
 所有参数 "Unset" 时不传给 API（不传默认值）。
 
+### 6. 消息操作架构
+
+三种消息操作的区别和使用场景：
+
+| 操作 | 作用对象 | 行为 | 使用场景 |
+|------|----------|------|----------|
+| **Retry** | 每条 model 消息 | 找到该消息前面最近的 user 消息，抛弃其后所有内容重新生成 | 对某条回复不满意，完全重来 |
+| **Regenerate** | 每条 model 消息 | 保留该消息的 thinking process，删除正文，抛弃其后消息，注入 continue 指令继续生成 | 基于原有思考深化分析、修正正文输出 |
+| **Continue** | 仅最后一条 model 消息 | 在会话末尾添加 continue 指令，让 AI 继续被中断的输出 | 网络错误、流中断导致的不完整响应 |
+
+**Regenerate 实现细节**：
+- 清洗逻辑：提取 `<details><summary>Thinking Process</summary>` 包裹的内容，删除正文部分
+- Prompt 工程：指导 AI 基于原有思考进行批判性检查，识别并填补思考中的缺陷，然后生成完整输出
+- 代码位置：`server/services/generation-manager.ts` 中的 `regenerateMessage()`
+
 ## 常见修改场景
 
 ### 修改 Markdown 渲染
@@ -198,7 +213,7 @@ OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
 ```
 
 > 所有 API Key 通过 dotenv 在 `server.ts` 中加载，前端不暴露任何 Key。
-> 当某个供应商的专用 Key 未设置时，会回退到 `OPENAI_API_KEY`。
+> 优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量（如 `GEMINI_API_KEY`）> `OPENAI_API_KEY` 回退。
 
 ## 注意事项
 

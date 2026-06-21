@@ -14,6 +14,9 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(256);
   const [generatingSessions, setGeneratingSessions] = useState<Set<string>>(new Set());
+  const [error, setError] = useState<string | null>(null);
+
+  const clearError = useCallback(() => setError(null), []);
 
   useEffect(() => {
     (async () => {
@@ -100,7 +103,7 @@ export default function App() {
       await api.chat.send(sessionId, content);
       markGenerating(sessionId, true);
     } catch (e: any) {
-      console.error('Send failed:', e);
+      setError(e.message || 'Failed to send message');
     }
   };
 
@@ -111,6 +114,7 @@ export default function App() {
 
   const handleRetry = async (msgId: string) => {
     if (!currentSessionId) return;
+    clearError();
     try {
       await api.chat.retry(currentSessionId, msgId);
       try {
@@ -120,12 +124,13 @@ export default function App() {
       }
       markGenerating(currentSessionId, true);
     } catch (e: any) {
-      console.error('Retry failed:', e);
+      setError(e.message || 'Failed to retry message');
     }
   };
 
   const handleContinue = async () => {
     if (!currentSessionId) return;
+    clearError();
     try {
       await api.chat.continue(currentSessionId);
       try {
@@ -135,7 +140,23 @@ export default function App() {
       }
       markGenerating(currentSessionId, true);
     } catch (e: any) {
-      console.error('Continue failed:', e);
+      setError(e.message || 'Failed to continue generation');
+    }
+  };
+
+  const handleRegenerate = async (msgId: string) => {
+    if (!currentSessionId) return;
+    clearError();
+    try {
+      await api.chat.regenerate(currentSessionId, msgId);
+      try {
+        await refreshSession(currentSessionId);
+      } catch (e) {
+        console.error('Refresh session failed:', e);
+      }
+      markGenerating(currentSessionId, true);
+    } catch (e: any) {
+      setError(e.message || 'Failed to regenerate message');
     }
   };
 
@@ -197,7 +218,11 @@ export default function App() {
           onStop={handleStop}
           onRetry={handleRetry}
           onContinue={handleContinue}
+          onRegenerate={handleRegenerate}
+          error={error}
+          onClearError={clearError}
           onGenerationEnd={async (id) => {
+            clearError();
             try {
               await refreshSession(id);
             } catch (e) {

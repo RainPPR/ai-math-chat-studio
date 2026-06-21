@@ -28,6 +28,12 @@
 - 实时显示 AI 生成过程
 - 支持思考过程展示（可折叠/展开）
 
+### 🔄 消息操作
+
+- **Retry（重试）**: 从当前消息往前找到最近的用户消息，抛弃其后所有内容重新生成
+- **Continue（继续）**: 在当前会话末尾添加指令，让 AI 继续被中断的输出（适用于网络错误/流中断场景）
+- **Regenerate（重新生成）**: 针对模型回复，保留其思考过程，抛弃正文，让 AI 基于原有思考继续输出（适用于深化分析、修正输出）
+
 ### 💡 后端驱动架构
 
 - **GenerationManager** 管理生成任务生命周期
@@ -323,6 +329,7 @@ interface ChatSession {
 | DELETE | `/api/sessions/:id`            | 删除会话           |
 | POST   | `/api/sessions/:id/messages`   | 发送消息           |
 | POST   | `/api/sessions/:id/retry`      | 重试消息           |
+| POST   | `/api/sessions/:id/regenerate` | 重新生成           |
 | POST   | `/api/sessions/:id/continue`   | 继续生成           |
 | DELETE | `/api/sessions/:id/generation` | 停止生成           |
 | GET    | `/api/providers`               | 获取内置供应商类型 |
