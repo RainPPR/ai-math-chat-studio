@@ -227,9 +227,27 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     return unsubscribe;
   }, [session?.id, isGenerating]);
 
+  // Throttled scroll to reduce layout calculations during rapid streaming
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (settings.autoScroll !== false) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [session?.messages, streamingContent, isGenerating, settings.autoScroll]);
+    if (settings.autoScroll === false) return;
+    
+    // Clear existing timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    // Throttle scroll to max 10 times per second
+    scrollTimeoutRef.current = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+    
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [session?.messages.length, streamingContent?.length, isGenerating, settings.autoScroll]);
 
   const handleSend = () => {
     if (input.trim() && !isGenerating) {

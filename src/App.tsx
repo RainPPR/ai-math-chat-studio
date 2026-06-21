@@ -73,11 +73,18 @@ export default function App() {
     await api.sessions.delete(id);
   };
 
+  // Debounce mechanism for rapid new chat + send operations
+  const pendingSendsRef = React.useRef<Map<string, NodeJS.Timeout>>(new Map());
+
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
 
     let sessionId = currentSessionId;
+    let isNewSession = false;
+
+    // Create new session if needed
     if (!sessionId) {
+      isNewSession = true;
       sessionId = crypto.randomUUID();
       const session: ChatSession = {
         id: sessionId,
@@ -94,18 +101,48 @@ export default function App() {
       content,
       createdAt: new Date().toISOString(),
     };
+
+    // Optimistic UI update
     setSessions(prev => prev.map(s => s.id === sessionId
       ? { ...s, messages: [...s.messages, userMsg], updatedAt: new Date().toISOString() }
       : s
     ));
 
-    try {
-      await api.chat.send(sessionId, content);
-      markGenerating(sessionId, true);
-    } catch (e: any) {
-      setError(e.message || 'Failed to send message');
+    // Debounce API call for new sessions to prevent race conditions
+    if (isNewSession) {
+      const existingTimeout = pendingSendsRef.current.get(sessionId);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+
+      const timeout = setTimeout(async () => {
+        pendingSendsRef.current.delete(sessionId);
+        try {
+          await api.chat.send(sessionId, content);
+          markGenerating(sessionId, true);
+        } catch (e: any) {
+          setError(e.message || 'Failed to send message');
+        }
+      }, 100); // Small delay to ensure session state is settled
+
+      pendingSendsRef.current.set(sessionId, timeout);
+    } else {
+      // Existing session - send immediately
+      try {
+        await api.chat.send(sessionId, content);
+        markGenerating(sessionId, true);
+      } catch (e: any) {
+        setError(e.message || 'Failed to send message');
+      }
     }
   };
+
+  // Cleanup pending sends on unmount
+  useEffect(() => {
+    return () => {
+      pendingSendsRef.current.forEach(timeout => clearTimeout(timeout));
+    };
+  }, []);
 
   const handleStop = async () => {
     if (!currentSessionId) return;

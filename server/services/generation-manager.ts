@@ -81,9 +81,67 @@ export interface GenerationTask {
 export class GenerationManager {
   private tasks = new Map<string, GenerationTask>();
   private sessionsDir: string;
+  private pendingWrites = new Map<string, Promise<void>>();
+  private titleGenerationQueue = new Map<string, Promise<void>>();
+  private deletedSessions = new Set<string>(); // Track deleted sessions to prevent writes
 
   constructor(sessionsDir: string) {
     this.sessionsDir = sessionsDir;
+  }
+
+  // Debounced write to batch rapid successive writes for the same session
+  private async debouncedWrite(session: ServerChatSession, delay = 100): Promise<void> {
+    const sessionId = session.id;
+
+    // Skip if session was deleted
+    if (this.deletedSessions.has(sessionId)) {
+      return;
+    }
+
+    // Cancel any pending write for this session
+    const existing = this.pendingWrites.get(sessionId);
+    if (existing) {
+      // Wait for it to complete before starting new one
+      try { await existing; } catch { /* ignore */ }
+    }
+
+    const writePromise = new Promise<void>((resolve) => {
+      setTimeout(async () => {
+        try {
+          // Double-check session wasn't deleted during wait
+          if (!this.deletedSessions.has(sessionId)) {
+            await this.writeSession(session);
+          }
+        } catch (err) {
+          console.error('[Write] Failed to write session %s:', sessionId, err);
+        } finally {
+          this.pendingWrites.delete(sessionId);
+          resolve();
+        }
+      }, delay);
+    });
+
+    this.pendingWrites.set(sessionId, writePromise);
+    return writePromise;
+  }
+
+  // Clear all pending operations for a session (called on delete)
+  private clearSessionOperations(sessionId: string): void {
+    this.deletedSessions.add(sessionId);
+
+    // Cancel pending writes
+    this.pendingWrites.delete(sessionId);
+
+    // Cancel pending title generation
+    this.titleGenerationQueue.delete(sessionId);
+
+    // Clean up completed tasks
+    this.cleanup(sessionId);
+
+    // Remove from deleted tracking after a delay to allow cleanup to propagate
+    setTimeout(() => {
+      this.deletedSessions.delete(sessionId);
+    }, 5000);
   }
 
   private sessionPath(id: string): string {
@@ -118,31 +176,53 @@ export class GenerationManager {
   }
 
   async deleteSession(id: string): Promise<void> {
+    // First, clear all pending operations and mark as deleted
+    this.clearSessionOperations(id);
+
+    // Stop any running generation
+    this.stop(id);
+
+    // Delete the file
     try { await fs.unlink(this.sessionPath(id)); } catch {}
+
+    // Clean up the task entry
+    this.tasks.delete(id);
   }
 
-  // Generate title asynchronously and notify subscribers
+  // Generate title asynchronously with queue to prevent concurrent generation for same session
   private async generateTitleAsync(sessionId: string, content: string): Promise<void> {
-    try {
-      const title = await generateTitleFromMarkdown(content);
-      const session = await this.readSession(sessionId);
-      if (!session) return;
-
-      // Only update if title actually changed and session has no custom title yet
-      if (session.title !== title && (session.title === 'New Chat' || session.messages.length <= 1)) {
-        session.title = title;
-        session.updatedAt = new Date().toISOString();
-        await this.writeSession(session);
-
-        // Notify subscribers about title update via delta event
-        const task = this.tasks.get(sessionId);
-        if (task) {
-          task.subscribers.forEach(cb => cb('title', { title }));
-        }
-      }
-    } catch (err) {
-      console.error('[Title] Failed to generate title for session %s:', sessionId, err);
+    // If there's already a title generation in progress for this session, skip
+    if (this.titleGenerationQueue.has(sessionId)) {
+      return;
     }
+
+    const generatePromise = (async () => {
+      try {
+        const title = await generateTitleFromMarkdown(content);
+        const session = await this.readSession(sessionId);
+        if (!session) return;
+
+        // Only update if title actually changed and session has no custom title yet
+        if (session.title !== title && (session.title === 'New Chat' || session.messages.length <= 1)) {
+          session.title = title;
+          session.updatedAt = new Date().toISOString();
+          await this.debouncedWrite(session, 0); // Immediate write for title
+
+          // Notify subscribers about title update via delta event
+          const task = this.tasks.get(sessionId);
+          if (task) {
+            task.subscribers.forEach(cb => cb('title', { title }));
+          }
+        }
+      } catch (err) {
+        console.error('[Title] Failed to generate title for session %s:', sessionId, err);
+      } finally {
+        this.titleGenerationQueue.delete(sessionId);
+      }
+    })();
+
+    this.titleGenerationQueue.set(sessionId, generatePromise);
+    return generatePromise;
   }
 
   async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
@@ -173,10 +253,10 @@ export class GenerationManager {
     }
 
     session.updatedAt = new Date().toISOString();
-    await this.writeSession(session);
+    await this.debouncedWrite(session, 0); // Immediate write for first message
 
-    // Start generation immediately
-    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
+    // Start generation immediately (fire-and-forget, errors handled internally)
+    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
 
     // Generate refined title asynchronously in background
     if (session.messages.length === 1) {
@@ -201,7 +281,8 @@ export class GenerationManager {
 
     try {
       await this.writeSession(session);
-      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
+      // Start generation (fire-and-forget, errors handled internally)
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
     } catch (err) {
       session.messages = originalMessages;
       await this.writeSession(session);
@@ -232,7 +313,8 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
 
     try {
       await this.writeSession(session);
-      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
+      // Start generation (fire-and-forget, errors handled internally)
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
     } catch (err) {
       session.messages = originalMessages;
       await this.writeSession(session);
@@ -280,7 +362,8 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
 
     try {
       await this.writeSession(session);
-      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
+      // Start generation (fire-and-forget, errors handled internally)
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
     } catch (err) {
       session.messages = originalMessages;
       await this.writeSession(session);
@@ -288,11 +371,19 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     }
   }
 
-  private startGeneration(session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): void {
+  private async startGeneration(session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
     const existing = this.tasks.get(session.id);
     if (existing && existing.status === 'running') {
+      // Abort existing task
       existing.abortController.abort();
+
+      // Wait a short time for the old task to complete its cleanup
+      // This prevents race conditions between old task's final cleanup and new task's start
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
+
+    // Clean up any completed task for this session
+    this.cleanup(session.id);
 
     const abortController = new AbortController();
     const task: GenerationTask = {
@@ -304,12 +395,18 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     };
     this.tasks.set(session.id, task);
 
-    this.runGeneration(task, session, model, provider, systemPrompt, injectThinkingTemplate).catch(err => {
+    try {
+      await this.runGeneration(task, session, model, provider, systemPrompt, injectThinkingTemplate);
+    } catch (err: any) {
       console.error('[Generation] Error for session %s:', session.id, err);
       task.status = 'error';
       task.error = err.message;
-      task.subscribers.forEach(cb => cb('error', { message: err.message }));
-    });
+      try {
+        task.subscribers.forEach(cb => cb('error', { message: err.message }));
+      } catch {
+        // Ignore errors notifying closed connections
+      }
+    }
   }
 
   private async runGeneration(task: GenerationTask, session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
@@ -322,6 +419,9 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
 
     let fullContent = '';
     let isThinking = false;
+    let lastNotifyTime = 0;
+    let pendingNotify = false;
+    let pendingNotifyTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const buildSystemPrompt = () => {
       if (model.providerType === 'google') {
@@ -334,6 +434,40 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       role: m.role === 'model' ? 'assistant' : m.role,
       content: m.content,
     }));
+
+    // Throttled notification to prevent overwhelming clients
+    const notifySubscribers = (event: string, data: any, immediate = false) => {
+      if (immediate) {
+        task.subscribers.forEach(cb => {
+          try { cb(event, data); } catch { /* ignore closed connections */ }
+        });
+        lastNotifyTime = Date.now();
+        pendingNotify = false;
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastNotifyTime >= 50) { // Max 20 updates per second
+        task.subscribers.forEach(cb => {
+          try { cb(event, data); } catch { /* ignore closed connections */ }
+        });
+        lastNotifyTime = now;
+        pendingNotify = false;
+      } else if (!pendingNotify) {
+        pendingNotify = true;
+        if (pendingNotifyTimeout) clearTimeout(pendingNotifyTimeout);
+        pendingNotifyTimeout = setTimeout(() => {
+          pendingNotifyTimeout = null;
+          if (pendingNotify && task.status === 'running') {
+            task.subscribers.forEach(cb => {
+              try { cb(event, { content: task.content }); } catch { /* ignore */ }
+            });
+            lastNotifyTime = Date.now();
+            pendingNotify = false;
+          }
+        }, 50 - (now - lastNotifyTime));
+      }
+    };
 
     try {
       for await (const chunk of streamChat(model.providerType, provider, {
@@ -364,7 +498,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
         }
 
         task.content = fullContent;
-        task.subscribers.forEach(cb => cb('delta', { content: fullContent }));
+        notifySubscribers('delta', { content: fullContent });
       }
     } catch (err: any) {
       if (err.name === 'AbortError') {
@@ -374,11 +508,18 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       }
     }
 
+    // If aborted or session deleted, don't write the final message but notify stopped
+    if (task.status === 'stopped' || this.deletedSessions.has(session.id)) {
+      console.log('[Generation] Aborted/stopped for session %s, skipping final write', session.id);
+      notifySubscribers('stopped', {}, true);
+      this.cleanup(session.id);
+      return;
+    }
+
     if (isThinking) {
       fullContent += '\n```\n\n</details>\n\n';
       isThinking = false;
       task.content = fullContent;
-      task.subscribers.forEach(cb => cb('delta', { content: fullContent }));
     }
 
     fullContent = fullContent.replace(/<details open>/g, '<details>');
@@ -390,17 +531,21 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
 
     console.log('[Generation] Finished for session %s, status=%s, contentLen=%d', session.id, task.status, fullContent.length);
 
-    const modelMsg: ServerChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'model',
-      content: fullContent,
-      createdAt: new Date().toISOString(),
-    };
-    session.messages.push(modelMsg);
-    session.updatedAt = new Date().toISOString();
-    await this.writeSession(session);
+    // Only write and notify if we got meaningful content
+    if (fullContent.trim()) {
+      const modelMsg: ServerChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'model',
+        content: fullContent,
+        createdAt: new Date().toISOString(),
+      };
+      session.messages.push(modelMsg);
+      session.updatedAt = new Date().toISOString();
+      await this.debouncedWrite(session, 0); // Immediate write for final result
+    }
 
-    task.subscribers.forEach(cb => cb('done', { content: fullContent }));
+    notifySubscribers('done', { content: fullContent }, true);
+    this.cleanup(session.id); // Clean up completed task
   }
 
   private async sanitizeSession(raw: any): Promise<ServerChatSession> {

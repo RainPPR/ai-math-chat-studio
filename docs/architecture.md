@@ -110,6 +110,61 @@ graph TD
 - 生成完成后通过 SSE `title` 事件推送给前端，侧边栏实时更新
 - 服务端同时更新 session.json 文件
 
+### 3. 多并发生成优化
+
+**问题**: 同时运行多个 AI 解题会话时，快速新增或切换对话会导致卡顿，可能存在以下问题：
+1. **Race Condition**: 新建会话立即发送消息时，会话未完全创建就开始生成
+2. **文件写入冲突**: 频繁写入 session.json 导致磁盘 I/O 瓶颈
+3. **通知风暴**: 每个 token 都触发 SSE 通知，压垮客户端
+4. **内存泄漏**: 已完成的任务不会自动清理
+5. **删除会话冲突**: 删除正在生成的会话时仍会尝试写入文件
+6. **SSE 连接资源泄漏**: 客户端断开连接时清理不完善
+
+**解决方案**:
+
+#### 后端优化
+
+**防抖写操作（Debounced Writes）**: 
+- 实现 `debouncedWrite()` 方法，对同一 session 的文件写入进行批处理
+- 减少频繁的磁盘 I/O 操作，避免写操作堆积导致的性能问题
+- 删除会话时通过 `deletedSessions` Set 跟踪，防止向已删除的会话写入
+
+**标题生成队列化（Title Generation Queue）**:
+- 使用 `titleGenerationQueue` Map 跟踪每个会话的标题生成状态
+- 防止同一 session 的并发标题生成请求产生冲突
+
+**通知节流（Throttled Notifications）**:
+- 在 `runGeneration()` 中实现通知节流机制，限制为最多 20 次/秒
+- 防止高频内容更新压垮客户端，提升整体响应性
+
+**任务清理（Task Cleanup）**:
+- 生成完成或中止时自动清理 `tasks` Map
+- `deleteSession()` 方法中调用 `clearSessionOperations()` 完整清理
+
+**生成器启动优化**:
+- `startGeneration()` 改为 async 方法，在启动新生成前等待旧任务清理（50ms）
+- 防止旧任务的最终写入与新任务冲突
+
+**中止处理优化**:
+- `runGeneration()` 检测 `stopped` 状态后发送 `stopped` 事件而非 `done`
+- 中止后不写入最终消息到 session 文件
+
+**SSE 连接健壮性增强**:
+- 添加 `X-Accel-Buffering: no` 头部，禁用 Nginx 等代理的缓冲
+- 实现指数退避策略（exponential backoff）替代固定轮询等待任务
+- 使用 `isClosed` 标志防止双重清理
+- 添加 `req.on('error')` 处理异常连接
+
+#### 前端优化
+
+**新会话消息发送防抖**:
+- 在 `App.tsx` 中使用 `pendingSendsRef` 跟踪待发送的新会话消息
+- 对新建会话后的第一条消息添加 100ms 防抖延迟，避免 race condition
+
+**滚动性能优化**:
+- 在 `ChatArea.tsx` 中实现滚动节流，限制为最多 10 次/秒
+- 减少布局计算和重绘频率，改善大量内容渲染时的性能
+
 ## 数据存储
 
 - **本地 JSON 文件**: 项目不依赖外部数据库，所有数据都存储在本地 `/data` 目录下的 JSON 文件中。这使得项目易于部署和迁移。

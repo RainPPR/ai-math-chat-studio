@@ -50,33 +50,72 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx buffering if present
     res.flushHeaders();
 
     let unsubscribe: (() => void) | null = null;
+    let isClosed = false;
 
-    for (let i = 0; i < 50; i++) {
+    // Clean up function to prevent double cleanup
+    const cleanup = () => {
+      if (isClosed) return;
+      isClosed = true;
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+    };
+
+    // Wait for task to be available with backoff
+    const maxWaitTime = 5000; // 5 seconds max
+    const startTime = Date.now();
+    let waitTime = 50; // Start with 50ms
+
+    while (Date.now() - startTime < maxWaitTime) {
       unsubscribe = gm.subscribe(sessionId, (event, data) => {
-        res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-        // title event should not close connection, it's an intermediate update
-        if (event === 'done' || event === 'error' || event === 'stopped') {
-          console.log(`[SSE] Sending ${event} for session ${sessionId}`);
-          setTimeout(() => { res.end(); }, 100);
+        if (isClosed) return;
+        try {
+          res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+          // title event should not close connection, it's an intermediate update
+          if (event === 'done' || event === 'error' || event === 'stopped') {
+            console.log(`[SSE] Sending ${event} for session ${sessionId}`);
+            // Use setImmediate for faster cleanup
+            setImmediate(() => {
+              cleanup();
+              res.end();
+            });
+          }
+        } catch (err) {
+          // Client disconnected
+          cleanup();
         }
       });
       if (unsubscribe) break;
-      await new Promise(r => setTimeout(r, 100));
+      // Exponential backoff with max 500ms
+      await new Promise(r => setTimeout(r, waitTime));
+      waitTime = Math.min(waitTime * 1.5, 500);
     }
 
     if (!unsubscribe) {
       console.log(`[SSE] Task not found for session ${sessionId} after 5s`);
-      res.write(`event: error\ndata: ${JSON.stringify({ message: 'Generation task not found' })}\n\n`);
-      res.end();
+      if (!isClosed) {
+        try {
+          res.write(`event: error\ndata: ${JSON.stringify({ message: 'Generation task not found' })}\n\n`);
+          res.end();
+        } catch {
+          // Client already disconnected
+        }
+      }
       return;
     }
 
     req.on('close', () => {
       console.log(`[SSE] Client disconnected for session ${sessionId}`);
-      if (unsubscribe) unsubscribe();
+      cleanup();
+    });
+
+    req.on('error', () => {
+      cleanup();
     });
   });
 
