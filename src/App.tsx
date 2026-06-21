@@ -231,6 +231,9 @@ export default function App() {
               markGenerating(id, false);
             }
           }}
+          onSessionTitleUpdate={(id, title) => {
+            setSessions(prev => prev.map(s => s.id === id ? { ...s, title } : s));
+          }}
         />
       </main>
 

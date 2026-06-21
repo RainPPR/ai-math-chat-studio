@@ -12,8 +12,13 @@ const PANDOC_OPTIONS = {
   wrap: 'none',
 };
 
+// Limit input length to avoid unnecessary pandoc processing
+const TITLE_INPUT_LIMIT = 100;
+
 async function generateTitleFromMarkdown(markdown: string): Promise<string> {
-  const _markdown = markdown.replaceAll("\\dfrac", "\\frac");
+  // Only take first N characters - title only needs beginning of message
+  const truncated = markdown.slice(0, TITLE_INPUT_LIMIT);
+  const _markdown = truncated.replaceAll("\\dfrac", "\\frac");
   try {
     const result = await convert(PANDOC_OPTIONS, _markdown, {});
     const plainText = result.stdout || _markdown;
@@ -116,13 +121,37 @@ export class GenerationManager {
     try { await fs.unlink(this.sessionPath(id)); } catch {}
   }
 
+  // Generate title asynchronously and notify subscribers
+  private async generateTitleAsync(sessionId: string, content: string): Promise<void> {
+    try {
+      const title = await generateTitleFromMarkdown(content);
+      const session = await this.readSession(sessionId);
+      if (!session) return;
+
+      // Only update if title actually changed and session has no custom title yet
+      if (session.title !== title && (session.title === 'New Chat' || session.messages.length <= 1)) {
+        session.title = title;
+        session.updatedAt = new Date().toISOString();
+        await this.writeSession(session);
+
+        // Notify subscribers about title update via delta event
+        const task = this.tasks.get(sessionId);
+        if (task) {
+          task.subscribers.forEach(cb => cb('title', { title }));
+        }
+      }
+    } catch (err) {
+      console.error('[Title] Failed to generate title for session %s:', sessionId, err);
+    }
+  }
+
   async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
     let session = await this.readSession(sessionId);
     if (!session) {
-      const title = await generateTitleFromMarkdown(content);
+      // Create session with temporary title immediately
       session = {
         id: sessionId,
-        title,
+        title: 'New Chat',
         messages: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -136,13 +165,23 @@ export class GenerationManager {
       createdAt: new Date().toISOString(),
     };
     session.messages.push(userMsg);
+
+    // For first message, update title immediately with raw content, then refine async
     if (session.messages.length === 1) {
-      session.title = await generateTitleFromMarkdown(content);
+      const rawTitle = content.trim().slice(0, 50) + (content.length > 50 ? '...' : '');
+      session.title = rawTitle || 'New Chat';
     }
+
     session.updatedAt = new Date().toISOString();
     await this.writeSession(session);
 
+    // Start generation immediately
     this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate);
+
+    // Generate refined title asynchronously in background
+    if (session.messages.length === 1) {
+      this.generateTitleAsync(sessionId, content).catch(() => {});
+    }
   }
 
   async retryMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {

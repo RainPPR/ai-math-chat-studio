@@ -3,11 +3,26 @@ import path from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
 import { rateLimit } from 'express-rate-limit';
+import { convert } from 'pandoc-wasm';
 import { GenerationManager } from './services/generation-manager';
 import { createSettingsRouter } from './routes/settings';
 import { createSessionRouter } from './routes/sessions';
 import { createChatRouter } from './routes/chat';
 import { createModelsRouter } from './routes/models';
+
+// Pre-warm pandoc-wasm to avoid cold-start latency on first message
+let pandocWarmed = false;
+async function warmPandocWasm(): Promise<void> {
+  if (pandocWarmed) return;
+  try {
+    const start = Date.now();
+    await convert({ from: 'markdown', to: 'plain', standalone: true, wrap: 'none' }, 'warmup', {});
+    pandocWarmed = true;
+    console.log(`[Warmup] pandoc-wasm initialized in ${Date.now() - start}ms`);
+  } catch (err) {
+    console.error('[Warmup] Failed to initialize pandoc-wasm:', err);
+  }
+}
 
 interface RemoteModelDef {
   id: string;
@@ -162,6 +177,10 @@ export async function startApp() {
 
   // Sync remote model sources before starting server
   await syncRemoteModels(SETTINGS_FILE);
+
+  // Pre-warm pandoc-wasm to avoid cold-start latency on first message
+  // This runs in parallel with Vite dev server startup
+  const pandocWarmupPromise = warmPandocWasm();
 
   const gm = new GenerationManager(SESSIONS_DIR);
 

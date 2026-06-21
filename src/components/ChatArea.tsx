@@ -14,6 +14,7 @@ interface ChatAreaProps {
   onContinue?: () => void;
   onRegenerate?: (msgId: string) => void;
   onGenerationEnd?: (sessionId: string) => void;
+  onSessionTitleUpdate?: (sessionId: string, title: string) => void;
   error?: string | null;
   onClearError?: () => void;
 }
@@ -155,7 +156,7 @@ const clearDraft = (sessionId: string) => {
   } catch { /* ignore storage errors */ }
 };
 
-export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, error, onClearError }) => {
+export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSessionTitleUpdate, error, onClearError }) => {
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
@@ -217,6 +218,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       },
       onStopped: () => {
         onGenerationEnd?.(session.id);
+      },
+      onTitle: (title) => {
+        onSessionTitleUpdate?.(session.id, title);
       },
     });
 

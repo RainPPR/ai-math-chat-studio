@@ -46,6 +46,14 @@
 | clsx | ^2.1.1 |
 | tailwind-merge | ^3.6.0 |
 | uuid | ^14.0.0 |
+| pandoc-wasm | ^1.1.0 |
+
+### pandoc-wasm 性能优化
+
+`pandoc-wasm` 是用于标题生成的 Markdown 转 Plain Text 工具。由于 WASM 模块的冷启动特性，首次调用可能延迟 5-20 秒。项目通过以下方式优化：
+
+- **服务端启动预热**：在 `server/app.ts` 中的 `startApp()` 函数内，与 Vite 启动并行执行 `warmPandocWasm()`，预先初始化 WASM 模块
+- **异步初始化**：预热操作不阻塞服务器启动流程，确保 HTTP 服务器尽快可用
 
 ## 开发工具
 | 工具 | 用途 |

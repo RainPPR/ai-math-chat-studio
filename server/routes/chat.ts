@@ -57,6 +57,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     for (let i = 0; i < 50; i++) {
       unsubscribe = gm.subscribe(sessionId, (event, data) => {
         res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+        // title event should not close connection, it's an intermediate update
         if (event === 'done' || event === 'error' || event === 'stopped') {
           console.log(`[SSE] Sending ${event} for session ${sessionId}`);
           setTimeout(() => { res.end(); }, 100);
