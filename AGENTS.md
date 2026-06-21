@@ -224,3 +224,16 @@ OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
 5. **`server.ts` 是入口文件**：仅 `import 'dotenv/config'` + `startApp()`，实际逻辑在 `server/app.ts`
 6. **已删除 topP**：所有位置均不传 topP 参数
 7. **所有供应商通过服务端代理**：Gemini 也通过服务端调用（不再前端直连）
+
+## ⚠️ 严禁事项（强制执行）
+
+### 包管理器
+- **必须使用 bun**：所有依赖安装、脚本运行必须使用 `bun`，**严禁使用 npm 或 pnpm**
+- 正确示例：`bun install express-rate-limit`、`bun run dev`、`bun run lint`
+- 错误示例：`npm install express-rate-limit` ❌、`pnpm install express-rate-limit` ❌
+
+### 文档同步更新
+- **修改代码后必须同步更新文档**：任何代码变更完成后，必须立即检查并更新相关文档
+- **AGENTS.md**：修改影响架构、开发规范、注意事项时必须更新
+- **docs/**：根据变更类型更新对应文档（架构→architecture.md、依赖→tech-stack.md、AI供应商→api-providers.md、数据模型→data-models.md、组件→components.md、文件结构→file-structure.md）
+- **未更新文档视为任务未完成**

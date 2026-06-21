@@ -333,7 +333,7 @@ interface ChatSession {
 | POST   | `/api/sessions/:id/continue`   | 继续生成           |
 | DELETE | `/api/sessions/:id/generation` | 停止生成           |
 | GET    | `/api/providers`               | 获取内置供应商类型 |
-| GET    | `/api/providers/:type/models`  | 获取模型列表       |
+| POST   | `/api/providers/:type/models`  | 获取模型列表       |
 
 ### SSE 流式端点
 

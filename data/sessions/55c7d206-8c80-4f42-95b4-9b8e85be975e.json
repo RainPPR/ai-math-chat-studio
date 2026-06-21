@@ -1,0 +1,14 @@
+{
+  "id": "55c7d206-8c80-4f42-95b4-9b8e85be975e",
+  "title": "已知函数 f(x) = e^(x − 1)ln x, g(x) = x² − x，求证当 x ∈ (...",
+  "messages": [
+    {
+      "id": "ea582a7d-64ef-4173-b8fc-113d59370da1",
+      "role": "user",
+      "content": "已知函数 $f(x)=e^{x-1}\\ln x,g(x)=x^2-x$，求证当 $x\\in(0,2)$ 时，$f(x)\\le g(x)$。",
+      "createdAt": "2026-06-21T05:20:34.004Z"
+    }
+  ],
+  "createdAt": "2026-06-21T05:20:34.004Z",
+  "updatedAt": "2026-06-21T05:20:53.334Z"
+}

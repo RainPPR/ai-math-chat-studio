@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import sanitize from 'sanitize-filename';
 import { convert } from 'pandoc-wasm';
 import { streamChat, StreamChunk } from '../providers/stream';
 import { MATH_INSTRUCTIONS } from '../providers/config';
@@ -81,7 +82,8 @@ export class GenerationManager {
   }
 
   private sessionPath(id: string): string {
-    return path.join(this.sessionsDir, `${id}.json`);
+    const sanitizedId = sanitize(id);
+    return path.join(this.sessionsDir, `${sanitizedId}.json`);
   }
 
   async readSession(id: string): Promise<ServerChatSession | null> {
@@ -264,7 +266,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     this.tasks.set(session.id, task);
 
     this.runGeneration(task, session, model, provider, systemPrompt, injectThinkingTemplate).catch(err => {
-      console.error(`[Generation] Error for session ${session.id}:`, err);
+      console.error('[Generation] Error for session %s:', session.id, err);
       task.status = 'error';
       task.error = err.message;
       task.subscribers.forEach(cb => cb('error', { message: err.message }));
@@ -272,7 +274,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
   }
 
   private async runGeneration(task: GenerationTask, session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
-    console.log(`[Generation] Starting for session ${session.id}, provider=${model.providerType}, model=${model.modelId}, messages=${session.messages.length}`);
+    console.log('[Generation] Starting for session %s, provider=%s, model=%s, messages=%d', session.id, model.providerType, model.modelId, session.messages.length);
 
     const messages = session.messages.map(m => ({
       role: m.role as string,
@@ -347,7 +349,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       task.status = 'done';
     }
 
-    console.log(`[Generation] Finished for session ${session.id}, status=${task.status}, contentLen=${fullContent.length}`);
+    console.log('[Generation] Finished for session %s, status=%s, contentLen=%d', session.id, task.status, fullContent.length);
 
     const modelMsg: ServerChatMessage = {
       id: crypto.randomUUID(),

@@ -131,7 +131,7 @@ interface GenerationProvider {
 - `POST /api/sessions/:id/retry` — 重试消息
 - `POST /api/sessions/:id/continue` — 继续生成
 - `GET /api/providers` — 获取内置提供商类型列表
-- `GET /api/providers/:type/models` — 获取指定类型的模型列表
+- `POST /api/providers/:type/models` — 获取指定类型的模型列表（POST 避免在 URL 中传递敏感信息）
 
 ## 默认设置
 

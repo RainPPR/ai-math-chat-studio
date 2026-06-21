@@ -13,9 +13,9 @@ export function createModelsRouter() {
     ]);
   });
 
-  router.get('/api/providers/:type/models', async (req, res) => {
+  router.post('/api/providers/:type/models', async (req, res) => {
     const { type } = req.params;
-    const { baseURL, apiKey, envKey } = req.query;
+    const { baseURL, apiKey, envKey } = req.body;
 
     try {
       let models: string[] = [];

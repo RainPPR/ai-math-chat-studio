@@ -6,6 +6,10 @@ on:
       - desktop
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   build-bundle:
     runs-on: ubuntu-latest
