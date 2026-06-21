@@ -60,7 +60,8 @@
           "thinking": true,
           "reasoning_effort": "max"
         }
-      }
+      },
+      "maxTokens": 16384
     },
     {
       "id": "e3567ha8-910c-4d11-a12b-e345gfk47896",
@@ -71,7 +72,8 @@
       "enableTools": true,
       "disabledTools": [],
       "reasoningEffort": "high",
-      "injectThinkingTemplate": true
+      "injectThinkingTemplate": true,
+      "maxTokens": 65536
     },
     {
       "id": "090f132d-1796-47d5-b6fa-32244e602e13",
@@ -96,7 +98,8 @@
           "enable_thinking": true,
           "clear_thinking": false
         }
-      }
+      },
+      "maxTokens": 32768
     },
     {
       "id": "96bf625a-9e90-4d72-95bc-680eb477025d",
