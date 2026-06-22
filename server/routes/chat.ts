@@ -76,7 +76,6 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
         if (isClosed) return;
         try {
           res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-          // title event should not close connection, it's an intermediate update
           if (event === 'done' || event === 'error' || event === 'stopped') {
             console.log(`[SSE] Sending ${event} for session ${sessionId}`);
             // Use setImmediate for faster cleanup

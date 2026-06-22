@@ -68,7 +68,6 @@ export const api = {
       onDone?: (content: string) => void;
       onError?: (message: string) => void;
       onStopped?: () => void;
-      onTitle?: (title: string) => void;
     },
   ): () => void {
     const es = new EventSource(`/api/sessions/${sessionId}/generation`);
@@ -98,11 +97,6 @@ export const api = {
     es.addEventListener('stopped', () => {
       callbacks.onStopped?.();
       es.close();
-    });
-
-    es.addEventListener('title', (e) => {
-      const data = JSON.parse(e.data);
-      callbacks.onTitle?.(data.title);
     });
 
     return () => es.close();

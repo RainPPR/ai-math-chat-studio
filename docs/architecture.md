@@ -91,26 +91,15 @@ graph TD
 
 ## 性能优化
 
-### 1. pandoc-wasm 冷启动优化
+### 1. 同步标题生成
 
-**问题**: `pandoc-wasm` 用于会话标题生成（Markdown 转 Plain Text）。由于 WASM 模块需要在首次调用时初始化，这会导致第一次发送消息时出现 5-20 秒的延迟。
+**实现**: `generateTitleFromMarkdown()` 使用纯 JavaScript 字符串操作，无需异步：
+- 使用 `unicodeit` 将 LaTeX 数学公式转换为 Unicode 字符
+- 使用 `markdown-to-txt` 清理 Markdown 语法
+- 只处理前200个字符，保证处理速度
+- 同步执行，生成后直接保存到 session.json，无需 SSE 通知前端
 
-**解决方案**: 在 `server/app.ts` 的 `startApp()` 中添加了 `warmPandocWasm()` 预热函数：
-- 服务端启动时异步初始化 pandoc-wasm
-- 与 Vite 开发服务器启动并行执行，不阻塞 HTTP 服务器启动
-- 首次消息请求时 WASM 已就绪，无冷启动延迟
-
-### 2. 异步标题生成
-
-**问题**: 标题生成需要调用 pandoc-wasm 转换 Markdown，如果同步执行会阻塞第一次消息响应。
-
-**解决方案**: 将标题生成改为异步模式：
-- 新建会话时立即使用用户消息前50字符作为临时标题，保证 UI 立即响应
-- 标题生成在后台异步执行，只处理前100个字符以提高性能
-- 生成完成后通过 SSE `title` 事件推送给前端，侧边栏实时更新
-- 服务端同时更新 session.json 文件
-
-### 3. 多并发生成优化
+### 2. 多并发生成优化
 
 **问题**: 同时运行多个 AI 解题会话时，快速新增或切换对话会导致卡顿，可能存在以下问题：
 1. **Race Condition**: 新建会话立即发送消息时，会话未完全创建就开始生成
@@ -128,10 +117,6 @@ graph TD
 - 实现 `debouncedWrite()` 方法，对同一 session 的文件写入进行批处理
 - 减少频繁的磁盘 I/O 操作，避免写操作堆积导致的性能问题
 - 删除会话时通过 `deletedSessions` Set 跟踪，防止向已删除的会话写入
-
-**标题生成队列化（Title Generation Queue）**:
-- 使用 `titleGenerationQueue` Map 跟踪每个会话的标题生成状态
-- 防止同一 session 的并发标题生成请求产生冲突
 
 **通知节流（Throttled Notifications）**:
 - 在 `runGeneration()` 中实现通知节流机制，限制为最多 20 次/秒

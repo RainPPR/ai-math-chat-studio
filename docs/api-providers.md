@@ -76,12 +76,9 @@ data: {"message": "错误信息"}
 
 event: stopped
 data: {}
-
-event: title
-data: {"title": "生成的会话标题"}
 ```
 
-**title 事件**：当新建会话时，服务端异步生成标题（使用 pandoc-wasm 转换 Markdown 为 Plain Text）。为避免阻塞消息发送，标题生成在后台异步执行，完成后通过 `title` 事件推送给前端，前端侧边栏实时更新显示。
+**标题生成**：当新建会话时，服务端同步生成标题（使用 `unicodeit` + `markdown-to-txt` 转换 Markdown 为 Plain Text）。标题生成后立即保存到 session.json。
 
 ## 环境变量汇总
 

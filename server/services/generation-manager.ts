@@ -1,9 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 import sanitize from 'sanitize-filename';
-import { convert } from 'pandoc-wasm';
 import { streamChat, StreamChunk } from '../providers/stream';
 import { MATH_INSTRUCTIONS } from '../providers/config';
+import * as unicodeit from 'unicodeit';
+import { markdownToTxt } from 'markdown-to-txt';
 
 /**
  * Convert non-standard thinking format to standard format.
@@ -67,31 +68,31 @@ function convertNonStandardThinking(content: string): string {
   return standardThinking.trim();
 }
 
-const PANDOC_OPTIONS = {
-  from: 'markdown',
-  to: 'plain',
-  standalone: true,
-  wrap: 'none',
-};
+// Limit input length for title generation
+const TITLE_INPUT_LIMIT = 200;
 
-// Limit input length to avoid unnecessary pandoc processing
-const TITLE_INPUT_LIMIT = 100;
+function generateTitleFromMarkdown(markdown: string): string {
+  // 1. First replace \dfrac with \frac
+  let processed = markdown.replace(/\\dfrac/g, '\\frac');
 
-async function generateTitleFromMarkdown(markdown: string): Promise<string> {
-  // Only take first N characters - title only needs beginning of message
-  const truncated = markdown.slice(0, TITLE_INPUT_LIMIT);
-  const _markdown = truncated.replaceAll("\\dfrac", "\\frac");
-  try {
-    const result = await convert(PANDOC_OPTIONS, _markdown, {});
-    const plainText = result.stdout || _markdown;
-    const trimmed = plainText.trim().replaceAll("$", "");
-    if (trimmed.length <= 50) return trimmed;
-    return trimmed.slice(0, 50) + '...';
-  } catch {
-    const trimmed = _markdown.trim().replaceAll("$", "");
-    if (trimmed.length <= 50) return trimmed;
-    return trimmed.slice(0, 50) + '...';
-  }
+  // 2. Target block math $$ ... $$ and convert LaTeX to Unicode
+  processed = processed.replace(/\$\$(?=[\s\S])([\s\S]*?)\$\$/g, (_, math) => {
+    return (unicodeit as any).replace(math);
+  });
+
+  // 3. Target inline math $ ... $ and convert LaTeX to Unicode
+  processed = processed.replace(/\$([^$\n]+?)\$/g, (_, math) => {
+    return (unicodeit as any).replace(math);
+  });
+
+  // 4. Strip remaining Markdown syntax (headers, bold, links, etc.)
+  let text = markdownToTxt(processed);
+
+  // 5. Remove remaining $ and backslashes, then trim
+  text = text.replace(/[$\\]/g, '').trim().replace(/[\n\r]+/g, ' ');
+
+  if (text.length <= 50) return text;
+  return text.slice(0, 50) + '...';
 }
 
 export interface ServerChatMessage {
@@ -144,7 +145,6 @@ export class GenerationManager {
   private tasks = new Map<string, GenerationTask>();
   private sessionsDir: string;
   private pendingWrites = new Map<string, Promise<void>>();
-  private titleGenerationQueue = new Map<string, Promise<void>>();
   private deletedSessions = new Set<string>(); // Track deleted sessions to prevent writes
 
   constructor(sessionsDir: string) {
@@ -193,9 +193,6 @@ export class GenerationManager {
 
     // Cancel pending writes
     this.pendingWrites.delete(sessionId);
-
-    // Cancel pending title generation
-    this.titleGenerationQueue.delete(sessionId);
 
     // Clean up completed tasks
     this.cleanup(sessionId);
@@ -251,56 +248,7 @@ export class GenerationManager {
     this.tasks.delete(id);
   }
 
-  // Generate title asynchronously with queue to prevent concurrent generation for same session
-  private async generateTitleAsync(sessionId: string, content: string): Promise<void> {
-    // If there's already a title generation in progress for this session, skip
-    if (this.titleGenerationQueue.has(sessionId)) {
-      return;
-    }
 
-    // Compute the raw title that was set immediately in sendMessage
-    // Must match the exact logic in sendMessage method
-    const trimmedContent = content.trim();
-    const rawTitle = trimmedContent.slice(0, 50) + (trimmedContent.length > 50 ? '...' : '');
-
-    const generatePromise = (async () => {
-      try {
-        const title = await generateTitleFromMarkdown(content);
-        const session = await this.readSession(sessionId);
-        if (!session) return;
-
-        // Check if current title is the original unprocessed title
-        // This handles cases where user sent multiple messages quickly (messages.length > 1)
-        // but title hasn't been processed yet
-        const isUnprocessedTitle = session.title === 'New Chat' ||
-                                    session.title === rawTitle ||
-                                    // Also match if title starts with raw content prefix (in case of edge cases)
-                                    (rawTitle.length < 50 && session.title.startsWith(rawTitle));
-
-        // Only update if:
-        // 1. The generated title is different from current title
-        // 2. The current title hasn't been customized (is still the original/raw title)
-        if (session.title !== title && isUnprocessedTitle) {
-          session.title = title;
-          session.updatedAt = new Date().toISOString();
-          await this.debouncedWrite(session, 0); // Immediate write for title
-
-          // Notify subscribers about title update via delta event
-          const task = this.tasks.get(sessionId);
-          if (task) {
-            task.subscribers.forEach(cb => cb('title', { title }));
-          }
-        }
-      } catch (err) {
-        console.error('[Title] Failed to generate title for session %s:', sessionId, err);
-      } finally {
-        this.titleGenerationQueue.delete(sessionId);
-      }
-    })();
-
-    this.titleGenerationQueue.set(sessionId, generatePromise);
-    return generatePromise;
-  }
 
   async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
     let session = await this.readSession(sessionId);
@@ -323,12 +271,9 @@ export class GenerationManager {
     };
     session.messages.push(userMsg);
 
-    // For first message, update title immediately with raw content, then refine async
-    // Generate raw title using consistent logic with frontend (trim first, then slice)
-    const trimmedContent = content.trim();
+    // Generate title synchronously for first message
     if (session.messages.length === 1) {
-      const rawTitle = trimmedContent.slice(0, 50) + (trimmedContent.length > 50 ? '...' : '');
-      session.title = rawTitle || 'New Chat';
+      session.title = generateTitleFromMarkdown(content);
     }
 
     session.updatedAt = new Date().toISOString();
@@ -336,11 +281,6 @@ export class GenerationManager {
 
     // Start generation immediately (fire-and-forget, errors handled internally)
     this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
-
-    // Generate refined title asynchronously in background
-    if (session.messages.length === 1) {
-      this.generateTitleAsync(sessionId, content).catch(() => {});
-    }
   }
 
   async retryMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
@@ -580,7 +520,8 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
         notifySubscribers('delta', { content: fullContent });
       }
     } catch (err: any) {
-      if (err.name === 'AbortError') {
+      // Handle both standard AbortError and OpenAI SDK APIUserAbortError
+      if (err.name === 'AbortError' || err.name === 'APIUserAbortError') {
         task.status = 'stopped';
       } else {
         throw err;
@@ -649,8 +590,8 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       };
     });
 
-    const firstUserMsg = messages.find((m: any) => m.role === 'user') || 'Untitled';
-    const title = await generateTitleFromMarkdown(firstUserMsg.content);
+    const firstUserMsg = messages.find((m: any) => m.role === 'user');
+    const title = firstUserMsg ? generateTitleFromMarkdown(firstUserMsg.content) : 'Untitled';
 
     return {
       id: raw.id ?? crypto.randomUUID(),

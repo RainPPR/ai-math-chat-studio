@@ -142,7 +142,6 @@ return unsubscribe; // useEffect cleanup
 - `done` — 生成完成
 - `error` — 错误
 - `stopped` — 已停止
-- `title` — 标题更新（异步生成完成后）
 
 ### 5. Provider + Model 分离架构
 
