@@ -1,0 +1,14 @@
+{
+  "id": "c3b72d47-a1e1-49c6-8f5c-ea3b899d18cd",
+  "title": "已知 a, b ∈ ℝ 且 a²e^(a) + ln a = 0，b\\ln\\left(b+\\ln b...",
+  "messages": [
+    {
+      "id": "1612ac1c-ccea-436b-80d6-ae0a9c5bb2ce",
+      "role": "user",
+      "content": "已知 $a,b\\in\\mathbb R$ 且 $a^2e^a+\\ln a=0$，$b\\ln\\left(b+\\ln b-\\dfrac{1}{b}\\right)=1$，比较大小：$ab,b,e^b$（可能有相等出现）。虽然我知道你大概率能看出来，但是不要写“我们猜测 $ab=1$”，要从我的角度考虑，我做不出来，显然是没观察到啊。",
+      "createdAt": "2026-06-22T06:59:20.518Z"
+    }
+  ],
+  "createdAt": "2026-06-22T06:59:20.518Z",
+  "updatedAt": "2026-06-22T06:59:52.938Z"
+}
