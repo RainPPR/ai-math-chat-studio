@@ -1,6 +1,6 @@
 {
   "id": "95d11e33-7942-4fcc-8a0c-25537b11b4ca",
-  "title": "求封闭形式：\n\n\n\\sum_{k=0}^n\\dbinom{n}{k}^2\n",
+  "title": "求封闭形式： ∑ₖ₌₀ⁿdbinom{n}{k}²",
   "messages": [
     {
       "id": "3f2615f5-7365-4929-a143-011e1da5dd93",

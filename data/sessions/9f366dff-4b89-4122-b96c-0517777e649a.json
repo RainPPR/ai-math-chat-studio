@@ -1,6 +1,6 @@
 {
   "id": "9f366dff-4b89-4122-b96c-0517777e649a",
-  "title": "已知函数 f(x)=\\begin{cases}2^{x-1}+1&x\\le1\\\\|\\log_2(x-...",
+  "title": "已知函数 f(x)=begin{cases}2ˣ⁻¹+1&x≤1‖łog₂(x−1)|&x>1end...",
   "messages": [
     {
       "id": "f76e1f98-d5de-4a7d-8cd9-1ce1d7e70f9e",

@@ -1,6 +1,6 @@
 {
   "id": "a1d30358-a791-4061-a677-f4eaa8cf254f",
-  "title": "已知函数 f(x)=\\begin{cases}4-2^x&x\\ge1\\\\x^2-(m+1)x+2m&...",
+  "title": "已知函数 f(x)=begin{cases}4−2ˣ&x≥1x²−(m+1)x+2m&x<1end{...",
   "messages": [
     {
       "id": "207402b9-cb7b-4090-81fb-44412c3c3695",

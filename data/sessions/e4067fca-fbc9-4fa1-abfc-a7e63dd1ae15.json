@@ -1,6 +1,6 @@
 {
   "id": "e4067fca-fbc9-4fa1-abfc-a7e63dd1ae15",
-  "title": "记 [x] 表示不超过 x 的最大整数，若 a ∈ (0, 1)，记 f(x) = |x − [x ...",
+  "title": "记 [x] 表示不超过 x 的最大整数，若 a∈(0,1)，记 f(x)=|x−[x+a]|+|x−...",
   "messages": [
     {
       "id": "bddc1966-7cea-4d08-8294-366ee9187adb",

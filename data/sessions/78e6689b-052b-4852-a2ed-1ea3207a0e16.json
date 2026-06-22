@@ -1,6 +1,6 @@
 {
   "id": "78e6689b-052b-4852-a2ed-1ea3207a0e16",
-  "title": "已知 c_n=\\frac{b_n-1}{b_n(2b_n-3)}，b_(n) = 2^(n)，求证 ...",
+  "title": "已知 cₙ=frac{bₙ−1}{bₙ(2bₙ−3)}，bₙ=2ⁿ，求证 cₙ 的前 n 项和 Tₙ...",
   "messages": [
     {
       "id": "ea6039f7-d907-49cf-83f9-ae8a1b98324f",

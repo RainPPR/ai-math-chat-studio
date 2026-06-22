@@ -1,6 +1,6 @@
 {
   "id": "6e5515f6-982c-437c-a7fe-f6c56662f90d",
-  "title": "已知函数 f(x)=\\begin{cases}x+0.5&0\\le x\\le 0.5\\\\2-2x&0...",
+  "title": "已知函数 f(x)=begin{cases}x+0.5&0≤ x≤ 0.52−2x&0.5<x≤ 1...",
   "messages": [
     {
       "id": "a9e568c1-26a4-4de4-8338-40193bd17c49",

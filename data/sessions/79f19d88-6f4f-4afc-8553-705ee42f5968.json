@@ -1,6 +1,6 @@
 {
   "id": "79f19d88-6f4f-4afc-8553-705ee42f5968",
-  "title": "设 a ≠ 0, n ≥ 1, n ∈ ℕ，[x^(k)](1 + x/a)^(n) = a_(k)...",
+  "title": "设 a≠0,n≥1,n∈mathbb N，xᵏⁿ=aₖ，若 a₀=1,a₁=3,a₂=4，求 a 和...",
   "messages": [
     {
       "id": "d71a9ec7-d30b-4824-8bc3-f6ba4b950ef0",

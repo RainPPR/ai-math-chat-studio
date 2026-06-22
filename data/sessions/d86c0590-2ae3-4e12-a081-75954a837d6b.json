@@ -1,6 +1,6 @@
 {
   "id": "d86c0590-2ae3-4e12-a081-75954a837d6b",
-  "title": "求 lim_(x → 0⁺)[−x² + (e^(x) − e^(−x))sin x] 的正负号",
+  "title": "求 łimₓ_→₀_^₊[−x²+(eˣ−e⁻ˣ)sin x] 的正负号",
   "messages": [
     {
       "id": "5e542b38-b078-4cca-a5d1-c0eb96ad86a3",
