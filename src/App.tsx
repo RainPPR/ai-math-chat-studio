@@ -88,7 +88,7 @@ export default function App() {
       sessionId = crypto.randomUUID();
       const session: ChatSession = {
         id: sessionId,
-        title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
+        title: content.trim().slice(0, 50) + (content.length > 50 ? '...' : ''),
         messages: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       };
       setSessions(prev => [session, ...prev]);

@@ -105,6 +105,22 @@
 
 此包装在 `GenerationManager.runGeneration()` 中完成，前端 `ChatArea.tsx` 的 `MessageItem` 负责解析和展示。
 
+#### 非标准思考格式转录
+
+部分免费 API 平台返回非标准思考格式，以 `Thinking...` 开头，后续连续以 `>` 开头的行为思考内容：
+
+```
+Thinking...
+> 用户要求比较 $ab, b, e^b$ 的大小...
+> 1. $a, b \in \mathbb{R}$
+...
+```
+
+处理流程：
+1. **前端实时检测（补丁式）**：`ChatArea.tsx` 的 `convertNonStandardThinkingForDisplay()` 在消息展示时检测非标准格式，确保流式传输过程中用户看到的也是正确的折叠格式
+2. **后端归档转换**：`GenerationManager.convertNonStandardThinking()` 在生成完成后将整个响应转换为标准格式存储到 JSON
+3. **存储和展示一致**：刷新页面后从 JSON 读取的内容已经是标准格式，不再需要转换
+
 ### 3. SSE 订阅模式
 
 前端通过 `api.subscribeGeneration()` 订阅生成进度：

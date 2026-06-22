@@ -2,6 +2,27 @@ import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
 import { resolveBaseURL, resolveApiKey, MATH_INSTRUCTIONS } from './config';
 
+/**
+ * Strip UI wrapper tags from message content, converting thinking blocks to quoted format.
+ * Converts: <details>\n<summary>Thinking Process</summary>\n\n```text\n...\n```\n\n</details>\n\n(content)
+ * To: > ...\n(content)
+ *
+ * This reduces token usage while preserving thinking content for models that support it.
+ */
+function stripThinkingWrapper(content: string): string {
+  // Match the entire details block with thinking process
+  const thinkingRegex = /<details(?:\s+open)?>\s*<summary>Thinking\s+Process<\/summary>\s*```text\n([\s\S]*?)\n```\s*<\/details>\s*(?:\r?\n)*/gi;
+
+  return content.replace(thinkingRegex, (match, thinkingContent) => {
+    // Convert thinking content to quoted format
+    const quotedThinking = thinkingContent
+      .split(/\r?\n/)
+      .map((line: string) => `> ${line}`)
+      .join('\n');
+    return quotedThinking + '\n\n';
+  });
+}
+
 export interface StreamRequest {
   model: string;
   messages: { role: string; content: string }[];
@@ -50,7 +71,7 @@ async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; a
   const history = req.messages.length > 40 ? req.messages.slice(-40) : req.messages;
   const contents: any[] = history.map(msg => ({
     role: msg.role === 'assistant' ? 'model' : msg.role,
-    parts: [{ text: msg.content }],
+    parts: [{ text: stripThinkingWrapper(msg.content) }],
   }));
 
   const config: any = {};
@@ -91,7 +112,8 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
   const history = req.messages.length > 40 ? req.messages.slice(-40) : req.messages;
   for (const msg of history) {
     if (msg.role === 'assistant' || msg.role === 'model') {
-      messages.push({ role: 'assistant', content: msg.content });
+      // Strip thinking wrapper to reduce tokens and normalize format
+      messages.push({ role: 'assistant', content: stripThinkingWrapper(msg.content) });
     } else {
       messages.push({ role: msg.role, content: msg.content });
     }

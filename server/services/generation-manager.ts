@@ -5,6 +5,68 @@ import { convert } from 'pandoc-wasm';
 import { streamChat, StreamChunk } from '../providers/stream';
 import { MATH_INSTRUCTIONS } from '../providers/config';
 
+/**
+ * Convert non-standard thinking format to standard format.
+ * Non-standard format:
+ *   Thinking...
+ *   > line 1
+ *   > line 2
+ *   ...
+ *   (content without > prefix)
+ *
+ * Standard format:
+ *   <details>\n<summary>Thinking Process</summary>\n\n```text\nline 1\nline 2\n...\n```\n\n</details>\n\n(content)
+ */
+function convertNonStandardThinking(content: string): string {
+  // Check if content starts with "Thinking..." followed by lines starting with ">"
+  const thinkingHeaderRegex = /^Thinking\.\.\.(\r?\n)/;
+  const headerMatch = content.match(thinkingHeaderRegex);
+
+  if (!headerMatch) {
+    return content;
+  }
+
+  const lines = content.split(/\r?\n/);
+
+  // First line should start with "Thinking..." (allow trailing whitespace)
+  if (!lines[0].trim().startsWith('Thinking...')) {
+    return content;
+  }
+
+  const thinkingLines: string[] = [];
+  let mainContentStartIndex = -1;
+
+  // Start from index 1 (after "Thinking...")
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    // Check if line starts with ">" (possibly with leading whitespace)
+    // Capture content after ">" and optional spaces
+    const quotedMatch = line.match(/^\s*>\s*(.*)$/);
+    if (quotedMatch) {
+      thinkingLines.push(quotedMatch[1]);
+    } else {
+      // Non-quoted line found, this is where main content starts
+      mainContentStartIndex = i;
+      break;
+    }
+  }
+
+  // If no thinking lines found or no main content, return as-is
+  if (thinkingLines.length === 0) {
+    return content;
+  }
+
+  // Build standard format
+  const thinkingContent = thinkingLines.join('\n');
+  const mainContent = mainContentStartIndex >= 0
+    ? lines.slice(mainContentStartIndex).join('\n').trimStart()
+    : '';
+
+  const standardThinking = `<details>\n<summary>Thinking Process</summary>\n\n\`\`\`text\n${thinkingContent}\n\`\`\`\n\n</details>\n\n${mainContent}`;
+
+  return standardThinking.trim();
+}
+
 const PANDOC_OPTIONS = {
   from: 'markdown',
   to: 'plain',
@@ -196,14 +258,29 @@ export class GenerationManager {
       return;
     }
 
+    // Compute the raw title that was set immediately in sendMessage
+    // Must match the exact logic in sendMessage method
+    const trimmedContent = content.trim();
+    const rawTitle = trimmedContent.slice(0, 50) + (trimmedContent.length > 50 ? '...' : '');
+
     const generatePromise = (async () => {
       try {
         const title = await generateTitleFromMarkdown(content);
         const session = await this.readSession(sessionId);
         if (!session) return;
 
-        // Only update if title actually changed and session has no custom title yet
-        if (session.title !== title && (session.title === 'New Chat' || session.messages.length <= 1)) {
+        // Check if current title is the original unprocessed title
+        // This handles cases where user sent multiple messages quickly (messages.length > 1)
+        // but title hasn't been processed yet
+        const isUnprocessedTitle = session.title === 'New Chat' ||
+                                    session.title === rawTitle ||
+                                    // Also match if title starts with raw content prefix (in case of edge cases)
+                                    (rawTitle.length < 50 && session.title.startsWith(rawTitle));
+
+        // Only update if:
+        // 1. The generated title is different from current title
+        // 2. The current title hasn't been customized (is still the original/raw title)
+        if (session.title !== title && isUnprocessedTitle) {
           session.title = title;
           session.updatedAt = new Date().toISOString();
           await this.debouncedWrite(session, 0); // Immediate write for title
@@ -247,8 +324,10 @@ export class GenerationManager {
     session.messages.push(userMsg);
 
     // For first message, update title immediately with raw content, then refine async
+    // Generate raw title using consistent logic with frontend (trim first, then slice)
+    const trimmedContent = content.trim();
     if (session.messages.length === 1) {
-      const rawTitle = content.trim().slice(0, 50) + (content.length > 50 ? '...' : '');
+      const rawTitle = trimmedContent.slice(0, 50) + (trimmedContent.length > 50 ? '...' : '');
       session.title = rawTitle || 'New Chat';
     }
 
@@ -523,6 +602,13 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     }
 
     fullContent = fullContent.replace(/<details open>/g, '<details>');
+
+    // Convert non-standard thinking format (if any) to standard format
+    // Only applies to openai-compatible providers that return non-standard thinking
+    if (model.providerType === 'openai-compatible') {
+      fullContent = convertNonStandardThinking(fullContent);
+    }
+
     task.content = fullContent;
 
     if (task.status === 'running') {
@@ -549,12 +635,19 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
   }
 
   private async sanitizeSession(raw: any): Promise<ServerChatSession> {
-    const messages = (raw.messages || []).map((m: any) => ({
-      id: m.id ?? crypto.randomUUID(),
-      role: m.role === 'model' || m.role === 'user' ? m.role : 'user',
-      content: m.content ?? '',
-      createdAt: m.createdAt ?? new Date().toISOString(),
-    }));
+    const messages = (raw.messages || []).map((m: any) => {
+      let content = m.content ?? '';
+      // Convert non-standard thinking format for old messages (from before this feature was added)
+      if (m.role === 'model') {
+        content = convertNonStandardThinking(content);
+      }
+      return {
+        id: m.id ?? crypto.randomUUID(),
+        role: m.role === 'model' || m.role === 'user' ? m.role : 'user',
+        content,
+        createdAt: m.createdAt ?? new Date().toISOString(),
+      };
+    });
 
     const firstUserMsg = messages.find((m: any) => m.role === 'user') || 'Untitled';
     const title = await generateTitleFromMarkdown(firstUserMsg.content);

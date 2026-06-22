@@ -19,6 +19,51 @@ interface ChatAreaProps {
   onClearError?: () => void;
 }
 
+/**
+ * Detect and convert non-standard thinking format to standard format for display.
+ * Non-standard: Thinking...\n> line1\n> line2\n...\ncontent
+ * Standard: <details>\n<summary>Thinking Process</summary>\n\n```text\nline1\nline2\n...\n```\n\n</details>\n\ncontent
+ */
+function convertNonStandardThinkingForDisplay(content: string): { thoughts: string[]; mainContent: string } {
+  const lines = content.split(/\r?\n/);
+
+  // Check if first line is exactly "Thinking..."
+  if (lines[0]?.trim() !== 'Thinking...') {
+    return { thoughts: [], mainContent: content };
+  }
+
+  const thinkingLines: string[] = [];
+  let mainContentStartIndex = -1;
+
+  // Start from index 1 (after "Thinking...")
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    // Skip empty lines in thinking section (they're part of thinking)
+    if (line.trim() === '') {
+      thinkingLines.push('');
+      continue;
+    }
+    const quotedMatch = line.match(/^\s*>\s*(.*)$/);
+    if (quotedMatch) {
+      thinkingLines.push(quotedMatch[1]);
+    } else {
+      mainContentStartIndex = i;
+      break;
+    }
+  }
+
+  // If no thinking lines found, return as-is
+  if (thinkingLines.length === 0) {
+    return { thoughts: [], mainContent: content };
+  }
+
+  const mainContent = mainContentStartIndex >= 0
+    ? lines.slice(mainContentStartIndex).join('\n').trimStart()
+    : '';
+
+  return { thoughts: [thinkingLines.join('\n')], mainContent };
+}
+
 const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue, onRegenerate }: {
   msg: any; isLast: boolean; isGenerating: boolean; settings: UserSettings;
   onCopy: (id: string, content: string) => void; copiedId: string | null;
@@ -29,17 +74,25 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
   let mainContent = msg.content;
 
   if (!isUser) {
-    const thoughtRegex = /<details(?: open)?>\n<summary>Thinking Process<\/summary>\n\n```text\n([\s\S]*?)(?:\n```\n\n<\/details>|$)/g;
-    for (const m of msg.content.matchAll(thoughtRegex)) {
-      if (m[1]) {
-        let thoughtContent = m[1].trim();
-        if (settings.gemmaTrimThinkingSpaces) {
-          thoughtContent = thoughtContent.split('\n').map((l: string) => l.trimStart()).join('\n');
+    // First, try to detect non-standard thinking format and convert for display
+    const converted = convertNonStandardThinkingForDisplay(msg.content);
+    if (converted.thoughts.length > 0) {
+      thoughts = converted.thoughts;
+      mainContent = converted.mainContent;
+    } else {
+      // Standard format: parse existing <details> blocks
+      const thoughtRegex = /<details(?: open)?>\n<summary>Thinking Process<\/summary>\n\n```text\n([\s\S]*?)(?:\n```\n\n<\/details>|$)/g;
+      for (const m of msg.content.matchAll(thoughtRegex)) {
+        if (m[1]) {
+          let thoughtContent = m[1].trim();
+          if (settings.gemmaTrimThinkingSpaces) {
+            thoughtContent = thoughtContent.split('\n').map((l: string) => l.trimStart()).join('\n');
+          }
+          thoughts.push(thoughtContent);
         }
-        thoughts.push(thoughtContent);
       }
+      mainContent = mainContent.replace(thoughtRegex, '').trim();
     }
-    mainContent = mainContent.replace(thoughtRegex, '').trim();
   }
 
   const [isThoughtOpen, setIsThoughtOpen] = useState(() => {
@@ -347,7 +400,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           <div className="flex justify-start">
             <div className="max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 bg-gray-800 text-gray-100 border border-gray-700 flex items-center gap-3">
               <Loader2 size={18} className="animate-spin text-blue-400" />
-              <span className="text-gray-400 text-sm font-medium">Thinking...</span>
+              <span className="text-gray-400 text-sm font-medium">Waiting...</span>
             </div>
           </div>
         )}
