@@ -33,6 +33,7 @@
 | 组件结构和职责 | `docs/components.md` |
 | 数学公式渲染 | `docs/tech-stack.md` |
 | 文件结构 | `docs/file-structure.md` |
+| 数学进化架构 v2 | `docs/math-evolution-v2.md` |
 
 ## 开发规范
 

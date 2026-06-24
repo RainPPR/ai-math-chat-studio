@@ -1,0 +1,13 @@
+{
+  "id": "gene-16507f08",
+  "domain": "functions",
+  "content": "For functional equations like f(x)=f(g(x)), analyze the fixed points and orbits of g(x).",
+  "type": "heuristic",
+  "strength": 0.5,
+  "success_count": 0,
+  "failure_count": 0,
+  "source": {
+    "session_id": "8dd09afd-9df0-4c48-9691-97a2d6b3b070"
+  },
+  "created_at": "2026-06-24T08:03:23.022437+00:00"
+}

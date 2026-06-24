@@ -12,6 +12,7 @@ ai-math-chat-studio/
 │   ├── components.md         # 组件结构
 │   ├── data-models.md        # 数据模型
 │   ├── tech-stack.md         # 技术栈
+│   ├── math-evolution-v2.md  # 数学进化架构 v2
 │   └── file-structure.md     # 本文件
 ├── data/                     # 本地数据存储（不提交）
 │   ├── settings.json         # 用户设置
@@ -49,6 +50,7 @@ ai-math-chat-studio/
 │       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
 │       └── utils.ts          # cn() 样式合并工具
 ├── tsconfig.json             # TypeScript 配置
+├── math_evolution_framework_new/ # 数学进化框架 v2
 └── vite.config.ts            # Vite 构建配置
 ```
 
