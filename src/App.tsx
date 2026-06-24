@@ -61,7 +61,9 @@ export default function App() {
     const id = crypto.randomUUID();
     const session: ChatSession = {
       id, title: 'New Chat',
-      messages: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      messages: [],
+      characterId: settings.activeCharacterId,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
     setSessions(prev => [session, ...prev]);
     setCurrentSessionId(id);
@@ -89,7 +91,10 @@ export default function App() {
       const session: ChatSession = {
         id: sessionId,
         title: content.trim().slice(0, 50) + (content.length > 50 ? '...' : ''),
-        messages: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        messages: [],
+        characterId: settings.activeCharacterId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       setSessions(prev => [session, ...prev]);
       setCurrentSessionId(sessionId);
@@ -203,6 +208,18 @@ export default function App() {
     await api.settings.save(newSettings);
   };
 
+  const handleSelectModel = async (modelId: string) => {
+    const newSettings = { ...settings, activeModelId: modelId };
+    setSettings(newSettings);
+    await api.settings.save(newSettings);
+  };
+
+  const handleSelectCharacter = async (characterId: string) => {
+    const newSettings = { ...settings, activeCharacterId: characterId };
+    setSettings(newSettings);
+    await api.settings.save(newSettings);
+  };
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -256,6 +273,8 @@ export default function App() {
           onRetry={handleRetry}
           onContinue={handleContinue}
           onRegenerate={handleRegenerate}
+          onSelectModel={handleSelectModel}
+          onSelectCharacter={handleSelectCharacter}
           error={error}
           onClearError={clearError}
           onGenerationEnd={async (id) => {

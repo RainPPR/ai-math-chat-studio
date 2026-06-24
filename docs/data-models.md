@@ -34,19 +34,33 @@ interface ModelInstance {
   maxTokens?: number;               // 最大 token 数（Unset 时不传给 API）
   reasoningEffort?: string;         // 推理努力程度（low/medium/high，OpenAI 兼容用）
   thinkingLevel?: string;           // 思考级别（Gemini 专用）
-   extraBody?: Record<string, any>;  // 额外请求体（JSON 对象，合并到 API 请求中）
-   injectThinkingTemplate?: boolean; // 注入 chat_template_kwargs thinking（Nvidia 用）
+  extraBody?: Record<string, any>;  // 额外请求体（JSON 对象，合并到 API 请求中）
+  injectThinkingTemplate?: boolean; // 注入 chat_template_kwargs thinking（Nvidia 用）
 }
 ```
+
+### Character（角色）
+
+```typescript
+interface Character {
+  id: string;            // UUID
+  name: string;          // 角色名称
+  systemPrompt: string;  // 系统提示词
+}
+```
+
+> **设计意图**：角色是系统提示词的容器。用户可在设置中创建多个角色（如"数学导师"、"代码助手"），每个角色携带不同的 `systemPrompt`。发送消息时，后端根据 `activeCharacterId` 查找对应角色的 `systemPrompt` 注入请求。
 
 ### UserSettings（用户设置）
 
 ```typescript
 interface UserSettings {
   activeModelId?: string;           // 当前活跃模型的 ModelInstance.id
+  activeCharacterId?: string;       // 当前活跃角色的 Character.id
   providers: ProviderInstance[];    // 提供商实例列表
-  models: ModelInstance[];         // 模型实例列表
-  systemPrompt: string;            // 系统提示词
+  models: ModelInstance[];          // 模型实例列表
+  characters: Character[];          // 角色列表
+  systemPrompt: string;             // 全局回退系统提示词（向后兼容）
   renderThinkingAsMarkdown: boolean;
   autoScroll: boolean;
   collapseThinkingFinished: boolean;
@@ -139,6 +153,7 @@ interface GenerationProvider {
 const DEFAULT_SETTINGS: UserSettings = {
   providers: [],
   models: [],
+  characters: [],
   systemPrompt: '',
   renderThinkingAsMarkdown: false,
   autoScroll: true,

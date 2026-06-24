@@ -2,10 +2,18 @@ import { Router } from 'express';
 import { GenerationManager } from '../services/generation-manager';
 import fs from 'fs/promises';
 
+interface Character {
+  id: string;
+  name: string;
+  systemPrompt: string;
+}
+
 interface SettingsData {
   activeModelId?: string;
+  activeCharacterId?: string;
   providers?: any[];
   models?: any[];
+  characters?: Character[];
   systemPrompt?: string;
   injectThinkingTemplate?: boolean;
   [key: string]: any;
@@ -27,6 +35,16 @@ function resolveActiveModel(settings: SettingsData) {
   return { model, provider };
 }
 
+function resolveSystemPrompt(settings: SettingsData): string {
+  if (settings.activeCharacterId && settings.characters?.length) {
+    const character = settings.characters.find((c: any) => c.id === settings.activeCharacterId);
+    if (character && character.systemPrompt) {
+      return character.systemPrompt;
+    }
+  }
+  return settings.systemPrompt || '';
+}
+
 export function createChatRouter(gm: GenerationManager, settingsFile: string) {
   const router = Router();
 
@@ -39,7 +57,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
-    await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
+    await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate, settings.activeCharacterId);
     res.status(202).json({ ok: true });
   });
 
@@ -50,13 +68,12 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx buffering if present
+    res.setHeader('X-Accel-Buffering', 'no');
     res.flushHeaders();
 
     let unsubscribe: (() => void) | null = null;
     let isClosed = false;
 
-    // Clean up function to prevent double cleanup
     const cleanup = () => {
       if (isClosed) return;
       isClosed = true;
@@ -66,10 +83,9 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
       }
     };
 
-    // Wait for task to be available with backoff
-    const maxWaitTime = 5000; // 5 seconds max
+    const maxWaitTime = 5000;
     const startTime = Date.now();
-    let waitTime = 50; // Start with 50ms
+    let waitTime = 50;
 
     while (Date.now() - startTime < maxWaitTime) {
       unsubscribe = gm.subscribe(sessionId, (event, data) => {
@@ -78,19 +94,16 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
           res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
           if (event === 'done' || event === 'error' || event === 'stopped') {
             console.log(`[SSE] Sending ${event} for session ${sessionId}`);
-            // Use setImmediate for faster cleanup
             setImmediate(() => {
               cleanup();
               res.end();
             });
           }
         } catch (err) {
-          // Client disconnected
           cleanup();
         }
       });
       if (unsubscribe) break;
-      // Exponential backoff with max 500ms
       await new Promise(r => setTimeout(r, waitTime));
       waitTime = Math.min(waitTime * 1.5, 500);
     }
@@ -136,7 +149,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     try {
-      await gm.retryMessage(req.params.id, messageId, result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
+      await gm.retryMessage(req.params.id, messageId, result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -149,7 +162,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     try {
-      await gm.continueGeneration(req.params.id, result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
+      await gm.continueGeneration(req.params.id, result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -165,7 +178,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     try {
-      await gm.regenerateMessage(req.params.id, messageId, result.model, result.provider, settings.systemPrompt || '', settings.injectThinkingTemplate);
+      await gm.regenerateMessage(req.params.id, messageId, result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });

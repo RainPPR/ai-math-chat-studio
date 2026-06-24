@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserSettings, ProviderInstance, ModelInstance, BuiltInProviderType, DEFAULT_SETTINGS } from '../types';
+import { UserSettings, ProviderInstance, ModelInstance, Character, BuiltInProviderType, DEFAULT_SETTINGS } from '../types';
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle } from 'lucide-react';
 
@@ -9,7 +9,7 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type Tab = 'general' | 'providers' | 'models';
+type Tab = 'general' | 'providers' | 'models' | 'characters';
 
 // ===== Active Model Dropdown Component =====
 
@@ -244,6 +244,12 @@ const makeEmptyModel = (): ModelInstance => ({
   modelId: '',
 });
 
+const makeEmptyCharacter = (): Character => ({
+  id: crypto.randomUUID(),
+  name: '',
+  systemPrompt: '',
+});
+
 const getDefaultEnvKey = (type: string): string => {
   switch (type) {
     case 'google': return 'GEMINI_API_KEY';
@@ -275,6 +281,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
   const [cleaning, setCleaning] = useState(false);
   const [cleanResult, setCleanResult] = useState<{ cleaned: number; total: number } | null>(null);
+
+  const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
 
   const handleCleanClick = async () => {
     if (!window.confirm('警告：这将重写所有会话数据，移除任何已废弃的字段。此操作不可撤销。确定要继续吗？')) {
@@ -361,6 +369,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     }));
   };
 
+  // ----- Character CRUD -----
+  const addCharacter = () => {
+    setEditingCharacter(makeEmptyCharacter());
+  };
+
+  const saveCharacter = () => {
+    if (!editingCharacter || !editingCharacter.name.trim()) return;
+    setLocal(s => {
+      const characters = [...s.characters];
+      const idx = characters.findIndex(c => c.id === editingCharacter.id);
+      if (idx >= 0) characters[idx] = editingCharacter;
+      else characters.push(editingCharacter);
+      return { ...s, characters };
+    });
+    setEditingCharacter(null);
+  };
+
+  const deleteCharacterEntry = (id: string) => {
+    setLocal(s => ({
+      ...s,
+      characters: s.characters.filter(c => c.id !== id),
+      activeCharacterId: s.activeCharacterId === id ? undefined : s.activeCharacterId,
+    }));
+  };
+
   const activeModel = local.models.find(m => m.id === local.activeModelId);
 
   return (
@@ -372,9 +405,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         </div>
 
         <div className="flex border-b border-gray-800 shrink-0">
-          {(['general', 'providers', 'models'] as Tab[]).map(t => (
+          {(['general', 'providers', 'models', 'characters'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)} className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === t ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>
-              {t === 'general' ? 'General' : t === 'providers' ? 'Providers' : 'Models'}
+              {t === 'general' ? 'General' : t === 'providers' ? 'Providers' : t === 'models' ? 'Models' : 'Characters'}
             </button>
           ))}
         </div>
@@ -395,13 +428,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">System Prompt</label>
-                <textarea
-                  value={local.systemPrompt}
-                  onChange={e => setLocal(s => ({ ...s, systemPrompt: e.target.value }))}
-                  placeholder="You are a helpful assistant..."
-                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 h-32 resize-none"
-                />
+                <label className="block text-sm font-medium text-gray-300">Active Character</label>
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                  {local.activeCharacterId && local.characters.find(c => c.id === local.activeCharacterId) ? (
+                    <div className="space-y-1">
+                      <div className="text-sm text-white font-medium">
+                        {local.characters.find(c => c.id === local.activeCharacterId)?.name}
+                      </div>
+                      <div className="text-xs text-gray-400 line-clamp-2">
+                        {local.characters.find(c => c.id === local.activeCharacterId)?.systemPrompt?.slice(0, 100)}...
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-gray-500 text-sm">No active character selected</span>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-3 pt-4 border-t border-gray-800">
@@ -538,6 +579,57 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   })()}
                   <button onClick={addModel} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-3 text-sm transition-colors">
                     <Plus size={16} /> Add Model
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Characters Tab */}
+          {tab === 'characters' && (
+            <>
+              {editingCharacter ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300">Character Name</label>
+                    <input
+                      value={editingCharacter.name}
+                      onChange={e => setEditingCharacter({ ...editingCharacter, name: e.target.value })}
+                      placeholder="e.g. Math Tutor"
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300">System Prompt</label>
+                    <textarea
+                      value={editingCharacter.systemPrompt}
+                      onChange={e => setEditingCharacter({ ...editingCharacter, systemPrompt: e.target.value })}
+                      placeholder="You are a helpful assistant..."
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 h-40 resize-none"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button onClick={() => setEditingCharacter(null)} className="px-4 py-2 text-gray-300 hover:text-white transition-colors">Cancel</button>
+                    <button onClick={saveCharacter} disabled={!editingCharacter.name.trim()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg transition-colors flex items-center gap-2"><Save size={14} /> Save Character</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {local.characters.length === 0 && <p className="text-xs text-gray-500">No characters configured.</p>}
+                  {local.characters.map(c => (
+                    <div key={c.id} className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-white truncate">{c.name}</div>
+                        <div className="text-xs text-gray-400 line-clamp-2 mt-1">{c.systemPrompt?.slice(0, 120)}...</div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-3">
+                        <button onClick={() => setEditingCharacter({ ...c })} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
+                        <button onClick={() => deleteCharacterEntry(c.id)} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={addCharacter} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-4 transition-colors">
+                    <Plus size={18} /> Add Character
                   </button>
                 </div>
               )}

@@ -106,6 +106,7 @@ export interface ServerChatSession {
   id: string;
   title: string;
   messages: ServerChatMessage[];
+  characterId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -250,7 +251,7 @@ export class GenerationManager {
 
 
 
-  async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
+  async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, characterId?: string): Promise<void> {
     let session = await this.readSession(sessionId);
     if (!session) {
       // Create session with temporary title immediately
@@ -258,6 +259,7 @@ export class GenerationManager {
         id: sessionId,
         title: 'New Chat',
         messages: [],
+        characterId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -597,6 +599,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       id: raw.id ?? crypto.randomUUID(),
       title,
       messages,
+      characterId: raw.characterId,
       createdAt: raw.createdAt ?? new Date().toISOString(),
       updatedAt: raw.updatedAt ?? new Date().toISOString(),
     };

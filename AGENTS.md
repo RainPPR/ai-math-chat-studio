@@ -143,9 +143,9 @@ return unsubscribe; // useEffect cleanup
 - `error` — 错误
 - `stopped` — 已停止
 
-### 5. Provider + Model 分离架构
+### 5. Provider + Model + Character 分离架构
 
-用户在 Settings 中分两级配置：
+用户在 Settings 中分三级配置：
 
 **Providers tab**：
 1. 添加/管理提供商实例（Google / Nvidia / OpenAI Compatible）
@@ -154,10 +154,19 @@ return unsubscribe; // useEffect cleanup
 **Models tab**：
 1. 选择关联的提供商实例
 2. 配置模型参数（temperature、maxTokens、reasoningEffort 等）
-   3. 选择活跃模型
+3. 选择活跃模型
+
+**Characters tab**：
+1. 创建/管理角色（名称 + 系统提示词）
+2. 角色对应不同的 AI 人格和系统级指令
+
+**快捷切换（ChatArea 浮动栏）**：
+- 在聊天输入框上方提供浮动栏，可快速切换当前活跃模型和角色
+- 切换后即时保存到 `settings.json`
 
 **General tab**：
-4. 选择活跃模型
+- 显示当前活跃角色预览
+- 控制 UI 开关（自动滚动、折叠思考过程等）
 
 所有参数 "Unset" 时不传给 API（不传默认值）。
 

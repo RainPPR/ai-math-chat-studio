@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatSession, UserSettings } from '../types';
 import { api } from '../lib/api';
-import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal, AlertCircle, X } from 'lucide-react';
+import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal, AlertCircle, X, ChevronDown, Bot, Sparkles } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface ChatAreaProps {
@@ -14,6 +14,8 @@ interface ChatAreaProps {
   onContinue?: () => void;
   onRegenerate?: (msgId: string) => void;
   onGenerationEnd?: (sessionId: string) => void;
+  onSelectModel?: (modelId: string) => void;
+  onSelectCharacter?: (characterId: string) => void;
   error?: string | null;
   onClearError?: () => void;
 }
@@ -208,13 +210,17 @@ const clearDraft = (sessionId: string) => {
   } catch { /* ignore storage errors */ }
 };
 
-export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, error, onClearError }) => {
+export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel, onSelectCharacter, error, onClearError }) => {
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<string>('');
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false);
+  const modelDropdownRef = useRef<HTMLDivElement>(null);
+  const characterDropdownRef = useRef<HTMLDivElement>(null);
 
   // Load draft on session change
   useEffect(() => {
@@ -298,6 +304,20 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     };
   }, [session?.messages.length, streamingContent?.length, isGenerating, settings.autoScroll]);
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (modelDropdownRef.current && !modelDropdownRef.current.contains(e.target as Node)) {
+        setModelDropdownOpen(false);
+      }
+      if (characterDropdownRef.current && !characterDropdownRef.current.contains(e.target as Node)) {
+        setCharacterDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSend = () => {
     if (input.trim() && !isGenerating) {
       onSendMessage(input);
@@ -355,8 +375,15 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
 
   return (
     <div className="flex-1 flex flex-col h-full relative bg-gray-900">
-      <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900/95 backdrop-blur z-10">
-        <h2 className="text-lg font-medium text-gray-200 truncate">{session.title}</h2>
+        <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900/95 backdrop-blur z-10">
+        <div className="flex flex-col min-w-0">
+          <h2 className="text-lg font-medium text-gray-200 truncate">{session.title}</h2>
+          {session?.characterId && (() => {
+            const c = settings.characters.find(x => x.id === session.characterId);
+            if (!c) return null;
+            return <span className="text-xs text-gray-500">({c.name})</span>;
+          })()}
+        </div>
         <button onClick={handleExport} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors">
           <Download size={16} /><span>Export</span>
         </button>
@@ -404,6 +431,83 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       </div>
 
       <div className="p-4 bg-gray-900 border-t border-gray-800">
+        {/* Floating model & character selector bar */}
+        <div className="max-w-4xl mx-auto mb-2 flex items-center gap-2">
+          {/* Model Selector */}
+          <div ref={modelDropdownRef} className="relative">
+            <button
+              onClick={() => { setCharacterDropdownOpen(false); setModelDropdownOpen(!modelDropdownOpen); }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
+            >
+              <Sparkles size={12} className="text-blue-400" />
+              <span className="max-w-[120px] truncate">
+                {(() => {
+                  const m = settings.models.find(x => x.id === settings.activeModelId);
+                  return m?.displayName || m?.modelId || 'Model';
+                })()}
+              </span>
+              <ChevronDown size={12} className={`transition-transform ${modelDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {modelDropdownOpen && (
+              <div className="absolute bottom-full mb-1 left-0 z-50 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-72 overflow-auto">
+                {settings.providers.map(provider => {
+                  const providerModels = settings.models.filter(m => m.providerId === provider.id);
+                  if (providerModels.length === 0) return null;
+                  return (
+                    <div key={provider.id} className="border-b border-gray-700/50 last:border-b-0">
+                      <div className="px-2.5 py-1.5 bg-gray-800/80 sticky top-0">
+                        <span className="text-[10px] font-medium text-gray-400">{provider.name}</span>
+                      </div>
+                      {providerModels.map(m => (
+                        <button
+                          key={m.id}
+                          onClick={() => { onSelectModel?.(m.id); setModelDropdownOpen(false); }}
+                          className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${m.id === settings.activeModelId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
+                        >
+                          {m.displayName || m.modelId}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Character Selector */}
+          <div ref={characterDropdownRef} className="relative">
+            <button
+              onClick={() => { setModelDropdownOpen(false); setCharacterDropdownOpen(!characterDropdownOpen); }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
+            >
+              <Bot size={12} className="text-green-400" />
+              <span className="max-w-[120px] truncate">
+                {(() => {
+                  const c = settings.characters.find(x => x.id === settings.activeCharacterId);
+                  return c?.name || 'Character';
+                })()}
+              </span>
+              <ChevronDown size={12} className={`transition-transform ${characterDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {characterDropdownOpen && (
+              <div className="absolute bottom-full mb-1 left-0 z-50 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
+                {settings.characters.length === 0 && (
+                  <div className="px-2.5 py-2 text-xs text-gray-500">No characters configured</div>
+                )}
+                {settings.characters.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => { onSelectCharacter?.(c.id); setCharacterDropdownOpen(false); }}
+                    className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${c.id === settings.activeCharacterId ? 'text-green-300 bg-green-600/10' : 'text-gray-300'}`}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="max-w-4xl mx-auto relative flex items-end gap-3 bg-gray-800 rounded-xl border border-gray-700 focus-within:border-gray-500 transition-colors p-2 shadow-lg">
           <textarea
             id="chat-input"

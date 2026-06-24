@@ -43,7 +43,7 @@ ai-math-chat-studio/
 │   ├── components/
 │   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
 │   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
-│   │   ├── SettingsModal.tsx # 设置弹窗（3 Tab：General / Providers / Models）
+│   │   ├── SettingsModal.tsx # 设置弹窗（4 Tab：General / Providers / Models / Characters）
 │   │   └── Sidebar.tsx       # 左侧栏（会话列表）
 │   └── lib/
 │       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）

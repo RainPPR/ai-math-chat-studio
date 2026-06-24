@@ -47,10 +47,18 @@ interface ModelInstance {
   injectThinkingTemplate?: boolean;
 }
 
+interface Character {
+  id: string;
+  name: string;
+  systemPrompt: string;
+}
+
 interface UserSettings {
   activeModelId?: string;
+  activeCharacterId?: string;
   providers: ProviderInstance[];
   models: ModelInstance[];
+  characters: Character[];
   systemPrompt: string;
   renderThinkingAsMarkdown: boolean;
   autoScroll: boolean;

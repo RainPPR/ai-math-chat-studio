@@ -60,6 +60,7 @@ graph TD
 *   **SSE 订阅**: 这是处理实时响应的核心。它通过 `api.subscribeGeneration` 订阅后端 SSE 端点，并根据接收到的事件 (`delta`, `done`, `error`, `stopped`) 实时更新 `streamingContent` 状态。
 *   **输入处理**: 管理用户输入框，支持 `Ctrl+Enter` 发送和 `Shift+Enter` 换行。
 *   **交互操作**: 提供停止生成、导出聊天记录等功能。
+*   **快捷选择栏**: 在输入框上方提供浮动栏，允许用户快速切换当前活跃模型和角色。切换后即时保存到 `settings.json`。
 
 ### `MessageItem` (子组件)
 
@@ -81,12 +82,12 @@ graph TD
 
 ## `SettingsModal.tsx` — 设置弹窗
 
-**职责**: 提供一个集中的界面，让用户管理应用的所有配置。它被设计为一个包含三个选项卡的模态框。
+**职责**: 提供一个集中的界面，让用户管理应用的所有配置。它被设计为一个包含四个选项卡的模态框。
 
 ### General Tab
 
 *   **活跃模型选择**: 允许用户从所有已配置的模型中选择一个作为当前聊天使用的模型。
-*   **系统提示词**: 配置发送给 AI 的全局系统级指令。
+*   **活跃角色预览**: 显示当前激活的角色名称及其系统提示词摘要（角色管理已移至 Characters tab）。
 *   **UI 开关**: 控制各种前端显示效果，如自动滚动、是否折叠思考过程等。
 
 ### Providers Tab
@@ -98,3 +99,8 @@ graph TD
 
 *   **模型管理**: 允许用户添加、编辑、删除模型实例 (ModelInstance)。
 *   **参数配置**: 在 `ModelEditor` 子组件中，用户可以将一个模型绑定到一个供应商，并配置其特定参数，如模型 ID、Temperature、Max Tokens 等。
+
+### Characters Tab
+
+*   **角色管理**: 允许用户添加、编辑、删除角色 (Character)。每个角色包含名称和系统提示词。
+*   **系统提示词迁移**: 原有 `systemPrompt` 字段被迁移为默认角色。后端生成时优先使用 `activeCharacterId` 对应的角色的 `systemPrompt`，若不存在则回退到 `systemPrompt` 字段。

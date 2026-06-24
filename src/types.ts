@@ -28,10 +28,18 @@ export interface ModelInstance {
   injectThinkingTemplate?: boolean;
 }
 
+export interface Character {
+  id: string;
+  name: string;
+  systemPrompt: string;
+}
+
 export interface UserSettings {
   activeModelId?: string;
+  activeCharacterId?: string;
   providers: ProviderInstance[];
   models: ModelInstance[];
+  characters: Character[];
   systemPrompt: string;
   renderThinkingAsMarkdown: boolean;
   autoScroll: boolean;
@@ -42,6 +50,7 @@ export interface UserSettings {
 export const DEFAULT_SETTINGS: UserSettings = {
   providers: [],
   models: [],
+  characters: [],
   systemPrompt: '',
   renderThinkingAsMarkdown: false,
   autoScroll: true,
@@ -75,6 +84,7 @@ export interface ChatSession {
   id: string;
   title: string;
   messages: ChatMessage[];
+  characterId?: string;  // 创建时使用的角色 ID（仅记录首次）
   createdAt: string;
   updatedAt: string;
 }
