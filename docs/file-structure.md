@@ -16,9 +16,17 @@ ai-math-chat-studio/
 ├── data/                     # 本地数据存储（不提交）
 │   ├── settings.json         # 用户设置
 │   └── sessions/             # 会话数据
+├── math_evolution_framework/    # 数学能力进化框架
+│   ├── README.md               # 框架介绍
+│   ├── evolve.py               # 进化引擎入口
+│   ├── bootstrap.py            # 批量初始化脚本
+│   ├── advanced.py             # 高级功能（叙事生成等）
+│   ├── config.yaml             # 进化配置
+│   ├── genes/                  # 基因库
+│   └── pitfalls/               # 错题本
 ├── index.html                # SPA 入口 HTML
 ├── package.json              # 项目依赖和脚本
-├── bun.lockb                 # Bun 依赖锁定文件
+├── bun.lock                  # Bun 依赖锁定文件
 ├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
 ├── server/                   # 后端模块
 │   ├── app.ts                # Express 5 应用组装，挂载所有路由
@@ -61,11 +69,11 @@ ai-math-chat-studio/
 | `server/providers/built-in.ts` | 内置 3 种提供商类型定义（google / nvidia / openai-compatible） |
 | `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
 | `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
-| `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、取消。 |
-| `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
+| `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、取消、防抖写入。 |
+| `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue/regenerate |
 | `server/routes/settings.ts` | `/api/settings` GET/PUT |
 | `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
-| `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
+| `server/routes/models.ts` | GET `/api/providers`、POST `/api/providers/:type/models` |
 | `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
 | `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
 | `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |

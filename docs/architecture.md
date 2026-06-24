@@ -74,7 +74,7 @@ graph TD
 
 ## 核心设计
 
-1.  **后端驱动生成**：所有 AI 生成任务由后端的 `GenerationManager` 服务管理。这意味着即使用户关闭浏览器或断开连接，生成任务也会在服务器上继续运行，直到完成。
+1.  **后端驱动生成**：所有 AI 生成任务由后端的 `GenerationManager` 服务管理。这意味着即使用户关闭 browser 或断开连接，生成任务也会在服务器上继续运行，直到完成。
 
 2.  **Provider/Model 两级配置**：
     *   **Provider (供应商)**: 定义了如何连接到一个 AI 服务（如 Google, Nvidia）。用户在 `Settings > Providers` 中配置 API Key 和 Base URL 等连接信息。
@@ -101,103 +101,46 @@ graph TD
 
 ### 2. 多并发生成优化
 
-**问题**: 同时运行多个 AI 解题会话时，快速新增或切换对话会导致卡顿，可能存在以下问题：
-1. **Race Condition**: 新建会话立即发送消息时，会话未完全创建就开始生成
-2. **文件写入冲突**: 频繁写入 session.json 导致磁盘 I/O 瓶颈
-3. **通知风暴**: 每个 token 都触发 SSE 通知，压垮客户端
-4. **内存泄漏**: 已完成的任务不会自动清理
-5. **删除会话冲突**: 删除正在生成的会话时仍会尝试写入文件
-6. **SSE 连接资源泄漏**: 客户端断开连接时清理不完善
+**后端优化**:
+- **防抖写操作 (Debounced Writes)**: 在 `GenerationManager` 中对同一 session 的文件写入进行批处理，减少磁盘 I/O。实现于 `debouncedWrite()`。
+- **通知节流 (Throttled Notifications)**: 在 `runGeneration()` 中限制 SSE 通知频率（最多 20 次/秒），防止高频更新压垮客户端。
+- **任务清理 (Task Cleanup)**: 生成完成、中止或删除会话（`clearSessionOperations()`）后自动清理 `tasks` Map。
+- **中止处理优化**: 正确处理 `AbortController`，中止后发送 `stopped` 事件，不写入最终消息到 session 文件。
+- **SSE 稳定性**: 添加 `X-Accel-Buffering: no`，支持指数退避订阅，防止资源泄漏。
 
-**解决方案**:
-
-#### 后端优化
-
-**防抖写操作（Debounced Writes）**: 
-- 实现 `debouncedWrite()` 方法，对同一 session 的文件写入进行批处理
-- 减少频繁的磁盘 I/O 操作，避免写操作堆积导致的性能问题
-- 删除会话时通过 `deletedSessions` Set 跟踪，防止向已删除的会话写入
-
-**通知节流（Throttled Notifications）**:
-- 在 `runGeneration()` 中实现通知节流机制，限制为最多 20 次/秒
-- 防止高频内容更新压垮客户端，提升整体响应性
-
-**任务清理（Task Cleanup）**:
-- 生成完成或中止时自动清理 `tasks` Map
-- `deleteSession()` 方法中调用 `clearSessionOperations()` 完整清理
-
-**生成器启动优化**:
-- `startGeneration()` 改为 async 方法，在启动新生成前等待旧任务清理（50ms）
-- 防止旧任务的最终写入与新任务冲突
-
-**中止处理优化**:
-- `runGeneration()` 检测 `stopped` 状态后发送 `stopped` 事件而非 `done`
-- 中止后不写入最终消息到 session 文件
-
-**SSE 连接健壮性增强**:
-- 添加 `X-Accel-Buffering: no` 头部，禁用 Nginx 等代理的缓冲
-- 实现指数退避策略（exponential backoff）替代固定轮询等待任务
-- 使用 `isClosed` 标志防止双重清理
-- 添加 `req.on('error')` 处理异常连接
-
-#### 前端优化
-
-**新会话消息发送防抖**:
-- 在 `App.tsx` 中使用 `pendingSendsRef` 跟踪待发送的新会话消息
-- 对新建会话后的第一条消息添加 100ms 防抖延迟，避免 race condition
-
-**滚动性能优化**:
-- 在 `ChatArea.tsx` 中实现滚动节流，限制为最多 10 次/秒
-- 减少布局计算和重绘频率，改善大量内容渲染时的性能
+**前端优化**:
+- **新会话发送防抖**: 在 `App.tsx` 中对新建会话的第一条消息添加 100ms 防抖，避免 race condition。
+- **滚动性能优化**: 在 `ChatArea.tsx` 中实现滚动节流（最多 10 次/秒），减少重绘频率。
 
 ## 数据存储
 
-- **本地 JSON 文件**: 项目不依赖外部数据库，所有数据都存储在本地 `/data` 目录下的 JSON 文件中。这使得项目易于部署和迁移。
-    -   `settings.json`: 存储所有用户配置，包括供应商、模型和通用设置。
-    -   `sessions/{id}.json`: 每个聊天会话存储为一个单独的 JSON 文件。
-- **无认证**: 该应用设计为单用户本地工具，不包含用户认证系统。
+- **本地 JSON 文件**: 项目不依赖外部数据库，所有数据都存储在本地 `/data` 目录下的 JSON 文件中。
+- **远程模型同步**: 启动时，`server/app.ts` 中的 `syncRemoteModels()` 会根据 `settings.json` 中的 `modelSource` 配置，自动拉取并同步模型列表。
 
 ## 数据流：一次完整的消息交互
 
-1.  **用户发送消息**: 用户在 `ChatArea` 组件的输入框中输入消息，按下 `Ctrl+Enter`。
-2.  **前端乐观更新**: `App.tsx` 中的 `handleSendMessage` 被调用。它立即将用户的消息添加到当前会话的 `messages` 数组中，并更新 UI，提供即时反馈。
-3.  **API 调用**: `api.ts` 中的 `sendMessage` 函数被调用，向后端 `POST /api/sessions/:id/messages` 发送请求。
-4.  **后端接收**: `server/routes/chat.ts` 中的路由处理器接收到请求。
-5.  **启动生成**: 后端将用户消息保存到对应的 `session.json` 文件中，然后调用 `GenerationManager` 来启动一个新的 AI 生成任务。
-6.  **SSE 连接**: 与此同时，前端的 `ChatArea` 组件通过 `useEffect` 自动订阅 `/api/sessions/:id/generation` 的 SSE 端点。
-7.  **流式响应**: `GenerationManager` 通过 `stream.ts` 调用相应的 AI Provider API。获取到的数据块被包装成 `delta` 事件，通过 SSE 连接实时发送回前端。
-8.  **前端渲染**: `ChatArea` 接收到 `delta` 事件，并将其内容追加到当前正在生成的回复中，用户看到平滑的打字机效果。
-9.  **任务结束**: 当 AI 完成生成时，后端发送 `done` 事件。前端接收到后，将最终的完整消息保存到状态中，并清理订阅。
+1.  **用户发送消息**: 用户在 `ChatArea` 输入消息，`App.tsx` 执行乐观更新。
+2.  **启动生成**: 后端 `POST /api/sessions/:id/messages` 接收消息，保存文件并触发 `GenerationManager.startGeneration()`。
+3.  **SSE 连接**: 前端 `ChatArea` 通过 `api.subscribeGeneration` 订阅 SSE 端点。
+4.  **流式响应**: `GenerationManager` 异步调用供应商 API，将 `delta` 事件推送给前端。
+5.  **任务结束**: 完成后发送 `done`，前端刷新 Session 状态并清理订阅。
 
 ## 消息操作机制
 
-系统提供三种对已生成消息的操作机制，每种有不同的适用场景：
+系统提供三种对已生成消息的操作机制：
 
-### 1. Retry（重试）
+### 1. Retry (重试)
+- **行为**: 找到该消息前面最近的 user 消息，截断后续消息，从该 user 消息开始重新生成。
 
-- **触发方式**: 每条 model 消息上的 "Retry" 按钮
-- **实现逻辑**: `GenerationManager.retryMessage()` 找到该消息前面最近的 user 消息，截断从该 user 消息之后的所有消息（包括当前消息），从那个 user 消息开始重新生成
-- **适用场景**: 对某条 AI 回复完全不满意，希望完全重新开始
+### 2. Regenerate (重新生成)
+- **行为**: 保留当前 model 消息的 `<details>` 思考过程，删除正文，注入 continue 指令让 AI 基于原有思考继续输出。
 
-### 2. Regenerate（重新生成）
-
-- **触发方式**: 每条 model 消息上的 "Regenerate" 按钮
-- **实现逻辑**: `GenerationManager.regenerateMessage()` 执行以下操作：
-  1. 清洗当前消息：保留 `<details><summary>Thinking Process</summary>` 包裹的思考过程，删除正文输出部分
-  2. 截断该消息之后的所有消息
-  3. 添加 user 指令提示 AI 基于原有思考进行批判性检查并延伸分析，然后生成完整输出
-- **适用场景**: AI 的思考过程有价值，但正文输出不完善或需要修正，希望在保留思考基础上深化分析
-
-### 3. Continue（继续）
-
-- **触发方式**: 仅最后一条 model 消息上的 "Continue" 按钮
-- **实现逻辑**: `GenerationManager.continueGeneration()` 在会话末尾添加 user 指令，明确告知 AI 这是由于网络错误或流中断导致的，并指导 AI 根据当前状态（已开始输出 vs 仍在思考）采取相应行动
-- **适用场景**: 网络错误、流中断或 AI 输出被意外截断，需要继续完成未完成的响应
+### 3. Continue (继续)
+- **行为**: 在会话末尾添加 user 指令，指导 AI 继续完成未完成的响应（针对网络错误/截断）。
 
 ## 核心设计决策
-
--   **服务端代理模式**: 所有对外部 AI API 的调用都通过 Express 后端进行。这确保了 API 密钥永远不会暴露给前端，增强了应用的安全性。
--   **两级架构 (Provider + Model)**: 解耦了 API 连接信息和模型参数，提高了配置的灵活性和复用性。
--   **思考过程包装**: 为了在 UI 中统一展示不同模型的“思考过程”(reasoning)，所有此类信息在 `GenerationManager` 中被统一包装成一个可折叠的 `<details>` HTML 标签。
--   **上下文窗口限制**: 为控制成本和 API 请求大小，每次生成只向 AI 模型发送最近的 40 条消息历史记录。
--   **文档同步规则**: `AGENTS.md` 中明确规定，任何对代码、架构或数据模型的修改都必须同步更新相关的文档，以保持其准确性。
+- **服务端代理模式**: 所有 AI 调用通过后端，保护 API Key 安全。
+- **思考过程包装**: 统一将 reasoning 内容包装为 `<details>` 标签。
+- **上下文限制**: 每次生成只向 AI 发送最近 40 条消息历史（在 `stream.ts` 中过滤）。
+- **无注释风格**: 代码应自解释，不添加冗余注释。
+- **文档同步规则**: `AGENTS.md` 中规定任何架构修改必须同步更新相关文档。

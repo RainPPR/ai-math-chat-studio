@@ -21,6 +21,7 @@
 **AI Math & Chat Studio** 是一个多会话 AI 聊天应用，内置 3 种提供商类型（Google Gemini、Nvidia NIM、OpenAI Compatible），支持提供商和模型的分离配置，以及 KaTeX 数学公式和 mhchem 化学公式渲染。数据以 JSON 文件形式存储在本地 `/data` 目录。
 
 **文档入口**：`docs/` 目录包含完整的架构、技术栈、组件、数据模型等文档。
+**Math Evolution Framework**: 位于 `math_evolution_framework/`，用于通过分析历史对话持续进化 AI 的解题能力。
 
 ## 快速导航
 
@@ -107,33 +108,15 @@
 
 #### 非标准思考格式转录
 
-部分免费 API 平台返回非标准思考格式，以 `Thinking...` 开头，后续连续以 `>` 开头的行为思考内容：
-
-```
-Thinking...
-> 用户要求比较 $ab, b, e^b$ 的大小...
-> 1. $a, b \in \mathbb{R}$
-...
-```
+部分免费 API 平台返回 non-standard 思考格式，以 `Thinking...` 开头，后续连续以 `>` 开头的行为思考内容。
 
 处理流程：
-1. **前端实时检测（补丁式）**：`ChatArea.tsx` 的 `convertNonStandardThinkingForDisplay()` 在消息展示时检测非标准格式，确保流式传输过程中用户看到的也是正确的折叠格式
-2. **后端归档转换**：`GenerationManager.convertNonStandardThinking()` 在生成完成后将整个响应转换为标准格式存储到 JSON
-3. **存储和展示一致**：刷新页面后从 JSON 读取的内容已经是标准格式，不再需要转换
+1. **前端实时检测（补丁式）**：`ChatArea.tsx` 的 `convertNonStandardThinkingForDisplay()` 在消息展示时检测非标准格式。
+2. **后端归档转换**：`GenerationManager.convertNonStandardThinking()` 在生成完成后将整个响应转换为标准格式存储到 JSON。
 
 ### 3. SSE 订阅模式
 
-前端通过 `api.subscribeGeneration()` 订阅生成进度：
-
-```typescript
-const unsubscribe = api.subscribeGeneration(sessionId, {
-  onDelta: (content) => setStreamingContent(content),
-  onDone: (content) => { ... },
-  onError: (message) => { ... },
-  onStopped: () => { ... },
-});
-return unsubscribe; // useEffect cleanup
-```
+前端通过 `api.subscribeGeneration()` 订阅生成进度。
 
 ### 4. SSE 流式协议
 
@@ -150,16 +133,12 @@ return unsubscribe; // useEffect cleanup
 **Providers tab**：
 1. 添加/管理提供商实例（Google / Nvidia / OpenAI Compatible）
 2. 配置每个提供商的 API Key、Base URL、Env Key Prefix
+3. **`modelSource`**：支持配置远程模型列表 JSON URL，服务器启动时自动同步
 
 **Models tab**：
 1. 选择关联的提供商实例
 2. 配置模型参数（temperature、maxTokens、reasoningEffort 等）
-   3. 选择活跃模型
-
-**General tab**：
-4. 选择活跃模型
-
-所有参数 "Unset" 时不传给 API（不传默认值）。
+3. 选择活跃模型
 
 ### 6. 消息操作架构
 
@@ -171,85 +150,20 @@ return unsubscribe; // useEffect cleanup
 | **Regenerate** | 每条 model 消息 | 保留该消息的 thinking process，删除正文，抛弃其后消息，注入 continue 指令继续生成 | 基于原有思考深化分析、修正正文输出 |
 | **Continue** | 仅最后一条 model 消息 | 在会话末尾添加 continue 指令，让 AI 继续被中断的输出 | 网络错误、流中断导致的不完整响应 |
 
-**Regenerate 实现细节**：
-- 清洗逻辑：提取 `<details><summary>Thinking Process</summary>` 包裹的内容，删除正文部分
-- Prompt 工程：指导 AI 基于原有思考进行批判性检查，识别并填补思考中的缺陷，然后生成完整输出
-- 代码位置：`server/services/generation-manager.ts` 中的 `regenerateMessage()`
-
-## 常见修改场景
-
-### 修改 Markdown 渲染
-
-- 渲染管线：`src/components/MarkdownRenderer.tsx`
-- 预处理逻辑：同上文件中的 `processedContent` 替换
-- KaTeX 配置：`rehype-katex` 选项
-
-### 修改 UI 布局
-
-- 整体布局：`src/App.tsx` 的 `return` 部分（flex 布局）
-- 左侧栏：`src/components/Sidebar.tsx`
-- 聊天区域：`src/components/ChatArea.tsx`
-- 设置弹窗：`src/components/SettingsModal.tsx`
-
-### 修改数据存储
-
-- 数据服务：`src/lib/api.ts`（统一 API 客户端）
-- 服务端路由：`server/routes/settings.ts`、`server/routes/sessions.ts`、`server/routes/chat.ts`、`server/routes/models.ts`
-- 生成管理：`server/services/generation-manager.ts`
-- 数据文件：`/data/settings.json`、`/data/sessions/*.json`
-
-### 修改供应商行为
-
-- 提供商配置：`server/providers/config.ts`
-- 流式调用逻辑：`server/providers/stream.ts`
-- API 路由：`server/routes/chat.ts`、`server/routes/models.ts`
-
-### 修改生成流程
-
-- 核心服务：`server/services/generation-manager.ts`
-- SSE 路由：`server/routes/chat.ts`（`GET /api/sessions/:id/generation`）
-- 前端订阅：`src/lib/api.ts`（`subscribeGeneration()`）+ `src/components/ChatArea.tsx`
-
-## 环境配置
-
-### 开发
-
-```bash
-bun install          # 安装依赖
-bun run dev          # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
-bun run lint         # TypeScript 类型检查
-```
-
-### 环境变量
-
-```env
-GEMINI_API_KEY=          # Google Gemini API Key
-NVIDIA_API_KEY=          # Nvidia NIM API Key
-OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
-```
-
-> 所有 API Key 通过 dotenv 在 `server.ts` 中加载，前端不暴露任何 Key。
-> 优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量（如 `GEMINI_API_KEY`）> `OPENAI_API_KEY` 回退。
-
 ## 注意事项
 
-1. **不要修改 `vite.config.ts` 中的 HMR 配置**：`DISABLE_HMR` 环境变量用于 AI Studio 环境
-2. **路径别名**：`@/*` 映射到项目根目录
-3. **上下文限制**：所有供应商只保留最近 40 条消息（在 `stream.ts` 中实现）
-4. **AbortController**：`GenerationManager` 支持取消正在进行的生成请求
-5. **`server.ts` 是入口文件**：仅 `import 'dotenv/config'` + `startApp()`，实际逻辑在 `server/app.ts`
-6. **已删除 topP**：所有位置均不传 topP 参数
-7. **所有供应商通过服务端代理**：Gemini 也通过服务端调用（不再前端直连）
+1. **不要修改 `vite.config.ts` 中的 HMR 配置**：`DISABLE_HMR` 环境变量用于 AI Studio 环境。
+2. **路径别名**：`@/*` 映射到项目根目录。
+3. **上下文限制**：所有供应商只保留最近 40 条消息（在 `stream.ts` 中实现）。
+4. **AbortController**：`GenerationManager` 支持取消正在进行的生成请求。
+5. **已删除 topP**：所有位置均不传 topP 参数。
+6. **所有供应商通过服务端代理**：Gemini 也通过服务端调用（不再前端直连）。
 
 ## ⚠️ 严禁事项（强制执行）
 
 ### 包管理器
-- **必须使用 bun**：所有依赖安装、脚本运行必须使用 `bun`，**严禁使用 npm 或 pnpm**
-- 正确示例：`bun install express-rate-limit`、`bun run dev`、`bun run lint`
-- 错误示例：`npm install express-rate-limit` ❌、`pnpm install express-rate-limit` ❌
+- **必须使用 bun**：所有依赖安装、脚本运行必须使用 `bun`，**严禁使用 npm 或 pnpm**。
 
 ### 文档同步更新
-- **修改代码后必须同步更新文档**：任何代码变更完成后，必须立即检查并更新相关文档
-- **AGENTS.md**：修改影响架构、开发规范、注意事项时必须更新
-- **docs/**：根据变更类型更新对应文档（架构→architecture.md、依赖→tech-stack.md、AI供应商→api-providers.md、数据模型→data-models.md、组件→components.md、文件结构→file-structure.md）
-- **未更新文档视为任务未完成**
+- **修改代码后必须同步更新文档**：任何代码变更完成后，必须立即检查并更新相关文档。
+- **未更新文档视为任务未完成**。

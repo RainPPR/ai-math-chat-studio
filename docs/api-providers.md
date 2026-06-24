@@ -17,27 +17,13 @@
 ### 服务端模块
 
 - **`server/providers/built-in.ts`** — 内置提供商类型定义
-  - `BUILT_IN_PROVIDERS` 记录：存储每种内置类型的默认配置
-  
 - **`server/providers/config.ts`** — 提供商配置解析
-  - `resolveApiKey()` — 解析 API Key（优先配置项，其次环境变量，最后 `OPENAI_API_KEY` 回退）
-  - `resolveBaseURL()` — 解析 Base URL（优先配置项，其次内置默认值）
-
 - **`server/providers/stream.ts`** — 流式 API 调用
-  - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
-  - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
-  - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK）
-  - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用
-  - `StreamRequest` / `StreamChunk` 类型定义
+- **远程模型同步**: `server/app.ts` 中的 `syncRemoteModels()` 在启动时运行，同步配置了 `modelSource` 的供应商模型。
 
 ### 前端统一客户端
 
-- **`src/lib/api.ts`** — 统一 API 客户端
-  - `api.settings` — 设置读写
-  - `api.sessions` — 会话 CRUD
-  - `api.chat` — 消息发送、停止、重试、继续
-  - `api.providers` — 获取内置提供商类型列表和模型列表
-  - `api.subscribeGeneration()` — SSE 订阅生成进度
+- **`src/lib/api.ts`** — 统一 API 客户端，封装了所有 REST 调用和 SSE 订阅逻辑。
 
 ## Google Gemini
 
@@ -50,15 +36,13 @@
 ## Nvidia NIM
 
 - **SDK**：OpenAI SDK
-- **Base URL**：`https://integrate.api.nvidia.com/v1`
-- **特殊功能**：支持 `extraBody` 透传（如 `chat_template_kwargs`）
-- **推理过程**：通过 `delta.reasoning` 或 `delta.reasoning_content` 字段检测
+- **Base URL**：`https://integrate.api.nvidia.com/v1` (固定，不可覆盖)
+- **特殊功能**：支持 `injectThinkingTemplate` (注入 `chat_template_kwargs`)
 
 ## OpenAI Compatible
 
 - **SDK**：OpenAI SDK
-- **用途**：支持任意 OpenAI 兼容 API 端点
-- **配置方式**：在 Settings → Providers tab 中手动填写名称、Base URL、API Key、Env Key Prefix
+- **用途**：支持任意 OpenAI 格式 API 端点。支持通过 `modelSource` 自动同步远程模型列表。
 
 ## SSE 流式协议
 
@@ -78,15 +62,14 @@ event: stopped
 data: {}
 ```
 
-**标题生成**：当新建会话时，服务端同步生成标题（使用 `unicodeit` + `markdown-to-txt` 转换 Markdown 为 Plain Text）。标题生成后立即保存到 session.json。
+**标题生成**：当新建会话时，服务端同步生成标题（使用 `unicodeit` + `markdown-to-txt`）。
 
 ## 环境变量汇总
 
 ```env
 GEMINI_API_KEY=          # Google Gemini
 NVIDIA_API_KEY=          # Nvidia NIM
-OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
+OPENAI_API_KEY=          # 通用回退
 ```
 
-> 所有 API Key 均在服务端读取（通过 dotenv），前端不暴露任何 Key。
-> API Key 解析优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量（如 `GEMINI_API_KEY`）> `OPENAI_API_KEY` 回退。
+> API Key 解析优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量 > `OPENAI_API_KEY` 回退。
