@@ -13,10 +13,6 @@ function formatClaudeDate(dateStr: string) {
   });
 }
 
-function ensureUuid(id: string): string {
-  if (uuidValidate(id)) return id.toLowerCase();
-  return uuidv4();
-}
 
 interface SettingsModalProps {
   settings: UserSettings;
@@ -318,7 +314,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       const exportData = await Promise.all(sessions.map(async (s) => {
         const fullSession = await api.sessions.get(s.id);
         return {
-          uuid: ensureUuid(fullSession.id),
+          uuid: fullSession.id,
           name: fullSession.title || "",
           created_at: formatClaudeDate(fullSession.createdAt),
           updated_at: formatClaudeDate(fullSession.updatedAt),
@@ -343,7 +339,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
             });
 
             return {
-              uuid: ensureUuid(m.id),
+              uuid: m.id,
               sender: m.role === 'user' ? 'human' : 'assistant',
               text: textWithoutThinking,
               content: contentBlocks,
