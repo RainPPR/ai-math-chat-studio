@@ -16,7 +16,7 @@ export default function App() {
   const [generatingSessions, setGeneratingSessions] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
-  const clearError = useCallback(() => setError(null), []);
+  const clearError = useCallback(() => { setError(null); }, []);
 
   useEffect(() => {
     (async () => {
@@ -145,7 +145,7 @@ export default function App() {
   // Cleanup pending sends on unmount
   useEffect(() => {
     return () => {
-      pendingSendsRef.current.forEach(timeout => clearTimeout(timeout));
+      pendingSendsRef.current.forEach(timeout => { clearTimeout(timeout); });
     };
   }, []);
 
@@ -254,7 +254,7 @@ export default function App() {
         onSelectSession={setCurrentSessionId}
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={() => { setIsSettingsOpen(true); }}
         width={sidebarWidth}
       />
 
@@ -294,7 +294,7 @@ export default function App() {
         <SettingsModal
           settings={settings}
           onSave={handleSaveSettings}
-          onClose={() => setIsSettingsOpen(false)}
+          onClose={() => { setIsSettingsOpen(false); }}
         />
       )}
     </div>

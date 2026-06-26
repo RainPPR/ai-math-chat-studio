@@ -104,7 +104,7 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
   if (req.injectThinkingTemplate) payload.chat_template_kwargs = { thinking: true };
 
   const response = await client.chat.completions.create(
-    { ...payload, ...(req.extraBody || {}) } as any,
+    { ...payload, ...(req.extraBody || {}) },
     { signal }
   ) as any;
 
@@ -112,7 +112,7 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
     const delta = chunk.choices?.[0]?.delta;
     if (!delta) continue;
-    const reasoning = (delta as any).reasoning || (delta as any).reasoning_content;
+    const reasoning = (delta).reasoning || (delta).reasoning_content;
     if (reasoning) yield { type: 'reasoning', content: reasoning };
     if (delta.content) yield { type: 'content', content: delta.content };
   }

@@ -38,7 +38,7 @@ function resolveActiveModel(settings: SettingsData) {
 function resolveSystemPrompt(settings: SettingsData): string {
   if (settings.activeCharacterId && settings.characters?.length) {
     const character = settings.characters.find((c: any) => c.id === settings.activeCharacterId);
-    if (character && character.systemPrompt) {
+    if (character?.systemPrompt) {
       return character.systemPrompt;
     }
   }
@@ -54,7 +54,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const settings = await loadSettings(settingsFile);
     const result = resolveActiveModel(settings);
-    if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
+    if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
     await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate, settings.activeCharacterId);
@@ -142,7 +142,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const settings = await loadSettings(settingsFile);
     const result = resolveActiveModel(settings);
-    if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
+    if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     try {
       await gm.retryMessage(req.params.id, messageId, result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate);
@@ -155,7 +155,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
   router.post('/api/sessions/:id/continue', async (req, res) => {
     const settings = await loadSettings(settingsFile);
     const result = resolveActiveModel(settings);
-    if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
+    if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     try {
       await gm.continueGeneration(req.params.id, result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate);
@@ -171,7 +171,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const settings = await loadSettings(settingsFile);
     const result = resolveActiveModel(settings);
-    if (!result || !result.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
+    if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     try {
       await gm.regenerateMessage(req.params.id, messageId, result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate);

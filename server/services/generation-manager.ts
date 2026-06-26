@@ -21,7 +21,7 @@ import { markdownToTxt } from 'markdown-to-txt';
 function convertNonStandardThinking(content: string): string {
   // Check if content starts with "Thinking..." followed by lines starting with ">"
   const thinkingHeaderRegex = /^Thinking\.\.\.(\r?\n)/;
-  const headerMatch = content.match(thinkingHeaderRegex);
+  const headerMatch = thinkingHeaderRegex.exec(content);
 
   if (!headerMatch) {
     return content;
@@ -42,7 +42,7 @@ function convertNonStandardThinking(content: string): string {
     const line = lines[i];
     // Check if line starts with ">" (possibly with leading whitespace)
     // Capture content after ">" and optional spaces
-    const quotedMatch = line.match(/^\s*>\s*(.*)$/);
+    const quotedMatch = /^\s*>\s*(.*)$/.exec(line);
     if (quotedMatch) {
       thinkingLines.push(quotedMatch[1]);
     } else {
@@ -356,7 +356,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     let cleanedContent = '';
 
     const thoughtRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>|$)/;
-    const match = messageContent.match(thoughtRegex);
+    const match = thoughtRegex.exec(messageContent);
 
     if (match && match[1]) {
       // Keep only the thinking process, wrapped properly
@@ -394,7 +394,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
 
   private async startGeneration(session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
     const existing = this.tasks.get(session.id);
-    if (existing && existing.status === 'running') {
+    if (existing?.status === 'running') {
       // Abort existing task
       existing.abortController.abort();
 
@@ -423,7 +423,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       task.status = 'error';
       task.error = err.message;
       try {
-        task.subscribers.forEach(cb => cb('error', { message: err.message }));
+        task.subscribers.forEach(cb => { cb('error', { message: err.message }); });
       } catch {
         // Ignore errors notifying closed connections
       }
@@ -434,7 +434,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     console.log('[Generation] Starting for session %s, provider=%s, model=%s, messages=%d', session.id, model.providerType, model.modelId, session.messages.length);
 
     const messages = session.messages.map(m => ({
-      role: m.role as string,
+      role: m.role,
       content: m.content,
     }));
 
@@ -644,7 +644,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
 
   stop(sessionId: string): void {
     const task = this.tasks.get(sessionId);
-    if (task && task.status === 'running') {
+    if (task?.status === 'running') {
       task.abortController.abort();
     }
   }

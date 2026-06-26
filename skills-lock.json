@@ -19,6 +19,18 @@
       "skillPath": "skills/gemini-live-api-dev/SKILL.md",
       "computedHash": "a93aa23b2a4cac2cab9d238b3cc751c6172146bd801959dfe340626f3a82dafa"
     },
+    "typescript-advanced-types": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "skillPath": "plugins/javascript-typescript/skills/typescript-advanced-types/SKILL.md",
+      "computedHash": "8cbf2bf600f392d7260e476e3202932a876e2281cda3b15a8b6a5a43f383252d"
+    },
+    "typescript-best-practices": {
+      "source": "0xbigboss/claude-code",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/typescript-best-practices/SKILL.md",
+      "computedHash": "9866bb48d92a951feafb77f6f48ea39b42c6c1e901788c916d4aad40f60db008"
+    },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",

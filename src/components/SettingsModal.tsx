@@ -48,7 +48,7 @@ const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => { document.removeEventListener('mousedown', handleClickOutside); };
   }, []);
 
   // Group models by provider
@@ -74,7 +74,7 @@ const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
       {/* Trigger Button */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => { setIsOpen(!isOpen); }}
         className="w-full bg-gray-800 border border-gray-700 hover:border-gray-600 text-white rounded-lg p-3 pr-10 focus:outline-none focus:border-blue-500 transition-colors text-left flex items-center justify-between"
       >
         {activeModel ? (
@@ -231,7 +231,7 @@ const ExtraBodyTextarea: React.FC<ExtraBodyTextareaProps> = ({ value, onChange, 
   return (
     <textarea
       value={text}
-      onChange={e => setText(e.target.value)}
+      onChange={e => { setText(e.target.value); }}
       onBlur={handleBlur}
       placeholder={placeholder}
       className="w-full bg-gray-950 border border-gray-700 font-mono text-green-400 text-sm rounded-lg p-3 focus:outline-none focus:border-blue-500 h-24 resize-y"
@@ -373,7 +373,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   };
 
   const saveProvider = () => {
-    if (!editingProvider || !editingProvider.name || !editingProvider.type) return;
+    if (!editingProvider?.name || !editingProvider.type) return;
     setLocal(s => {
       const providers = [...s.providers];
       const idx = providers.findIndex(p => p.id === editingProvider.id);
@@ -416,7 +416,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   };
 
   const saveModel = () => {
-    if (!editingModel || !editingModel.providerId || !editingModel.modelId) return;
+    if (!editingModel?.providerId || !editingModel.modelId) return;
     setLocal(s => {
       const models = [...s.models];
       const idx = models.findIndex(m => m.id === editingModel.id);
@@ -442,7 +442,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   };
 
   const saveCharacter = () => {
-    if (!editingCharacter || !editingCharacter.name.trim()) return;
+    if (!editingCharacter?.name.trim()) return;
     setLocal(s => {
       const characters = [...s.characters];
       const idx = characters.findIndex(c => c.id === editingCharacter.id);
@@ -473,7 +473,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
         <div className="flex border-b border-gray-800 shrink-0">
           {(['general', 'providers', 'models', 'characters'] as Tab[]).map(t => (
-            <button key={t} onClick={() => setTab(t)} className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === t ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>
+            <button key={t} onClick={() => { setTab(t); }} className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === t ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>
               {t === 'general' ? 'General' : t === 'providers' ? 'Providers' : t === 'models' ? 'Models' : 'Characters'}
             </button>
           ))}
@@ -489,7 +489,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   models={local.models}
                   providers={local.providers}
                   activeModelId={local.activeModelId}
-                  onChange={id => setLocal(s => ({ ...s, activeModelId: id || undefined }))}
+                  onChange={id => { setLocal(s => ({ ...s, activeModelId: id || undefined })); }}
                 />
                 {local.models.length === 0 && <p className="text-xs text-gray-500">Add models in the Models tab first.</p>}
               </div>
@@ -521,7 +521,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   { key: 'gemmaTrimThinkingSpaces', label: 'Remove leading spaces from thinking (Gemma)' },
                 ].map(({ key, label }) => (
                   <label key={key} className="flex items-center space-x-3 cursor-pointer">
-                    <input type="checkbox" checked={(local as any)[key] ?? false} onChange={e => setLocal(s => ({ ...s, [key]: e.target.checked }))} className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900" />
+                    <input type="checkbox" checked={(local as any)[key] ?? false} onChange={e => { setLocal(s => ({ ...s, [key]: e.target.checked })); }} className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900" />
                     <span className="text-sm text-gray-300">{label}</span>
                   </label>
                 ))}
@@ -549,7 +549,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   builtInTypes={builtInTypes}
                   onChange={setEditingProvider}
                   onSave={saveProvider}
-                  onCancel={() => setEditingProvider(null)}
+                  onCancel={() => { setEditingProvider(null); }}
                 />
               ) : (
                 <>
@@ -570,8 +570,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <button onClick={() => setEditingProvider({ ...p })} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
-                        <button onClick={() => deleteProvider(p.id)} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
+                        <button onClick={() => { setEditingProvider({ ...p }); }} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
+                        <button onClick={() => { deleteProvider(p.id); }} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
                       </div>
                     </div>
                   ))}
@@ -633,8 +633,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-1 ml-2 shrink-0">
-                                    <button onClick={() => setEditingModel({ ...m })} className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><Pencil size={14} /></button>
-                                    <button onClick={() => deleteModelEntry(m.id)} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                                    <button onClick={() => { setEditingModel({ ...m }); }} className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><Pencil size={14} /></button>
+                                    <button onClick={() => { deleteModelEntry(m.id); }} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
                                   </div>
                                 </div>
                               );
@@ -661,7 +661,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <label className="block text-sm font-medium text-gray-300">Character Name</label>
                     <input
                       value={editingCharacter.name}
-                      onChange={e => setEditingCharacter({ ...editingCharacter, name: e.target.value })}
+                      onChange={e => { setEditingCharacter({ ...editingCharacter, name: e.target.value }); }}
                       placeholder="e.g. Math Tutor"
                       className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
                     />
@@ -670,13 +670,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <label className="block text-sm font-medium text-gray-300">System Prompt</label>
                     <textarea
                       value={editingCharacter.systemPrompt}
-                      onChange={e => setEditingCharacter({ ...editingCharacter, systemPrompt: e.target.value })}
+                      onChange={e => { setEditingCharacter({ ...editingCharacter, systemPrompt: e.target.value }); }}
                       placeholder="You are a helpful assistant..."
                       className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 h-40 resize-none"
                     />
                   </div>
                   <div className="flex justify-end gap-3 pt-4">
-                    <button onClick={() => setEditingCharacter(null)} className="px-4 py-2 text-gray-300 hover:text-white transition-colors">Cancel</button>
+                    <button onClick={() => { setEditingCharacter(null); }} className="px-4 py-2 text-gray-300 hover:text-white transition-colors">Cancel</button>
                     <button onClick={saveCharacter} disabled={!editingCharacter.name.trim()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg transition-colors flex items-center gap-2"><Save size={14} /> Save Character</button>
                   </div>
                 </div>
@@ -690,8 +690,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                         <div className="text-xs text-gray-400 line-clamp-2 mt-1">{c.systemPrompt?.slice(0, 120)}...</div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-3">
-                        <button onClick={() => setEditingCharacter({ ...c })} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
-                        <button onClick={() => deleteCharacterEntry(c.id)} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
+                        <button onClick={() => { setEditingCharacter({ ...c }); }} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
+                        <button onClick={() => { deleteCharacterEntry(c.id); }} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
                       </div>
                     </div>
                   ))}
@@ -706,7 +706,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
         <div className="p-6 border-t border-gray-800 bg-gray-950 flex justify-end gap-3 shrink-0">
           <button onClick={onClose} className="px-5 py-2.5 text-gray-300 hover:text-white font-medium transition-colors">Cancel</button>
-          <button onClick={() => onSave(local)} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"><Save size={16} /> Save</button>
+          <button onClick={() => { onSave(local); }} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"><Save size={16} /> Save</button>
         </div>
       </div>
       {cleaning && (
@@ -760,7 +760,7 @@ const ProviderEditor: React.FC<{
         <label className="block text-sm font-medium text-gray-300">Provider Type</label>
         <select
           value={entry.type}
-          onChange={e => handleTypeChange(e.target.value)}
+          onChange={e => { handleTypeChange(e.target.value); }}
           className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
         >
           {builtInTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -771,7 +771,7 @@ const ProviderEditor: React.FC<{
         <label className="block text-sm font-medium text-gray-300">Provider Name</label>
         <input
           value={entry.name}
-          onChange={e => onChange({ ...entry, name: e.target.value })}
+          onChange={e => { onChange({ ...entry, name: e.target.value }); }}
           placeholder="e.g. My Nvidia Account"
           className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
         />
@@ -792,7 +792,7 @@ const ProviderEditor: React.FC<{
           <label className="block text-sm font-medium text-gray-300">Base URL (optional)</label>
           <input
             value={entry.baseURL || ''}
-            onChange={e => onChange({ ...entry, baseURL: e.target.value || undefined })}
+            onChange={e => { onChange({ ...entry, baseURL: e.target.value || undefined }); }}
             placeholder={getDefaultBaseURL(entry.type) || 'https://api.example.com/v1'}
             className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
           />
@@ -804,7 +804,7 @@ const ProviderEditor: React.FC<{
         <input
           type="password"
           value={entry.apiKey || ''}
-          onChange={e => onChange({ ...entry, apiKey: e.target.value || undefined })}
+          onChange={e => { onChange({ ...entry, apiKey: e.target.value || undefined }); }}
           placeholder="sk-... or leave empty to use env variable"
           className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
         />
@@ -814,7 +814,7 @@ const ProviderEditor: React.FC<{
         <label className="block text-sm font-medium text-gray-300">Env Key Prefix (default: {getDefaultEnvKey(entry.type)})</label>
         <input
           value={entry.envKey || ''}
-          onChange={e => onChange({ ...entry, envKey: e.target.value || undefined })}
+          onChange={e => { onChange({ ...entry, envKey: e.target.value || undefined }); }}
           placeholder={getDefaultEnvKey(entry.type)}
           className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
         />
@@ -825,7 +825,7 @@ const ProviderEditor: React.FC<{
         <label className="block text-sm font-medium text-gray-300">Extra Config (JSON, optional)</label>
         <ExtraBodyTextarea
           value={entry.extra}
-          onChange={v => onChange({ ...entry, extra: v })}
+          onChange={v => { onChange({ ...entry, extra: v }); }}
           placeholder='{"customHeader": "value"}'
         />
       </div>
@@ -835,7 +835,7 @@ const ProviderEditor: React.FC<{
           <label className="block text-sm font-medium text-gray-300">Model Source URL (optional)</label>
           <input
             value={entry.modelSource || ''}
-            onChange={e => onChange({ ...entry, modelSource: e.target.value || undefined })}
+            onChange={e => { onChange({ ...entry, modelSource: e.target.value || undefined }); }}
             placeholder="https://example.com/models.json"
             className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
           />
@@ -890,7 +890,7 @@ const ModelEditor: React.FC<{
         <label className="block text-sm font-medium text-gray-300">Provider</label>
         <select
           value={entry.providerId}
-          onChange={e => handleProviderChange(e.target.value)}
+          onChange={e => { handleProviderChange(e.target.value); }}
           className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
         >
           <option value="">-- Select a provider --</option>
@@ -905,7 +905,7 @@ const ModelEditor: React.FC<{
           <input
             list="model-datalist"
             value={entry.modelId}
-            onChange={e => onChange({ ...entry, modelId: e.target.value })}
+            onChange={e => { onChange({ ...entry, modelId: e.target.value }); }}
             placeholder="Select or type model name..."
             className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
           />
@@ -916,7 +916,7 @@ const ModelEditor: React.FC<{
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-300 invisible">.</label>
           <button
-            onClick={() => onLoadModels(entry)}
+            onClick={() => { onLoadModels(entry); }}
             disabled={loadingModels || !entry.providerId}
             className="px-4 py-3 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-lg transition-colors text-sm shrink-0"
           >
@@ -934,7 +934,7 @@ const ModelEditor: React.FC<{
         <label className="block text-sm font-medium text-gray-300">Display Name (optional)</label>
         <input
           value={entry.displayName || ''}
-          onChange={e => onChange({ ...entry, displayName: e.target.value || undefined })}
+          onChange={e => { onChange({ ...entry, displayName: e.target.value || undefined }); }}
           placeholder="e.g. My GPT-4o"
           className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
         />
@@ -943,18 +943,18 @@ const ModelEditor: React.FC<{
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-300">Temperature</label>
-          <input type="number" min="0" max="2" step="0.1" value={entry.temperature ?? ''} onChange={e => onChange({ ...entry, temperature: e.target.value === '' ? undefined : parseFloat(e.target.value) })} placeholder="Unset" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500" />
+          <input type="number" min="0" max="2" step="0.1" value={entry.temperature ?? ''} onChange={e => { onChange({ ...entry, temperature: e.target.value === '' ? undefined : parseFloat(e.target.value) }); }} placeholder="Unset" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500" />
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-300">Max Tokens</label>
-          <input type="number" min="1" max="100000" value={entry.maxTokens ?? ''} onChange={e => onChange({ ...entry, maxTokens: e.target.value === '' ? undefined : parseInt(e.target.value) })} placeholder="Unset" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500" />
+          <input type="number" min="1" max="100000" value={entry.maxTokens ?? ''} onChange={e => { onChange({ ...entry, maxTokens: e.target.value === '' ? undefined : parseInt(e.target.value) }); }} placeholder="Unset" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500" />
         </div>
       </div>
 
       {entry.providerType === 'google' && (
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-300">Thinking Level</label>
-          <select value={entry.thinkingLevel || ''} onChange={e => onChange({ ...entry, thinkingLevel: e.target.value || undefined })} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500">
+          <select value={entry.thinkingLevel || ''} onChange={e => { onChange({ ...entry, thinkingLevel: e.target.value || undefined }); }} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500">
             <option value="">Unset</option>
             <option value="none">None</option>
             <option value="minimal">Minimal</option>
@@ -967,7 +967,7 @@ const ModelEditor: React.FC<{
 
       {entry.providerType === 'nvidia' && (
         <label className="flex items-center space-x-3 cursor-pointer bg-gray-800/50 border border-gray-700/50 rounded-lg p-3">
-          <input type="checkbox" checked={entry.injectThinkingTemplate ?? false} onChange={e => onChange({ ...entry, injectThinkingTemplate: e.target.checked })} className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900" />
+          <input type="checkbox" checked={entry.injectThinkingTemplate ?? false} onChange={e => { onChange({ ...entry, injectThinkingTemplate: e.target.checked }); }} className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900" />
           <span className="text-sm text-gray-300">Inject chat_template_kwargs thinking mode</span>
         </label>
       )}
@@ -975,7 +975,7 @@ const ModelEditor: React.FC<{
       {entry.providerType === 'openai-compatible' && (
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-300">Reasoning Effort</label>
-          <select value={entry.reasoningEffort || ''} onChange={e => onChange({ ...entry, reasoningEffort: e.target.value || undefined })} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500">
+          <select value={entry.reasoningEffort || ''} onChange={e => { onChange({ ...entry, reasoningEffort: e.target.value || undefined }); }} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500">
             <option value="">Unset</option>
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -992,7 +992,7 @@ const ModelEditor: React.FC<{
         </div>
         <ExtraBodyTextarea
           value={entry.extraBody}
-          onChange={v => onChange({ ...entry, extraBody: v })}
+          onChange={v => { onChange({ ...entry, extraBody: v }); }}
           placeholder='{"chat_template_kwargs":{"thinking":true}}'
         />
       </div>

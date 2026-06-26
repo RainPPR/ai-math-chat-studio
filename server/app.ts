@@ -185,7 +185,7 @@ export async function startApp() {
   } else {
     const distPath = process.env.DIST_DIR || path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('{*path}', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+    app.get('{*path}', (_req, res) => { res.sendFile(path.join(distPath, 'index.html')); });
   }
 
   return new Promise<import('net').Server>((resolve) => {

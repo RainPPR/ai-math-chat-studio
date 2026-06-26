@@ -99,6 +99,6 @@ export const api = {
       es.close();
     });
 
-    return () => es.close();
+    return () => { es.close(); };
   },
 };

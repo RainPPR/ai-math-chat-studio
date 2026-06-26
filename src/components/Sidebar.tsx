@@ -150,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <div key={group.key}>
               <button
-                onClick={() => toggleGroup(group.key)}
+                onClick={() => { toggleGroup(group.key); }}
                 className={`w-full flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded transition-colors select-none ${isOlder ? 'text-gray-600 hover:text-gray-500' : 'text-gray-500 hover:text-gray-300'}`}
               >
                 {isCollapsed ? <ChevronRight size={14} className="shrink-0" /> : <ChevronDown size={14} className="shrink-0" />}
@@ -166,7 +166,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <div
                       key={session.id}
                       className={`group flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${currentSessionId === session.id ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}`}
-                      onClick={() => onSelectSession(session.id)}
+                      onClick={() => { onSelectSession(session.id); }}
                     >
                       <div className="flex items-center gap-3 overflow-hidden">
                         <MessageSquare size={16} className="shrink-0" />

@@ -18,7 +18,7 @@ export function createModelsRouter() {
     const { baseURL, apiKey, envKey } = req.body;
 
     try {
-      let models: string[] = [];
+      const models: string[] = [];
 
       if (type === 'google') {
         const key = process.env.GEMINI_API_KEY;

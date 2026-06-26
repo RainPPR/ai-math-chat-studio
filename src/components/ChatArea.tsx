@@ -44,7 +44,7 @@ function convertNonStandardThinkingForDisplay(content: string): { thoughts: stri
       thinkingLines.push('');
       continue;
     }
-    const quotedMatch = line.match(/^\s*>\s*(.*)$/);
+    const quotedMatch = /^\s*>\s*(.*)$/.exec(line);
     if (quotedMatch) {
       thinkingLines.push(quotedMatch[1]);
     } else {
@@ -128,7 +128,7 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
       <div className={`max-w-[85%] md:max-w-[75%] flex flex-col gap-2 ${isUser ? 'items-end' : 'items-start'} w-full`}>
         {thoughts.map((thought, i) => (
           <div key={`thought-${i}`} className="rounded-xl shadow-sm relative w-full bg-gray-800/40 border border-gray-700/50 overflow-hidden">
-            <button onClick={() => setIsThoughtOpen(!isThoughtOpen)} className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800/60 hover:bg-gray-800/80 transition-colors text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <button onClick={() => { setIsThoughtOpen(!isThoughtOpen); }} className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800/60 hover:bg-gray-800/80 transition-colors text-xs font-semibold uppercase tracking-wider text-gray-400">
               <div className="flex items-center gap-2">
                 <Loader2 size={12} className={isGenerating && isLast ? 'animate-spin text-blue-400' : 'text-gray-500'} />
                 Thinking Process
@@ -267,7 +267,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     if (!isGenerating) { setStreamingContent(''); return; }
 
     const unsubscribe = api.subscribeGeneration(session.id, {
-      onDelta: (content) => setStreamingContent(content),
+      onDelta: (content) => { setStreamingContent(content); },
       onDone: () => {
         onGenerationEnd?.(session.id);
       },
@@ -285,7 +285,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   // Throttled scroll to reduce layout calculations during rapid streaming
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (settings.autoScroll === false) return;
+    if (!settings.autoScroll) return;
     
     // Clear existing timeout
     if (scrollTimeoutRef.current) {
@@ -315,7 +315,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => { document.removeEventListener('mousedown', handleClickOutside); };
   }, []);
 
   const handleSend = () => {
@@ -332,7 +332,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const handleCopy = (id: string, content: string) => {
     navigator.clipboard.writeText(content);
     setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+    setTimeout(() => { setCopiedId(null); }, 2000);
   };
 
   const handleExport = () => {
@@ -359,7 +359,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const displayMessages = [...session.messages];
   const lastMsg = session.messages.length > 0 ? session.messages[session.messages.length - 1] : null;
   let isStreamSaved = false;
-  if (lastMsg && lastMsg.role === 'model' && streamingContent) {
+  if (lastMsg?.role === 'model' && streamingContent) {
     const normalizedSaved = lastMsg.content;
     const normalizedStream = streamingContent;
     isStreamSaved = normalizedSaved.includes(normalizedStream.substring(0, Math.min(normalizedStream.length, 500)));
@@ -512,7 +512,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           <textarea
             id="chat-input"
             value={input}
-            onChange={(e) => handleInputChange(e.target.value)}
+            onChange={(e) => { handleInputChange(e.target.value); }}
             placeholder="Type a message... (Ctrl+Enter to send, Enter/Shift+Enter for newline)"
             className="flex-1 bg-transparent text-white resize-none max-h-64 min-h-[44px] p-3 focus:outline-none placeholder-gray-500"
             rows={1}
