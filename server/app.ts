@@ -2,7 +2,6 @@ import express from 'express';
 import path from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
-import { rateLimit } from 'express-rate-limit';
 import { GenerationManager } from './services/generation-manager';
 import { createSettingsRouter } from './routes/settings';
 import { createSessionRouter } from './routes/sessions';
@@ -174,15 +173,6 @@ export async function startApp() {
   const gm = new GenerationManager(SESSIONS_DIR);
 
   app.use(express.json());
-
-  // Rate limiting for API routes - 60 requests per minute
-  const apiLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 60, // max 60 requests per windowMs
-    message: { error: 'Too many requests, please try again later.' },
-  });
-  app.use('/api', apiLimiter);
-
   app.use(createSettingsRouter(SETTINGS_FILE));
   app.use(createSessionRouter(gm));
   app.use(createChatRouter(gm, SETTINGS_FILE));
