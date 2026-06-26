@@ -29,7 +29,7 @@
     "lodash": "^4.18.1",
     "lucide-react": "^1.21.0",
     "markdown-to-txt": "^2.0.1",
-    "motion": "^12.40.0",
+    "motion": "^12.42.0",
     "openai": "^6.44.0",
     "pandoc-wasm": "^1.1.0",
     "react": "^19.2.7",
