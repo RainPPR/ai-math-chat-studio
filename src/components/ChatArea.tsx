@@ -176,7 +176,13 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
 const estimateTokens = (text: string) => {
   if (!text) return 0;
   let ascii = 0, nonAscii = 0;
-  for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) <= 127) ascii++; else nonAscii++;
+  for (let i = 0; i < text.length; i++) {
+    if (text.charCodeAt(i) <= 127) {
+      ascii++;
+    } else {
+      nonAscii++;
+    }
+  }
   return Math.ceil(ascii / 4 + nonAscii * 0.8);
 };
 
