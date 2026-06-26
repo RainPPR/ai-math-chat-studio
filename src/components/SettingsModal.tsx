@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, Character, BuiltInProviderType, DEFAULT_SETTINGS } from '../types';
 import { api } from '../lib/api';
+import { v4 as uuidv4, validate as uuidValidate } from 'uuid';
 import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download } from 'lucide-react';
 
 
@@ -13,18 +14,8 @@ function formatClaudeDate(dateStr: string) {
 }
 
 function ensureUuid(id: string): string {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if (uuidRegex.test(id)) return id.toLowerCase();
-  try {
-    return crypto.randomUUID();
-  } catch {
-    // Fallback for extremely old browsers or non-secure contexts
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = (Date.now() + Math.random() * 16) % 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  }
+  if (uuidValidate(id)) return id.toLowerCase();
+  return uuidv4();
 }
 
 interface SettingsModalProps {
