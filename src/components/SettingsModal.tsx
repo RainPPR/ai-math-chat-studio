@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, Character, BuiltInProviderType, DEFAULT_SETTINGS } from '../types';
 import { api } from '../lib/api';
-import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle } from 'lucide-react';
+import { v4 as uuidv4, validate as uuidValidate } from 'uuid';
+import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download } from 'lucide-react';
+
+
+function formatClaudeDate(dateStr: string) {
+  const d = new Date(dateStr);
+  const iso = d.toISOString(); // YYYY-MM-DDTHH:mm:ss.sssZ
+  return iso.replace(/\.(\d+)Z$/, (match, p1) => {
+    return '.' + p1.padEnd(6, '0') + 'Z';
+  });
+}
+
 
 interface SettingsModalProps {
   settings: UserSettings;
@@ -296,6 +307,62 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     } catch (err: any) {
       setCleanResult({ cleaned: 0, total: 0 });
     }
+  }
+  const handleExportClaude = async () => {
+    try {
+      const sessions = await api.sessions.list();
+      const exportData = await Promise.all(sessions.map(async (s) => {
+        const fullSession = await api.sessions.get(s.id);
+        return {
+          uuid: fullSession.id,
+          name: fullSession.title || "",
+          created_at: formatClaudeDate(fullSession.createdAt),
+          updated_at: formatClaudeDate(fullSession.updatedAt),
+          chat_messages: fullSession.messages.map(m => {
+            const contentBlocks: any[] = [];
+            const thinkRegex = /<think>([\s\S]*?)<\/think>/g;
+            let textWithoutThinking = m.content;
+            const matches = Array.from(m.content.matchAll(thinkRegex));
+
+            for (const match of matches) {
+              contentBlocks.push({
+                type: 'thinking',
+                thinking: (match as any)[1].trim()
+              });
+              textWithoutThinking = textWithoutThinking.replace(match[0], '');
+            }
+
+            textWithoutThinking = textWithoutThinking.trim();
+            contentBlocks.push({
+              type: 'text',
+              text: textWithoutThinking
+            });
+
+            return {
+              uuid: m.id,
+              sender: m.role === 'user' ? 'human' : 'assistant',
+              // text: textWithoutThinking,
+              content: contentBlocks,
+              created_at: formatClaudeDate(m.createdAt),
+              updated_at: formatClaudeDate(m.createdAt),
+              attachments: [],
+              files: []
+            };
+          })
+        };
+      }));
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'conversations.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error('Export failed', err);
+      alert('Export failed: ' + err.message);
+    }
   };
 
   useEffect(() => { api.providers.list().then(setBuiltInTypes).catch(() => { }); }, []);
@@ -461,10 +528,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
               </div>
 
               <div className="space-y-3 pt-4 border-t border-red-900/50">
-                <h3 className="text-sm font-medium text-red-400 flex items-center gap-2">
-                  <AlertTriangle size={14} />
-                  Danger Zone
-                </h3>
+                <button onClick={handleExportClaude} className="w-full bg-red-600/90 hover:bg-red-600 text-white rounded-lg p-3 font-medium transition-colors flex items-center justify-center gap-2">
+                  <Download size={16} />
+                  导出为 Claude 格式
+                </button>
                 <button onClick={handleCleanClick} className="w-full bg-red-600/90 hover:bg-red-600 text-white rounded-lg p-3 font-medium transition-colors flex items-center justify-center gap-2">
                   <AlertTriangle size={16} />
                   强制清洗数据
