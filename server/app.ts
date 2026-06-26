@@ -7,6 +7,7 @@ import { createSettingsRouter } from './routes/settings';
 import { createSessionRouter } from './routes/sessions';
 import { createChatRouter } from './routes/chat';
 import { createModelsRouter } from './routes/models';
+import { initLogger } from './services/logger';
 
 interface RemoteModelDef {
   id: string;
@@ -157,10 +158,15 @@ async function syncRemoteModels(settingsFile: string) {
 }
 
 export async function startApp() {
+  const DATA_DIR = path.join(process.cwd(), 'data');
+  const LOG_DIR = path.join(DATA_DIR, 'log');
+
+  // Initialize logger first
+  initLogger(LOG_DIR);
+
   const app = express();
   const PORT = parseInt(process.env.PORT || '3000', 10);
 
-  const DATA_DIR = path.join(process.cwd(), 'data');
   const SESSIONS_DIR = path.join(DATA_DIR, 'sessions');
   const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 

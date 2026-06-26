@@ -33,6 +33,7 @@ graph TD
 
         subgraph Core Services (server/services/)
             S_GenMan[generation-manager.ts]
+            S_Logger[logger.ts]
         end
 
         subgraph AI Providers (server/providers/)
@@ -45,6 +46,7 @@ graph TD
         F --> R_Sessions
         F --> R_Chat
         F --> R_Models
+        F -- Initializes --> S_Logger
 
         R_Chat --> S_GenMan
         S_GenMan --> P_Stream
