@@ -443,6 +443,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     let lastNotifyTime = 0;
     let pendingNotify = false;
     let pendingNotifyTimeout: ReturnType<typeof setTimeout> | null = null;
+    let firstTokenReceived = false;
 
     const buildSystemPrompt = () => {
       if (model.providerType === 'google') {
@@ -504,6 +505,11 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       }, task.abortController.signal)) {
         if (task.abortController.signal.aborted) break;
 
+        if (!firstTokenReceived && chunk.content.length > 0) {
+          firstTokenReceived = true;
+          console.log('[Generation] First token received for session %s', session.id);
+        }
+
         if (chunk.type === 'reasoning') {
           if (!isThinking) {
             isThinking = true;
@@ -522,12 +528,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
         notifySubscribers('delta', { content: fullContent });
       }
     } catch (err: any) {
-      // Handle both standard AbortError and OpenAI SDK APIUserAbortError
-      if (err.name === 'AbortError' || err.name === 'APIUserAbortError') {
-        task.status = 'stopped';
-      } else {
-        throw err;
-      }
+      task.status = 'stopped';
     }
 
     // If aborted or session deleted, don't write the final message but notify stopped

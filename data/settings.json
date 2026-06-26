@@ -178,13 +178,6 @@
       "displayName": "Qwen3.5-397B-A17B-T (Poe)"
     },
     {
-      "id": "b590ac57-34f1-5b38-ada8-0cc97fd89fb0",
-      "providerId": "p-poe-8d3e",
-      "providerType": "openai-compatible",
-      "modelId": "kimi-k2.5-fw",
-      "displayName": "Kimi-K2.5-FW (Poe)"
-    },
-    {
       "id": "b657c5c4-ab39-5657-a244-37fac1b33a94",
       "providerId": "p-poe-8d3e",
       "providerType": "openai-compatible",

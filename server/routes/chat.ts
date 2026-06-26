@@ -63,7 +63,6 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
   router.get('/api/sessions/:id/generation', async (req, res) => {
     const sessionId = req.params.id;
-    console.log(`[SSE] Client connected for session ${sessionId}`);
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -93,7 +92,6 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
         try {
           res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
           if (event === 'done' || event === 'error' || event === 'stopped') {
-            console.log(`[SSE] Sending ${event} for session ${sessionId}`);
             setImmediate(() => {
               cleanup();
               res.end();
@@ -109,7 +107,6 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     }
 
     if (!unsubscribe) {
-      console.log(`[SSE] Task not found for session ${sessionId} after 5s`);
       if (!isClosed) {
         try {
           res.write(`event: error\ndata: ${JSON.stringify({ message: 'Generation task not found' })}\n\n`);
@@ -122,7 +119,6 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     }
 
     req.on('close', () => {
-      console.log(`[SSE] Client disconnected for session ${sessionId}`);
       cleanup();
     });
 
