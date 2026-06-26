@@ -1,0 +1,15 @@
+{
+  "id": "b9818dac-1be8-4930-abcb-01b46cb5b6f5",
+  "title": "已知函数 f(x)=1−|1−x|,0≤ x≤ 2，且 f(x)=2f(x−2),2<x≤ 8，若 ...",
+  "messages": [
+    {
+      "id": "a072e97c-37fd-4cf1-bbd5-1b936a37bc74",
+      "role": "user",
+      "content": "已知函数 $f(x)=1-|1-x|,0\\le x\\le 2$，且 $f(x)=2f(x-2),2<x\\le 8$，若 $f(x)=kx$ 恰好有四个实数根，求实数 $k$ 的取值范围。",
+      "createdAt": "2026-06-26T04:33:44.001Z"
+    }
+  ],
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "createdAt": "2026-06-26T04:33:44.001Z",
+  "updatedAt": "2026-06-26T04:33:44.015Z"
+}

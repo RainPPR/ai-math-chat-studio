@@ -505,7 +505,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       }, task.abortController.signal)) {
         if (task.abortController.signal.aborted) break;
 
-        if (!firstTokenReceived && chunk.content.length > 0) {
+        if (!firstTokenReceived && chunk.content && chunk.content.length > 0) {
           firstTokenReceived = true;
           console.log('[Generation] First token received for session %s', session.id);
         }
@@ -515,13 +515,13 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
             isThinking = true;
             fullContent += '<think>\n';
           }
-          fullContent += chunk.content;
+          fullContent += chunk.content || '';
         } else if (chunk.type === 'content') {
           if (isThinking) {
             isThinking = false;
             fullContent += '\n</think>\n\n';
           }
-          fullContent += chunk.content;
+          fullContent += chunk.content || '';
         }
 
         task.content = fullContent;
