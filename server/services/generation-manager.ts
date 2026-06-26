@@ -16,7 +16,7 @@ import { markdownToTxt } from 'markdown-to-txt';
  *   (content without > prefix)
  *
  * Standard format:
- *   <details>\n<summary>Thinking Process</summary>\n\n```text\nline 1\nline 2\n...\n```\n\n</details>\n\n(content)
+ *   <think>\nline 1\nline 2\n...\n</think>\n\n(content)
  */
 function convertNonStandardThinking(content: string): string {
   // Check if content starts with "Thinking..." followed by lines starting with ">"
@@ -63,7 +63,7 @@ function convertNonStandardThinking(content: string): string {
     ? lines.slice(mainContentStartIndex).join('\n').trimStart()
     : '';
 
-  const standardThinking = `<details>\n<summary>Thinking Process</summary>\n\n\`\`\`text\n${thinkingContent}\n\`\`\`\n\n</details>\n\n${mainContent}`;
+  const standardThinking = `<think>\n${thinkingContent}\n</think>\n\n${mainContent}`;
 
   return standardThinking.trim();
 }
@@ -355,12 +355,12 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     const messageContent = session.messages[idx].content;
     let cleanedContent = '';
 
-    const thoughtRegex = /<details(?: open)?>\n<summary>Thinking Process<\/summary>\n\n```text\n([\s\S]*?)(?:\n```\n\n<\/details>|$)/;
+    const thoughtRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>|$)/;
     const match = messageContent.match(thoughtRegex);
 
     if (match && match[1]) {
       // Keep only the thinking process, wrapped properly
-      cleanedContent = `<details open>\n<summary>Thinking Process</summary>\n\n\`\`\`text\n${match[1].trim()}\n\`\`\`\n\n</details>\n\n`;
+      cleanedContent = `<think>\n${match[1].trim()}\n</think>\n\n`;
     }
 
     // Update the message with cleaned content (only thinking preserved)
@@ -513,13 +513,13 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
         if (chunk.type === 'reasoning') {
           if (!isThinking) {
             isThinking = true;
-            fullContent += '<details open>\n<summary>Thinking Process</summary>\n\n```text\n';
+            fullContent += '<think>\n';
           }
           fullContent += chunk.content;
         } else if (chunk.type === 'content') {
           if (isThinking) {
             isThinking = false;
-            fullContent += '\n```\n\n</details>\n\n';
+            fullContent += '\n</think>\n\n';
           }
           fullContent += chunk.content;
         }
@@ -540,12 +540,12 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     }
 
     if (isThinking) {
-      fullContent += '\n```\n\n</details>\n\n';
+      fullContent += '\n</think>\n\n';
       isThinking = false;
       task.content = fullContent;
     }
 
-    fullContent = fullContent.replace(/<details open>/g, '<details>');
+
 
     // Convert non-standard thinking format (if any) to standard format
     // Only applies to openai-compatible providers that return non-standard thinking

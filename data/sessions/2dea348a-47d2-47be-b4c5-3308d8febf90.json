@@ -11,7 +11,7 @@
     {
       "id": "0e66ae51-1567-4f3a-98a4-7f0408cd6333",
       "role": "model",
-      "content": "<details>\n<summary>Thinking Process</summary>\n\n```text\nWe\n```\n\n</details>\n\n",
+      "content": "<think>\nWe\n</think>\n\n",
       "createdAt": "2026-06-14T03:39:17.875Z"
     }
   ],

@@ -23,7 +23,7 @@ interface ChatAreaProps {
 /**
  * Detect and convert non-standard thinking format to standard format for display.
  * Non-standard: Thinking...\n> line1\n> line2\n...\ncontent
- * Standard: <details>\n<summary>Thinking Process</summary>\n\n```text\nline1\nline2\n...\n```\n\n</details>\n\ncontent
+ * Standard: <think>\nline1\nline2\n...\n</think>\n\ncontent
  */
 function convertNonStandardThinkingForDisplay(content: string): { thoughts: string[]; mainContent: string } {
   const lines = content.split(/\r?\n/);
@@ -81,8 +81,8 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
       thoughts = converted.thoughts;
       mainContent = converted.mainContent;
     } else {
-      // Standard format: parse existing <details> blocks
-      const thoughtRegex = /<details(?: open)?>\n<summary>Thinking Process<\/summary>\n\n```text\n([\s\S]*?)(?:\n```\n\n<\/details>|$)/g;
+      // Standard format: parse existing <think> blocks
+      const thoughtRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/g;
       for (const m of msg.content.matchAll(thoughtRegex)) {
         if (m[1]) {
           let thoughtContent = m[1].trim();
@@ -360,8 +360,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const lastMsg = session.messages.length > 0 ? session.messages[session.messages.length - 1] : null;
   let isStreamSaved = false;
   if (lastMsg && lastMsg.role === 'model' && streamingContent) {
-    const normalizedSaved = lastMsg.content.replace(/<details>/g, '<details open>');
-    const normalizedStream = streamingContent.replace(/<details>/g, '<details open>');
+    const normalizedSaved = lastMsg.content;
+    const normalizedStream = streamingContent;
     isStreamSaved = normalizedSaved.includes(normalizedStream.substring(0, Math.min(normalizedStream.length, 500)));
   }
   if (isGenerating && streamingContent && !isStreamSaved) {

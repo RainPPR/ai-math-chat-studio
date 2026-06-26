@@ -4,14 +4,14 @@ import { resolveBaseURL, resolveApiKey, MATH_INSTRUCTIONS } from './config';
 
 /**
  * Strip UI wrapper tags from message content, converting thinking blocks to quoted format.
- * Converts: <details>\n<summary>Thinking Process</summary>\n\n```text\n...\n```\n\n</details>\n\n(content)
+ * Converts: <think>\n...\n</think>\n\n(content)
  * To: > ...\n(content)
  *
  * This reduces token usage while preserving thinking content for models that support it.
  */
 function stripThinkingWrapper(content: string): string {
   // Match the entire details block with thinking process
-  const thinkingRegex = /<details(?:\s+open)?>\s*<summary>Thinking\s+Process<\/summary>\s*```text\n([\s\S]*?)\n```\s*<\/details>\s*(?:\r?\n)*/gi;
+  const thinkingRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:\r?\n)?<\/think>(?:\r?\n)*/gi;
 
   return content.replace(thinkingRegex, (match, thinkingContent) => {
     // Convert thinking content to quoted format
