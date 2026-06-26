@@ -341,7 +341,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
             return {
               uuid: m.id,
               sender: m.role === 'user' ? 'human' : 'assistant',
-              text: textWithoutThinking,
+              // text: textWithoutThinking,
               content: contentBlocks,
               created_at: formatClaudeDate(m.createdAt),
               updated_at: formatClaudeDate(m.createdAt),
