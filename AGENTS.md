@@ -32,6 +32,7 @@
 | 数据模型和存储 | `docs/data-models.md` |
 | 组件结构和职责 | `docs/components.md` |
 | 数学公式渲染 | `docs/tech-stack.md` |
+| 代码质量与 Lint 规范 | `docs/linting-and-quality.md` |
 | 文件结构 | `docs/file-structure.md` |
 
 ## 开发规范
@@ -229,7 +230,9 @@ bun run dev          # 启动开发服务器（tsx server.ts → Express + Vite 
 
 "check": "tsc --noEmit --strict",
 "pretty": "prettier --check .",
-"lint": "eslint ."
+"lint": "eslint .",
+"lint:fix": "eslint . --fix",
+"pretty:fix": "prettier --write ."
 ```
 
 修复是可以使用

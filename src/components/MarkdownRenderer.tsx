@@ -5,7 +5,6 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import remarkSqueezeParagraphs from 'remark-squeeze-paragraphs';
 
-// @ts-expect-error
 import remarkCjkFriendly from 'remark-cjk-friendly';
 
 import rehypeKatex from 'rehype-katex';

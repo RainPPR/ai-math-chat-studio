@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, Character, BuiltInProviderType, DEFAULT_SETTINGS } from '../types';
 import { api } from '../lib/api';
-import { v4 as uuidv4, validate as uuidValidate } from 'uuid';
 import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download } from 'lucide-react';
 
 
@@ -304,7 +303,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     try {
       const result = await api.sessions.clean();
       setCleanResult({ cleaned: result.cleaned, total: result.total });
-    } catch (err: any) {
+    } catch {
       setCleanResult({ cleaned: 0, total: 0 });
     }
   }
@@ -461,7 +460,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     }));
   };
 
-  const activeModel = local.models.find(m => m.id === local.activeModelId);
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -876,8 +874,6 @@ const ModelEditor: React.FC<{
   onSave: () => void;
   onCancel: () => void;
 }> = ({ entry, providers, availableModels, loadingModels, fetchError, onChange, onLoadModels, onSave, onCancel }) => {
-  const selectedProvider = providers.find(p => p.id === entry.providerId);
-
   const handleProviderChange = (providerId: string) => {
     const p = providers.find(x => x.id === providerId);
     if (!p) return;
