@@ -226,7 +226,17 @@ return unsubscribe; // useEffect cleanup
 ```bash
 bun install          # 安装依赖
 bun run dev          # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
-bun run lint         # TypeScript 类型检查
+
+"check": "tsc --noEmit --strict",
+"pretty": "prettier --check .",
+"lint": "eslint ."
+```
+
+修复是可以使用
+
+```bash
+bun run eslint --fix .
+bun run prettier --write .
 ```
 
 ### 环境变量

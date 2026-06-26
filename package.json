@@ -10,7 +10,9 @@
     "build:compile": "bun scripts/build-bun-compile.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist dist-server dist-compile release",
-    "lint": "tsc --noEmit --strict"
+    "check": "tsc --noEmit --strict",
+    "pretty": "prettier --check .",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@google/genai": "^2.9.0",
@@ -52,14 +54,18 @@
     "vite": "^8.0.16"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/bun": "^1.3.14",
     "@types/express": "^5.0.6",
     "@types/node": "^26.0.0",
     "autoprefixer": "^10.5.0",
     "esbuild": "^0.28.1",
+    "eslint": "^10.5.0",
+    "prettier": "^3.8.4",
     "tailwindcss": "^4.3.1",
     "tsx": "^4.22.4",
-    "typescript": "~6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.62.0"
   },
   "patchedDependencies": {
     "pandoc-wasm@1.1.0": "patches/pandoc-wasm@1.1.0.patch"

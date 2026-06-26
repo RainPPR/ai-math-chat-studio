@@ -2,8 +2,7 @@ name: Build
 
 on:
   push:
-    branches:
-      - desktop
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -11,8 +10,24 @@ permissions:
   pull-requests: write
 
 jobs:
+  check-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun run lint --max-warnings=0
+        if: always()
+      - run: bun run check --max-warnings=0
+        if: always()
+      - run: bun run pretty --max-warnings=0
+        if: always()
+
   build-bundle:
     runs-on: ubuntu-latest
+    needs: check-lint
     steps:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
@@ -27,6 +42,7 @@ jobs:
 
   build-compile:
     runs-on: windows-latest
+    needs: check-lint
     steps:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
