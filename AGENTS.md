@@ -171,6 +171,15 @@ return unsubscribe; // useEffect cleanup
 
 所有参数 "Unset" 时不传给 API（不传默认值）。
 
+
+### 7. 日志保留功能
+
+系统在启动时通过 `server/services/logger.ts` 初始化日志保留功能：
+- **拦截器**：拦截 `console.log/info/warn/error`。
+- **存储路径**：`data/log/YYYY-MM-DD-HHmmss-index.log`（使用 UTC 时间）。
+- **启动索引**：解析文件名自动计算当日的最大启动序号并递增。
+- **初始化**：在 `server/app.ts` 的 `startApp()` 最开始调用。
+
 ### 6. 消息操作架构
 
 三种消息操作的区别和使用场景：

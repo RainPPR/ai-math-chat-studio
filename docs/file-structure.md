@@ -15,7 +15,8 @@ ai-math-chat-studio/
 │   └── file-structure.md     # 本文件
 ├── data/                     # 本地数据存储（不提交）
 │   ├── settings.json         # 用户设置
-│   └── sessions/             # 会话数据
+│   ├── sessions/             # 会话数据
+│   └── log/                  # 日志数据
 ├── index.html                # SPA 入口 HTML
 ├── package.json              # 项目依赖和脚本
 ├── bun.lockb                 # Bun 依赖锁定文件
@@ -33,7 +34,8 @@ ai-math-chat-studio/
 │   │   ├── chat.ts           # /api/sessions/:id/messages, generation, retry, continue
 │   │   └── models.ts         # /api/providers, /api/providers/:type/models
 │   └── services/             # 核心服务
-│       └── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
+│       ├── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
+│       └── logger.ts             # 日志服务：拦截 console 输出并持久化到 data/log/
 ├── src/
 │   ├── App.tsx               # 主应用组件（状态管理）
 │   ├── main.tsx              # React 入口
@@ -62,6 +64,7 @@ ai-math-chat-studio/
 | `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
 | `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
 | `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、取消。 |
+| `server/services/logger.ts` | **日志服务**：拦截 console 输出并持久化到 `data/log/`。 |
 | `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
 | `server/routes/settings.ts` | `/api/settings` GET/PUT |
 | `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
