@@ -3,34 +3,50 @@ import path from 'path';
 import { format } from 'util';
 
 export function initLogger(logDir: string) {
+  const originalLog = console.log;
+  const originalInfo = console.info;
+  const originalWarn = console.warn;
+  const originalError = console.error;
+
   if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir, { recursive: true });
   }
 
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(now.getUTCDate()).padStart(2, '0');
+  const hours = String(now.getUTCHours()).padStart(2, '0');
+  const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(now.getUTCSeconds()).padStart(2, '0');
 
   const dateStr = `${year}-${month}-${day}`;
   const timeStr = `${hours}${minutes}${seconds}`;
 
   const files = fs.readdirSync(logDir);
   const todayPrefix = dateStr;
-  const index = files.filter(f => f.startsWith(todayPrefix)).length + 1;
+
+  let maxIndex = 0;
+  for (const file of files) {
+    if (file.startsWith(todayPrefix) && file.endsWith('.log')) {
+      const parts = file.slice(0, -4).split('-');
+      const idxStr = parts[parts.length - 1];
+      const idx = parseInt(idxStr, 10);
+      if (!isNaN(idx) && idx > maxIndex) {
+        maxIndex = idx;
+      }
+    }
+  }
+  const index = maxIndex + 1;
 
   const fileName = `${dateStr}-${timeStr}-${index}.log`;
   const filePath = path.join(logDir, fileName);
 
   const logStream = fs.createWriteStream(filePath, { flags: 'a' });
 
-  const originalLog = console.log;
-  const originalInfo = console.info;
-  const originalWarn = console.warn;
-  const originalError = console.error;
+  logStream.on('error', (err) => {
+    originalError('[Logger] Failed to write to log file:', err);
+  });
 
   const writeToLog = (level: string, args: any[]) => {
     const timestamp = new Date().toISOString();
