@@ -47,7 +47,7 @@ export default function App() {
   const markGenerating = useCallback((id: string, v: boolean) => {
     setGeneratingSessions(prev => {
       const next = new Set(prev);
-      v ? next.add(id) : next.delete(id);
+      if (v) next.add(id); else next.delete(id);
       return next;
     });
   }, []);

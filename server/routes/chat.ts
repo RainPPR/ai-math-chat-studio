@@ -97,7 +97,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
               res.end();
             });
           }
-        } catch (err) {
+        } catch {
           cleanup();
         }
       });

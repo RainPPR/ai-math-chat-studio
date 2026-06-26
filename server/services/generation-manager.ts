@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import sanitize from 'sanitize-filename';
-import { streamChat, StreamChunk } from '../providers/stream';
+import { streamChat } from '../providers/stream';
 import { MATH_INSTRUCTIONS } from '../providers/config';
 import * as unicodeit from 'unicodeit';
 import { markdownToTxt } from 'markdown-to-txt';
@@ -69,7 +69,6 @@ function convertNonStandardThinking(content: string): string {
 }
 
 // Limit input length for title generation
-const TITLE_INPUT_LIMIT = 200;
 
 function generateTitleFromMarkdown(markdown: string): string {
   // 1. First replace \dfrac with \frac
@@ -527,7 +526,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
         task.content = fullContent;
         notifySubscribers('delta', { content: fullContent });
       }
-    } catch (err: any) {
+    } catch {
       task.status = 'stopped';
     }
 

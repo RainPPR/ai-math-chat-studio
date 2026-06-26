@@ -12,6 +12,7 @@
     "clean": "rm -rf dist dist-server dist-compile release",
     "check": "tsc --noEmit --strict",
     "pretty": "prettier --check .",
+    "lint:fix": "eslint . --fix",    "pretty:fix": "prettier --write .",
     "lint": "eslint ."
   },
   "dependencies": {
