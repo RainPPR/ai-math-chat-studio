@@ -12,3 +12,4 @@ coverage/
 /dist-compile
 ai-math-chat-studio.exe
 /cache
+data/log/
