@@ -182,7 +182,7 @@ bun run dev
 
 ```mermaid
 graph TD
-    subgraph 前端 (React SPA)
+    subgraph "前端 (React SPA)"
         A[Sidebar - 会话列表]
         B[ChatArea - 聊天区域]
         C[SettingsModal - 设置弹窗]
@@ -190,15 +190,15 @@ graph TD
         E[src/lib/api.ts - 统一 API 客户端]
     end
 
-    subgraph 后端 (Express 5)
+    subgraph "后端 (Express 5)"
         F[server/routes/ - API 路由]
         G[server/providers/ - AI 供应商逻辑]
         H[server/services/ - 核心服务]
     end
 
     subgraph 数据层
-        I[/data/settings.json - 用户设置]
-        J[/data/sessions/*.json - 会话数据]
+        I["/data/settings.json - 用户设置"]
+        J["/data/sessions/*.json - 会话数据"]
     end
 
     A --> E
