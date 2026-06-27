@@ -83,12 +83,12 @@ interface ChatMessage {
 
 ```typescript
 interface ChatSession {
-  id: string;         // UUID
-  uid: string;        // 固定为 'local'（历史遗留字段）
-  title: string;      // 会话标题（首条消息前 30 字符）
+  id: string;               // UUID
+  title: string;            // 会话标题
   messages: ChatMessage[];  // 消息列表
-  createdAt: string;  // ISO 时间戳
-  updatedAt: string;  // ISO 时间戳
+  characterId?: string;    // 创建时使用的角色 ID（仅记录首次）
+  createdAt: string;        // ISO 时间戳
+  updatedAt: string;        // ISO 时间戳
 }
 ```
 
@@ -104,9 +104,9 @@ interface GenerationModel {
   temperature?: number;
   maxTokens?: number;
   reasoningEffort?: string;
-   extraBody?: Record<string, any>;
+  extraBody?: Record<string, any>;
   thinkingLevel?: string;
- }
+}
 
 interface GenerationProvider {
   baseURL?: string;
@@ -129,6 +129,7 @@ interface GenerationProvider {
 /data/
   settings.json           # UserSettings（单文件）
   sessions/{sessionId}.json  # ChatSession（每会话一个文件）
+  log/                    # 日志文件（YYYY-MM-DD-HHmmss-index.log）
 ```
 
 **API 端点**：
