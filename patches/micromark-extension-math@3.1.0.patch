@@ -1,4 +1,0 @@
---- a/node_modules/micromark-extension-math/package.json
-+++ b/node_modules/micromark-extension-math/package.json
-@@ -0,0 +1 @@
-+// empty

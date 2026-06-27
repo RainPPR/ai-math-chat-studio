@@ -15,7 +15,6 @@ import 'katex/dist/katex-swap.min.css';
 
 import katex from 'katex';
 // Import the ESM version of mhchem to ensure it registers on the same katex instance
-// @ts-expect-error
 import "katex/dist/contrib/mhchem.mjs";
 
 interface MarkdownRendererProps {
