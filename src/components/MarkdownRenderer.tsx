@@ -24,7 +24,7 @@ interface MarkdownRendererProps {
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content }) => {
   let processedContent = content;
   
-  // Replace \[ ... \] with 2931 ... 2931
+  // Replace \[ ... \] with $$ ... $$
   processedContent = processedContent.replace(/\\\[([\s\S]*?)\\\]/g, (match, p1) => `$$${p1}$$`);
   
   // Replace \( ... \) with $ ... $
