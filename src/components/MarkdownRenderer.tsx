@@ -13,7 +13,7 @@ import rehypeExternalLinks from 'rehype-external-links';
 import rehypeSanitize from 'rehype-sanitize';
 import 'katex/dist/katex-swap.min.css';
 
-import katex from 'katex';
+import 'katex';
 // Import the ESM version of mhchem to ensure it registers on the same katex instance
 import "katex/dist/contrib/mhchem.mjs";
 
@@ -24,7 +24,7 @@ interface MarkdownRendererProps {
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content }) => {
   let processedContent = content;
   
-  // Replace \[ ... \] with $$ ... $$
+  // Replace \[ ... \] with 2931 ... 2931
   processedContent = processedContent.replace(/\\\[([\s\S]*?)\\\]/g, (match, p1) => `$$${p1}$$`);
   
   // Replace \( ... \) with $ ... $
@@ -44,7 +44,6 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content
           rehypeRaw, 
           rehypeSanitize, 
           [rehypeKatex, {
-            katex,
             strict: false,
             throwOnError: false,
             macros: { '\\tag': '\\qquad (#1)' }
