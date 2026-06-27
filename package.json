@@ -61,8 +61,8 @@
     "@types/node": "^26.0.1",
     "autoprefixer": "^10.5.2",
     "esbuild": "^0.28.1",
-    "eslint": "^10.5.0",
-    "prettier": "^3.8.4",
+    "eslint": "^10.6.0",
+    "prettier": "^3.9.0",
     "tailwindcss": "^4.3.1",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
@@ -70,5 +70,11 @@
   },
   "patchedDependencies": {
     "pandoc-wasm@1.1.0": "patches/pandoc-wasm@1.1.0.patch"
+  },
+  "overrides": {
+    "katex": "^0.17.0"
+  },
+  "resolutions": {
+    "katex": "^0.17.0"
   }
 }

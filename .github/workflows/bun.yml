@@ -2,7 +2,11 @@ name: Build
 
 on:
   push:
+    branches:
+      - desktop
   pull_request:
+    branches:
+      - desktop
   workflow_dispatch:
 
 permissions:
