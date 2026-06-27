@@ -1,0 +1,20 @@
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -84,7 +84,7 @@
+       let result
+
+       try {
+-        result = katex.renderToString(value, {
++        result = (settings.katex || katex).renderToString(value, {
+           ...settings,
+           displayMode,
+           throwOnError: true
+@@ -105,7 +105,7 @@
+         // it doesn’t always:
+         // <https://github.com/remarkjs/react-markdown/issues/853>
+         try {
+-          result = katex.renderToString(value, {
++          result = (settings.katex || katex).renderToString(value, {
+             ...settings,
+             displayMode,
+             strict: 'ignore',

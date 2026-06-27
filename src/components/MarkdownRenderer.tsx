@@ -13,8 +13,10 @@ import rehypeExternalLinks from 'rehype-external-links';
 import rehypeSanitize from 'rehype-sanitize';
 import 'katex/dist/katex-swap.min.css';
 
+import katex from 'katex';
+// Import the ESM version of mhchem to ensure it registers on the same katex instance
 // @ts-expect-error
-import "katex/dist/contrib/mhchem";
+import "katex/dist/contrib/mhchem.mjs";
 
 interface MarkdownRendererProps {
   content: string;
@@ -42,7 +44,12 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content
         rehypePlugins={[
           rehypeRaw, 
           rehypeSanitize, 
-          [rehypeKatex, { strict: false, throwOnError: false, macros: { '\\tag': '\\qquad (#1)' } }], 
+          [rehypeKatex, {
+            katex,
+            strict: false,
+            throwOnError: false,
+            macros: { '\\tag': '\\qquad (#1)' }
+          }],
           [rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }]
         ]}
       >

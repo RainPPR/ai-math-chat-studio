@@ -69,6 +69,13 @@
     "typescript-eslint": "^8.62.0"
   },
   "patchedDependencies": {
-    "pandoc-wasm@1.1.0": "patches/pandoc-wasm@1.1.0.patch"
+    "pandoc-wasm@1.1.0": "patches/pandoc-wasm@1.1.0.patch",
+    "rehype-katex@7.0.1": "patches/rehype-katex@7.0.1.patch"
+  },
+  "overrides": {
+    "katex": "^0.17.0"
+  },
+  "resolutions": {
+    "katex": "^0.17.0"
   }
 }
