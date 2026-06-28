@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatSession, UserSettings } from '../types';
 import { api } from '../lib/api';
-import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal, AlertCircle, X, ChevronDown, Bot, Sparkles } from 'lucide-react';
+import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal, AlertCircle, X, ChevronDown, Bot, Sparkles, FileText } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface ChatAreaProps {
@@ -188,6 +188,17 @@ const estimateTokens = (text: string) => {
 
 const DRAFT_STORAGE_KEY = 'chat_drafts';
 
+const PRESET_TEMPLATES = [
+  {
+    name: '三角形基础',
+    content: '在 $\\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，已知 ',
+  },
+  {
+    name: '锐角三角形',
+    content: '在锐角 $\\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，已知 ',
+  },
+];
+
 const saveDraft = (sessionId: string, content: string) => {
   try {
     const drafts = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || '{}');
@@ -225,8 +236,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const lastInputRef = useRef<string>('');
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false);
+  const [templateDropdownOpen, setTemplateDropdownOpen] = useState(false);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
   const characterDropdownRef = useRef<HTMLDivElement>(null);
+  const templateDropdownRef = useRef<HTMLDivElement>(null);
 
   // Load draft on session change
   useEffect(() => {
@@ -319,6 +332,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       if (characterDropdownRef.current && !characterDropdownRef.current.contains(e.target as Node)) {
         setCharacterDropdownOpen(false);
       }
+      if (templateDropdownRef.current && !templateDropdownRef.current.contains(e.target as Node)) {
+        setTemplateDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => { document.removeEventListener('mousedown', handleClickOutside); };
@@ -333,6 +349,22 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
       if (textarea) textarea.style.height = 'auto';
     }
+  };
+
+  const handleTemplateSelect = (content: string) => {
+    const newInput = input + content;
+    handleInputChange(newInput);
+    setTemplateDropdownOpen(false);
+
+    // Adjust textarea height
+    setTimeout(() => {
+      const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
+      if (textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 256)}px`;
+        textarea.focus();
+      }
+    }, 0);
   };
 
   const handleCopy = (id: string, content: string) => {
@@ -507,6 +539,31 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                     className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${c.id === settings.activeCharacterId ? 'text-green-300 bg-green-600/10' : 'text-gray-300'}`}
                   >
                     {c.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Template Selector */}
+          <div ref={templateDropdownRef} className="relative">
+            <button
+              onClick={() => { setModelDropdownOpen(false); setCharacterDropdownOpen(false); setTemplateDropdownOpen(!templateDropdownOpen); }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
+            >
+              <FileText size={12} className="text-orange-400" />
+              <span className="max-w-[120px] truncate">Templates</span>
+              <ChevronDown size={12} className={`transition-transform ${templateDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {templateDropdownOpen && (
+              <div className="absolute bottom-full mb-1 left-0 z-50 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
+                {PRESET_TEMPLATES.map((t, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleTemplateSelect(t.content)}
+                    className="w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate text-gray-300"
+                  >
+                    {t.name}
                   </button>
                 ))}
               </div>
