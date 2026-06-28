@@ -41,7 +41,7 @@
 
 - **TypeScript 项目**，所有类型定义在 `src/types.ts`
 - **React 函数组件**，不使用 class 组件
-- **Tailwind CSS** 样，使用 `cn()` 工具函数（`src/lib/utils.ts`）合并条件样式
+- **Tailwind CSS** 样式，使用 `cn()` 工具函数（`src/lib/utils.ts`）合并条件样式
 - **无注释风格**：代码应自解释，不添加注释（除非必要）
 - **ES Module**：项目使用 `"type": "module"`
 - **严禁使用三元表达式**：根据 `docs/linting-and-quality.md`，严禁使用三元表达式，必须使用 `if/else`。
@@ -118,8 +118,8 @@
 ### 4. 日志保留功能
 
 系统通过 `server/services/logger.ts` 初始化日志功能：
-- **存储路径**：`data/log/YYYY-MM-DD-HHmmss-index.log`（UTC 时间）。
-- **启动序号**：解析文件名自动计算当日的顺序索引。
+- **存储路径**：`data/log/YYYY-MM-DD.log`（UTC 时间）。
+- **初始化**：在 `server/app.ts` 的 `startApp()` 最开始调用。
 
 ### 5. 消息操作架构
 

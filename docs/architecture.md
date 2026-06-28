@@ -92,7 +92,7 @@ graph TD
     *   `services/`: 包含核心业务逻辑，如 `GenerationManager`。
     *   `providers/`: 封装了与外部 AI API 交互的所有逻辑。
 
-5.  **实时日志系统**：系统通过 `server/services/logger.ts` 拦截 `console` 方法（log, info, warn, error），并将日志持久化到 `data/log/`。日志文件名采用 `YYYY-MM-DD-HHmmss-index.log` 格式，使用 UTC 时间，并支持同一天内的顺序索引。
+5.  **实时日志系统**：系统通过 `server/services/logger.ts` 拦截 `console` 方法（log, info, warn, error），并将日志持久化到 `data/log/`。日志文件名采用 `YYYY-MM-DD.log` 格式，使用 UTC 时间。
 
 6.  **SSE 实时订阅**：前端使用 `EventSource` API 订阅后端的 `/api/sessions/:id/generation` 端点。后端通过这个长连接实时推送 AI 生成的 `delta` (内容块)、`done` (完成)、`error` (错误) 或 `stopped` (停止) 事件，实现了打字机效果和实时状态更新。
 

@@ -18,7 +18,7 @@ ai-math-chat-studio/
 ├── data/                     # 本地数据存储（不提交）
 │   ├── settings.json         # 用户设置
 │   ├── sessions/             # 会话数据
-│   └── log/                  # 日志数据 (YYYY-MM-DD-HHmmss-index.log)
+│   └── log/                  # 日志数据 (YYYY-MM-DD.log)
 ├── index.html                # SPA 入口 HTML
 ├── package.json              # 项目依赖和脚本
 ├── bun.lock                  # Bun 依赖锁定文件

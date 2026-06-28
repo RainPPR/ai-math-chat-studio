@@ -51,7 +51,7 @@
 ### 💡 后端驱动架构
 
 - **GenerationManager** 管理生成任务生命周期
-- **Logger Service** 提供鲁棒的日志记录功能 (`data/log/YYYY-MM-DD-HHmmss-index.log`)
+- **Logger Service** 提供日志记录功能 (`data/log/YYYY-MM-DD.log`)
 - 前端关闭不影响后端继续生成
 - 页面刷新后自动恢复生成状态
 - 支持取消正在进行的生成请求

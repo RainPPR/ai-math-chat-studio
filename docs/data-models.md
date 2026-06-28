@@ -129,7 +129,7 @@ interface GenerationProvider {
 /data/
   settings.json           # UserSettings（单文件）
   sessions/{sessionId}.json  # ChatSession（每会话一个文件）
-  log/                    # 日志文件（YYYY-MM-DD-HHmmss-index.log）
+  log/                    # 日志文件（YYYY-MM-DD.log）
 ```
 
 **API 端点**：

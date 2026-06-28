@@ -16,30 +16,8 @@ export function initLogger(logDir: string) {
   const year = now.getUTCFullYear();
   const month = String(now.getUTCMonth() + 1).padStart(2, '0');
   const day = String(now.getUTCDate()).padStart(2, '0');
-  const hours = String(now.getUTCHours()).padStart(2, '0');
-  const minutes = String(now.getUTCMinutes()).padStart(2, '0');
-  const seconds = String(now.getUTCSeconds()).padStart(2, '0');
 
-  const dateStr = `${year}-${month}-${day}`;
-  const timeStr = `${hours}${minutes}${seconds}`;
-
-  // Determine the next index for the current day
-  const files = fs.readdirSync(logDir);
-  const dayLogRegex = new RegExp(`^${dateStr}-\\d{6}-(\\d+)\\.log$`);
-
-  let maxIndex = 0;
-  for (const file of files) {
-    const match = file.match(dayLogRegex);
-    if (match) {
-      const index = parseInt(match[1], 10);
-      if (index > maxIndex) {
-        maxIndex = index;
-      }
-    }
-  }
-
-  const nextIndex = maxIndex + 1;
-  const fileName = `${dateStr}-${timeStr}-${nextIndex}.log`;
+  const fileName = `${year}-${month}-${day}.log`;
   const filePath = path.join(logDir, fileName);
 
   const logStream = fs.createWriteStream(filePath, { flags: 'a' });
