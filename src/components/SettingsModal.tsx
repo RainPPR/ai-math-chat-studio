@@ -1,3 +1,4 @@
+import JSZip from "jszip";
 import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, Character, BuiltInProviderType, DEFAULT_SETTINGS } from '../types';
 import { api } from '../lib/api';
@@ -310,52 +311,83 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const handleExportClaude = async () => {
     try {
       const sessions = await api.sessions.list();
-      const exportData = await Promise.all(sessions.map(async (s) => {
-        const fullSession = await api.sessions.get(s.id);
-        return {
-          uuid: fullSession.id,
-          name: fullSession.title || "",
-          created_at: formatClaudeDate(fullSession.createdAt),
-          updated_at: formatClaudeDate(fullSession.updatedAt),
-          chat_messages: fullSession.messages.map(m => {
-            const contentBlocks: any[] = [];
-            const thinkRegex = /<think>([\s\S]*?)<\/think>/g;
-            let textWithoutThinking = m.content;
-            const matches = Array.from(m.content.matchAll(thinkRegex));
+      const characters = settings.characters || [];
 
-            for (const match of matches) {
+      const sessionsByCharacter: Record<string, typeof sessions> = {};
+
+      for (const s of sessions) {
+        const charId = s.characterId || 'default';
+        if (!sessionsByCharacter[charId]) {
+          sessionsByCharacter[charId] = [];
+        }
+        sessionsByCharacter[charId].push(s);
+      }
+
+      const masterZip = new JSZip();
+
+      for (const [charId, charSessions] of Object.entries(sessionsByCharacter)) {
+        const character = characters.find(c => c.id === charId);
+        const charName = character ? character.name : (charId === 'default' ? 'Default' : 'Unknown');
+
+        const exportData = await Promise.all(charSessions.map(async (s) => {
+          const fullSession = await api.sessions.get(s.id);
+          return {
+            uuid: fullSession.id,
+            name: fullSession.title || "",
+            created_at: formatClaudeDate(fullSession.createdAt),
+            updated_at: formatClaudeDate(fullSession.updatedAt),
+            chat_messages: fullSession.messages.map(m => {
+              const contentBlocks: any[] = [];
+              const thinkRegex = /<think>([\s\S]*?)<\/think>/g;
+              let textWithoutThinking = m.content;
+              const matches = Array.from(m.content.matchAll(thinkRegex));
+
+              for (const match of matches) {
+                contentBlocks.push({
+                  type: 'thinking',
+                  thinking: (match as any)[1].trim()
+                });
+                textWithoutThinking = textWithoutThinking.replace(match[0], '');
+              }
+
+              textWithoutThinking = textWithoutThinking.trim();
               contentBlocks.push({
-                type: 'thinking',
-                thinking: (match as any)[1].trim()
+                type: 'text',
+                text: textWithoutThinking
               });
-              textWithoutThinking = textWithoutThinking.replace(match[0], '');
-            }
 
-            textWithoutThinking = textWithoutThinking.trim();
-            contentBlocks.push({
-              type: 'text',
-              text: textWithoutThinking
-            });
+              return {
+                uuid: m.id,
+                sender: m.role === 'user' ? 'human' : 'assistant',
+                content: contentBlocks,
+                created_at: formatClaudeDate(m.createdAt),
+                updated_at: formatClaudeDate(m.createdAt),
+                attachments: [],
+                files: []
+              };
+            })
+          };
+        }));
 
-            return {
-              uuid: m.id,
-              sender: m.role === 'user' ? 'human' : 'assistant',
-              // text: textWithoutThinking,
-              content: contentBlocks,
-              created_at: formatClaudeDate(m.createdAt),
-              updated_at: formatClaudeDate(m.createdAt),
-              attachments: [],
-              files: []
-            };
-          })
-        };
-      }));
+        const charZip = new JSZip();
+        charZip.file('conversations.json', JSON.stringify(exportData, null, 2));
+        const charZipBlob = await charZip.generateAsync({ type: 'blob' });
+        masterZip.file(`${charName}.zip`, charZipBlob);
+      }
 
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
+      const now = new Date();
+      const timestamp = now.getFullYear().toString() +
+                        (now.getMonth() + 1).toString().padStart(2, '0') +
+                        now.getDate().toString().padStart(2, '0') + '_' +
+                        now.getHours().toString().padStart(2, '0') +
+                        now.getMinutes().toString().padStart(2, '0') +
+                        now.getSeconds().toString().padStart(2, '0');
+
+      const finalBlob = await masterZip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(finalBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'conversations.json';
+      a.download = `Claude_Export_${timestamp}.zip`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err: any) {
