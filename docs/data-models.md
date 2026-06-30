@@ -139,6 +139,7 @@ interface GenerationProvider {
 - `GET /api/sessions` — 列出所有会话
 - `GET /api/sessions/:id` — 获取单个会话
 - `DELETE /api/sessions/:id` — 删除会话
+- `PATCH /api/sessions/:id` — 更新会话元数据（如 characterId）
 - `POST /api/sessions/:id/messages` — 发送消息并触发生成
 - `GET /api/sessions/:id/generation` — SSE 订阅生成进度
 - `DELETE /api/sessions/:id/generation` — 停止生成

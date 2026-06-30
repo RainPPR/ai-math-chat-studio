@@ -214,6 +214,16 @@ export default function App() {
     await api.settings.save(newSettings);
   };
 
+  const handleUpdateSessionCharacter = async (characterId: string) => {
+    if (!currentSessionId) return;
+    try {
+      const updated = await api.sessions.update(currentSessionId, { characterId });
+      setSessions(prev => prev.map(s => s.id === currentSessionId ? updated : s));
+    } catch (e: any) {
+      setError(e.message || "Failed to update session character");
+    }
+  };
+
   const handleSelectCharacter = async (characterId: string) => {
     const newSettings = { ...settings, activeCharacterId: characterId };
     setSettings(newSettings);
@@ -250,6 +260,7 @@ export default function App() {
     <div className="flex h-screen bg-gray-900 text-gray-100 overflow-hidden font-sans relative">
       <Sidebar
         sessions={sessions}
+        characters={settings.characters}
         currentSessionId={currentSessionId}
         onSelectSession={setCurrentSessionId}
         onNewChat={handleNewChat}
@@ -275,6 +286,7 @@ export default function App() {
           onRegenerate={handleRegenerate}
           onSelectModel={handleSelectModel}
           onSelectCharacter={handleSelectCharacter}
+          onUpdateSessionCharacter={handleUpdateSessionCharacter}
           error={error}
           onClearError={clearError}
           onGenerationEnd={async (id) => {

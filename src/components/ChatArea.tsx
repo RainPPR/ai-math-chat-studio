@@ -16,6 +16,7 @@ interface ChatAreaProps {
   onGenerationEnd?: (sessionId: string) => void;
   onSelectModel?: (modelId: string) => void;
   onSelectCharacter?: (characterId: string) => void;
+  onUpdateSessionCharacter?: (characterId: string) => void;
   error?: string | null;
   onClearError?: () => void;
 }
@@ -227,7 +228,7 @@ const clearDraft = (sessionId: string) => {
   } catch { /* ignore storage errors */ }
 };
 
-export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel, onSelectCharacter, error, onClearError }) => {
+export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel, onSelectCharacter, onUpdateSessionCharacter, error, onClearError }) => {
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
@@ -237,6 +238,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false);
   const [templateDropdownOpen, setTemplateDropdownOpen] = useState(false);
+  const [headerCharacterDropdownOpen, setHeaderCharacterDropdownOpen] = useState(false);
+  const headerCharacterDropdownRef = useRef<HTMLDivElement>(null);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
   const characterDropdownRef = useRef<HTMLDivElement>(null);
   const templateDropdownRef = useRef<HTMLDivElement>(null);
@@ -335,6 +338,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       if (templateDropdownRef.current && !templateDropdownRef.current.contains(e.target as Node)) {
         setTemplateDropdownOpen(false);
       }
+      if (headerCharacterDropdownRef.current && !headerCharacterDropdownRef.current.contains(e.target as Node)) {
+        setHeaderCharacterDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => { document.removeEventListener('mousedown', handleClickOutside); };
@@ -416,11 +422,37 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
         <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900/95 backdrop-blur z-10">
         <div className="flex flex-col min-w-0">
           <h2 className="text-lg font-medium text-gray-200 truncate">{session.title}</h2>
-          {session?.characterId && (() => {
-            const c = settings.characters.find(x => x.id === session.characterId);
-            if (!c) return null;
-            return <span className="text-xs text-gray-500">({c.name})</span>;
-          })()}
+          <div ref={headerCharacterDropdownRef} className="relative">
+            <button
+              onClick={() => setHeaderCharacterDropdownOpen(!headerCharacterDropdownOpen)}
+              className="flex items-center gap-1 px-1.5 py-0.5 hover:bg-gray-800 rounded transition-colors text-xs text-gray-500"
+            >
+              {(() => {
+                const c = settings.characters.find(x => x.id === session.characterId);
+                return c ? `(${c.name})` : '(No Character)';
+              })()}
+              <ChevronDown size={10} className={`transition-transform ${headerCharacterDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {headerCharacterDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 z-50 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
+                <button
+                  onClick={() => { onUpdateSessionCharacter?.(''); setHeaderCharacterDropdownOpen(false); }}
+                  className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${!session.characterId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
+                >
+                  None
+                </button>
+                {settings.characters.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => { onUpdateSessionCharacter?.(c.id); setHeaderCharacterDropdownOpen(false); }}
+                    className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${c.id === session.characterId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <button onClick={handleExport} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors">
           <Download size={16} /><span>Export</span>
