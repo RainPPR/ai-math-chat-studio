@@ -216,8 +216,12 @@ export default function App() {
 
   const handleUpdateSessionCharacter = async (characterId: string) => {
     if (!currentSessionId) return;
-    const updated = await api.sessions.update(currentSessionId, { characterId });
-    setSessions(prev => prev.map(s => s.id === currentSessionId ? updated : s));
+    try {
+      const updated = await api.sessions.update(currentSessionId, { characterId });
+      setSessions(prev => prev.map(s => s.id === currentSessionId ? updated : s));
+    } catch (e: any) {
+      setError(e.message || "Failed to update session character");
+    }
   };
 
   const handleSelectCharacter = async (characterId: string) => {

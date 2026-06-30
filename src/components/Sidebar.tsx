@@ -122,6 +122,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const groups = useMemo(() => groupSessions(filteredSessions), [filteredSessions]);
 
+  // Reset filter to 'all' if the active session is filtered out (e.g. when creating a new chat)
+  React.useEffect(() => {
+    if (currentSessionId && !filteredSessions.some(s => s.id === currentSessionId)) {
+      setFilterCharacterId('all');
+    }
+  }, [currentSessionId, filteredSessions]);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
     return new Set(ALWAYS_COLLAPSED);
   });

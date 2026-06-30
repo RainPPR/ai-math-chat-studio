@@ -222,6 +222,11 @@ export class GenerationManager {
   }
 
   async updateSession(id: string, updates: Partial<ServerChatSession>): Promise<ServerChatSession | null> {
+    const pending = this.pendingWrites?.get(id);
+    if (pending) {
+      try { await pending; } catch {}
+    }
+
     const session = await this.readSession(id);
     if (!session) {
       return null;
@@ -230,14 +235,17 @@ export class GenerationManager {
     const updated = {
       ...session,
       ...updates,
-      id: session.id, // Ensure ID doesn't change
+      id: session.id,
       updatedAt: new Date().toISOString(),
     };
+
+    if (updated.characterId === "") {
+      delete updated.characterId;
+    }
 
     await this.writeSession(updated);
     return updated;
   }
-
   async listSessions(): Promise<ServerChatSession[]> {
     try {
       const files = (await fs.readdir(this.sessionsDir)).filter(f => f.endsWith('.json'));

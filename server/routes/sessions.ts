@@ -20,7 +20,12 @@ export function createSessionRouter(gm: GenerationManager) {
 
   router.patch('/api/sessions/:id', async (req, res) => {
     try {
-      const updated = await gm.updateSession(req.params.id, req.body);
+      const { title, characterId } = req.body || {};
+      const updates: any = {};
+      if (title !== undefined) updates.title = title;
+      if (characterId !== undefined) updates.characterId = characterId;
+
+      const updated = await gm.updateSession(req.params.id, updates);
       if (!updated) {
         return res.status(404).json({ error: 'Session not found' });
       }
