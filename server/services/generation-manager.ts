@@ -232,11 +232,12 @@ export class GenerationManager {
       return null;
     }
 
+    const shouldUpdateTimestamp = Object.keys(updates).some(key => key !== 'characterId');
     const updated = {
       ...session,
       ...updates,
       id: session.id,
-      updatedAt: new Date().toISOString(),
+      updatedAt: shouldUpdateTimestamp ? new Date().toISOString() : session.updatedAt,
     };
 
     if (updated.characterId === "") {
