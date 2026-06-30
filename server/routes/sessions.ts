@@ -18,6 +18,18 @@ export function createSessionRouter(gm: GenerationManager) {
     res.json(session);
   });
 
+  router.patch('/api/sessions/:id', async (req, res) => {
+    try {
+      const updated = await gm.updateSession(req.params.id, req.body);
+      if (!updated) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      res.json(updated);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Update failed' });
+    }
+  });
+
   router.delete('/api/sessions/:id', async (req, res) => {
     gm.stop(req.params.id);
     await gm.deleteSession(req.params.id);

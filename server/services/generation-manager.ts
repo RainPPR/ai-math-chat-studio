@@ -221,6 +221,23 @@ export class GenerationManager {
     await fs.writeFile(this.sessionPath(session.id), JSON.stringify(session, null, 2));
   }
 
+  async updateSession(id: string, updates: Partial<ServerChatSession>): Promise<ServerChatSession | null> {
+    const session = await this.readSession(id);
+    if (!session) {
+      return null;
+    }
+
+    const updated = {
+      ...session,
+      ...updates,
+      id: session.id, // Ensure ID doesn't change
+      updatedAt: new Date().toISOString(),
+    };
+
+    await this.writeSession(updated);
+    return updated;
+  }
+
   async listSessions(): Promise<ServerChatSession[]> {
     try {
       const files = (await fs.readdir(this.sessionsDir)).filter(f => f.endsWith('.json'));

@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { ChatSession } from '../types';
-import { Plus, Settings, MessageSquare, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Settings, MessageSquare, Trash2, ChevronDown, ChevronRight, User } from 'lucide-react';
+import { Character } from '../types';
 
 interface SidebarProps {
   sessions: ChatSession[];
+  characters: Character[];
   currentSessionId: string | null;
   onSelectSession: (id: string) => void;
   onNewChat: () => void;
@@ -107,9 +109,18 @@ function groupSessions(sessions: ChatSession[]): SessionGroup[] {
 const ALWAYS_COLLAPSED = new Set(['past_year', 'older']);
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  sessions, currentSessionId, onSelectSession, onNewChat, onDeleteChat, onOpenSettings, width
+  sessions, characters, currentSessionId, onSelectSession, onNewChat, onDeleteChat, onOpenSettings, width
 }) => {
-  const groups = useMemo(() => groupSessions(sessions), [sessions]);
+  const [filterCharacterId, setFilterCharacterId] = useState<string | 'all'>('all');
+
+  const filteredSessions = useMemo(() => {
+    if (filterCharacterId === 'all') {
+      return sessions;
+    }
+    return sessions.filter(s => s.characterId === filterCharacterId);
+  }, [sessions, filterCharacterId]);
+
+  const groups = useMemo(() => groupSessions(filteredSessions), [filteredSessions]);
 
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
     return new Set(ALWAYS_COLLAPSED);
@@ -132,7 +143,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
       className="bg-gray-950 flex flex-col h-full shrink-0"
       style={{ width: `${width}px` }}
     >
-      <div className="p-4">
+      <div className="p-4 space-y-3">
+      <div className="pb-1">
+        <div className="relative group">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors">
+            <User size={14} />
+          </div>
+          <select
+            value={filterCharacterId}
+            onChange={(e) => setFilterCharacterId(e.target.value)}
+            className="w-full bg-gray-900 border border-gray-800 text-gray-300 text-xs rounded-lg pl-9 pr-8 py-2 appearance-none focus:outline-none focus:border-blue-500/50 transition-colors cursor-pointer hover:bg-gray-800/50"
+          >
+            <option value="all">All Characters</option>
+            {characters.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none">
+            <ChevronDown size={12} />
+          </div>
+        </div>
+      </div>
         <button
           onClick={onNewChat}
           className="w-full flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-3 rounded-lg transition-colors font-medium"

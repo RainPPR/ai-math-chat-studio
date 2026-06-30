@@ -20,6 +20,11 @@ export const api = {
   },
 
   sessions: {
+    update: (id: string, updates: Partial<ChatSession>) => request<ChatSession>(`/api/sessions/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    }),
     list: () => request<ChatSession[]>('/api/sessions'),
     get: (id: string) => request<ChatSession>(`/api/sessions/${id}`),
     delete: (id: string) => request<{ ok: true }>(`/api/sessions/${id}`, { method: 'DELETE' }),
