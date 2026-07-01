@@ -63,10 +63,10 @@ function processDocs() {
 }
 
 /**
- * Part 2: Process scripts, server, src
+ * Part 2: Process scripts, server, src, .github, README.md
  */
 function processSource() {
-  const dirs = ['scripts', 'server', 'src'];
+  const targets = ['scripts', 'server', 'src', '.github', 'README.md'];
   const extToLang: Record<string, string> = {
     '.ts': 'typescript',
     '.tsx': 'typescript',
@@ -75,34 +75,45 @@ function processSource() {
     '.json': 'json',
     '.css': 'css',
     '.html': 'html',
-    '.md': 'markdown'
+    '.md': 'markdown',
+    '.yml': 'yaml',
+    '.yaml': 'yaml'
   };
 
-  for (const dir of dirs) {
-    if (!fs.existsSync(dir)) continue;
+  const processFile = (fullPath: string) => {
+    const ext = path.extname(fullPath);
+    const lang = extToLang[ext] || 'text';
+    const content = fs.readFileSync(fullPath, 'utf-8');
 
-    const walk = (currentDir: string) => {
-      const files = fs.readdirSync(currentDir);
-      for (const file of files) {
-        const fullPath = path.join(currentDir, file);
-        if (fs.statSync(fullPath).isDirectory()) {
-          walk(fullPath);
-        } else {
-          const ext = path.extname(file);
-          const lang = extToLang[ext] || 'text';
-          const content = fs.readFileSync(fullPath, 'utf-8');
-          
-          const relativePath = path.relative('.', fullPath);
-          const targetDir = path.join(DIST_DIR, path.dirname(relativePath));
-          ensureDir(targetDir);
-          
-          const targetPath = path.join(DIST_DIR, `${relativePath}.md`);
-          const mdContent = `\`\`\`${lang}\n${content}\n\`\`\``;
-          fs.writeFileSync(targetPath, mdContent);
-        }
+    const relativePath = path.relative('.', fullPath);
+    const targetDir = path.join(DIST_DIR, path.dirname(relativePath));
+    ensureDir(targetDir);
+
+    const targetPath = path.join(DIST_DIR, `${relativePath}.md`);
+    const mdContent = `\`\`\`${lang}\n${content}\n\`\`\``;
+    fs.writeFileSync(targetPath, mdContent);
+  };
+
+  const walk = (currentDir: string) => {
+    const files = fs.readdirSync(currentDir);
+    for (const file of files) {
+      const fullPath = path.join(currentDir, file);
+      if (fs.statSync(fullPath).isDirectory()) {
+        walk(fullPath);
+      } else {
+        processFile(fullPath);
       }
-    };
-    walk(dir);
+    }
+  };
+
+  for (const target of targets) {
+    if (!fs.existsSync(target)) continue;
+
+    if (fs.statSync(target).isDirectory()) {
+      walk(target);
+    } else {
+      processFile(target);
+    }
   }
   console.log('Generated source markdown files');
 }
