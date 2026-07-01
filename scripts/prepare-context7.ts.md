@@ -37,7 +37,7 @@ function processDocs() {
         const title = currentHeadings.join(' / ');
         let blockContent = currentBlock.join('\n').trim();
         // Remove existing code block markers
-        blockContent = blockContent.replace(/```[a-z]*\n/gi, '').replace(/\n```/g, '');
+        blockContent = blockContent.replace(/\`\`\`[a-z]*\n/gi, '').replace(/\n\`\`\`/g, '');
         
         consolidatedContent += `### ${title}\n\n\`\`\`text\n${blockContent}\n\`\`\`\n\n`;
         currentBlock = [];
@@ -64,10 +64,10 @@ function processDocs() {
 }
 
 /**
- * Part 2: Process scripts, server, src
+ * Part 2: Process scripts, server, src, .github, README.md
  */
 function processSource() {
-  const dirs = ['scripts', 'server', 'src'];
+  const targets = ['scripts', 'server', 'src', '.github', 'README.md'];
   const extToLang: Record<string, string> = {
     '.ts': 'typescript',
     '.tsx': 'typescript',
@@ -76,34 +76,60 @@ function processSource() {
     '.json': 'json',
     '.css': 'css',
     '.html': 'html',
-    '.md': 'markdown'
+    '.md': 'markdown',
+    '.yml': 'yaml',
+    '.yaml': 'yaml'
   };
 
-  for (const dir of dirs) {
-    if (!fs.existsSync(dir)) continue;
+  const processFile = (fullPath: string) => {
+    const ext = path.extname(fullPath);
+    const lang = extToLang[ext] || 'text';
+    const content = fs.readFileSync(fullPath, 'utf-8');
 
-    const walk = (currentDir: string) => {
-      const files = fs.readdirSync(currentDir);
-      for (const file of files) {
-        const fullPath = path.join(currentDir, file);
-        if (fs.statSync(fullPath).isDirectory()) {
-          walk(fullPath);
-        } else {
-          const ext = path.extname(file);
-          const lang = extToLang[ext] || 'text';
-          const content = fs.readFileSync(fullPath, 'utf-8');
-          
-          const relativePath = path.relative('.', fullPath);
-          const targetDir = path.join(DIST_DIR, path.dirname(relativePath));
-          ensureDir(targetDir);
-          
-          const targetPath = path.join(DIST_DIR, `${relativePath}.md`);
-          const mdContent = `\`\`\`${lang}\n${content}\n\`\`\``;
-          fs.writeFileSync(targetPath, mdContent);
-        }
+    let relativePath = path.relative('.', fullPath).replace(/\\/g, '/');
+
+    // Path transformation to avoid .github permission issues in the destination branch
+    if (relativePath.startsWith('.github/workflows/')) {
+      relativePath = relativePath.replace('.github/workflows/', 'workflow/');
+    } else if (relativePath.startsWith('.github/')) {
+      relativePath = relativePath.replace('.github/', 'github/');
+    }
+
+    const targetDir = path.join(DIST_DIR, path.dirname(relativePath));
+    ensureDir(targetDir);
+
+    const targetPath = path.join(DIST_DIR, `${relativePath}.md`);
+
+    // Find maximum number of consecutive backticks to safely wrap content
+    const backtickMatches = content.match(/\`{3,}/g);
+    const backticks = backtickMatches
+      ? '\`'.repeat(Math.max(...backtickMatches.map(m => m.length)) + 1)
+      : '\`\`\`';
+
+    const mdContent = `${backticks}${lang}\n${content}\n${backticks}`;
+    fs.writeFileSync(targetPath, mdContent);
+  };
+
+  const walk = (currentDir: string) => {
+    const files = fs.readdirSync(currentDir);
+    for (const file of files) {
+      const fullPath = path.join(currentDir, file);
+      if (fs.statSync(fullPath).isDirectory()) {
+        walk(fullPath);
+      } else {
+        processFile(fullPath);
       }
-    };
-    walk(dir);
+    }
+  };
+
+  for (const target of targets) {
+    if (!fs.existsSync(target)) continue;
+
+    if (fs.statSync(target).isDirectory()) {
+      walk(target);
+    } else {
+      processFile(target);
+    }
   }
   console.log('Generated source markdown files');
 }
