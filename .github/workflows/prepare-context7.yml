@@ -37,24 +37,41 @@ jobs:
 
       - name: Deploy to context7 branch
         run: |
-          REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          # 1. 配置 Git 机器人身份
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # Clone the context7 branch into a separate directory
-          git clone --branch context7 $REPO_URL context7_repo || (git clone $REPO_URL context7_repo && cd context7_repo && git checkout --orphan context7 && git rm -rf .)
+          # 2. 使用 Git Worktree 创建一个干净的发布目录 (deploy-env)
+          # 由于 actions/checkout 已经配置好了 token 和远程仓库，这里无需再显式拼接 URL
+          if git fetch origin context7; then
+            echo "发现远程分支 context7，正在关联工作区..."
+            git worktree add deploy-env FETCH_HEAD
+            cd deploy-env
+            git checkout -B context7
+          else
+            echo "未发现远程分支 context7，正在创建全新的 orphan 分支..."
+            git worktree add deploy-env --detach
+            cd deploy-env
+            git checkout --orphan context7
+          fi
           
-          # Remove old content and copy new artifacts
-          # Ensure we don't remove the .git directory
-          find context7_repo -maxdepth 1 ! -name "context7_repo" ! -name ".git" -exec rm -rf {} +
-          cp -r context7-dist/* context7_repo/
+          # 3. 清理旧代码并复制新产物
+          # 安全清理当前跟踪的所有文件（Worktree 机制下 .git 是一个文件，不会被此命令误删）
+          git rm -rfq . || true
           
-          cd context7_repo
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
+          # 返回上层并将构建产物完整拷贝进来（-a 参数确保隐藏文件也能被拷贝）
+          cd ..
+          cp -a context7-dist/. deploy-env/
+          
+          # 4. 提交与推送
+          cd deploy-env
+          git add -A
           
           if ! git diff --cached --quiet; then
             git commit -m "chore: deploy context7 artifacts ($(date -u +'%Y-%m-%d %H:%M:%S UTC'))"
+            # 直接 push 即可，权限由 action 顶部的 permissions: contents: write 提供
             git push origin context7
+            echo "部署成功！"
           else
-            echo "No changes to commit"
+            echo "产物无任何变化，跳过提交"
           fi
