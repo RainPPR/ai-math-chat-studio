@@ -90,7 +90,14 @@ function processSource() {
     ensureDir(targetDir);
 
     const targetPath = path.join(DIST_DIR, `${relativePath}.md`);
-    const mdContent = `\`\`\`${lang}\n${content}\n\`\`\``;
+
+    // Find maximum number of consecutive backticks to safely wrap content
+    const backtickMatches = content.match(/`{3,}/g);
+    const backticks = backtickMatches
+      ? '`'.repeat(Math.max(...backtickMatches.map(m => m.length)) + 1)
+      : '```';
+
+    const mdContent = `${backticks}${lang}\n${content}\n${backticks}`;
     fs.writeFileSync(targetPath, mdContent);
   };
 
