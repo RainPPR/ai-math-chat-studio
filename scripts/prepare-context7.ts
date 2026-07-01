@@ -36,7 +36,7 @@ function processDocs() {
         const title = currentHeadings.join(' / ');
         let blockContent = currentBlock.join('\n').trim();
         // Remove existing code block markers
-        blockContent = blockContent.replace(/```[a-z]*\n/gi, '').replace(/\n```/g, '');
+        blockContent = blockContent.replace(/\`\`\`[a-z]*\n/gi, '').replace(/\n\`\`\`/g, '');
         
         consolidatedContent += `### ${title}\n\n\`\`\`text\n${blockContent}\n\`\`\`\n\n`;
         currentBlock = [];
@@ -85,17 +85,25 @@ function processSource() {
     const lang = extToLang[ext] || 'text';
     const content = fs.readFileSync(fullPath, 'utf-8');
 
-    const relativePath = path.relative('.', fullPath);
+    let relativePath = path.relative('.', fullPath).replace(/\\/g, '/');
+
+    // Path transformation to avoid .github permission issues in the destination branch
+    if (relativePath.startsWith('.github/workflows/')) {
+      relativePath = relativePath.replace('.github/workflows/', 'workflow/');
+    } else if (relativePath.startsWith('.github/')) {
+      relativePath = relativePath.replace('.github/', 'github/');
+    }
+
     const targetDir = path.join(DIST_DIR, path.dirname(relativePath));
     ensureDir(targetDir);
 
     const targetPath = path.join(DIST_DIR, `${relativePath}.md`);
 
     // Find maximum number of consecutive backticks to safely wrap content
-    const backtickMatches = content.match(/`{3,}/g);
+    const backtickMatches = content.match(/\`{3,}/g);
     const backticks = backtickMatches
-      ? '`'.repeat(Math.max(...backtickMatches.map(m => m.length)) + 1)
-      : '```';
+      ? '\`'.repeat(Math.max(...backtickMatches.map(m => m.length)) + 1)
+      : '\`\`\`';
 
     const mdContent = `${backticks}${lang}\n${content}\n${backticks}`;
     fs.writeFileSync(targetPath, mdContent);
