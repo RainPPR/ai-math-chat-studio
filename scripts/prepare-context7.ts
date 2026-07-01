@@ -85,7 +85,7 @@ function processSource() {
     const lang = extToLang[ext] || 'text';
     const content = fs.readFileSync(fullPath, 'utf-8');
 
-    let relativePath = path.relative('.', fullPath);
+    let relativePath = path.relative('.', fullPath).replace(/\\/g, '/');
 
     // Path transformation to avoid .github permission issues in the destination branch
     if (relativePath.startsWith('.github/workflows/')) {
