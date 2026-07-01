@@ -21,6 +21,7 @@ ensureDir(DIST_DIR);
  */
 function processDocs() {
   const docsDir = 'docs';
+  if (!fs.existsSync(docsDir)) return;
   const files = fs.readdirSync(docsDir).filter(f => f.endsWith('.md') && fs.statSync(path.join(docsDir, f)).isFile());
   let consolidatedContent = '';
 
@@ -126,7 +127,10 @@ function processSessions() {
     
     if (session.messages && Array.isArray(session.messages)) {
       for (const msg of session.messages) {
-        mdContent += `## ${msg.role}\n\n\`\`\`text\n${msg.role}/${msg.createdAt}\n\n${msg.content}\n\`\`\`\n\n`;
+        const cleanedContent = (typeof msg.content === 'string' ? msg.content : '')
+          .replace(/<think>[\s\S]*?<\/think>/g, '')
+          .trim();
+        mdContent += `## ${msg.role}\n\n\`\`\`text\n${msg.role}/${msg.createdAt}\n\n${cleanedContent}\n\`\`\`\n\n`;
       }
     }
 
