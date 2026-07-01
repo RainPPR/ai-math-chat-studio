@@ -127,7 +127,9 @@ function processSessions() {
     
     if (session.messages && Array.isArray(session.messages)) {
       for (const msg of session.messages) {
-        const cleanedContent = msg.content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+        const cleanedContent = (typeof msg.content === 'string' ? msg.content : '')
+          .replace(/<think>[\s\S]*?<\/think>/g, '')
+          .trim();
         mdContent += `## ${msg.role}\n\n\`\`\`text\n${msg.role}/${msg.createdAt}\n\n${cleanedContent}\n\`\`\`\n\n`;
       }
     }
