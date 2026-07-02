@@ -289,8 +289,9 @@ export default function App() {
           onUpdateSessionCharacter={handleUpdateSessionCharacter}
           error={error}
           onClearError={clearError}
+          onError={setError}
           onGenerationEnd={async (id) => {
-            clearError();
+            // Do not clear error here as it might have just been set by onError
             try {
               await refreshSession(id);
             } catch (e) {
