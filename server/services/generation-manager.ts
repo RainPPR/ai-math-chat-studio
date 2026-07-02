@@ -492,7 +492,11 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     let firstTokenReceived = false;
 
     const buildSystemPrompt = () => {
+      // For Google, we must provide a system prompt.
+      // We append MATH_INSTRUCTIONS only if it's not already present in the prompt to ensure LaTeX rendering rules are clear.
       if (model.providerType === 'google') {
+        const hasMath = systemPrompt && (systemPrompt.includes('KaTeX') || systemPrompt.includes('LaTeX'));
+        if (hasMath) return systemPrompt;
         return systemPrompt ? systemPrompt + '\n\n' + MATH_INSTRUCTIONS : MATH_INSTRUCTIONS;
       }
       return systemPrompt;
