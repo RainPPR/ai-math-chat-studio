@@ -1,0 +1,21 @@
+{
+  "id": "8d34b5e5-650a-4ee5-af22-1ee9bbdf915b",
+  "title": "【不定项选择】已知正数 x,y,z 满足 5ˣ=9ʸ=15ᶻ=k，（下列正确的有）证明或推翻",
+  "messages": [
+    {
+      "id": "dfadd9e9-6113-4f6d-976e-481ab3838119",
+      "role": "user",
+      "content": "【不定项选择】已知正数 $x,y,z$ 满足 $5^x=9^y=15^z=k$，（下列正确的有）证明或推翻",
+      "createdAt": "2026-06-02T02:57:36.144Z"
+    },
+    {
+      "id": "30ed352f-dbfe-4d59-b6a1-df7d52ab3925",
+      "role": "model",
+      "content": "",
+      "createdAt": "2026-06-02T02:57:40.549Z"
+    }
+  ],
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "createdAt": "2026-06-02T02:57:36.143Z",
+  "updatedAt": "2026-06-02T02:57:40.549Z"
+}

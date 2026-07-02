@@ -1,0 +1,15 @@
+{
+  "id": "9efc109f-8aff-4dee-85a2-9b5416dd3bb7",
+  "title": "已知 f(x)=(1+x)ⁿ,(|x|<1)，证明 f(x)+f(−x)<2ⁿ。",
+  "messages": [
+    {
+      "id": "68131287-8571-4ee9-8513-47ce7b6ebf1b",
+      "role": "user",
+      "content": "已知 $f(x)=(1+x)^n,(|x|<1)$，证明 $f(x)+f(-x)<2^n$。",
+      "createdAt": "2026-06-13T05:15:55.175Z"
+    }
+  ],
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "createdAt": "2026-06-13T05:15:55.175Z",
+  "updatedAt": "2026-06-13T05:15:55.175Z"
+}

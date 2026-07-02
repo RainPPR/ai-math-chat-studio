@@ -1,0 +1,15 @@
+{
+  "id": "bb3ae93c-9970-447b-8c64-c1dca4b0b5a3",
+  "title": "已知函数 f(x) 定义在实数域上，当 x<0 时 0<f(x)<frac{1}{2}，且对任意实数...",
+  "messages": [
+    {
+      "id": "bda9e793-d997-4bc5-ae65-2ab3f9dc09d3",
+      "role": "user",
+      "content": "已知函数 $f(x)$ 定义在实数域上，当 $x<0$ 时 $0<f(x)<\\dfrac{1}{2}$，且对任意实数 $m,n$ 均 $\\dfrac{1}{f(m+n)}=\\dfrac{1}{f(m)}(f(n)}-\\dfrac{1}{f(m)}-\\dfrac{1}{f(n)}+2$，求 $f(\\ln2026)$ 和 $f(\\sin2026)$ 的大小关系。",
+      "createdAt": "2026-06-15T03:52:52.155Z"
+    }
+  ],
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "createdAt": "2026-06-15T03:52:52.155Z",
+  "updatedAt": "2026-06-15T03:52:52.155Z"
+}
