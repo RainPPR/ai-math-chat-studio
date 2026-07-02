@@ -307,11 +307,12 @@
       "systemPrompt": "你是一位物理专家，擅长解答高中及竞赛级物理问题。使用 LaTeX 格式输出公式。"
     }
   ],
+  "systemPrompt": "",
   "renderThinkingAsMarkdown": true,
   "autoScroll": false,
   "collapseThinkingFinished": true,
-  "gemmaTrimThinkingSpaces": true,
+  "gemmaTrimThinkingSpaces": false,
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeModelId": "fbfbd4f2-c04f-43b3-bf7c-01a44059afcc",
-  "activeCharacterId": "95460bbd-f1d7-4d51-a7ea-fa039d1c81fc"
+  "activeModelId": "48899e79-0ee1-4b48-a804-a0fafc4ae3f9",
+  "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e"
 }
