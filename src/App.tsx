@@ -75,6 +75,15 @@ export default function App() {
     await api.sessions.delete(id);
   };
 
+  const handleDuplicateChat = async (id: string) => {
+    try {
+      const duplicated = await api.sessions.duplicate(id);
+      setSessions(prev => [duplicated, ...prev]);
+    } catch (e: any) {
+      setError(e.message || 'Failed to duplicate chat');
+    }
+  };
+
   // Debounce mechanism for rapid new chat + send operations
   const pendingSendsRef = React.useRef<Map<string, NodeJS.Timeout>>(new Map());
 
@@ -265,6 +274,7 @@ export default function App() {
         onSelectSession={setCurrentSessionId}
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
+        onDuplicateChat={handleDuplicateChat}
         onOpenSettings={() => { setIsSettingsOpen(true); }}
         width={sidebarWidth}
       />

@@ -221,6 +221,26 @@ export class GenerationManager {
     await fs.writeFile(this.sessionPath(session.id), JSON.stringify(session, null, 2));
   }
 
+  async duplicateSession(id: string): Promise<ServerChatSession | null> {
+    const source = await this.readSession(id);
+    if (!source) return null;
+
+    const now = new Date().toISOString();
+    const newSession: ServerChatSession = {
+      ...source,
+      id: crypto.randomUUID(),
+      messages: source.messages.map(m => ({
+        ...m,
+        id: crypto.randomUUID(),
+      })),
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await this.writeSession(newSession);
+    return newSession;
+  }
+
   async updateSession(id: string, updates: Partial<ServerChatSession>): Promise<ServerChatSession | null> {
     const pending = this.pendingWrites?.get(id);
     if (pending) {

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ChatSession } from '../types';
-import { Plus, Settings, MessageSquare, Trash2, ChevronDown, ChevronRight, User } from 'lucide-react';
+import { Plus, Settings, MessageSquare, Trash2, Copy, ChevronDown, ChevronRight, User } from 'lucide-react';
 import { Character } from '../types';
 
 interface SidebarProps {
@@ -10,6 +10,7 @@ interface SidebarProps {
   onSelectSession: (id: string) => void;
   onNewChat: () => void;
   onDeleteChat: (id: string) => void;
+  onDuplicateChat: (id: string) => void;
   onOpenSettings: () => void;
   width: number;
 }
@@ -109,7 +110,7 @@ function groupSessions(sessions: ChatSession[]): SessionGroup[] {
 const ALWAYS_COLLAPSED = new Set(['past_year', 'older']);
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  sessions, characters, currentSessionId, onSelectSession, onNewChat, onDeleteChat, onOpenSettings, width
+  sessions, characters, currentSessionId, onSelectSession, onNewChat, onDeleteChat, onDuplicateChat, onOpenSettings, width
 }) => {
   const [filterCharacterId, setFilterCharacterId] = useState<string | 'all'>('all');
 
@@ -203,12 +204,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <MessageSquare size={16} className="shrink-0" />
                         <span className="truncate text-sm font-medium">{session.title}</span>
                       </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onDeleteChat(session.id); }}
-                        className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-opacity p-1"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onDuplicateChat(session.id); }}
+                          className="text-gray-500 hover:text-blue-400 transition-colors p-1"
+                          title="Duplicate Chat"
+                        >
+                          <Copy size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onDeleteChat(session.id); }}
+                          className="text-gray-500 hover:text-red-400 transition-colors p-1"
+                          title="Delete Chat"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -1,0 +1,20 @@
+{
+  "id": "9f1904c4-08c3-4a78-9654-8f2ec41995d5",
+  "title": "Test Session",
+  "messages": [
+    {
+      "id": "c8399c43-0fa3-4247-bfe4-6806de618532",
+      "role": "user",
+      "content": "hello",
+      "createdAt": "2026-07-02T03:09:20.890Z"
+    },
+    {
+      "id": "ee0c85b4-6669-47a5-9f67-06c480eb1d1c",
+      "role": "model",
+      "content": "hi",
+      "createdAt": "2026-07-02T03:09:20.890Z"
+    }
+  ],
+  "createdAt": "2026-07-02T03:15:08.715Z",
+  "updatedAt": "2026-07-02T03:15:08.715Z"
+}
