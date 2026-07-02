@@ -229,7 +229,8 @@ export class GenerationManager {
     const newSession: ServerChatSession = {
       ...source,
       id: crypto.randomUUID(),
-      messages: source.messages.map(m => ({
+      title: `${source.title} (Copy)`,
+      messages: (source.messages || []).map(m => ({
         ...m,
         id: crypto.randomUUID(),
       })),
