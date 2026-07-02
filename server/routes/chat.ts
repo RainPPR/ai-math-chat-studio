@@ -35,14 +35,15 @@ function resolveActiveModel(settings: SettingsData) {
   return { model, provider };
 }
 
-function resolveSystemPrompt(settings: SettingsData): string {
-  if (settings.activeCharacterId && settings.characters?.length) {
-    const character = settings.characters.find((c: any) => c.id === settings.activeCharacterId);
+function resolveSystemPrompt(settings: SettingsData, characterId?: string): string {
+  const targetId = characterId || settings.activeCharacterId;
+  if (targetId && settings.characters?.length) {
+    const character = settings.characters.find((c: any) => c.id === targetId);
     if (character?.systemPrompt) {
       return character.systemPrompt;
     }
   }
-  return settings.systemPrompt || '';
+  return '';
 }
 
 export function createChatRouter(gm: GenerationManager, settingsFile: string) {
@@ -57,7 +58,10 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
-    await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate, settings.activeCharacterId);
+    const session = await gm.readSession(sessionId);
+    const characterId = session?.characterId || settings.activeCharacterId;
+
+    await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate, characterId);
     res.status(202).json({ ok: true });
   });
 
@@ -144,8 +148,12 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     const result = resolveActiveModel(settings);
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
+    const sessionId = req.params.id;
+    const session = await gm.readSession(sessionId);
+    const characterId = session?.characterId || settings.activeCharacterId;
+
     try {
-      await gm.retryMessage(req.params.id, messageId, result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate);
+      await gm.retryMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -157,8 +165,12 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     const result = resolveActiveModel(settings);
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
+    const sessionId = req.params.id;
+    const session = await gm.readSession(sessionId);
+    const characterId = session?.characterId || settings.activeCharacterId;
+
     try {
-      await gm.continueGeneration(req.params.id, result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate);
+      await gm.continueGeneration(sessionId, result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -173,8 +185,12 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     const result = resolveActiveModel(settings);
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
+    const sessionId = req.params.id;
+    const session = await gm.readSession(sessionId);
+    const characterId = session?.characterId || settings.activeCharacterId;
+
     try {
-      await gm.regenerateMessage(req.params.id, messageId, result.model, result.provider, resolveSystemPrompt(settings), settings.injectThinkingTemplate);
+      await gm.regenerateMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
