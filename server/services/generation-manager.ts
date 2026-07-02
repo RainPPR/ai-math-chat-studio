@@ -465,11 +465,11 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     try {
       await this.runGeneration(task, session, model, provider, systemPrompt, injectThinkingTemplate);
     } catch (err: any) {
-      console.error('[Generation] Error for session %s:', session.id, err);
+      console.warn('[Generation] Error for session %s:', session.id, err);
       task.status = 'error';
-      task.error = err.message;
+      task.error = err.message || String(err);
       try {
-        task.subscribers.forEach(cb => { cb('error', { message: err.message }); });
+        task.subscribers.forEach(cb => { cb('error', { message: task.error }); });
       } catch {
         // Ignore errors notifying closed connections
       }
@@ -573,8 +573,12 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
         task.content = fullContent;
         notifySubscribers('delta', { content: fullContent });
       }
-    } catch {
-      task.status = 'stopped';
+    } catch (err: any) {
+      if (err.name === 'AbortError' || err.message === 'Aborted') {
+        task.status = 'stopped';
+      } else {
+        throw err;
+      }
     }
 
     // If aborted or session deleted, don't write the final message but notify stopped
