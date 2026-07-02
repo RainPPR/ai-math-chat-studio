@@ -36,9 +36,8 @@ function resolveActiveModel(settings: SettingsData) {
 }
 
 function resolveSystemPrompt(settings: SettingsData, characterId?: string): string {
-  const targetId = characterId || settings.activeCharacterId;
-  if (targetId && settings.characters?.length) {
-    const character = settings.characters.find((c: any) => c.id === targetId);
+  if (characterId && settings.characters?.length) {
+    const character = settings.characters.find((c: any) => c.id === characterId);
     if (character?.systemPrompt) {
       return character.systemPrompt;
     }
@@ -59,7 +58,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    const characterId = session?.characterId || settings.activeCharacterId;
+    const characterId = session ? session.characterId : settings.activeCharacterId;
 
     await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate, characterId);
     res.status(202).json({ ok: true });
@@ -150,7 +149,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    const characterId = session?.characterId || settings.activeCharacterId;
+    const characterId = session?.characterId;
 
     try {
       await gm.retryMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate);
@@ -167,7 +166,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    const characterId = session?.characterId || settings.activeCharacterId;
+    const characterId = session?.characterId;
 
     try {
       await gm.continueGeneration(sessionId, result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate);
@@ -187,7 +186,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    const characterId = session?.characterId || settings.activeCharacterId;
+    const characterId = session?.characterId;
 
     try {
       await gm.regenerateMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate);
