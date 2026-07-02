@@ -41,6 +41,18 @@ export function createSessionRouter(gm: GenerationManager) {
     res.json({ ok: true });
   });
 
+  router.post('/api/sessions/:id/duplicate', async (req, res) => {
+    try {
+      const duplicated = await gm.duplicateSession(req.params.id);
+      if (!duplicated) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      res.json(duplicated);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Duplicate failed' });
+    }
+  });
+
   router.post('/api/sessions/clean', async (req, res) => {
     try {
       const result = await gm.cleanSessions();
