@@ -236,6 +236,13 @@
       "reasoningEffort": "high"
     },
     {
+      "id": "a1600296-046e-5465-b8ff-9bd743cbb72c",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "poolside/laguna-xs-2.1:free",
+      "displayName": "Poolside: Laguna XS 2.1 (Kilo)"
+    },
+    {
       "id": "e2c6d1c5-44b3-5bcd-aa30-790edccdc2ed",
       "providerId": "p-kilo-gw",
       "providerType": "openai-compatible",
@@ -318,6 +325,6 @@
   "collapseThinkingFinished": true,
   "gemmaTrimThinkingSpaces": true,
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeModelId": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89",
-  "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e"
+  "activeModelId": "38cae9a5-8a17-5744-a713-3161c3da71f2",
+  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
 }
