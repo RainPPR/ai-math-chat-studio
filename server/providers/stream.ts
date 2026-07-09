@@ -129,7 +129,10 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
     try {
       gen = runWithReasoningEffort('high');
       firstResult = await gen.next();
-    } catch (err) {
+    } catch (err: any) {
+      if (signal?.aborted || (err instanceof Error && err.name === 'AbortError') || err?.name === 'AbortError') {
+        throw err;
+      }
       console.warn('[OpenAI] Request with reasoningEffort=high failed, falling back to original unset behavior:', err);
     }
 
