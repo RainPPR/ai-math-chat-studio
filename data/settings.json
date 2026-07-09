@@ -34,6 +34,15 @@
       "name": "LogFare",
       "envKey": "LOGFARE_API_KEY",
       "baseURL": "https://logfare.ai/v1"
+    },
+    {
+      "id": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+      "type": "openai-compatible",
+      "name": "OpenCode Public",
+      "apiKey": "public",
+      "envKey": "",
+      "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/opencode-free-ai-math.json",
+      "baseURL": "https://opencode.ai/zen/v1"
     }
   ],
   "models": [
@@ -221,11 +230,11 @@
       "displayName": "Auto Free (Kilo)"
     },
     {
-      "id": "e95fc0cb-3ce7-5503-a2f5-99bfd69160a3",
+      "id": "04560a4e-43f1-5a34-ada1-8019b1d4dda6",
       "providerId": "p-kilo-gw",
       "providerType": "openai-compatible",
-      "modelId": "poolside/laguna-m.1:free",
-      "displayName": "Poolside: Laguna M.1 (Kilo)"
+      "modelId": "tencent/hy3:free",
+      "displayName": "Tencent: Hy3 (Kilo)"
     },
     {
       "id": "c93e0a30-0931-543b-bb9b-d7c020d6b0b3",
@@ -278,6 +287,13 @@
       "displayName": "Poolside: Laguna XS.2 (Kilo)"
     },
     {
+      "id": "e95fc0cb-3ce7-5503-a2f5-99bfd69160a3",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "poolside/laguna-m.1:free",
+      "displayName": "Poolside: Laguna M.1 (Kilo)"
+    },
+    {
       "id": "d63a257a-6bab-5b88-9418-46fad53210e1",
       "providerId": "p-kilo-gw",
       "providerType": "openai-compatible",
@@ -290,6 +306,41 @@
       "providerType": "openai-compatible",
       "modelId": "openrouter/free",
       "displayName": "Free Models Router (Kilo)"
+    },
+    {
+      "id": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
+      "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+      "providerType": "openai-compatible",
+      "modelId": "deepseek-v4-flash-free",
+      "displayName": "Deepseek V4 Flash (OpenCode)"
+    },
+    {
+      "id": "1a49d398-0224-583f-973a-a0bb2af90ee2",
+      "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+      "providerType": "openai-compatible",
+      "modelId": "mimo-v2.5-free",
+      "displayName": "Mimo V2.5 (OpenCode)"
+    },
+    {
+      "id": "ac977b66-c8d1-5da3-a80f-9d44eceaed61",
+      "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+      "providerType": "openai-compatible",
+      "modelId": "hy3-free",
+      "displayName": "Hy3 (OpenCode)"
+    },
+    {
+      "id": "14f57ded-622b-5af6-8331-a14e299bdd14",
+      "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+      "providerType": "openai-compatible",
+      "modelId": "nemotron-3-ultra-free",
+      "displayName": "Nemotron 3 Ultra (OpenCode)"
+    },
+    {
+      "id": "f4b831e8-6a1a-5403-a625-007ffcd3ac96",
+      "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+      "providerType": "openai-compatible",
+      "modelId": "north-mini-code-free",
+      "displayName": "North Mini Code (OpenCode)"
     }
   ],
   "characters": [
@@ -330,6 +381,6 @@
   "collapseThinkingFinished": true,
   "gemmaTrimThinkingSpaces": true,
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeModelId": "a7cf2ab2-4cc2-4e54-a4ee-84ccbe1c4f76",
-  "activeCharacterId": "0f4ce28b-5c40-4ba5-890d-e0980d3c4f8e"
+  "activeModelId": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
+  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
 }
