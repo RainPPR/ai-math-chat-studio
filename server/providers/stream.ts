@@ -56,51 +56,27 @@ async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; a
   const config: any = {};
   config.systemInstruction = req.systemPrompt || MATH_INSTRUCTIONS;
 
-  // Check abort before starting
-  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-
-  async function* runWithConfig(cfg: any): AsyncGenerator<StreamChunk> {
-    const currentStream = await ai.models.generateContentStream({ model: req.model, contents, config: cfg });
-    for await (const chunk of currentStream) {
-      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-      const parts = chunk.candidates?.[0]?.content?.parts || [];
-      for (const part of parts) {
-        if (part.thought && part.text) yield { type: 'reasoning', content: part.text };
-        else if (part.text) yield { type: 'content', content: part.text };
-      }
+  if (req.thinkingLevel && req.thinkingLevel !== 'none') {
+    const valid = ['minimal', 'low', 'medium', 'high'];
+    if (valid.includes(req.thinkingLevel)) {
+      config.thinkingConfig = { thinkingLevel: req.thinkingLevel.toUpperCase(), includeThoughts: true };
     }
   }
 
-  if (!req.thinkingLevel) {
-    // thinkingLevel is unset. Try high first.
-    try {
-      const highConfig = {
-        ...config,
-        thinkingConfig: { thinkingLevel: 'HIGH', includeThoughts: true }
-      };
-      const gen = runWithConfig(highConfig);
-      const firstResult = await gen.next();
-      if (!firstResult.done) {
-        yield firstResult.value;
-        for await (const chunk of gen) {
-          yield chunk;
-        }
-        return;
-      }
-    } catch (err) {
-      console.warn('[Gemini] Request with thinkingLevel=high failed, falling back to original unset behavior:', err);
+  // Check abort before starting
+  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
+  const currentStream = await ai.models.generateContentStream({ model: req.model, contents, config });
+
+  for await (const chunk of currentStream) {
+    // Check abort during streaming
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
+    const parts = chunk.candidates?.[0]?.content?.parts || [];
+    for (const part of parts) {
+      if (part.thought && part.text) yield { type: 'reasoning', content: part.text };
+      else if (part.text) yield { type: 'content', content: part.text };
     }
-    // Fallback: original unset behavior (no thinkingConfig)
-    yield* runWithConfig(config);
-  } else {
-    const activeConfig = { ...config };
-    if (req.thinkingLevel !== 'none') {
-      const valid = ['minimal', 'low', 'medium', 'high'];
-      if (valid.includes(req.thinkingLevel)) {
-        activeConfig.thinkingConfig = { thinkingLevel: req.thinkingLevel.toUpperCase(), includeThoughts: true };
-      }
-    }
-    yield* runWithConfig(activeConfig);
   }
 }
 
@@ -148,18 +124,19 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
 
   if (!req.reasoningEffort) {
     // reasoningEffort is unset. Try high first.
+    let gen: AsyncGenerator<StreamChunk> | null = null;
+    let firstResult: IteratorResult<StreamChunk> | null = null;
     try {
-      const gen = runWithReasoningEffort('high');
-      const firstResult = await gen.next();
-      if (!firstResult.done) {
-        yield firstResult.value;
-        for await (const chunk of gen) {
-          yield chunk;
-        }
-        return;
-      }
+      gen = runWithReasoningEffort('high');
+      firstResult = await gen.next();
     } catch (err) {
       console.warn('[OpenAI] Request with reasoningEffort=high failed, falling back to original unset behavior:', err);
+    }
+
+    if (firstResult && !firstResult.done) {
+      yield firstResult.value;
+      yield* gen!;
+      return;
     }
     // Fallback: original unset behavior (no reasoning_effort passed)
     yield* runWithReasoningEffort(undefined);
