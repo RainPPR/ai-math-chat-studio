@@ -100,21 +100,51 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
   const payload: any = { model: req.model, messages, stream: true };
   if (req.temperature != null) payload.temperature = req.temperature;
   if (req.maxTokens != null) payload.max_tokens = req.maxTokens;
-  if (req.reasoningEffort) payload.reasoning_effort = req.reasoningEffort;
   if (req.injectThinkingTemplate) payload.chat_template_kwargs = { thinking: true };
 
-  const response = await client.chat.completions.create(
-    { ...payload, ...(req.extraBody || {}) },
-    { signal }
-  ) as any;
+  async function* runWithReasoningEffort(reasoningEffort: string | undefined): AsyncGenerator<StreamChunk> {
+    const finalPayload = { ...payload, ...(req.extraBody || {}) };
+    if (reasoningEffort) {
+      finalPayload.reasoning_effort = reasoningEffort;
+    }
+    const response = await client.chat.completions.create(
+      finalPayload,
+      { signal }
+    ) as any;
 
-  for await (const chunk of response) {
-    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-    const delta = chunk.choices?.[0]?.delta;
-    if (!delta) continue;
-    const reasoning = (delta).reasoning || (delta).reasoning_content;
-    if (reasoning) yield { type: 'reasoning', content: reasoning };
-    if (delta.content) yield { type: 'content', content: delta.content };
+    for await (const chunk of response) {
+      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+      const delta = chunk.choices?.[0]?.delta;
+      if (!delta) continue;
+      const reasoning = (delta).reasoning || (delta).reasoning_content;
+      if (reasoning) yield { type: 'reasoning', content: reasoning };
+      if (delta.content) yield { type: 'content', content: delta.content };
+    }
+  }
+
+  if (!req.reasoningEffort) {
+    // reasoningEffort is unset. Try high first.
+    let gen: AsyncGenerator<StreamChunk> | null = null;
+    let firstResult: IteratorResult<StreamChunk> | null = null;
+    try {
+      gen = runWithReasoningEffort('high');
+      firstResult = await gen.next();
+    } catch (err: any) {
+      if (signal?.aborted || (err instanceof Error && err.name === 'AbortError') || err?.name === 'AbortError') {
+        throw err;
+      }
+      console.warn('[OpenAI] Request with reasoningEffort=high failed, falling back to original unset behavior:', err);
+    }
+
+    if (firstResult && !firstResult.done) {
+      yield firstResult.value;
+      yield* gen!;
+      return;
+    }
+    // Fallback: original unset behavior (no reasoning_effort passed)
+    yield* runWithReasoningEffort(undefined);
+  } else {
+    yield* runWithReasoningEffort(req.reasoningEffort);
   }
 }
 
