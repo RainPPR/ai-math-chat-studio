@@ -124,25 +124,54 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
   }
 
   if (!req.reasoningEffort) {
-    // reasoningEffort is unset. Try high first.
-    let gen: AsyncGenerator<StreamChunk> | null = null;
+    const efforts = ['max', 'xhigh', 'high'];
+    let successfulGen: AsyncGenerator<StreamChunk> | null = null;
     let firstResult: IteratorResult<StreamChunk> | null = null;
-    try {
-      gen = runWithReasoningEffort('high');
-      firstResult = await gen.next();
-    } catch (err: any) {
-      if (signal?.aborted || (err instanceof Error && err.name === 'AbortError') || err?.name === 'AbortError') {
-        throw err;
+
+    for (const effort of efforts) {
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        if (signal?.aborted) {
+          throw new DOMException('Aborted', 'AbortError');
+        }
+        try {
+          const gen = runWithReasoningEffort(effort);
+          const res = await gen.next();
+          firstResult = res;
+          successfulGen = gen;
+          break;
+        } catch (err: any) {
+          if (signal?.aborted || (err instanceof Error && err.name === 'AbortError') || err?.name === 'AbortError') {
+            throw err;
+          }
+          const isRateLimit = err && (
+            err.status === 429 ||
+            err.statusCode === 429 ||
+            (typeof err.message === 'string' && (
+              err.message.includes('429') ||
+              err.message.toLowerCase().includes('rate-limit') ||
+              err.message.toLowerCase().includes('rate limit') ||
+              err.message.includes('请求过快')
+            ))
+          );
+          if (isRateLimit) {
+            throw err;
+          }
+          console.warn(`[OpenAI] Request with reasoningEffort=${effort} (attempt ${attempt}/2) failed, trying fallback:`, err);
+        }
       }
-      console.warn('[OpenAI] Request with reasoningEffort=high failed, falling back to original unset behavior:', err);
+      if (successfulGen && firstResult) {
+        break;
+      }
     }
 
-    if (firstResult && !firstResult.done) {
-      yield firstResult.value;
-      yield* gen!;
+    if (successfulGen && firstResult) {
+      if (!firstResult.done) {
+        yield firstResult.value;
+      }
+      yield* successfulGen;
       return;
     }
-    // Fallback: original unset behavior (no reasoning_effort passed)
+
     yield* runWithReasoningEffort(undefined);
   } else {
     yield* runWithReasoningEffort(req.reasoningEffort);

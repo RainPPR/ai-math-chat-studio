@@ -38,7 +38,7 @@
   - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
   - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
   - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK）
-  - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用
+  - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用，支持 `reasoning_effort` 自动重试机制（从 `max` -> `xhigh` -> `high` 依次尝试并带有重试，最后回退到无参数；若检测到请求过快/429限制，则不继续试错直接抛出错误）
   - `StreamRequest` / `StreamChunk` 类型定义
 ```
 
@@ -438,7 +438,7 @@ interface ModelInstance {
   displayName?: string;             // 显示名称（可选）
   temperature?: number;             // 温度参数（Unset 时不传给 API）
   maxTokens?: number;               // 最大 token 数（Unset 时不传给 API）
-  reasoningEffort?: string;         // 推理努力程度（low/medium/high，OpenAI 兼容用）
+  reasoningEffort?: string;         // 推理努力程度（max/xhigh/high/medium/low/minimal/none，OpenAI 兼容用）
   thinkingLevel?: string;           // 思考级别（Gemini 专用）
   extraBody?: Record<string, any>;  // 额外请求体（JSON 对象，合并到 API 请求中）
   injectThinkingTemplate?: boolean; // 注入 chat_template_kwargs thinking（Nvidia 用）
