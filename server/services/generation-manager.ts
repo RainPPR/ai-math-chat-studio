@@ -548,10 +548,15 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       }
     };
 
+    let hasSaved = false;
     const savePartialContent = async () => {
+      if (hasSaved) {
+        return;
+      }
       if (this.deletedSessions.has(session.id)) {
         return;
       }
+      hasSaved = true;
       if (isThinking) {
         fullContent += '\n</think>\n\n';
         isThinking = false;
@@ -606,28 +611,34 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
             fullContent += '<think>\n';
           }
           fullContent += chunk.content || '';
-        } else {
-          if (chunk.type === 'content') {
-            if (isThinking) {
-              isThinking = false;
-              fullContent += '\n</think>\n\n';
-            }
-            fullContent += chunk.content || '';
+        } else if (chunk.type === 'content') {
+          if (isThinking) {
+            isThinking = false;
+            fullContent += '\n</think>\n\n';
           }
+          fullContent += chunk.content || '';
         }
 
         task.content = fullContent;
         notifySubscribers('delta', { content: fullContent });
       }
 
-      // Normal completion
-      await savePartialContent();
-      if (task.status === 'running') {
-        task.status = 'done';
+      if (task.abortController.signal.aborted || task.status === 'stopped') {
+        task.status = 'stopped';
+        console.log('[Generation] Aborted/stopped detected at end of stream for session %s', session.id);
+        await savePartialContent();
+        notifySubscribers('stopped', {}, true);
+        this.cleanup(session.id);
+      } else {
+        // Normal completion
+        await savePartialContent();
+        if (task.status === 'running') {
+          task.status = 'done';
+        }
+        console.log('[Generation] Finished for session %s, status=%s, contentLen=%d', session.id, task.status, fullContent.length);
+        notifySubscribers('done', { content: fullContent }, true);
+        this.cleanup(session.id);
       }
-      console.log('[Generation] Finished for session %s, status=%s, contentLen=%d', session.id, task.status, fullContent.length);
-      notifySubscribers('done', { content: fullContent }, true);
-      this.cleanup(session.id);
     } catch (err: any) {
       if (task.status === 'stopped' || err.name === 'AbortError' || err.message === 'Aborted') {
         task.status = 'stopped';

@@ -235,15 +235,20 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
             throw new DOMException('Aborted', 'AbortError');
           }
 
-          const status = err.status || err.statusCode;
+          const status = err?.status || err?.statusCode;
           if (status === 401 || status === 403 || status === 404) {
             throw err;
           }
 
           if (status === 400 || status === 422) {
-            console.warn(`[OpenAI] Parameter reasoningEffort is unsupported (HTTP ${status}), falling back to no reasoning_effort immediately:`, err);
-            isFallbackToNoReasoning = true;
-            break;
+            const errMsg = typeof err?.message === 'string' ? err.message.toLowerCase() : '';
+            if (errMsg.includes('reasoning_effort') || errMsg.includes('reasoningeffort') || errMsg.includes('parameter')) {
+              console.warn(`[OpenAI] Parameter reasoningEffort is unsupported (HTTP ${status}), falling back to no reasoning_effort immediately:`, err);
+              isFallbackToNoReasoning = true;
+              break;
+            } else {
+              throw err;
+            }
           }
 
           const isRateLimit = err && (
