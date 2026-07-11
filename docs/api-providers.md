@@ -27,7 +27,7 @@
   - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
   - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
   - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK）
-  - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用，支持 `reasoning_effort` 自动重试机制（从 `max` -> `xhigh` -> `high` 依次尝试并带有重试，最后回退到无参数）
+  - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用，支持 `reasoning_effort` 自动重试机制（从 `max` -> `xhigh` -> `high` 依次尝试并带有重试，最后回退到无参数；若检测到请求过快/429限制，则不继续试错直接抛出错误）
   - `StreamRequest` / `StreamChunk` 类型定义
 
 ### 前端统一客户端

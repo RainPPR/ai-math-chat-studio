@@ -142,6 +142,19 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
           if (signal?.aborted || (err instanceof Error && err.name === 'AbortError') || err?.name === 'AbortError') {
             throw err;
           }
+          const isRateLimit = err && (
+            err.status === 429 ||
+            err.statusCode === 429 ||
+            (typeof err.message === 'string' && (
+              err.message.includes('429') ||
+              err.message.toLowerCase().includes('rate-limit') ||
+              err.message.toLowerCase().includes('rate limit') ||
+              err.message.includes('请求过快')
+            ))
+          );
+          if (isRateLimit) {
+            throw err;
+          }
           console.warn(`[OpenAI] Request with reasoningEffort=${effort} (attempt ${attempt}/2) failed, trying fallback:`, err);
         }
       }
