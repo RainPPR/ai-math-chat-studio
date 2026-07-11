@@ -1005,9 +1005,13 @@ const ModelEditor: React.FC<{
           <label className="block text-sm font-medium text-gray-300">Reasoning Effort</label>
           <select value={entry.reasoningEffort || ''} onChange={e => { onChange({ ...entry, reasoningEffort: e.target.value || undefined }); }} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500">
             <option value="">Unset</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
+            <option value="max">Max</option>
+            <option value="xhigh">Xhigh</option>
             <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+            <option value="minimal">Minimal</option>
+            <option value="none">None</option>
           </select>
         </div>
       )}

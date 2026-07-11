@@ -32,7 +32,7 @@ interface ModelInstance {
   displayName?: string;             // 显示名称（可选）
   temperature?: number;             // 温度参数（Unset 时不传给 API）
   maxTokens?: number;               // 最大 token 数（Unset 时不传给 API）
-  reasoningEffort?: string;         // 推理努力程度（low/medium/high，OpenAI 兼容用）
+  reasoningEffort?: string;         // 推理努力程度（max/xhigh/high/medium/low/minimal/none，OpenAI 兼容用）
   thinkingLevel?: string;           // 思考级别（Gemini 专用）
   extraBody?: Record<string, any>;  // 额外请求体（JSON 对象，合并到 API 请求中）
   injectThinkingTemplate?: boolean; // 注入 chat_template_kwargs thinking（Nvidia 用）

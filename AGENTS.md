@@ -82,6 +82,8 @@
 **Models tab**：
 - 选择关联的提供商实例。
 - 配置模型参数（temperature、maxTokens、reasoningEffort、thinkingLevel 等）。
+  - **OpenAI Compatible**：支持设置 `reasoningEffort` (包括 `max`, `xhigh`, `high`, `medium`, `low`, `minimal`, `none`)。
+  - **自动试错机制**：当 `reasoningEffort` 未指定时，流式生成器会采用级联回退机制，依次尝试以 `max` -> `xhigh` -> `high` 强度调用（每个层级最多重试一次），若均失败，最终退回无 `reasoning_effort` 参数调用。
 
 **Characters tab**：
 - 创建/管理角色（名称 + 系统提示词）。
