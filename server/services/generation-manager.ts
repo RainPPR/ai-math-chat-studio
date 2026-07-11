@@ -578,7 +578,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
         notifySubscribers('delta', { content: fullContent });
       }
     } catch (err: any) {
-      if (err.name === 'AbortError' || err.message === 'Aborted') {
+      if (task.status === 'stopped' || err.name === 'AbortError' || err.message === 'Aborted') {
         task.status = 'stopped';
       } else {
         throw err;
@@ -699,6 +699,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
   stop(sessionId: string): void {
     const task = this.tasks.get(sessionId);
     if (task?.status === 'running') {
+      task.status = 'stopped';
       task.abortController.abort();
     }
   }

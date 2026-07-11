@@ -160,7 +160,18 @@ export default function App() {
 
   const handleStop = async () => {
     if (!currentSessionId) return;
-    await api.chat.stop(currentSessionId);
+    try {
+      await api.chat.stop(currentSessionId);
+    } catch (e: any) {
+      console.error('Failed to stop generation:', e);
+    } finally {
+      markGenerating(currentSessionId, false);
+      try {
+        await refreshSession(currentSessionId);
+      } catch (e) {
+        console.error('Failed to refresh session on stop:', e);
+      }
+    }
   };
 
   const handleRetry = async (msgId: string) => {
