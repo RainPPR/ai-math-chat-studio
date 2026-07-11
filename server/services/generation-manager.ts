@@ -77,6 +77,9 @@ function generateTitleFromMarkdown(markdown: string): string {
   // Replace \displaystyle and \scriptstyle with ''
   processed = processed.replace(/\\displaystyle/g, '').replace(/\\scriptstyle/g, '');
 
+  // 同时处理全角空格、换行符或制表符等所有空白字符并将其替换为单个空格
+  processed = processed.replace(/\s+/g, " ");
+
   // 2. Target block math $$ ... $$ and convert LaTeX to Unicode
   processed = processed.replace(/\$\$(?=[\s\S])([\s\S]*?)\$\$/g, (_, math) => {
     return (unicodeit as any).replace(math);
