@@ -230,7 +230,11 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
           const res = await gen.next();
           firstResult = res;
           successfulGen = gen;
-          console.log(`[OpenAI] Trial Cascade: Successfully connected to model ${req.model} using reasoningEffort=${effort}`);
+          if (!res.done) {
+            console.log(`[OpenAI] Trial Cascade: Successfully connected to model ${req.model} using reasoningEffort=${effort}`);
+          } else {
+            console.warn(`[OpenAI] Trial Cascade: Model ${req.model} returned no chunks using reasoningEffort=${effort}`);
+          }
           break;
         } catch (err: any) {
           if (isAbortError(err)) {
