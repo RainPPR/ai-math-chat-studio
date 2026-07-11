@@ -64,6 +64,10 @@ async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; a
     }
   }
 
+  if (signal) {
+    config.abortSignal = signal;
+  }
+
   // Check abort before starting
   if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
 

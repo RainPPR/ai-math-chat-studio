@@ -161,7 +161,11 @@ export default function App() {
 
   const handleStop = async () => {
     if (!currentSessionId) return;
-    await api.chat.stop(currentSessionId);
+    try {
+      await api.chat.stop(currentSessionId);
+    } catch (e: any) {
+      console.error('Failed to stop generation:', e);
+    }
   };
 
   const handleRetry = async (msgId: string) => {
