@@ -111,18 +111,32 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
     if (signal?.aborted) return true;
     if (err instanceof DOMException && err.name === 'AbortError') return true;
     if (err instanceof OpenAI.APIUserAbortError) return true;
-    if (err instanceof Error) {
-      if (err.name === 'AbortError' || err.name === 'APIUserAbortError') return true;
-      if (typeof err.message === 'string' && (
-        err.message.toLowerCase().includes('abort') ||
-        err.message.toLowerCase().includes('cancel')
-      )) return true;
+
+    const name = err.name;
+    const message = err.message;
+
+    if (typeof name === 'string' && (name === 'AbortError' || name === 'APIUserAbortError')) {
+      return true;
     }
-    if (typeof err.name === 'string' && (err.name === 'AbortError' || err.name === 'APIUserAbortError')) return true;
-    if (typeof err.message === 'string' && (
-      err.message.toLowerCase().includes('abort') ||
-      err.message.toLowerCase().includes('cancel')
-    )) return true;
+
+    if (err.code === 'ERR_CANCELED') {
+      return true;
+    }
+
+    if (typeof message === 'string') {
+      const lowerMessage = message.toLowerCase();
+      if (
+        lowerMessage.includes('aborted') ||
+        lowerMessage === 'canceled' ||
+        lowerMessage === 'cancelled' ||
+        lowerMessage.includes('request cancelled') ||
+        lowerMessage.includes('user cancelled') ||
+        lowerMessage.includes('abort')
+      ) {
+        return true;
+      }
+    }
+
     return false;
   };
 
@@ -132,20 +146,12 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
       finalPayload.reasoning_effort = reasoningEffort;
     }
 
-    let response;
     try {
-      response = await client.chat.completions.create(
+      const response = await client.chat.completions.create(
         finalPayload,
         { signal }
       ) as any;
-    } catch (err: any) {
-      if (isAbortError(err)) {
-        throw new DOMException('Aborted', 'AbortError');
-      }
-      throw err;
-    }
 
-    try {
       for await (const chunk of response) {
         if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
         const delta = chunk.choices?.[0]?.delta;
@@ -207,34 +213,13 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
       if (!firstResult.done) {
         yield firstResult.value;
       }
-      try {
-        yield* successfulGen;
-      } catch (err: any) {
-        if (isAbortError(err)) {
-          throw new DOMException('Aborted', 'AbortError');
-        }
-        throw err;
-      }
+      yield* successfulGen;
       return;
     }
 
-    try {
-      yield* runWithReasoningEffort(undefined);
-    } catch (err: any) {
-      if (isAbortError(err)) {
-        throw new DOMException('Aborted', 'AbortError');
-      }
-      throw err;
-    }
+    yield* runWithReasoningEffort(undefined);
   } else {
-    try {
-      yield* runWithReasoningEffort(req.reasoningEffort);
-    } catch (err: any) {
-      if (isAbortError(err)) {
-        throw new DOMException('Aborted', 'AbortError');
-      }
-      throw err;
-    }
+    yield* runWithReasoningEffort(req.reasoningEffort);
   }
 }
 
