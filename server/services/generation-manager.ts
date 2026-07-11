@@ -71,31 +71,32 @@ function convertNonStandardThinking(content: string): string {
 // Limit input length for title generation
 
 function generateTitleFromMarkdown(markdown: string): string {
-  // 1. First replace \dfrac with \frac
+  // First replace \dfrac with \frac
   let processed = markdown.replace(/\\dfrac/g, '\\frac');
 
   // Replace \displaystyle and \scriptstyle with ''
   processed = processed.replace(/\\displaystyle/g, '').replace(/\\scriptstyle/g, '');
 
-  // 同时处理全角空格、换行符或制表符等所有空白字符并将其替换为单个空格
-  processed = processed.replace(/\s+/g, " ");
-
-  // 2. Target block math $$ ... $$ and convert LaTeX to Unicode
+  // Target block math $$ ... $$ and convert LaTeX to Unicode
   processed = processed.replace(/\$\$(?=[\s\S])([\s\S]*?)\$\$/g, (_, math) => {
     return (unicodeit as any).replace(math);
   });
 
-  // 3. Target inline math $ ... $ and convert LaTeX to Unicode
+  // Target inline math $ ... $ and convert LaTeX to Unicode
   processed = processed.replace(/\$([^$\n]+?)\$/g, (_, math) => {
     return (unicodeit as any).replace(math);
   });
 
-  // 4. Strip remaining Markdown syntax (headers, bold, links, etc.)
+  // Strip remaining Markdown syntax (headers, bold, links, etc.)
   let text = markdownToTxt(processed);
 
-  // 5. Remove remaining $ and backslashes, then trim
+  // 同时处理全角空格、换行符或制表符等所有空白字符并将其替换为单个空格
+  text = text.replace(/\s+/g, " ");
+
+  // Remove remaining $ and backslashes, then trim
   text = text.replace(/[$\\]/g, '').trim().replace(/[\n\r]+/g, ' ');
 
+  // 返回最多 50 个字符，如果超过则强制切断
   if (text.length <= 50) return text;
   return text.slice(0, 50) + '...';
 }
