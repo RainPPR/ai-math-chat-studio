@@ -106,23 +106,59 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
   if (req.maxTokens != null) payload.max_tokens = req.maxTokens;
   if (req.injectThinkingTemplate) payload.chat_template_kwargs = { thinking: true };
 
+  const isAbortError = (err: any): boolean => {
+    if (!err) return false;
+    if (signal?.aborted) return true;
+    if (err instanceof DOMException && err.name === 'AbortError') return true;
+    if (err instanceof OpenAI.APIUserAbortError) return true;
+    if (err instanceof Error) {
+      if (err.name === 'AbortError' || err.name === 'APIUserAbortError') return true;
+      if (typeof err.message === 'string' && (
+        err.message.toLowerCase().includes('abort') ||
+        err.message.toLowerCase().includes('cancel')
+      )) return true;
+    }
+    if (typeof err.name === 'string' && (err.name === 'AbortError' || err.name === 'APIUserAbortError')) return true;
+    if (typeof err.message === 'string' && (
+      err.message.toLowerCase().includes('abort') ||
+      err.message.toLowerCase().includes('cancel')
+    )) return true;
+    return false;
+  };
+
   async function* runWithReasoningEffort(reasoningEffort: string | undefined): AsyncGenerator<StreamChunk> {
     const finalPayload = { ...payload, ...(req.extraBody || {}) };
     if (reasoningEffort) {
       finalPayload.reasoning_effort = reasoningEffort;
     }
-    const response = await client.chat.completions.create(
-      finalPayload,
-      { signal }
-    ) as any;
 
-    for await (const chunk of response) {
-      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-      const delta = chunk.choices?.[0]?.delta;
-      if (!delta) continue;
-      const reasoning = (delta).reasoning || (delta).reasoning_content;
-      if (reasoning) yield { type: 'reasoning', content: reasoning };
-      if (delta.content) yield { type: 'content', content: delta.content };
+    let response;
+    try {
+      response = await client.chat.completions.create(
+        finalPayload,
+        { signal }
+      ) as any;
+    } catch (err: any) {
+      if (isAbortError(err)) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
+      throw err;
+    }
+
+    try {
+      for await (const chunk of response) {
+        if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+        const delta = chunk.choices?.[0]?.delta;
+        if (!delta) continue;
+        const reasoning = (delta).reasoning || (delta).reasoning_content;
+        if (reasoning) yield { type: 'reasoning', content: reasoning };
+        if (delta.content) yield { type: 'content', content: delta.content };
+      }
+    } catch (err: any) {
+      if (isAbortError(err)) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
+      throw err;
     }
   }
 
@@ -143,8 +179,8 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
           successfulGen = gen;
           break;
         } catch (err: any) {
-          if (signal?.aborted || (err instanceof Error && err.name === 'AbortError') || err?.name === 'AbortError') {
-            throw err;
+          if (isAbortError(err)) {
+            throw new DOMException('Aborted', 'AbortError');
           }
           const isRateLimit = err && (
             err.status === 429 ||
@@ -171,13 +207,34 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
       if (!firstResult.done) {
         yield firstResult.value;
       }
-      yield* successfulGen;
+      try {
+        yield* successfulGen;
+      } catch (err: any) {
+        if (isAbortError(err)) {
+          throw new DOMException('Aborted', 'AbortError');
+        }
+        throw err;
+      }
       return;
     }
 
-    yield* runWithReasoningEffort(undefined);
+    try {
+      yield* runWithReasoningEffort(undefined);
+    } catch (err: any) {
+      if (isAbortError(err)) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
+      throw err;
+    }
   } else {
-    yield* runWithReasoningEffort(req.reasoningEffort);
+    try {
+      yield* runWithReasoningEffort(req.reasoningEffort);
+    } catch (err: any) {
+      if (isAbortError(err)) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
+      throw err;
+    }
   }
 }
 
