@@ -14,6 +14,7 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(256);
   const [generatingSessions, setGeneratingSessions] = useState<Set<string>>(new Set());
+  const [stoppingSessions, setStoppingSessions] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   const clearError = useCallback(() => { setError(null); }, []);
@@ -159,11 +160,23 @@ export default function App() {
   }, []);
 
   const handleStop = async () => {
-    if (!currentSessionId) return;
+    if (!currentSessionId) {
+      return;
+    }
+    setStoppingSessions(prev => {
+      const next = new Set(prev);
+      next.add(currentSessionId);
+      return next;
+    });
     try {
       await api.chat.stop(currentSessionId);
     } catch (e: any) {
       console.error('Failed to stop generation:', e);
+      setStoppingSessions(prev => {
+        const next = new Set(prev);
+        next.delete(currentSessionId);
+        return next;
+      });
     }
   };
 
@@ -293,6 +306,7 @@ export default function App() {
           session={currentSession}
           onSendMessage={handleSendMessage}
           isGenerating={currentSessionId ? generatingSessions.has(currentSessionId) : false}
+          isStopping={currentSessionId ? stoppingSessions.has(currentSessionId) : false}
           settings={settings}
           onStop={handleStop}
           onRetry={handleRetry}
@@ -311,7 +325,16 @@ export default function App() {
             } catch (e) {
               console.error('Refresh session failed:', e);
             } finally {
-              markGenerating(id, false);
+              setGeneratingSessions(prev => {
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+              });
+              setStoppingSessions(prev => {
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+              });
             }
           }}
         />
