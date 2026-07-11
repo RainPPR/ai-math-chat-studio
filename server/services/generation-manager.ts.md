@@ -759,7 +759,11 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
   cleanup(sessionId: string): void {
     const task = this.tasks.get(sessionId);
     if (task && task.status !== 'running') {
-      this.tasks.delete(sessionId);
+      setTimeout(() => {
+        if (this.tasks.get(sessionId) === task) {
+          this.tasks.delete(sessionId);
+        }
+      }, 10000);
     }
   }
 }

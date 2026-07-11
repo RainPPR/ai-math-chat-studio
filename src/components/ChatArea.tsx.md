@@ -9,6 +9,7 @@ interface ChatAreaProps {
   session?: ChatSession;
   onSendMessage: (content: string) => void;
   isGenerating: boolean;
+  isStopping?: boolean;
   settings: UserSettings;
   onStop?: () => void;
   onRetry?: (msgId: string) => void;
@@ -230,7 +231,7 @@ const clearDraft = (sessionId: string) => {
   } catch { /* ignore storage errors */ }
 };
 
-export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel, onSelectCharacter, onUpdateSessionCharacter, error, onClearError, onError }) => {
+export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, isStopping, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel, onSelectCharacter, onUpdateSessionCharacter, error, onClearError, onError }) => {
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
@@ -483,7 +484,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             key={msg.id || idx}
             msg={msg}
             isLast={idx === displayMessages.length - 1}
-            isGenerating={isGenerating && idx === displayMessages.length - 1}
+            isGenerating={isGenerating && !isStopping && idx === displayMessages.length - 1}
             settings={settings}
             onCopy={handleCopy}
             copiedId={copiedId}
@@ -492,7 +493,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             onRegenerate={onRegenerate}
           />
         ))}
-        {isGenerating && !streamingContent && (
+        {isGenerating && !isStopping && !streamingContent && (
           <div className="flex justify-start">
             <div className="max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 bg-gray-800 text-gray-100 border border-gray-700 flex items-center gap-3">
               <Loader2 size={18} className="animate-spin text-blue-400" />
@@ -623,12 +624,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
               }
             }}
           />
-          {isGenerating ? (
+          {isGenerating && !isStopping ? (
             <button onClick={onStop} className="p-3.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm">
               <SquareTerminal size={20} />
             </button>
           ) : (
-            <button onClick={handleSend} disabled={!input.trim()} className="p-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm">
+            <button onClick={handleSend} disabled={!input.trim() || isStopping} className="p-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm">
               <Send size={20} />
             </button>
           )}
