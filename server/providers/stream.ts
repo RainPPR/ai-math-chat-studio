@@ -225,10 +225,12 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
           }
         }
         try {
+          console.log(`[OpenAI] Trial Cascade: Attempting model ${req.model} with reasoningEffort=${effort} (attempt ${attempt}/2)`);
           const gen = runWithReasoningEffort(effort);
           const res = await gen.next();
           firstResult = res;
           successfulGen = gen;
+          console.log(`[OpenAI] Trial Cascade: Successfully connected to model ${req.model} using reasoningEffort=${effort}`);
           break;
         } catch (err: any) {
           if (isAbortError(err)) {
@@ -287,8 +289,10 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
       }
     }
 
+    console.log(`[OpenAI] Trial Cascade: Falling back to model ${req.model} with no reasoningEffort parameter`);
     yield* runWithReasoningEffort(undefined);
   } else {
+    console.log(`[OpenAI] Requesting model ${req.model} with explicit reasoningEffort=${req.reasoningEffort}`);
     yield* runWithReasoningEffort(req.reasoningEffort);
   }
 }

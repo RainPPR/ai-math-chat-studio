@@ -656,7 +656,7 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       if (isManualStop || err.name === 'AbortError' || err.message === 'Aborted') {
         task.status = 'stopped';
         console.log('[Generation] Aborted/stopped for session %s, manual=%s', session.id, isManualStop);
-        if (isManualStop) {
+        if (isManualStop || !task.abortController.signal.aborted) {
           await savePartialContent();
         }
         notifySubscribers('stopped', {}, true);
