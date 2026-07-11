@@ -242,7 +242,7 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
 
           if (status === 400 || status === 422) {
             const errMsg = typeof err?.message === 'string' ? err.message.toLowerCase() : '';
-            if (errMsg.includes('reasoning_effort') || errMsg.includes('reasoningeffort') || errMsg.includes('parameter')) {
+            if (errMsg.includes('reasoning_effort') || errMsg.includes('reasoningeffort')) {
               console.warn(`[OpenAI] Parameter reasoningEffort is unsupported (HTTP ${status}), falling back to no reasoning_effort immediately:`, err);
               isFallbackToNoReasoning = true;
               break;

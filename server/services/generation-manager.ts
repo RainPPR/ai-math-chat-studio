@@ -174,18 +174,19 @@ export class GenerationManager {
       try { await existing; } catch { /* ignore */ }
     }
 
-    const writePromise = new Promise<void>((resolve) => {
+    const writePromise = new Promise<void>((resolve, reject) => {
       setTimeout(async () => {
         try {
           // Double-check session wasn't deleted during wait
           if (!this.deletedSessions.has(sessionId)) {
             await this.writeSession(session);
           }
+          resolve();
         } catch (err) {
           console.error('[Write] Failed to write session %s:', sessionId, err);
+          reject(err);
         } finally {
           this.pendingWrites.delete(sessionId);
-          resolve();
         }
       }, delay);
     });
@@ -574,9 +575,10 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
           content: fullContent,
           createdAt: new Date().toISOString(),
         };
-        session.messages.push(modelMsg);
-        session.updatedAt = new Date().toISOString();
-        await this.debouncedWrite(session, 0);
+        const latestSession = await this.readSession(session.id) || session;
+        latestSession.messages.push(modelMsg);
+        latestSession.updatedAt = new Date().toISOString();
+        await this.debouncedWrite(latestSession, 0);
       }
     };
 
@@ -624,26 +626,39 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       }
 
       if (task.abortController.signal.aborted || task.status === 'stopped') {
+        const isManualStop = task.status === 'stopped';
         task.status = 'stopped';
-        console.log('[Generation] Aborted/stopped detected at end of stream for session %s', session.id);
-        await savePartialContent();
+        console.log('[Generation] Aborted/stopped detected at end of stream for session %s, manual=%s', session.id, isManualStop);
+        if (isManualStop) {
+          await savePartialContent();
+        }
         notifySubscribers('stopped', {}, true);
         this.cleanup(session.id);
       } else {
         // Normal completion
         await savePartialContent();
-        if (task.status === 'running') {
-          task.status = 'done';
+        const currentStatus = task.status as string;
+        if (task.abortController.signal.aborted || currentStatus === 'stopped') {
+          task.status = 'stopped';
+          notifySubscribers('stopped', {}, true);
+          this.cleanup(session.id);
+        } else {
+          if (task.status === 'running') {
+            task.status = 'done';
+          }
+          console.log('[Generation] Finished for session %s, status=%s, contentLen=%d', session.id, task.status, fullContent.length);
+          notifySubscribers('done', { content: fullContent }, true);
+          this.cleanup(session.id);
         }
-        console.log('[Generation] Finished for session %s, status=%s, contentLen=%d', session.id, task.status, fullContent.length);
-        notifySubscribers('done', { content: fullContent }, true);
-        this.cleanup(session.id);
       }
     } catch (err: any) {
-      if (task.status === 'stopped' || err.name === 'AbortError' || err.message === 'Aborted') {
+      const isManualStop = task.status === 'stopped';
+      if (isManualStop || err.name === 'AbortError' || err.message === 'Aborted') {
         task.status = 'stopped';
-        console.log('[Generation] Aborted/stopped for session %s', session.id);
-        await savePartialContent();
+        console.log('[Generation] Aborted/stopped for session %s, manual=%s', session.id, isManualStop);
+        if (isManualStop) {
+          await savePartialContent();
+        }
         notifySubscribers('stopped', {}, true);
         this.cleanup(session.id);
       } else {
