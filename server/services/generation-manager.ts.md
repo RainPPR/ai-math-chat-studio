@@ -175,18 +175,19 @@ export class GenerationManager {
       try { await existing; } catch { /* ignore */ }
     }
 
-    const writePromise = new Promise<void>((resolve) => {
+    const writePromise = new Promise<void>((resolve, reject) => {
       setTimeout(async () => {
         try {
           // Double-check session wasn't deleted during wait
           if (!this.deletedSessions.has(sessionId)) {
             await this.writeSession(session);
           }
+          resolve();
         } catch (err) {
           console.error('[Write] Failed to write session %s:', sessionId, err);
+          reject(err);
         } finally {
           this.pendingWrites.delete(sessionId);
-          resolve();
         }
       }, delay);
     });
@@ -549,6 +550,39 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
       }
     };
 
+    let hasSaved = false;
+    const savePartialContent = async () => {
+      if (hasSaved) {
+        return;
+      }
+      if (this.deletedSessions.has(session.id)) {
+        return;
+      }
+      hasSaved = true;
+      if (isThinking) {
+        fullContent += '\n</think>\n\n';
+        isThinking = false;
+        task.content = fullContent;
+      }
+      if (model.providerType === 'openai-compatible') {
+        fullContent = convertNonStandardThinking(fullContent);
+      }
+      task.content = fullContent;
+
+      if (fullContent.trim()) {
+        const modelMsg: ServerChatMessage = {
+          id: crypto.randomUUID(),
+          role: 'model',
+          content: fullContent,
+          createdAt: new Date().toISOString(),
+        };
+        const latestSession = await this.readSession(session.id) || session;
+        latestSession.messages.push(modelMsg);
+        latestSession.updatedAt = new Date().toISOString();
+        await this.debouncedWrite(latestSession, 0);
+      }
+    };
+
     try {
       for await (const chunk of streamChat(model.providerType, provider, {
         model: model.modelId,
@@ -561,11 +595,17 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
         thinkingLevel: model.thinkingLevel,
         injectThinkingTemplate,
       }, task.abortController.signal)) {
-        if (task.abortController.signal.aborted) break;
+        if (task.abortController.signal.aborted) {
+          break;
+        }
 
-        if (!firstTokenReceived && chunk.content && chunk.content.length > 0) {
-          firstTokenReceived = true;
-          console.log('[Generation] First token received for session %s', session.id);
+        if (!firstTokenReceived) {
+          if (chunk.content) {
+            if (chunk.content.length > 0) {
+              firstTokenReceived = true;
+              console.log('[Generation] First token received for session %s', session.id);
+            }
+          }
         }
 
         if (chunk.type === 'reasoning') {
@@ -585,59 +625,49 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
         task.content = fullContent;
         notifySubscribers('delta', { content: fullContent });
       }
-    } catch (err: any) {
-      if (task.status === 'stopped' || err.name === 'AbortError' || err.message === 'Aborted') {
+
+      if (task.abortController.signal.aborted || task.status === 'stopped') {
+        const isManualStop = task.status === 'stopped';
         task.status = 'stopped';
+        console.log('[Generation] Aborted/stopped detected at end of stream for session %s, manual=%s', session.id, isManualStop);
+        if (isManualStop) {
+          await savePartialContent();
+        }
+        notifySubscribers('stopped', {}, true);
+        this.cleanup(session.id);
       } else {
+        // Normal completion
+        await savePartialContent();
+        const currentStatus = task.status as string;
+        if (task.abortController.signal.aborted || currentStatus === 'stopped') {
+          task.status = 'stopped';
+          notifySubscribers('stopped', {}, true);
+          this.cleanup(session.id);
+        } else {
+          if (task.status === 'running') {
+            task.status = 'done';
+          }
+          console.log('[Generation] Finished for session %s, status=%s, contentLen=%d', session.id, task.status, fullContent.length);
+          notifySubscribers('done', { content: fullContent }, true);
+          this.cleanup(session.id);
+        }
+      }
+    } catch (err: any) {
+      const isManualStop = task.status === 'stopped';
+      if (isManualStop || err.name === 'AbortError' || err.message === 'Aborted') {
+        task.status = 'stopped';
+        console.log('[Generation] Aborted/stopped for session %s, manual=%s', session.id, isManualStop);
+        if (isManualStop || !task.abortController.signal.aborted) {
+          await savePartialContent();
+        }
+        notifySubscribers('stopped', {}, true);
+        this.cleanup(session.id);
+      } else {
+        console.warn('[Generation] Unexpected error during stream for session %s', session.id, err);
+        await savePartialContent();
         throw err;
       }
     }
-
-    // If aborted or session deleted, don't write the final message but notify stopped
-    if (task.status === 'stopped' || this.deletedSessions.has(session.id)) {
-      console.log('[Generation] Aborted/stopped for session %s, skipping final write', session.id);
-      notifySubscribers('stopped', {}, true);
-      this.cleanup(session.id);
-      return;
-    }
-
-    if (isThinking) {
-      fullContent += '\n</think>\n\n';
-      isThinking = false;
-      task.content = fullContent;
-    }
-
-
-
-    // Convert non-standard thinking format (if any) to standard format
-    // Only applies to openai-compatible providers that return non-standard thinking
-    if (model.providerType === 'openai-compatible') {
-      fullContent = convertNonStandardThinking(fullContent);
-    }
-
-    task.content = fullContent;
-
-    if (task.status === 'running') {
-      task.status = 'done';
-    }
-
-    console.log('[Generation] Finished for session %s, status=%s, contentLen=%d', session.id, task.status, fullContent.length);
-
-    // Only write and notify if we got meaningful content
-    if (fullContent.trim()) {
-      const modelMsg: ServerChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'model',
-        content: fullContent,
-        createdAt: new Date().toISOString(),
-      };
-      session.messages.push(modelMsg);
-      session.updatedAt = new Date().toISOString();
-      await this.debouncedWrite(session, 0); // Immediate write for final result
-    }
-
-    notifySubscribers('done', { content: fullContent }, true);
-    this.cleanup(session.id); // Clean up completed task
   }
 
   private async sanitizeSession(raw: any): Promise<ServerChatSession> {

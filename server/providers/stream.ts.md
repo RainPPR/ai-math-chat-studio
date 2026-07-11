@@ -91,7 +91,9 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
   const client = new OpenAI({ baseURL, apiKey });
 
   const messages: any[] = [];
-  if (req.systemPrompt) messages.push({ role: 'system', content: req.systemPrompt });
+  if (req.systemPrompt) {
+    messages.push({ role: 'system', content: req.systemPrompt });
+  }
 
   const history = req.messages.length > 40 ? req.messages.slice(-40) : req.messages;
   for (const msg of history) {
@@ -103,21 +105,44 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
   }
 
   const payload: any = { model: req.model, messages, stream: true };
-  if (req.temperature != null) payload.temperature = req.temperature;
-  if (req.maxTokens != null) payload.max_tokens = req.maxTokens;
-  if (req.injectThinkingTemplate) payload.chat_template_kwargs = { thinking: true };
+  if (req.temperature != null) {
+    payload.temperature = req.temperature;
+  }
+  if (req.maxTokens != null) {
+    payload.max_tokens = req.maxTokens;
+  }
+  if (req.injectThinkingTemplate) {
+    payload.chat_template_kwargs = { thinking: true };
+  }
 
   const isAbortError = (err: any): boolean => {
-    if (!err) return false;
-    if (signal?.aborted) return true;
-    if (err instanceof DOMException && err.name === 'AbortError') return true;
-    if (err instanceof OpenAI.APIUserAbortError) return true;
+    if (!err) {
+      return false;
+    }
+    if (signal) {
+      if (signal.aborted) {
+        return true;
+      }
+    }
+    if (err instanceof DOMException) {
+      if (err.name === 'AbortError') {
+        return true;
+      }
+    }
+    if (err instanceof OpenAI.APIUserAbortError) {
+      return true;
+    }
 
     const name = err.name;
     const message = err.message;
 
-    if (typeof name === 'string' && (name === 'AbortError' || name === 'APIUserAbortError')) {
-      return true;
+    if (typeof name === 'string') {
+      if (name === 'AbortError') {
+        return true;
+      }
+      if (name === 'APIUserAbortError') {
+        return true;
+      }
     }
 
     if (err.code === 'ERR_CANCELED') {
@@ -126,14 +151,22 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
 
     if (typeof message === 'string') {
       const lowerMessage = message.toLowerCase();
-      if (
-        lowerMessage.includes('aborted') ||
-        lowerMessage === 'canceled' ||
-        lowerMessage === 'cancelled' ||
-        lowerMessage.includes('request cancelled') ||
-        lowerMessage.includes('user cancelled') ||
-        lowerMessage.includes('abort')
-      ) {
+      if (lowerMessage.includes('aborted')) {
+        return true;
+      }
+      if (lowerMessage === 'canceled') {
+        return true;
+      }
+      if (lowerMessage === 'cancelled') {
+        return true;
+      }
+      if (lowerMessage.includes('request cancelled')) {
+        return true;
+      }
+      if (lowerMessage.includes('user cancelled')) {
+        return true;
+      }
+      if (lowerMessage.includes('abort')) {
         return true;
       }
     }
@@ -154,12 +187,21 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
       ) as any;
 
       for await (const chunk of response) {
-        if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+        if (signal) {
+          if (signal.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
+          }
+        }
         const delta = chunk.choices?.[0]?.delta;
-        if (!delta) continue;
-        const reasoning = (delta).reasoning || (delta).reasoning_content;
-        if (reasoning) yield { type: 'reasoning', content: reasoning };
-        if (delta.content) yield { type: 'content', content: delta.content };
+        if (delta) {
+          const reasoning = delta.reasoning || delta.reasoning_content;
+          if (reasoning) {
+            yield { type: 'reasoning', content: reasoning };
+          }
+          if (delta.content) {
+            yield { type: 'content', content: delta.content };
+          }
+        }
       }
     } catch (err: any) {
       if (isAbortError(err)) {
@@ -174,21 +216,48 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
     let successfulGen: AsyncGenerator<StreamChunk> | null = null;
     let firstResult: IteratorResult<StreamChunk> | null = null;
 
+    let isFallbackToNoReasoning = false;
+
     for (const effort of efforts) {
       for (let attempt = 1; attempt <= 2; attempt++) {
-        if (signal?.aborted) {
-          throw new DOMException('Aborted', 'AbortError');
+        if (signal) {
+          if (signal.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
+          }
         }
         try {
+          console.log(`[OpenAI] Trial Cascade: Attempting model ${req.model} with reasoningEffort=${effort} (attempt ${attempt}/2)`);
           const gen = runWithReasoningEffort(effort);
           const res = await gen.next();
           firstResult = res;
           successfulGen = gen;
+          if (!res.done) {
+            console.log(`[OpenAI] Trial Cascade: Successfully connected to model ${req.model} using reasoningEffort=${effort}`);
+          } else {
+            console.warn(`[OpenAI] Trial Cascade: Model ${req.model} returned no chunks using reasoningEffort=${effort}`);
+          }
           break;
         } catch (err: any) {
           if (isAbortError(err)) {
             throw new DOMException('Aborted', 'AbortError');
           }
+
+          const status = err?.status || err?.statusCode;
+          if (status === 401 || status === 403 || status === 404) {
+            throw err;
+          }
+
+          if (status === 400 || status === 422) {
+            const errMsg = typeof err?.message === 'string' ? err.message.toLowerCase() : '';
+            if (errMsg.includes('reasoning_effort') || errMsg.includes('reasoningeffort')) {
+              console.warn(`[OpenAI] Parameter reasoningEffort is unsupported (HTTP ${status}), falling back to no reasoning_effort immediately:`, err);
+              isFallbackToNoReasoning = true;
+              break;
+            } else {
+              throw err;
+            }
+          }
+
           const isRateLimit = err && (
             err.status === 429 ||
             err.statusCode === 429 ||
@@ -205,21 +274,30 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
           console.warn(`[OpenAI] Request with reasoningEffort=${effort} (attempt ${attempt}/2) failed, trying fallback:`, err);
         }
       }
-      if (successfulGen && firstResult) {
+      if (isFallbackToNoReasoning) {
         break;
       }
-    }
-
-    if (successfulGen && firstResult) {
-      if (!firstResult.done) {
-        yield firstResult.value;
+      if (successfulGen) {
+        if (firstResult) {
+          break;
+        }
       }
-      yield* successfulGen;
-      return;
     }
 
+    if (successfulGen) {
+      if (firstResult) {
+        if (!firstResult.done) {
+          yield firstResult.value;
+        }
+        yield* successfulGen;
+        return;
+      }
+    }
+
+    console.log(`[OpenAI] Trial Cascade: Falling back to model ${req.model} with no reasoningEffort parameter`);
     yield* runWithReasoningEffort(undefined);
   } else {
+    console.log(`[OpenAI] Requesting model ${req.model} with explicit reasoningEffort=${req.reasoningEffort}`);
     yield* runWithReasoningEffort(req.reasoningEffort);
   }
 }
