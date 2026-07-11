@@ -107,23 +107,65 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
   if (req.maxTokens != null) payload.max_tokens = req.maxTokens;
   if (req.injectThinkingTemplate) payload.chat_template_kwargs = { thinking: true };
 
+  const isAbortError = (err: any): boolean => {
+    if (!err) return false;
+    if (signal?.aborted) return true;
+    if (err instanceof DOMException && err.name === 'AbortError') return true;
+    if (err instanceof OpenAI.APIUserAbortError) return true;
+
+    const name = err.name;
+    const message = err.message;
+
+    if (typeof name === 'string' && (name === 'AbortError' || name === 'APIUserAbortError')) {
+      return true;
+    }
+
+    if (err.code === 'ERR_CANCELED') {
+      return true;
+    }
+
+    if (typeof message === 'string') {
+      const lowerMessage = message.toLowerCase();
+      if (
+        lowerMessage.includes('aborted') ||
+        lowerMessage === 'canceled' ||
+        lowerMessage === 'cancelled' ||
+        lowerMessage.includes('request cancelled') ||
+        lowerMessage.includes('user cancelled') ||
+        lowerMessage.includes('abort')
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   async function* runWithReasoningEffort(reasoningEffort: string | undefined): AsyncGenerator<StreamChunk> {
     const finalPayload = { ...payload, ...(req.extraBody || {}) };
     if (reasoningEffort) {
       finalPayload.reasoning_effort = reasoningEffort;
     }
-    const response = await client.chat.completions.create(
-      finalPayload,
-      { signal }
-    ) as any;
 
-    for await (const chunk of response) {
-      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-      const delta = chunk.choices?.[0]?.delta;
-      if (!delta) continue;
-      const reasoning = (delta).reasoning || (delta).reasoning_content;
-      if (reasoning) yield { type: 'reasoning', content: reasoning };
-      if (delta.content) yield { type: 'content', content: delta.content };
+    try {
+      const response = await client.chat.completions.create(
+        finalPayload,
+        { signal }
+      ) as any;
+
+      for await (const chunk of response) {
+        if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+        const delta = chunk.choices?.[0]?.delta;
+        if (!delta) continue;
+        const reasoning = (delta).reasoning || (delta).reasoning_content;
+        if (reasoning) yield { type: 'reasoning', content: reasoning };
+        if (delta.content) yield { type: 'content', content: delta.content };
+      }
+    } catch (err: any) {
+      if (isAbortError(err)) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
+      throw err;
     }
   }
 
@@ -144,8 +186,8 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
           successfulGen = gen;
           break;
         } catch (err: any) {
-          if (signal?.aborted || (err instanceof Error && err.name === 'AbortError') || err?.name === 'AbortError') {
-            throw err;
+          if (isAbortError(err)) {
+            throw new DOMException('Aborted', 'AbortError');
           }
           const isRateLimit = err && (
             err.status === 429 ||
