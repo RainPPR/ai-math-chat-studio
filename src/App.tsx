@@ -159,11 +159,20 @@ export default function App() {
   }, []);
 
   const handleStop = async () => {
-    if (!currentSessionId) return;
+    if (!currentSessionId) {
+      return;
+    }
     try {
+      markGenerating(currentSessionId, false);
       await api.chat.stop(currentSessionId);
     } catch (e: any) {
       console.error('Failed to stop generation:', e);
+    } finally {
+      try {
+        await refreshSession(currentSessionId);
+      } catch (refreshErr) {
+        console.error('Failed to refresh session after stop:', refreshErr);
+      }
     }
   };
 
