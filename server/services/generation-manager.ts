@@ -74,8 +74,8 @@ function generateTitleFromMarkdown(markdown: string): string {
   // 1. First replace \dfrac with \frac
   let processed = markdown.replace(/\\dfrac/g, '\\frac');
 
-  // Replace LaTeX style directives and any trailing whitespace with ''
-  processed = processed.replace(/\\(?:display|text|script(?:script)?)style\\s*/g, '');
+  // Replace \displaystyle and \scriptstyle with ''
+  processed = processed.replace(/\\displaystyle/g, '').replace(/\\scriptstyle/g, '');
 
   // 2. Target block math $$ ... $$ and convert LaTeX to Unicode
   processed = processed.replace(/\$\$(?=[\s\S])([\s\S]*?)\$\$/g, (_, math) => {
