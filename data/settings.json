@@ -33,7 +33,8 @@
       "type": "openai-compatible",
       "name": "LogFare",
       "envKey": "LOGFARE_API_KEY",
-      "baseURL": "https://logfare.ai/v1"
+      "baseURL": "https://logfare.ai/v1",
+      "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/logfare-ai-math.json"
     },
     {
       "id": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
@@ -157,30 +158,6 @@
       }
     },
     {
-      "id": "a273e2e9-9bdd-4c31-88bf-ce563d4518fb",
-      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-      "providerType": "openai-compatible",
-      "modelId": "kimi-k2.7-code",
-      "displayName": "Kimi K2.7 Code (LogFare)",
-      "reasoningEffort": "high"
-    },
-    {
-      "id": "c7496830-fd3c-443e-8e2a-d3cf75cc0d8a",
-      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-      "providerType": "openai-compatible",
-      "modelId": "deepseek-v4-flash",
-      "displayName": "DeepSeek V4 Flash (LogFare)",
-      "reasoningEffort": "high"
-    },
-    {
-      "id": "48899e79-0ee1-4b48-a804-a0fafc4ae3f9",
-      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-      "providerType": "openai-compatible",
-      "modelId": "glm-5.2",
-      "displayName": "GLM 5.2 (LogFare)",
-      "reasoningEffort": "high"
-    },
-    {
       "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
       "providerId": "p-poe-8d3e",
       "providerType": "openai-compatible",
@@ -301,6 +278,62 @@
       "displayName": "Free Models Router (Kilo)"
     },
     {
+      "id": "f66904d4-5a05-55ff-a3e8-3f42b90414ef",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "grok-4.3",
+      "displayName": "Grok 4.3 (LogFare)"
+    },
+    {
+      "id": "6ff1f6f8-28ba-5fe5-baed-6b3c96e9874d",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "kimi-k2.6",
+      "displayName": "Kimi K2.6 (LogFare)"
+    },
+    {
+      "id": "5ab7cacf-75df-5490-8295-8edd9c1d374b",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "deepseek-v4-flash",
+      "displayName": "DeepSeek V4 Flash (LogFare)"
+    },
+    {
+      "id": "c7995cd3-216c-5394-ad7c-c6458a16de51",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "glm-5.2",
+      "displayName": "GLM 5.2 (LogFare)"
+    },
+    {
+      "id": "d4cb5d70-7982-59d7-bd72-4337d101bf05",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "kimi-k2.7-code",
+      "displayName": "Kimi K2.7 Code (LogFare)"
+    },
+    {
+      "id": "248c1cbe-0ff5-5ed2-b6cc-0f5d89abccae",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "deepseek-v4-pro",
+      "displayName": "DeepSeek V4 Pro (LogFare)"
+    },
+    {
+      "id": "4ed31846-fff0-5772-a6c5-e111ea731e0c",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "minimax-m3",
+      "displayName": "MiniMax M3 (LogFare)"
+    },
+    {
+      "id": "e1e8e975-b3ce-58d8-bc4b-812a5bd4b9c5",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "mimo-v2.5",
+      "displayName": "MiMo V2.5 (LogFare)"
+    },
+    {
       "id": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
       "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
       "providerType": "openai-compatible",
@@ -380,5 +413,5 @@
   "gemmaTrimThinkingSpaces": true,
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
   "activeModelId": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
-  "activeCharacterId": "95460bbd-f1d7-4d51-a7ea-fa039d1c81fc"
+  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
 }
