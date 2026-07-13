@@ -1,0 +1,15 @@
+{
+  "id": "ceff5814-c4d9-4f25-8339-1aac9b0027ec",
+  "title": "已知 f(x)=sin≤ft(2x+frac{2π}{3}right)，求 f(x)=frac{√{...",
+  "messages": [
+    {
+      "id": "563ab416-121f-44c7-bb85-628bcdb265d5",
+      "role": "user",
+      "content": "已知 $f(x)=\\sin\\left(2x+\\dfrac{2\\pi}{3}\\right)$，求 $f(x)=\\dfrac{\\sqrt{3}}{2}$ 在 $\\left(-\\dfrac{13\\pi}{12},\\dfrac{11\\pi}{12}\\right)$ 的解。",
+      "createdAt": "2026-07-13T00:58:17.276Z"
+    }
+  ],
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "createdAt": "2026-07-13T00:58:17.276Z",
+  "updatedAt": "2026-07-13T00:58:17.293Z"
+}
