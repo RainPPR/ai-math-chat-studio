@@ -1,15 +1,15 @@
 {
-  "id": "c8d0a2aa-913b-424a-8286-f23267398a51",
+  "id": "f2ddac94-3a9b-48f5-a829-a76ad95391ea",
   "title": "Hello, this is a test for the pure markdown viewin...",
   "messages": [
     {
-      "id": "b6ea8c97-277e-4a6c-b65c-6b27ff5c0cd3",
+      "id": "0aa44ab5-95db-481b-b5a4-f0d41f0f2fb8",
       "role": "user",
       "content": "Hello, this is a test for the pure markdown viewing and printing feature! $$\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$$",
-      "createdAt": "2026-07-15T09:46:21.233Z"
+      "createdAt": "2026-07-15T10:15:49.594Z"
     }
   ],
   "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
-  "createdAt": "2026-07-15T09:46:21.233Z",
-  "updatedAt": "2026-07-15T09:46:21.249Z"
+  "createdAt": "2026-07-15T10:15:49.593Z",
+  "updatedAt": "2026-07-15T10:15:49.609Z"
 }

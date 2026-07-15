@@ -131,15 +131,11 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
   const itemsAlignClass = isUser ? 'items-end' : 'items-start';
   const copyIcon = copiedId === msg.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />;
 
-  // Absolute positioning toolbar handles responsive layout: comfort offsets on large viewports, inside bubbles on small devices to prevent clipping.
-  // keyboard accessibility focuses are supported via group-focus-within and focus-within.
-  const actionPositionClass = isUser
-    ? 'absolute top-2 right-2 sm:-left-12 flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10'
-    : 'absolute top-2 right-2 sm:-right-12 flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10';
+  const sideOffset = isUser ? 'sm:right-auto sm:-left-12' : 'sm:left-auto sm:-right-12';
+  const actionPositionClass = `absolute top-2 right-2 ${sideOffset} flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10`;
 
   const backgroundClass = isUser ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-100 border border-gray-700';
 
-  // Do not show the viewing overlay button if message is currently streaming to prevent stale snapshot freezes.
   const isCurrentlyStreaming = isGenerating && isLast;
 
   return (
@@ -387,17 +383,30 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     return () => { document.removeEventListener('mousedown', handleClickOutside); };
   }, []);
 
+  const lastActiveElementRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     const chatContainer = document.getElementById('chat-scroll-container');
     if (viewingContent) {
+      lastActiveElementRef.current = document.activeElement as HTMLElement;
       document.body.style.overflow = 'hidden';
       if (chatContainer) {
         chatContainer.style.overflowY = 'hidden';
       }
+      setTimeout(() => {
+        const closeBtn = document.getElementById('viewing-close-btn');
+        if (closeBtn) {
+          closeBtn.focus();
+        }
+      }, 50);
     } else {
       document.body.style.overflow = '';
       if (chatContainer) {
         chatContainer.style.overflowY = 'auto';
+      }
+      if (lastActiveElementRef.current) {
+        lastActiveElementRef.current.focus();
+        lastActiveElementRef.current = null;
       }
     }
     return () => {
@@ -830,6 +839,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                 <span>打印</span>
               </button>
               <button
+                id="viewing-close-btn"
                 onClick={() => setViewingContent(null)}
                 className="flex items-center gap-2 px-4 py-2 bg-red-950/40 hover:bg-red-900/40 text-red-200 border border-red-900/30 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-lg transition-colors text-sm font-medium cursor-pointer"
                 title="关闭"
