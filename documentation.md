@@ -111,291 +111,6 @@ OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
 > API Key 解析优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量（如 `GEMINI_API_KEY`）> `OPENAI_API_KEY` 回退。
 ```
 
-### 组件结构文档
-
-```text
-
-```
-
-### 组件结构文档 / 组件树
-
-```text
-graph TD
-    App[App.tsx]
-    subgraph App Children
-        Sidebar[Sidebar.tsx]
-        ChatArea[ChatArea.tsx]
-        SettingsModal[SettingsModal.tsx]
-    end
-
-    App --> Sidebar
-    App --> ChatArea
-    App --> SettingsModal
-
-    subgraph ChatArea Children
-        MessageItem[MessageItem]
-    end
-
-    subgraph MessageItem Children
-        MarkdownRenderer[MarkdownRenderer.tsx]
-    end
-
-    subgraph SettingsModal Children
-        ProviderEditor[ProviderEditor]
-        ModelEditor[ModelEditor]
-    end
-
-    ChatArea --> MessageItem
-    MessageItem --> MarkdownRenderer
-    SettingsModal --> ProviderEditor
-    SettingsModal --> ModelEditor
-```
-
-### 组件结构文档 / `App.tsx` — 状态管理中心
-
-```text
-**职责**:
-
-*   **状态中心**: 作为整个应用的顶层组件，管理所有核心状态。
-*   **数据获取**: 在应用启动时，通过 `api.ts` 从后端获取初始设置和会话数据。
-*   **状态管理**: 管理会话列表 (`sessions`)、当前会话 (`currentSessionId`)、用户设置 (`settings`)、以及全局 UI 状态（如 `isSettingsOpen`）。
-*   **业务逻辑**: 实现核心业务逻辑，如新建/删除会话、发送/重试消息，并将这些函数作为 props 传递给子组件。
-*   **持久化**: 调用 `api.ts` 中的函数将变更（如保存设置、发送消息）持久化到后端。
-```
-
-### 组件结构文档 / `Sidebar.tsx` — 左侧栏
-
-```text
-**职责**:
-
-*   **会话列表**: 显示所有聊天会话，按更新时间排序。
-*   **分类过滤**: 在会话列表上方提供角色选择器，允许用户按 Character 过滤显示的会话。
-*   **用户交互**: 允许用户切换会话、新建会话、删除会话。
-*   **导航**: 提供打开设置模态框的入口。
-```
-
-### 组件结构文档 / `ChatArea.tsx` — 聊天主区域
-
-```text
-**职责**:
-
-*   **消息显示**: 渲染当前会话的消息列表，包括用户消息和 AI 回复。
-*   **SSE 订阅**: 这是处理实时响应的核心。它通过 `api.subscribeGeneration` 订阅后端 SSE 端点，并根据接收到的事件 (`delta`, `done`, `error`, `stopped`) 实时更新 `streamingContent` 状态。
-*   **输入处理**: 管理用户输入框，支持 `Ctrl+Enter` 发送和 `Shift+Enter` 换行。
-*   **交互操作**: 提供停止生成、导出聊天记录等功能。支持手动修改当前会话绑定的 Character（点击标题下方的角色名称）。
-*   **快捷选择栏**: 在输入框上方提供浮动栏，允许用户快速切换当前活跃模型和角色。切换后即时保存到 `settings.json`。
-```
-
-### 组件结构文档 / `ChatArea.tsx` — 聊天主区域 / `MessageItem` (子组件)
-
-```text
-*   **职责**: 渲染单条消息，包括消息内容、头像、以及操作按钮（复制、重试、重新生成、继续）。
-*   **思考过程处理**: 解析并渲染 AI 回复中包含的 `<details>` 思考过程块，并提供折叠/展开功能。
-*   **消息操作**:
-    *   **Retry（重试）**: 从当前消息往前找到最近的 user 消息，抛弃其后所有内容重新生成
-    *   **Regenerate（重新生成）**: 保留当前 model 消息的 thinking process，删除正文，抛弃后续消息，注入 continue 指令让 AI 基于原有思考继续输出
-    *   **Continue（继续）**: 仅对最后一条 model 消息显示，在会话末尾添加 continue 指令让 AI 继续被中断的输出
-```
-
-### 组件结构文档 / `MarkdownRenderer.tsx` — Markdown 渲染器
-
-```text
-**职责**:
-
-*   **Markdown-to-HTML**: 使用 `react-markdown` 将 Markdown 文本安全地转换为 React 组件。
-*   **插件管线**: 集成 `remark-*` 和 `rehype-*` 插件生态，以支持 GFM (GitHub Flavored Markdown)、数学公式、化学方程式等高级功能。
-*   **数学渲染**: 通过 `remark-math` 和 `rehype-katex` 插件，将 LaTeX 格式的数学公式（`$...$` 和 `$$...$$`）渲染为 HTML 和 CSS。
-*   **安全**: 使用 `rehype-sanitize` 清理 HTML，防止 XSS 攻击，同时通过 `rehype-raw` 允许安全的、用于特定功能的 HTML 标签（如 `<details>`)。
-```
-
-### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗
-
-```text
-**职责**: 提供一个集中的界面，让用户管理应用的所有配置。它被设计为一个包含四个选项卡的模态框。
-```
-
-### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / General Tab
-
-```text
-*   **活跃模型选择**: 允许用户从所有已配置的模型中选择一个作为当前聊天使用的模型。
-*   **活跃角色预览**: 显示当前激活的角色名称及其系统提示词摘要（角色管理已移至 Characters tab）。
-*   **UI 开关**: 控制各种前端显示效果，如自动滚动、是否折叠思考过程等。
-```
-
-### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Providers Tab
-
-```text
-*   **供应商管理**: 允许用户添加、编辑、删除 AI 供应商实例 (ProviderInstance)。
-*   **连接配置**: 在 `ProviderEditor` 子组件中，用户可以配置供应商类型（Google, Nvidia, OpenAI Compatible）、API Key、Base URL 等连接信息。
-```
-
-### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Models Tab
-
-```text
-*   **模型管理**: 允许用户添加、编辑、删除模型实例 (ModelInstance)。
-*   **参数配置**: 在 `ModelEditor` 子组件中，用户可以将一个模型绑定到一个供应商，并配置其特定参数，如模型 ID、Temperature、Max Tokens 等。
-
-
-*   **危险区域操作**:
-    *   **Claude 格式导出**: 将所有会话数据转换为符合 Claude 官方规范的 JSON 格式并下载，自动处理思考过程块和时间戳精度。
-    *   **强制清洗数据**: 移除数据中的废弃字段，保持数据整洁。
-```
-
-### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Characters Tab
-
-```text
-*   **角色管理**: 允许用户添加、编辑、删除角色 (Character)。每个角色包含名称和系统提示词。
-*   **系统提示词迁移**: 原有 `systemPrompt` 字段被迁移为默认角色。后端生成时优先使用 `activeCharacterId` 对应的角色的 `systemPrompt`，若不存在则回退到 `systemPrompt` 字段。
-```
-
-### 代码质量与 Lint 规范
-
-```text
-本项目执行严格的代码质量检查。所有代码必须通过 ESLint、Prettier 和 TypeScript 的严格模式检查。
-```
-
-### 代码质量与 Lint 规范 / 检查工具
-
-```text
-- **Lint**: `bun run lint` (eslint)
-- **Formatting**: `bun run pretty` (prettier --check)
-- **Type Check**: `bun run check` (tsc --noEmit --strict)
-```
-
-### 代码质量与 Lint 规范 / 修复工具
-
-```text
-- **自动修复 Lint**: `bun run lint:fix`
-- **自动修复格式**: `bun run pretty:fix`
-```
-
-### 代码质量与 Lint 规范 / 严格修复规则
-
-```text
-1. **禁止未使用变量**: 所有的 `unused-vars` 必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
-2. **禁止未使用的表达式**: 严禁将三元运算符或逻辑表达式作为独立语句使用。应使用标准的 `if/else` 语句。
-3. **严格类型检查**: TypeScript 必须处于 `--strict` 模式。严禁无故使用 `@ts-ignore` 或 `@ts-expect-error`。如果第三方库缺少类型或存在上游 Bug，必须在注释中说明原因。
-4. **文档同步**: 任何逻辑变更必须同步更新 `AGENTS.md` 和 `docs/` 目录下的相关文档。
-```
-
-### 代码质量与 Lint 规范 / 最佳实践 (TypeScript)
-
-```text
-- **Make Illegal States Unrepresentable**: 使用辨析联合类型 (Discriminated Unions) 确保状态合法。
-- **Runtime Validation**: 对外部数据（API 响应、本地存储）使用 Zod 等工具进行运行时验证。
-- **Branded Types**: 对 ID 等原始类型使用 Branded Types 以增强区分度。
-- **Exhaustive Checks**: 使用 `never` 类型确保 `switch` 语句处理了所有可能的情况。
-```
-
-### 技术栈详情
-
-```text
-
-```
-
-### 技术栈详情 / 前端框架
-
-```text
-| 技术 | 版本 |
-|---|---|
-| React | ^19.2.7 |
-| TypeScript | ~6.0.3 |
-| Vite | ^8.0.16 |
-| Tailwind CSS | ^4.3.1 |
-| @tailwindcss/typography | ^0.5.20 |
-```
-
-### 技术栈详情 / 后端
-
-```text
-| 技术 | 版本 |
-|---|---|
-| Express | ^5.2.1 |
-| tsx | ^4.22.4 |
-| OpenAI SDK | ^6.44.0 |
-| dotenv | ^17.4.2 |
-```
-
-### 技术栈详情 / AI/数学库
-
-```text
-| 技术 | 版本 |
-|---|---|
-| @google/genai | ^2.8.0 |
-| KaTeX | ^0.17.0 |
-```
-
-### 技术栈详情 / Markdown 渲染管线
-
-```text
-| 技术 | 版本 |
-|---|---|
-| react-markdown | ^10.1.0 |
-| remark-math | ^6.0.0 |
-| remark-gfm | ^4.0.1 |
-| remark-breaks | ^4.0.0 |
-| remark-cjk-friendly | ^2.2.0 |
-| remark-squeeze-paragraphs | ^6.0.0 |
-| rehype-katex | ^7.0.1 |
-| rehype-raw | ^7.0.0 |
-| rehype-sanitize | ^6.0.0 |
-| rehype-external-links | ^3.0.0 |
-| katex/contrib/mhchem | (Bundled with KaTeX) |
-```
-
-### 技术栈详情 / 其他依赖
-
-```text
-| 技术 | 版本 |
-|---|---|
-| lucide-react | ^1.21.0 |
-| motion | ^12.40.0 |
-| clsx | ^2.1.1 |
-| tailwind-merge | ^3.6.0 |
-| uuid | ^14.0.1 |
-| unicodeit | ^0.7.5 |
-| markdown-to-txt | ^2.0.1 |
-```
-
-### 技术栈详情 / 其他依赖 / 标题生成
-
-```text
-标题生成使用纯 JavaScript 字符串操作，无需异步：
-
-- **unicodeit**: 将 LaTeX 数学公式转换为 Unicode 字符（如 `\alpha` → `α`)
-- **markdown-to-txt**: 清理 Markdown 语法（标题、粗体、链接等）
-- 处理流程：替换 `\dfrac` → `\frac` → 处理块级数学 `$$...$$` → 处理行内数学 `$...$` → Markdown 转文本 → 移除剩余 `$` 和 `\`
-- 只处理前200个字符，保证极快的处理速度
-```
-
-### 技术栈详情 / 开发工具
-
-```text
-| 工具 | 用途 |
-|---|---|
-| Bun | 依赖管理、脚本运行、构建 |
-| TypeScript (`tsc --noEmit`) | 类型检查 (`bun run lint`) |
-| Vite HMR | 热模块替换 |
-```
-
-### 技术栈详情 / 构建命令
-
-```text
-bun run dev           # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
-bun run build         # Vite 生产构建
-bun run preview       # 预览生产构建
-bun run build:bundle    # 打包服务端代码为单个 bundle
-bun run build:compile  # 使用 Bun 编译为可执行文件
-bun run lint          # TypeScript 类型检查
-bun run clean         # 清除 dist、dist-server、dist-compile、release 目录
-```
-
-### 技术栈详情 / 路径别名
-
-```text
-`@/*` 映射到项目根目录，配置在 `tsconfig.json` 和 `vite.config.ts` 中。
-```
-
 ### 数据模型与存储
 
 ```text
@@ -660,6 +375,154 @@ ai-math-chat-studio/
 | `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
 ```
 
+### 代码质量与 Lint 规范
+
+```text
+本项目执行严格的代码质量检查。所有代码必须通过 ESLint、Prettier 和 TypeScript 的严格模式检查。
+```
+
+### 代码质量与 Lint 规范 / 检查工具
+
+```text
+- **Lint**: `bun run lint` (eslint)
+- **Formatting**: `bun run pretty` (prettier --check)
+- **Type Check**: `bun run check` (tsc --noEmit --strict)
+```
+
+### 代码质量与 Lint 规范 / 修复工具
+
+```text
+- **自动修复 Lint**: `bun run lint:fix`
+- **自动修复格式**: `bun run pretty:fix`
+```
+
+### 代码质量与 Lint 规范 / 严格修复规则
+
+```text
+1. **禁止未使用变量**: 所有的 `unused-vars` 必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
+2. **禁止未使用的表达式**: 严禁将三元运算符或逻辑表达式作为独立语句使用。应使用标准的 `if/else` 语句。
+3. **严格类型检查**: TypeScript 必须处于 `--strict` 模式。严禁无故使用 `@ts-ignore` 或 `@ts-expect-error`。如果第三方库缺少类型或存在上游 Bug，必须在注释中说明原因。
+4. **文档同步**: 任何逻辑变更必须同步更新 `AGENTS.md` 和 `docs/` 目录下的相关文档。
+```
+
+### 代码质量与 Lint 规范 / 最佳实践 (TypeScript)
+
+```text
+- **Make Illegal States Unrepresentable**: 使用辨析联合类型 (Discriminated Unions) 确保状态合法。
+- **Runtime Validation**: 对外部数据（API 响应、本地存储）使用 Zod 等工具进行运行时验证。
+- **Branded Types**: 对 ID 等原始类型使用 Branded Types 以增强区分度。
+- **Exhaustive Checks**: 使用 `never` 类型确保 `switch` 语句处理了所有可能的情况。
+```
+
+### 技术栈详情
+
+```text
+
+```
+
+### 技术栈详情 / 前端框架
+
+```text
+| 技术 | 版本 |
+|---|---|
+| React | ^19.2.7 |
+| TypeScript | ~6.0.3 |
+| Vite | ^8.0.16 |
+| Tailwind CSS | ^4.3.1 |
+| @tailwindcss/typography | ^0.5.20 |
+```
+
+### 技术栈详情 / 后端
+
+```text
+| 技术 | 版本 |
+|---|---|
+| Express | ^5.2.1 |
+| tsx | ^4.22.4 |
+| OpenAI SDK | ^6.44.0 |
+| dotenv | ^17.4.2 |
+```
+
+### 技术栈详情 / AI/数学库
+
+```text
+| 技术 | 版本 |
+|---|---|
+| @google/genai | ^2.8.0 |
+| KaTeX | ^0.17.0 |
+```
+
+### 技术栈详情 / Markdown 渲染管线
+
+```text
+| 技术 | 版本 |
+|---|---|
+| react-markdown | ^10.1.0 |
+| remark-math | ^6.0.0 |
+| remark-gfm | ^4.0.1 |
+| remark-breaks | ^4.0.0 |
+| remark-cjk-friendly | ^2.2.0 |
+| remark-squeeze-paragraphs | ^6.0.0 |
+| rehype-katex | ^7.0.1 |
+| rehype-raw | ^7.0.0 |
+| rehype-sanitize | ^6.0.0 |
+| rehype-external-links | ^3.0.0 |
+| katex/contrib/mhchem | (Bundled with KaTeX) |
+```
+
+### 技术栈详情 / 其他依赖
+
+```text
+| 技术 | 版本 |
+|---|---|
+| lucide-react | ^1.21.0 |
+| motion | ^12.40.0 |
+| clsx | ^2.1.1 |
+| tailwind-merge | ^3.6.0 |
+| uuid | ^14.0.1 |
+| unicodeit | ^0.7.5 |
+| markdown-to-txt | ^2.0.1 |
+```
+
+### 技术栈详情 / 其他依赖 / 标题生成
+
+```text
+标题生成使用纯 JavaScript 字符串操作，无需异步：
+
+- **unicodeit**: 将 LaTeX 数学公式转换为 Unicode 字符（如 `\alpha` → `α`)
+- **markdown-to-txt**: 清理 Markdown 语法（标题、粗体、链接等）
+- 处理流程：替换 `\dfrac` → `\frac` → 处理块级数学 `$$...$$` → 处理行内数学 `$...$` → Markdown 转文本 → 移除剩余 `$` 和 `\`
+- 只处理前200个字符，保证极快的处理速度
+```
+
+### 技术栈详情 / 开发工具
+
+```text
+| 工具 | 用途 |
+|---|---|
+| Bun | 依赖管理、脚本运行、构建 |
+| TypeScript (`tsc --noEmit`) | 类型检查 (`bun run lint`) |
+| Vite HMR | 热模块替换 |
+```
+
+### 技术栈详情 / 构建命令
+
+```text
+bun run dev           # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
+bun run build         # Vite 生产构建
+bun run preview       # 预览生产构建
+bun run build:bundle    # 打包服务端代码为单个 bundle
+bun run build:compile  # 使用 Bun 编译为可执行文件
+bun run lint          # TypeScript 类型检查
+bun run clean         # 清除 dist、dist-server、dist-compile、release 目录
+```
+
+### 技术栈详情 / 路径别名
+
+```text
+`@/*` 映射到项目根目录，配置在 `tsconfig.json` 和 `vite.config.ts` 中。
+```
+
 ### 项目架构概览
 
 ```text
@@ -905,5 +768,142 @@ graph TD
 -   **思考过程包装**: 为了在 UI 中统一展示不同模型的“思考过程”(reasoning)，所有此类信息在 `GenerationManager` 中被统一包装成一个可折叠的 `<details>` HTML 标签。
 -   **上下文窗口限制**: 为控制成本和 API 请求大小，每次生成只向 AI 模型发送最近的 40 条消息历史记录。
 -   **文档同步规则**: `AGENTS.md` 中明确规定，任何对代码、架构或数据模型的修改都必须同步更新相关的文档，以保持其准确性。
+```
+
+### 组件结构文档
+
+```text
+
+```
+
+### 组件结构文档 / 组件树
+
+```text
+graph TD
+    App[App.tsx]
+    subgraph App Children
+        Sidebar[Sidebar.tsx]
+        ChatArea[ChatArea.tsx]
+        SettingsModal[SettingsModal.tsx]
+    end
+
+    App --> Sidebar
+    App --> ChatArea
+    App --> SettingsModal
+
+    subgraph ChatArea Children
+        MessageItem[MessageItem]
+    end
+
+    subgraph MessageItem Children
+        MarkdownRenderer[MarkdownRenderer.tsx]
+    end
+
+    subgraph SettingsModal Children
+        ProviderEditor[ProviderEditor]
+        ModelEditor[ModelEditor]
+    end
+
+    ChatArea --> MessageItem
+    MessageItem --> MarkdownRenderer
+    SettingsModal --> ProviderEditor
+    SettingsModal --> ModelEditor
+```
+
+### 组件结构文档 / `App.tsx` — 状态管理中心
+
+```text
+**职责**:
+
+*   **状态中心**: 作为整个应用的顶层组件，管理所有核心状态。
+*   **数据获取**: 在应用启动时，通过 `api.ts` 从后端获取初始设置和会话数据。
+*   **状态管理**: 管理会话列表 (`sessions`)、当前会话 (`currentSessionId`)、用户设置 (`settings`)、以及全局 UI 状态（如 `isSettingsOpen`）。
+*   **业务逻辑**: 实现核心业务逻辑，如新建/删除会话、发送/重试消息，并将这些函数作为 props 传递给子组件。
+*   **持久化**: 调用 `api.ts` 中的函数将变更（如保存设置、发送消息）持久化到后端。
+```
+
+### 组件结构文档 / `Sidebar.tsx` — 左侧栏
+
+```text
+**职责**:
+
+*   **会话列表**: 显示所有聊天会话，按更新时间排序。
+*   **分类过滤**: 在会话列表上方提供角色选择器，允许用户按 Character 过滤显示的会话。
+*   **用户交互**: 允许用户切换会话、新建会话、删除会话。
+*   **导航**: 提供打开设置模态框的入口。
+```
+
+### 组件结构文档 / `ChatArea.tsx` — 聊天主区域
+
+```text
+**职责**:
+
+*   **消息显示**: 渲染当前会话的消息列表，包括用户消息和 AI 回复。
+*   **SSE 订阅**: 这是处理实时响应的核心。它通过 `api.subscribeGeneration` 订阅后端 SSE 端点，并根据接收到的事件 (`delta`, `done`, `error`, `stopped`) 实时更新 `streamingContent` 状态。
+*   **输入处理**: 管理用户输入框，支持 `Ctrl+Enter` 发送和 `Shift+Enter` 换行。
+*   **交互操作**: 提供停止生成、导出聊天记录等功能。支持手动修改当前会话绑定的 Character（点击标题下方的角色名称）。
+*   **快捷选择栏**: 在输入框上方提供浮动栏，允许用户快速切换当前活跃模型和角色。切换后即时保存到 `settings.json`。
+```
+
+### 组件结构文档 / `ChatArea.tsx` — 聊天主区域 / `MessageItem` (子组件)
+
+```text
+*   **职责**: 渲染单条消息，包括消息内容、头像、以及操作按钮（复制、重试、重新生成、继续）。
+*   **思考过程处理**: 解析并渲染 AI 回复中包含的 `<details>` 思考过程块，并提供折叠/展开功能。
+*   **消息操作**:
+    *   **Retry（重试）**: 从当前消息往前找到最近的 user 消息，抛弃其后所有内容重新生成
+    *   **Regenerate（重新生成）**: 保留当前 model 消息的 thinking process，删除正文，抛弃后续消息，注入 continue 指令让 AI 基于原有思考继续输出
+    *   **Continue（继续）**: 仅对最后一条 model 消息显示，在会话末尾添加 continue 指令让 AI 继续被中断的输出
+```
+
+### 组件结构文档 / `MarkdownRenderer.tsx` — Markdown 渲染器
+
+```text
+**职责**:
+
+*   **Markdown-to-HTML**: 使用 `react-markdown` 将 Markdown 文本安全地转换为 React 组件。
+*   **插件管线**: 集成 `remark-*` 和 `rehype-*` 插件生态，以支持 GFM (GitHub Flavored Markdown)、数学公式、化学方程式等高级功能。
+*   **数学渲染**: 通过 `remark-math` 和 `rehype-katex` 插件，将 LaTeX 格式的数学公式（`$...$` 和 `$$...$$`）渲染为 HTML 和 CSS。
+*   **安全**: 使用 `rehype-sanitize` 清理 HTML，防止 XSS 攻击，同时通过 `rehype-raw` 允许安全的、用于特定功能的 HTML 标签（如 `<details>`)。
+```
+
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗
+
+```text
+**职责**: 提供一个集中的界面，让用户管理应用的所有配置。它被设计为一个包含四个选项卡的模态框。
+```
+
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / General Tab
+
+```text
+*   **活跃模型选择**: 允许用户从所有已配置的模型中选择一个作为当前聊天使用的模型。
+*   **活跃角色预览**: 显示当前激活的角色名称及其系统提示词摘要（角色管理已移至 Characters tab）。
+*   **UI 开关**: 控制各种前端显示效果，如自动滚动、是否折叠思考过程等。
+```
+
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Providers Tab
+
+```text
+*   **供应商管理**: 允许用户添加、编辑、删除 AI 供应商实例 (ProviderInstance)。
+*   **连接配置**: 在 `ProviderEditor` 子组件中，用户可以配置供应商类型（Google, Nvidia, OpenAI Compatible）、API Key、Base URL 等连接信息。
+```
+
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Models Tab
+
+```text
+*   **模型管理**: 允许用户添加、编辑、删除模型实例 (ModelInstance)。
+*   **参数配置**: 在 `ModelEditor` 子组件中，用户可以将一个模型绑定到一个供应商，并配置其特定参数，如模型 ID、Temperature、Max Tokens 等。
+
+
+*   **危险区域操作**:
+    *   **Claude 格式导出**: 将所有会话数据转换为符合 Claude 官方规范的 JSON 格式并下载，自动处理思考过程块和时间戳精度。
+    *   **强制清洗数据**: 移除数据中的废弃字段，保持数据整洁。
+```
+
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Characters Tab
+
+```text
+*   **角色管理**: 允许用户添加、编辑、删除角色 (Character)。每个角色包含名称和系统提示词。
+*   **系统提示词迁移**: 原有 `systemPrompt` 字段被迁移为默认角色。后端生成时优先使用 `activeCharacterId` 对应的角色的 `systemPrompt`，若不存在则回退到 `systemPrompt` 字段。
 ```
 
