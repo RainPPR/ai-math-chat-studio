@@ -127,30 +127,20 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
     }
   }, [mainContent, isGenerating, isLast, settings.collapseThinkingFinished]);
 
-  let alignClass = 'justify-start';
-  if (isUser) {
-    alignClass = 'justify-end';
-  }
+  const alignClass = isUser ? 'justify-end' : 'justify-start';
+  const itemsAlignClass = isUser ? 'items-end' : 'items-start';
+  const copyIcon = copiedId === msg.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />;
 
-  let itemsAlignClass = 'items-start';
-  if (isUser) {
-    itemsAlignClass = 'items-end';
-  }
+  // Absolute positioning toolbar handles responsive layout: comfort offsets on large viewports, inside bubbles on small devices to prevent clipping.
+  // keyboard accessibility focuses are supported via group-focus-within and focus-within.
+  const actionPositionClass = isUser
+    ? 'absolute top-2 right-2 sm:-left-12 flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10'
+    : 'absolute top-2 right-2 sm:-right-12 flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10';
 
-  let copyIcon = <Copy size={16} />;
-  if (copiedId === msg.id) {
-    copyIcon = <Check size={16} className="text-green-400" />;
-  }
+  const backgroundClass = isUser ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-100 border border-gray-700';
 
-  let actionPositionClass = 'absolute top-2 -right-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity';
-  if (isUser) {
-    actionPositionClass = 'absolute top-2 -left-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity';
-  }
-
-  let backgroundClass = 'bg-gray-800 text-gray-100 border border-gray-700';
-  if (isUser) {
-    backgroundClass = 'bg-blue-600 text-white';
-  }
+  // Do not show the viewing overlay button if message is currently streaming to prevent stale snapshot freezes.
+  const isCurrentlyStreaming = isGenerating && isLast;
 
   return (
     <div className={`flex ${alignClass} group`}>
@@ -174,21 +164,25 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
         {mainContent && (
           <div className={`rounded-2xl px-6 py-4 shadow-sm relative w-full ${backgroundClass}`}>
             <div className={actionPositionClass}>
-              <button
-                onClick={() => onView(mainContent)}
-                className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
-                title="查看"
-              >
-                <Eye size={16} />
-              </button>
+              {!isCurrentlyStreaming && (
+                <button
+                  onClick={() => onView(mainContent)}
+                  className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                  title="查看"
+                  aria-label="查看"
+                >
+                  <Eye size={16} />
+                </button>
+              )}
               <button
                 onClick={() => {
                   if (msg.id) {
                     onCopy(msg.id, msg.content);
                   }
                 }}
-                className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
+                className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
                 title="Copy"
+                aria-label="复制消息"
               >
                 {copyIcon}
               </button>
@@ -393,15 +387,24 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     return () => { document.removeEventListener('mousedown', handleClickOutside); };
   }, []);
 
-  // Lock body scroll when viewing content overlay is active
   useEffect(() => {
+    const chatContainer = document.getElementById('chat-scroll-container');
     if (viewingContent) {
       document.body.style.overflow = 'hidden';
+      if (chatContainer) {
+        chatContainer.style.overflowY = 'hidden';
+      }
     } else {
       document.body.style.overflow = '';
+      if (chatContainer) {
+        chatContainer.style.overflowY = 'auto';
+      }
     }
     return () => {
       document.body.style.overflow = '';
+      if (chatContainer) {
+        chatContainer.style.overflowY = 'auto';
+      }
     };
   }, [viewingContent]);
 
@@ -419,7 +422,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     document.body.appendChild(iframe);
 
     const doc = iframe.contentWindow?.document || iframe.contentDocument;
-    if (!doc) return;
+    if (!doc) {
+      if (iframe.parentNode) {
+        iframe.parentNode.removeChild(iframe);
+      }
+      return;
+    }
 
     const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
       .map(el => el.outerHTML)
@@ -493,14 +501,15 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     }, 500);
   };
 
-  // Intercept Ctrl+P / Cmd+P in viewing overlay
   useEffect(() => {
+    if (!viewingContent) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (viewingContent) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-          e.preventDefault();
-          handlePrint();
-        }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault();
+        handlePrint();
+      } else if (e.key === 'Escape') {
+        setViewingContent(null);
       }
     };
 
@@ -623,7 +632,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
+      <div id="chat-scroll-container" className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
         {error && (
           <div className="max-w-4xl mx-auto">
             <div className="rounded-xl px-4 py-3 bg-red-900/30 border border-red-700/50 flex items-start gap-3">
@@ -802,22 +811,29 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       </div>
 
       {viewingContent && (
-        <div className="fixed inset-0 z-50 bg-gray-950 overflow-y-auto flex flex-col p-6 sm:p-12">
+        <div
+          className="fixed inset-0 z-50 bg-gray-950 overflow-y-auto flex flex-col p-6 sm:p-12"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="viewing-content-title"
+        >
           <div className="max-w-4xl mx-auto w-full flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
-            <h3 className="text-lg font-semibold text-gray-300">Markdown 渲染结果</h3>
+            <h3 id="viewing-content-title" className="text-lg font-semibold text-gray-300">Markdown 渲染结果</h3>
             <div className="flex items-center gap-3">
               <button
                 onClick={handlePrint}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg transition-colors text-sm font-medium cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg transition-colors text-sm font-medium cursor-pointer"
                 title="打印 (Ctrl+P)"
+                aria-label="打印渲染结果"
               >
                 <Printer size={16} />
                 <span>打印</span>
               </button>
               <button
                 onClick={() => setViewingContent(null)}
-                className="flex items-center gap-2 px-4 py-2 bg-red-950/40 hover:bg-red-900/40 text-red-200 border border-red-900/30 rounded-lg transition-colors text-sm font-medium cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 bg-red-950/40 hover:bg-red-900/40 text-red-200 border border-red-900/30 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-lg transition-colors text-sm font-medium cursor-pointer"
                 title="关闭"
+                aria-label="关闭预览"
               >
                 <X size={16} />
                 <span>关闭</span>
