@@ -393,12 +393,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       if (chatContainer) {
         chatContainer.style.overflowY = 'hidden';
       }
-      setTimeout(() => {
-        const closeBtn = document.getElementById('viewing-close-btn');
-        if (closeBtn) {
-          closeBtn.focus();
-        }
-      }, 50);
+      const closeBtn = document.getElementById('viewing-close-btn');
+      if (closeBtn) {
+        closeBtn.focus();
+      }
     } else {
       document.body.style.overflow = '';
       if (chatContainer) {
