@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatSession, UserSettings } from '../types';
 import { api } from '../lib/api';
-import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal, AlertCircle, X, ChevronDown, Bot, Sparkles, FileText } from 'lucide-react';
+import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal, AlertCircle, X, ChevronDown, Bot, Sparkles, FileText, Eye, Printer } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface ChatAreaProps {
@@ -68,10 +68,11 @@ function convertNonStandardThinkingForDisplay(content: string): { thoughts: stri
   return { thoughts: [thinkingLines.join('\n')], mainContent };
 }
 
-const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue, onRegenerate }: {
+const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue, onRegenerate, onView }: {
   msg: any; isLast: boolean; isGenerating: boolean; settings: UserSettings;
   onCopy: (id: string, content: string) => void; copiedId: string | null;
   onRetry?: (msgId: string) => void; onContinue?: () => void; onRegenerate?: (msgId: string) => void;
+  onView: (content: string) => void;
 }) => {
   const isUser = msg.role === 'user';
   let thoughts: string[] = [];
@@ -126,9 +127,34 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
     }
   }, [mainContent, isGenerating, isLast, settings.collapseThinkingFinished]);
 
+  let alignClass = 'justify-start';
+  if (isUser) {
+    alignClass = 'justify-end';
+  }
+
+  let itemsAlignClass = 'items-start';
+  if (isUser) {
+    itemsAlignClass = 'items-end';
+  }
+
+  let copyIcon = <Copy size={16} />;
+  if (copiedId === msg.id) {
+    copyIcon = <Check size={16} className="text-green-400" />;
+  }
+
+  let actionPositionClass = 'absolute top-2 -right-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity';
+  if (isUser) {
+    actionPositionClass = 'absolute top-2 -left-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity';
+  }
+
+  let backgroundClass = 'bg-gray-800 text-gray-100 border border-gray-700';
+  if (isUser) {
+    backgroundClass = 'bg-blue-600 text-white';
+  }
+
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group`}>
-      <div className={`max-w-[85%] md:max-w-[75%] flex flex-col gap-2 ${isUser ? 'items-end' : 'items-start'} w-full`}>
+    <div className={`flex ${alignClass} group`}>
+      <div className={`max-w-[85%] md:max-w-[75%] flex flex-col gap-2 ${itemsAlignClass} w-full`}>
         {thoughts.map((thought, i) => (
           <div key={`thought-${i}`} className="rounded-xl shadow-sm relative w-full bg-gray-800/40 border border-gray-700/50 overflow-hidden">
             <button onClick={() => { setIsThoughtOpen(!isThoughtOpen); }} className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800/60 hover:bg-gray-800/80 transition-colors text-xs font-semibold uppercase tracking-wider text-gray-400">
@@ -146,10 +172,27 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
           </div>
         ))}
         {mainContent && (
-          <div className={`rounded-2xl px-6 py-4 shadow-sm relative w-full ${isUser ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-100 border border-gray-700'}`}>
-            <button onClick={() => msg.id && onCopy(msg.id, msg.content)} className={`absolute top-2 ${isUser ? '-left-10' : '-right-10'} p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-opacity`} title="Copy">
-              {copiedId === msg.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
-            </button>
+          <div className={`rounded-2xl px-6 py-4 shadow-sm relative w-full ${backgroundClass}`}>
+            <div className={actionPositionClass}>
+              <button
+                onClick={() => onView(mainContent)}
+                className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
+                title="查看"
+              >
+                <Eye size={16} />
+              </button>
+              <button
+                onClick={() => {
+                  if (msg.id) {
+                    onCopy(msg.id, msg.content);
+                  }
+                }}
+                className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
+                title="Copy"
+              >
+                {copyIcon}
+              </button>
+            </div>
             <MarkdownRenderer content={mainContent} />
           </div>
         )}
@@ -234,6 +277,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
+  const [viewingContent, setViewingContent] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<string>('');
@@ -348,6 +392,123 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     document.addEventListener('mousedown', handleClickOutside);
     return () => { document.removeEventListener('mousedown', handleClickOutside); };
   }, []);
+
+  // Lock body scroll when viewing content overlay is active
+  useEffect(() => {
+    if (viewingContent) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [viewingContent]);
+
+  const handlePrint = () => {
+    const printElement = document.getElementById('print-content-render');
+    if (!printElement) return;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (!doc) return;
+
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+      .map(el => el.outerHTML)
+      .join('\n');
+
+    const printStyles = `
+      <style>
+        @media print {
+          @page {
+            margin: 20mm;
+          }
+          body {
+            background-color: white !important;
+            color: black !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+          }
+          .prose-invert {
+            color: black !important;
+          }
+          .prose {
+            max-width: none !important;
+            color: black !important;
+          }
+          .prose * {
+            color: black !important;
+            border-color: #ddd !important;
+            background-color: transparent !important;
+          }
+          .katex {
+            text-rendering: auto;
+          }
+        }
+        body {
+          background-color: white !important;
+          color: black !important;
+          padding: 20px;
+        }
+      </style>
+    `;
+
+    doc.open();
+    doc.write(
+      '<!DOCTYPE html>\n' +
+      '<html>\n' +
+      '  <head>\n' +
+      '    <title>Print Content</title>\n' +
+      '    ' + styles + '\n' +
+      '    ' + printStyles + '\n' +
+      '  </head>\n' +
+      '  <body>\n' +
+      '    <div class="prose">\n' +
+      '      ' + printElement.innerHTML + '\n' +
+      '    </div>\n' +
+      '  </body>\n' +
+      '</html>'
+    );
+    doc.close();
+
+    setTimeout(() => {
+      if (iframe.contentWindow) {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }
+      setTimeout(() => {
+        if (iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
+        }
+      }, 1000);
+    }, 500);
+  };
+
+  // Intercept Ctrl+P / Cmd+P in viewing overlay
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (viewingContent) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+          e.preventDefault();
+          handlePrint();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [viewingContent]);
 
   const handleSend = () => {
     if (input.trim() && !isGenerating) {
@@ -490,6 +651,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             onRetry={onRetry}
             onContinue={onContinue}
             onRegenerate={onRegenerate}
+            onView={(content) => setViewingContent(content)}
           />
         ))}
         {isGenerating && !isStopping && !streamingContent && (
@@ -638,6 +800,38 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           {input.length > 0 && <span className="text-xs text-gray-500 font-mono">Est. Tokens: <span className="text-blue-400 font-medium">{estimateTokens(input)}</span> (~{input.length} chars)</span>}
         </div>
       </div>
+
+      {viewingContent && (
+        <div className="fixed inset-0 z-50 bg-gray-950 overflow-y-auto flex flex-col p-6 sm:p-12">
+          <div className="max-w-4xl mx-auto w-full flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
+            <h3 className="text-lg font-semibold text-gray-300">Markdown 渲染结果</h3>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg transition-colors text-sm font-medium cursor-pointer"
+                title="打印 (Ctrl+P)"
+              >
+                <Printer size={16} />
+                <span>打印</span>
+              </button>
+              <button
+                onClick={() => setViewingContent(null)}
+                className="flex items-center gap-2 px-4 py-2 bg-red-950/40 hover:bg-red-900/40 text-red-200 border border-red-900/30 rounded-lg transition-colors text-sm font-medium cursor-pointer"
+                title="关闭"
+              >
+                <X size={16} />
+                <span>关闭</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="print-content" className="max-w-4xl mx-auto w-full flex-1 bg-gray-900 text-gray-100 rounded-xl shadow-xl p-8 sm:p-12 border border-gray-800 mb-8 overflow-x-auto">
+            <div id="print-content-render" className="prose prose-invert prose-lg md:prose-xl max-w-none">
+              <MarkdownRenderer content={viewingContent} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
