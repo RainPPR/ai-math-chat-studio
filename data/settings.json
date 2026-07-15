@@ -165,13 +165,6 @@
       "displayName": "Gemma-4-31B (Poe)"
     },
     {
-      "id": "b657c5c4-ab39-5657-a244-37fac1b33a94",
-      "providerId": "p-poe-8d3e",
-      "providerType": "openai-compatible",
-      "modelId": "glm-5.1-t",
-      "displayName": "GLM-5.1-T (Poe)"
-    },
-    {
       "id": "77fc9549-28c8-5e64-994a-b20990ea22e0",
       "providerId": "p-poe-8d3e",
       "providerType": "openai-compatible",
@@ -278,13 +271,6 @@
       "displayName": "Free Models Router (Kilo)"
     },
     {
-      "id": "f66904d4-5a05-55ff-a3e8-3f42b90414ef",
-      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-      "providerType": "openai-compatible",
-      "modelId": "grok-4.3",
-      "displayName": "Grok 4.3 (LogFare)"
-    },
-    {
       "id": "6ff1f6f8-28ba-5fe5-baed-6b3c96e9874d",
       "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
       "providerType": "openai-compatible",
@@ -306,13 +292,6 @@
       "displayName": "GLM 5.2 (LogFare)"
     },
     {
-      "id": "d4cb5d70-7982-59d7-bd72-4337d101bf05",
-      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-      "providerType": "openai-compatible",
-      "modelId": "kimi-k2.7-code",
-      "displayName": "Kimi K2.7 Code (LogFare)"
-    },
-    {
       "id": "248c1cbe-0ff5-5ed2-b6cc-0f5d89abccae",
       "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
       "providerType": "openai-compatible",
@@ -332,6 +311,20 @@
       "providerType": "openai-compatible",
       "modelId": "mimo-v2.5",
       "displayName": "MiMo V2.5 (LogFare)"
+    },
+    {
+      "id": "e9c170a6-bda7-59db-99f5-bfbe321ebdf5",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "grok-4.5",
+      "displayName": "Grok 4.5 (LogFare)"
+    },
+    {
+      "id": "2f8870b2-8c24-5d63-b382-a194a1b18398",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "mimo-v2.5-pro",
+      "displayName": "MiMo V2.5 Pro (LogFare)"
     },
     {
       "id": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
