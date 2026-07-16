@@ -404,10 +404,7 @@
   "autoScroll": false,
   "collapseThinkingFinished": true,
   "gemmaTrimThinkingSpaces": true,
-  "starredSessions": {
-    "f2ddac94-3a9b-48f5-a829-a76ad95391ea": "yellow",
-    "f6697785-4f1e-452e-a371-73a14c20783a": "yellow"
-  },
+  "starredSessions": {},
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
   "activeModelId": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
   "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e"

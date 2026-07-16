@@ -162,6 +162,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   autoScroll: true,
   collapseThinkingFinished: true,
   gemmaTrimThinkingSpaces: false,
+  starredSessions: {},
 };
 ```
 

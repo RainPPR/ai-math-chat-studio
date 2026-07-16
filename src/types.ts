@@ -45,8 +45,10 @@ export interface UserSettings {
   autoScroll: boolean;
   collapseThinkingFinished: boolean;
   gemmaTrimThinkingSpaces: boolean;
-  starredSessions?: Record<string, string>;
+  starredSessions?: Record<string, StarColor>;
 }
+
+export type StarColor = 'yellow' | 'rose' | 'blue' | 'green' | 'orange';
 
 export const DEFAULT_SETTINGS: UserSettings = {
   providers: [],

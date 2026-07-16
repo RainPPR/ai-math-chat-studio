@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChatSession } from '../types';
+import { ChatSession, Character, StarColor } from '../types';
 import { Plus, Settings, MessageSquare, Trash2, Copy, ChevronDown, ChevronRight, User, Star } from 'lucide-react';
-import { Character } from '../types';
 
 const STAR_COLORS = [
   { id: 'yellow', name: '黄', colorClass: 'text-yellow-500 hover:text-yellow-400', bgClass: 'bg-yellow-500' },
@@ -12,17 +11,9 @@ const STAR_COLORS = [
 ];
 
 function getStarColorClass(colorId: string): string {
-  if (colorId === 'rose') {
-    return 'text-rose-500 hover:text-rose-400';
-  }
-  if (colorId === 'blue') {
-    return 'text-blue-500 hover:text-blue-400';
-  }
-  if (colorId === 'green') {
-    return 'text-green-500 hover:text-green-400';
-  }
-  if (colorId === 'orange') {
-    return 'text-orange-500 hover:text-orange-400';
+  const found = STAR_COLORS.find(c => c.id === colorId);
+  if (found) {
+    return found.colorClass;
   }
   return 'text-yellow-500 hover:text-yellow-400';
 }
@@ -32,7 +23,7 @@ interface SessionItemProps {
   isSelected: boolean;
   isStarred: boolean;
   starredColor: string;
-  activeColorPickerSessionId: string | null;
+  showColorPicker: boolean;
   onSelect: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -46,7 +37,7 @@ const SessionItem: React.FC<SessionItemProps> = ({
   isSelected,
   isStarred,
   starredColor,
-  activeColorPickerSessionId,
+  showColorPicker,
   onSelect,
   onDuplicate,
   onDelete,
@@ -54,37 +45,49 @@ const SessionItem: React.FC<SessionItemProps> = ({
   onSelectColor,
   onUnstar,
 }) => {
-  const bgClass = isSelected
-    ? 'bg-gray-800 text-white'
-    : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200';
+  let bgClass = 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200';
+  if (isSelected) {
+    bgClass = 'bg-gray-800 text-white';
+  }
 
   const starColorClass = getStarColorClass(starredColor);
 
+  let starButtonClass = 'text-gray-500 hover:text-gray-300 opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100';
+  if (isStarred) {
+    starButtonClass = starColorClass;
+  }
+
+  let starFill = 'none';
+  if (isStarred) {
+    starFill = 'currentColor';
+  }
+
   return (
     <div
-      className={`group flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${bgClass}`}
-      onClick={onSelect}
+      className={`group flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${bgClass}`}
     >
-      <div className="flex items-center gap-3 overflow-hidden min-w-0">
+      <button
+        onClick={onSelect}
+        className="flex items-center gap-3 overflow-hidden min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded cursor-pointer py-1"
+      >
         <MessageSquare size={16} className="shrink-0" />
         <span className="truncate text-sm font-medium">{session.title}</span>
-      </div>
+      </button>
       <div className="flex items-center gap-1 shrink-0 relative">
         <div className="relative">
           <button
             onClick={onStarClick}
-            className={`p-1 rounded transition-colors ${
-              isStarred
-                ? starColorClass
-                : 'text-gray-500 hover:text-gray-300 opacity-0 group-hover:opacity-100'
-            }`}
+            className={`p-1 rounded transition-colors cursor-pointer ${starButtonClass}`}
             title="Star Chat"
           >
-            <Star size={16} fill={isStarred ? 'currentColor' : 'none'} />
+            <Star size={16} fill={starFill} />
           </button>
 
-          {activeColorPickerSessionId === session.id && (
-            <div className="absolute right-0 bottom-full mb-1 z-[100] bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-2 flex items-center gap-1.5 whitespace-nowrap">
+          {showColorPicker && (
+            <div
+              onClick={(e) => { e.stopPropagation(); }}
+              className="absolute right-0 top-full mt-1 z-[100] bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-2 flex items-center gap-1.5 whitespace-nowrap"
+            >
               {STAR_COLORS.map(color => (
                 <button
                   key={color.id}
@@ -105,13 +108,13 @@ const SessionItem: React.FC<SessionItemProps> = ({
           )}
         </div>
 
-        <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDuplicate();
             }}
-            className="text-gray-500 hover:text-blue-400 transition-colors p-1 cursor-pointer"
+            className="text-gray-500 hover:text-blue-400 transition-colors p-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
             title="Duplicate Chat"
           >
             <Copy size={16} />
@@ -121,7 +124,7 @@ const SessionItem: React.FC<SessionItemProps> = ({
               e.stopPropagation();
               onDelete();
             }}
-            className="text-gray-500 hover:text-red-400 transition-colors p-1 cursor-pointer"
+            className="text-gray-500 hover:text-red-400 transition-colors p-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
             title="Delete Chat"
           >
             <Trash2 size={16} />
@@ -142,8 +145,8 @@ interface SidebarProps {
   onDuplicateChat: (id: string) => void;
   onOpenSettings: () => void;
   width: number;
-  starredSessions?: Record<string, string>;
-  onToggleStarSession?: (sessionId: string, color: string) => void;
+  starredSessions?: Record<string, StarColor>;
+  onToggleStarSession?: (sessionId: string, color: StarColor | '') => void;
 }
 
 interface SessionGroup {
@@ -254,17 +257,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleStarSession,
 }) => {
   const [filterCharacterId, setFilterCharacterId] = useState<string | 'all'>('all');
-  const [activeColorPickerSessionId, setActiveColorPickerSessionId] = useState<string | null>(null);
+  const [activeColorPickerId, setActiveColorPickerId] = useState<string | null>(null);
   const [isStarredCollapsed, setIsStarredCollapsed] = useState(false);
 
-  // Close activeColorPickerSessionId when clicking outside
+  // Close activeColorPickerId when clicking outside using capture-phase event listener
   useEffect(() => {
     const handleClosePicker = () => {
-      setActiveColorPickerSessionId(null);
+      setActiveColorPickerId(null);
     };
-    document.addEventListener('click', handleClosePicker);
+    document.addEventListener('click', handleClosePicker, true);
     return () => {
-      document.removeEventListener('click', handleClosePicker);
+      document.removeEventListener('click', handleClosePicker, true);
     };
   }, []);
 
@@ -300,21 +303,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
     });
   };
 
-  const handleStarClick = (e: React.MouseEvent, sessionId: string) => {
+  const handleStarClick = (e: React.MouseEvent, pickerId: string) => {
     e.stopPropagation();
-    if (activeColorPickerSessionId === sessionId) {
-      setActiveColorPickerSessionId(null);
+    if (activeColorPickerId === pickerId) {
+      setActiveColorPickerId(null);
     } else {
-      setActiveColorPickerSessionId(sessionId);
+      setActiveColorPickerId(pickerId);
     }
   };
 
-  const handleSelectColor = (e: React.MouseEvent, sessionId: string, colorId: string) => {
+  const handleSelectColor = (e: React.MouseEvent, sessionId: string, colorId: StarColor) => {
     e.stopPropagation();
     if (onToggleStarSession) {
       onToggleStarSession(sessionId, colorId);
     }
-    setActiveColorPickerSessionId(null);
+    setActiveColorPickerId(null);
   };
 
   const handleUnstar = (e: React.MouseEvent, sessionId: string) => {
@@ -322,7 +325,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (onToggleStarSession) {
       onToggleStarSession(sessionId, '');
     }
-    setActiveColorPickerSessionId(null);
+    setActiveColorPickerId(null);
   };
 
   return (
@@ -382,19 +385,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   const isSelected = currentSessionId === session.id;
                   const isStarred = true;
                   const color = starredSessions?.[session.id] || 'yellow';
+                  const pickerId = `starred-${session.id}`;
                   return (
                     <SessionItem
-                      key={`starred-${session.id}`}
+                      key={pickerId}
                       session={session}
                       isSelected={isSelected}
                       isStarred={isStarred}
                       starredColor={color}
-                      activeColorPickerSessionId={activeColorPickerSessionId}
+                      showColorPicker={activeColorPickerId === pickerId}
                       onSelect={() => onSelectSession(session.id)}
                       onDuplicate={() => onDuplicateChat(session.id)}
                       onDelete={() => onDeleteChat(session.id)}
-                      onStarClick={(e) => handleStarClick(e, session.id)}
-                      onSelectColor={(e, colorId) => handleSelectColor(e, session.id, colorId)}
+                      onStarClick={(e) => handleStarClick(e, pickerId)}
+                      onSelectColor={(e, colorId) => handleSelectColor(e, session.id, colorId as StarColor)}
                       onUnstar={(e) => handleUnstar(e, session.id)}
                     />
                   );
@@ -429,6 +433,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       const isSelected = currentSessionId === session.id;
                       const isStarred = !!(starredSessions && starredSessions[session.id]);
                       const color = (starredSessions && starredSessions[session.id]) || '';
+                      const pickerId = `regular-${session.id}`;
                       return (
                         <SessionItem
                           key={session.id}
@@ -436,12 +441,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           isSelected={isSelected}
                           isStarred={isStarred}
                           starredColor={color}
-                          activeColorPickerSessionId={activeColorPickerSessionId}
+                          showColorPicker={activeColorPickerId === pickerId}
                           onSelect={() => onSelectSession(session.id)}
                           onDuplicate={() => onDuplicateChat(session.id)}
                           onDelete={() => onDeleteChat(session.id)}
-                          onStarClick={(e) => handleStarClick(e, session.id)}
-                          onSelectColor={(e, colorId) => handleSelectColor(e, session.id, colorId)}
+                          onStarClick={(e) => handleStarClick(e, pickerId)}
+                          onSelectColor={(e, colorId) => handleSelectColor(e, session.id, colorId as StarColor)}
                           onUnstar={(e) => handleUnstar(e, session.id)}
                         />
                       );
