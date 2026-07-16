@@ -240,6 +240,19 @@ export default function App() {
     await api.settings.save(newSettings);
   };
 
+  const handleToggleStarSession = async (sessionId: string, color: string) => {
+    const currentStarred = settings.starredSessions || {};
+    const updatedStarred = { ...currentStarred };
+    if (!color) {
+      delete updatedStarred[sessionId];
+    } else {
+      updatedStarred[sessionId] = color;
+    }
+    const newSettings = { ...settings, starredSessions: updatedStarred };
+    setSettings(newSettings);
+    await api.settings.save(newSettings);
+  };
+
   const handleUpdateSessionCharacter = async (characterId: string) => {
     if (!currentSessionId) return;
     try {
@@ -294,6 +307,8 @@ export default function App() {
         onDuplicateChat={handleDuplicateChat}
         onOpenSettings={() => { setIsSettingsOpen(true); }}
         width={sidebarWidth}
+        starredSessions={settings.starredSessions}
+        onToggleStarSession={handleToggleStarSession}
       />
 
       <div

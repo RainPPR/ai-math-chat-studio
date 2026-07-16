@@ -45,6 +45,7 @@ export interface UserSettings {
   autoScroll: boolean;
   collapseThinkingFinished: boolean;
   gemmaTrimThinkingSpaces: boolean;
+  starredSessions?: Record<string, string>;
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -56,6 +57,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   autoScroll: true,
   collapseThinkingFinished: true,
   gemmaTrimThinkingSpaces: false,
+  starredSessions: {},
 };
 
 // Legacy type (kept for backward compatibility)

@@ -68,11 +68,23 @@ function convertNonStandardThinkingForDisplay(content: string): { thoughts: stri
   return { thoughts: [thinkingLines.join('\n')], mainContent };
 }
 
+function getMessageMainContent(msg: { role: string; content: string }): string {
+  if (msg.role === 'user') {
+    return msg.content;
+  }
+  const converted = convertNonStandardThinkingForDisplay(msg.content);
+  if (converted.thoughts.length > 0) {
+    return converted.mainContent;
+  }
+  const thoughtRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/g;
+  return msg.content.replace(thoughtRegex, '').trim();
+}
+
 const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue, onRegenerate, onView }: {
   msg: any; isLast: boolean; isGenerating: boolean; settings: UserSettings;
   onCopy: (id: string, content: string) => void; copiedId: string | null;
   onRetry?: (msgId: string) => void; onContinue?: () => void; onRegenerate?: (msgId: string) => void;
-  onView: (content: string) => void;
+  onView: (msg: any) => void;
 }) => {
   const isUser = msg.role === 'user';
   let thoughts: string[] = [];
@@ -131,8 +143,8 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
   const itemsAlignClass = isUser ? 'items-end' : 'items-start';
   const copyIcon = copiedId === msg.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />;
 
-  const sideOffset = isUser ? 'sm:right-auto sm:-left-12' : 'sm:left-auto sm:-right-12';
-  const actionPositionClass = `absolute top-2 right-2 ${sideOffset} flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10`;
+  const sideOffset = isUser ? 'sm:right-auto sm:-left-10' : 'sm:left-auto sm:-right-10';
+  const actionPositionClass = `absolute top-2 right-2 ${sideOffset} flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10`;
 
   const backgroundClass = isUser ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-100 border border-gray-700';
 
@@ -162,7 +174,7 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
             <div className={actionPositionClass}>
               {!isCurrentlyStreaming && (
                 <button
-                  onClick={() => onView(mainContent)}
+                  onClick={() => onView(msg)}
                   className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
                   title="查看"
                   aria-label="查看"
@@ -667,7 +679,30 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             onRetry={onRetry}
             onContinue={onContinue}
             onRegenerate={onRegenerate}
-            onView={(content) => setViewingContent(content)}
+            onView={(viewMsg) => {
+              const mainContent = getMessageMainContent(viewMsg);
+              if (viewMsg.role === 'model') {
+                const idx = displayMessages.indexOf(viewMsg);
+                let nearestUserMsg = null;
+                if (idx !== -1) {
+                  for (let i = idx - 1; i >= 0; i--) {
+                    if (displayMessages[i].role === 'user') {
+                      nearestUserMsg = displayMessages[i];
+                      break;
+                    }
+                  }
+                }
+                if (nearestUserMsg) {
+                  const userContent = getMessageMainContent(nearestUserMsg);
+                  const combined = `### 问题\n\n${userContent}\n\n---\n\n### 回答\n\n${mainContent}`;
+                  setViewingContent(combined);
+                } else {
+                  setViewingContent(mainContent);
+                }
+              } else {
+                setViewingContent(mainContent);
+              }
+            }}
           />
         ))}
         {isGenerating && !isStopping && !streamingContent && (
