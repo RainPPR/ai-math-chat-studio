@@ -265,8 +265,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // Close activeColorPickerId when clicking outside using capture-phase event listener
   useEffect(() => {
     const handleClosePicker = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && target.closest('[data-picker-element="true"]')) {
+      const target = e.target as Node | null;
+      if (target instanceof Element && target.closest('[data-picker-element="true"]')) {
         return;
       }
       setActiveColorPickerId(null);
