@@ -65,6 +65,7 @@ interface UserSettings {
   autoScroll: boolean;
   collapseThinkingFinished: boolean;
   gemmaTrimThinkingSpaces: boolean;
+  starredSessions?: Record<string, string>;
 }
 
 async function syncRemoteModels(settingsFile: string) {

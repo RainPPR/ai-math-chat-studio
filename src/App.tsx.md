@@ -1,11 +1,13 @@
 ```typescript
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './lib/api';
-import { ChatSession, ChatMessage, UserSettings, DEFAULT_SETTINGS } from './types';
+import { ChatSession, ChatMessage, UserSettings, DEFAULT_SETTINGS, StarColor } from './types';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
 import { Loader2 } from 'lucide-react';
+
+let settingsSaveQueue = Promise.resolve();
 
 export default function App() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -73,8 +75,29 @@ export default function App() {
 
   const handleDeleteChat = async (id: string) => {
     setSessions(prev => prev.filter(s => s.id !== id));
-    if (currentSessionId === id) setCurrentSessionId(null);
+    if (currentSessionId === id) {
+      setCurrentSessionId(null);
+    }
     await api.sessions.delete(id);
+
+    // Clean up star state from settings
+    if (settings.starredSessions && settings.starredSessions[id]) {
+      const previousSettings = { ...settings };
+      const updatedStarred = { ...settings.starredSessions };
+      delete updatedStarred[id];
+      const newSettings = { ...settings, starredSessions: updatedStarred };
+      setSettings(newSettings);
+
+      settingsSaveQueue = settingsSaveQueue.then(async () => {
+        try {
+          await api.settings.save(newSettings);
+        } catch (e: any) {
+          setSettings(previousSettings);
+          setError(e.message || 'Failed to update starred sessions after deletion');
+        }
+      });
+      await settingsSaveQueue;
+    }
   };
 
   const handleDuplicateChat = async (id: string) => {
@@ -230,15 +253,58 @@ export default function App() {
   };
 
   const handleSaveSettings = async (newSettings: UserSettings) => {
+    const previousSettings = { ...settings };
     setSettings(newSettings);
     setIsSettingsOpen(false);
-    await api.settings.save(newSettings);
+
+    settingsSaveQueue = settingsSaveQueue.then(async () => {
+      try {
+        await api.settings.save(newSettings);
+      } catch (e: any) {
+        setSettings(previousSettings);
+        setError(e.message || 'Failed to save settings');
+      }
+    });
+    await settingsSaveQueue;
   };
 
   const handleSelectModel = async (modelId: string) => {
+    const previousSettings = { ...settings };
     const newSettings = { ...settings, activeModelId: modelId };
     setSettings(newSettings);
-    await api.settings.save(newSettings);
+
+    settingsSaveQueue = settingsSaveQueue.then(async () => {
+      try {
+        await api.settings.save(newSettings);
+      } catch (e: any) {
+        setSettings(previousSettings);
+        setError(e.message || 'Failed to update selected model');
+      }
+    });
+    await settingsSaveQueue;
+  };
+
+  const handleToggleStarSession = async (sessionId: string, color: StarColor | '') => {
+    const previousSettings = { ...settings };
+    const currentStarred = settings.starredSessions || {};
+    const updatedStarred = { ...currentStarred };
+    if (!color) {
+      delete updatedStarred[sessionId];
+    } else {
+      updatedStarred[sessionId] = color;
+    }
+    const newSettings = { ...settings, starredSessions: updatedStarred };
+    setSettings(newSettings);
+
+    settingsSaveQueue = settingsSaveQueue.then(async () => {
+      try {
+        await api.settings.save(newSettings);
+      } catch (e: any) {
+        setSettings(previousSettings);
+        setError(e.message || 'Failed to update starred session');
+      }
+    });
+    await settingsSaveQueue;
   };
 
   const handleUpdateSessionCharacter = async (characterId: string) => {
@@ -252,9 +318,19 @@ export default function App() {
   };
 
   const handleSelectCharacter = async (characterId: string) => {
+    const previousSettings = { ...settings };
     const newSettings = { ...settings, activeCharacterId: characterId };
     setSettings(newSettings);
-    await api.settings.save(newSettings);
+
+    settingsSaveQueue = settingsSaveQueue.then(async () => {
+      try {
+        await api.settings.save(newSettings);
+      } catch (e: any) {
+        setSettings(previousSettings);
+        setError(e.message || 'Failed to update selected character');
+      }
+    });
+    await settingsSaveQueue;
   };
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -295,6 +371,8 @@ export default function App() {
         onDuplicateChat={handleDuplicateChat}
         onOpenSettings={() => { setIsSettingsOpen(true); }}
         width={sidebarWidth}
+        starredSessions={settings.starredSessions}
+        onToggleStarSession={handleToggleStarSession}
       />
 
       <div
