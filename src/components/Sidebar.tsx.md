@@ -78,7 +78,8 @@ const SessionItem: React.FC<SessionItemProps> = ({
         <div className="relative">
           <button
             onClick={onStarClick}
-            className={`p-1 rounded transition-colors cursor-pointer ${starButtonClass}`}
+            data-picker-element="true"
+            className={`p-1 rounded transition cursor-pointer ${starButtonClass}`}
             title="Star Chat"
           >
             <Star size={16} fill={starFill} />
@@ -87,6 +88,7 @@ const SessionItem: React.FC<SessionItemProps> = ({
           {showColorPicker && (
             <div
               onClick={(e) => { e.stopPropagation(); }}
+              data-picker-element="true"
               className="absolute right-0 top-full mt-1 z-[100] bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-2 flex items-center gap-1.5 whitespace-nowrap"
             >
               {STAR_COLORS.map(color => (
@@ -263,7 +265,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // Close activeColorPickerId when clicking outside using capture-phase event listener
   useEffect(() => {
-    const handleClosePicker = () => {
+    const handleClosePicker = (e: MouseEvent) => {
+      const target = e.target as Node | null;
+      if (target instanceof Element && target.closest('[data-picker-element="true"]')) {
+        return;
+      }
       setActiveColorPickerId(null);
     };
     document.addEventListener('click', handleClosePicker, true);
