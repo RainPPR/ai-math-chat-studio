@@ -824,7 +824,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           aria-modal="true"
           aria-labelledby="viewing-content-title"
         >
-          <div className="max-w-4xl mx-auto w-full flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
+          <div className="max-w-[90%] 2xl:max-w-7xl mx-auto w-full flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
             <h3 id="viewing-content-title" className="text-lg font-semibold text-gray-300">Markdown 渲染结果</h3>
             <div className="flex items-center gap-3">
               <button
@@ -849,7 +849,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             </div>
           </div>
 
-          <div id="print-content" className="max-w-4xl mx-auto w-full flex-1 bg-gray-900 text-gray-100 rounded-xl shadow-xl p-8 sm:p-12 border border-gray-800 mb-8 overflow-x-auto">
+          <div id="print-content" className="max-w-[90%] 2xl:max-w-7xl mx-auto w-full flex-1 bg-gray-900 text-gray-100 rounded-xl shadow-xl p-8 sm:p-12 border border-gray-800 mb-8 overflow-x-auto">
             <div id="print-content-render" className="prose prose-invert prose-lg md:prose-xl max-w-none">
               <MarkdownRenderer content={viewingContent} />
             </div>
