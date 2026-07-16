@@ -68,37 +68,52 @@ function convertNonStandardThinkingForDisplay(content: string): { thoughts: stri
   return { thoughts: [thinkingLines.join('\n')], mainContent };
 }
 
+export function parseMessageContent(
+  content: string,
+  isUser: boolean,
+  settings: UserSettings
+): { thoughts: string[]; mainContent: string } {
+  let thoughts: string[] = [];
+  let mainContent = content;
+
+  if (isUser) {
+    return { thoughts, mainContent };
+  }
+
+  // First, try to detect non-standard thinking format and convert for display
+  const converted = convertNonStandardThinkingForDisplay(content);
+  if (converted.thoughts.length > 0) {
+    thoughts = converted.thoughts;
+    mainContent = converted.mainContent;
+  } else {
+    // Standard format: parse existing <think> blocks
+    const thoughtRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/g;
+    for (const m of content.matchAll(thoughtRegex)) {
+      if (m[1]) {
+        let thoughtContent = m[1].trim();
+        if (settings.gemmaTrimThinkingSpaces) {
+          thoughtContent = thoughtContent.split('\n').map((l: string) => l.trimStart()).join('\n');
+        }
+        thoughts.push(thoughtContent);
+      }
+    }
+    mainContent = mainContent.replace(thoughtRegex, '').trim();
+  }
+
+  return { thoughts, mainContent };
+}
+
 const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue, onRegenerate, onView }: {
   msg: any; isLast: boolean; isGenerating: boolean; settings: UserSettings;
   onCopy: (id: string, content: string) => void; copiedId: string | null;
   onRetry?: (msgId: string) => void; onContinue?: () => void; onRegenerate?: (msgId: string) => void;
-  onView: (content: string) => void;
+  onView: () => void;
 }) => {
   const isUser = msg.role === 'user';
-  let thoughts: string[] = [];
-  let mainContent = msg.content;
 
-  if (!isUser) {
-    // First, try to detect non-standard thinking format and convert for display
-    const converted = convertNonStandardThinkingForDisplay(msg.content);
-    if (converted.thoughts.length > 0) {
-      thoughts = converted.thoughts;
-      mainContent = converted.mainContent;
-    } else {
-      // Standard format: parse existing <think> blocks
-      const thoughtRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/g;
-      for (const m of msg.content.matchAll(thoughtRegex)) {
-        if (m[1]) {
-          let thoughtContent = m[1].trim();
-          if (settings.gemmaTrimThinkingSpaces) {
-            thoughtContent = thoughtContent.split('\n').map((l: string) => l.trimStart()).join('\n');
-          }
-          thoughts.push(thoughtContent);
-        }
-      }
-      mainContent = mainContent.replace(thoughtRegex, '').trim();
-    }
-  }
+  const parsed = parseMessageContent(msg.content, isUser, settings);
+  const thoughts = parsed.thoughts;
+  const mainContent = parsed.mainContent;
 
   const [isThoughtOpen, setIsThoughtOpen] = useState(() => {
     if (settings.collapseThinkingFinished) {
@@ -131,8 +146,12 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
   const itemsAlignClass = isUser ? 'items-end' : 'items-start';
   const copyIcon = copiedId === msg.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />;
 
-  const sideOffset = isUser ? 'sm:right-auto sm:-left-12' : 'sm:left-auto sm:-right-12';
-  const actionPositionClass = `absolute top-2 right-2 ${sideOffset} flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10`;
+  let sideOffset = 'sm:left-auto sm:-right-10';
+  if (isUser) {
+    sideOffset = 'sm:right-auto sm:-left-10';
+  }
+
+  const actionPositionClass = `absolute top-2 right-2 ${sideOffset} flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10`;
 
   const backgroundClass = isUser ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-100 border border-gray-700';
 
@@ -162,7 +181,7 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
             <div className={actionPositionClass}>
               {!isCurrentlyStreaming && (
                 <button
-                  onClick={() => onView(mainContent)}
+                  onClick={onView}
                   className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
                   title="查看"
                   aria-label="查看"
@@ -267,7 +286,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
-  const [viewingContent, setViewingContent] = useState<string | null>(null);
+  const [viewingContent, setViewingContent] = useState<{ userContent?: string; modelContent: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<string>('');
@@ -667,7 +686,26 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             onRetry={onRetry}
             onContinue={onContinue}
             onRegenerate={onRegenerate}
-            onView={(content) => setViewingContent(content)}
+            onView={() => {
+              const mainContent = parseMessageContent(msg.content, msg.role === 'user', settings).mainContent;
+              if (msg.role === 'model') {
+                let nearestUserMsg = null;
+                for (let i = idx - 1; i >= 0; i--) {
+                  if (displayMessages[i].role === 'user') {
+                    nearestUserMsg = displayMessages[i];
+                    break;
+                  }
+                }
+                if (nearestUserMsg) {
+                  const userContent = parseMessageContent(nearestUserMsg.content, true, settings).mainContent;
+                  setViewingContent({ userContent, modelContent: mainContent });
+                } else {
+                  setViewingContent({ modelContent: mainContent });
+                }
+              } else {
+                setViewingContent({ modelContent: mainContent });
+              }
+            }}
           />
         ))}
         {isGenerating && !isStopping && !streamingContent && (
@@ -850,8 +888,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           </div>
 
           <div id="print-content" className="max-w-4xl mx-auto w-full flex-1 bg-gray-900 text-gray-100 rounded-xl shadow-xl p-8 sm:p-12 border border-gray-800 mb-8 overflow-x-auto">
-            <div id="print-content-render" className="prose prose-invert prose-lg md:prose-xl max-w-none">
-              <MarkdownRenderer content={viewingContent} />
+            <div id="print-content-render" className="prose prose-invert prose-lg md:prose-xl max-w-none space-y-8">
+              {viewingContent.userContent && (
+                <div className="border-b border-gray-800/80 pb-8">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-400 mb-4 select-none">问题 (Question)</h4>
+                  <MarkdownRenderer content={viewingContent.userContent} />
+                </div>
+              )}
+              <div>
+                {viewingContent.userContent && (
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-green-400 mb-4 select-none">回答 (Answer)</h4>
+                )}
+                <MarkdownRenderer content={viewingContent.modelContent} />
+              </div>
             </div>
           </div>
         </div>
