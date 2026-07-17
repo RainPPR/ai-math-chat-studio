@@ -158,6 +158,15 @@
       }
     },
     {
+      "id": "a0c2e1eb-26cd-464a-93b5-da6e4fd148ac",
+      "providerId": "p-nvidia-9a1b",
+      "providerType": "nvidia",
+      "modelId": "thinkingmachines/inkling",
+      "displayName": "Inkling (Nvidia)",
+      "maxTokens": 16384,
+      "injectThinkingTemplate": false
+    },
+    {
       "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
       "providerId": "p-poe-8d3e",
       "providerType": "openai-compatible",
@@ -360,15 +369,6 @@
       "providerType": "openai-compatible",
       "modelId": "north-mini-code-free",
       "displayName": "North Mini Code (OpenCode)"
-    },
-    {
-      "id": "a0c2e1eb-26cd-464a-93b5-da6e4fd148ac",
-      "providerId": "p-nvidia-9a1b",
-      "providerType": "nvidia",
-      "modelId": "thinkingmachines/inkling",
-      "displayName": "Inkling (Nvidia)",
-      "maxTokens": 16384,
-      "injectThinkingTemplate": false
     }
   ],
   "characters": [
@@ -417,6 +417,6 @@
     "f6697785-4f1e-452e-a371-73a14c20783a": "yellow"
   },
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeModelId": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
-  "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e"
+  "activeModelId": "a0c2e1eb-26cd-464a-93b5-da6e4fd148ac",
+  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
 }

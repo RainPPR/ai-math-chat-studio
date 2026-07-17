@@ -1,0 +1,15 @@
+{
+  "id": "c27edfde-adac-41a9-9150-9e3be19ba282",
+  "title": "已知 eˣ+sin x≥ ax+1 对任意 x∈[0,+∞) 恒成立，则实数 a 的取值范围是？",
+  "messages": [
+    {
+      "id": "5287875a-a3ab-4f1e-8e62-8298da6ee123",
+      "role": "user",
+      "content": "已知 $e^x+\\sin x\\ge ax+1$ 对任意 $x\\in[0,+\\infty)$ 恒成立，则实数 $a$ 的取值范围是？",
+      "createdAt": "2026-07-17T02:12:41.886Z"
+    }
+  ],
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "createdAt": "2026-07-17T02:12:41.885Z",
+  "updatedAt": "2026-07-17T02:12:41.903Z"
+}
