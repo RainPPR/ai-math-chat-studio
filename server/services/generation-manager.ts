@@ -256,17 +256,29 @@ export class GenerationManager {
       try { await pending; } catch {}
     }
 
-    const session = await this.readSession(id);
+    let session = await this.readSession(id);
     if (!session) {
-      return null;
+      const now = new Date().toISOString();
+      session = {
+        id,
+        title: updates.title || 'New Chat',
+        messages: [],
+        createdAt: now,
+        updatedAt: now,
+      };
     }
 
     const shouldUpdateTimestamp = Object.keys(updates).some(key => key !== 'characterId');
-    const updated = {
+    let newUpdatedAt = session.updatedAt;
+    if (shouldUpdateTimestamp) {
+      newUpdatedAt = new Date().toISOString();
+    }
+
+    const updated: ServerChatSession = {
       ...session,
       ...updates,
       id: session.id,
-      updatedAt: shouldUpdateTimestamp ? new Date().toISOString() : session.updatedAt,
+      updatedAt: newUpdatedAt,
     };
 
     if (updated.characterId === "") {
