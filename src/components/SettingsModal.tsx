@@ -295,6 +295,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
 
+  const [isChunkModalOpen, setIsChunkModalOpen] = useState(false);
+  const [selectedChunk, setSelectedChunk] = useState<string>('all');
+  const [newCustomChunk, setNewCustomChunk] = useState<string>('');
+
   const handleCleanClick = async () => {
     if (!window.confirm('警告：这将重写所有会话数据，移除任何已废弃的字段。此操作不可撤销。确定要继续吗？')) {
       return;
@@ -308,14 +312,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       setCleanResult({ cleaned: 0, total: 0 });
     }
   }
-  const handleExportClaude = async () => {
+
+  const handleExportClaude = () => {
+    setIsChunkModalOpen(true);
+  };
+
+  const executeExport = async (chunkTime: string) => {
     try {
+      // Capture the pre-export boundary time before listing sessions
+      const preExportBoundary = new Date().toISOString();
+
       const sessions = await api.sessions.list();
-      const characters = settings.characters || [];
+      const characters = local.characters || [];
+
+      // Filter sessions based on chunkTime
+      let filteredSessions = sessions;
+      if (chunkTime !== 'all') {
+        const chunkDate = new Date(chunkTime);
+        filteredSessions = sessions.filter(s => {
+          const dateStr = s.updatedAt || s.createdAt;
+          if (!dateStr) return false;
+          const sDate = new Date(dateStr);
+          return !isNaN(sDate.getTime()) && sDate >= chunkDate;
+        });
+      }
+
+      if (filteredSessions.length === 0) {
+        alert('没有找到符合条件的会话进行导出！');
+        return;
+      }
 
       const sessionsByCharacter: Record<string, typeof sessions> = {};
 
-      for (const s of sessions) {
+      for (const s of filteredSessions) {
         const charId = s.characterId || 'default';
         if (!sessionsByCharacter[charId]) {
           sessionsByCharacter[charId] = [];
@@ -390,6 +419,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       a.download = `Claude_Export_${timestamp}.zip`;
       a.click();
       URL.revokeObjectURL(url);
+
+      // Only add a new chunk for preExportBoundary if build & download initiated successfully
+      const updatedChunks = [...(local.claudeChunks || [])];
+      if (!updatedChunks.includes(preExportBoundary)) {
+        updatedChunks.push(preExportBoundary);
+      }
+
+      const updatedSettings = { ...local, claudeChunks: updatedChunks };
+      setLocal(updatedSettings);
+      onSave(updatedSettings);
     } catch (err: any) {
       console.error('Export failed', err);
       alert('Export failed: ' + err.message);
@@ -568,6 +607,131 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                 </button>
               </div>
             </>
+          )}
+
+          {/* Chunk Filter / Selection Dialog Overlay */}
+          {isChunkModalOpen && (
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+              <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md p-6 shadow-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white">选择导出分片时间</h3>
+                  <button onClick={() => setIsChunkModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                    <X size={20} />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400">只导出选定时间及其以后的会话。如果某个角色在范围内没有任何会话，则不创建该角色子 zip。</p>
+
+                <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-700/60 rounded-lg p-2 bg-gray-950/50">
+                  <label className="flex items-center space-x-3 p-2 rounded hover:bg-gray-700/30 cursor-pointer text-sm text-gray-300">
+                    <input
+                      type="radio"
+                      name="claude-chunk"
+                      value="all"
+                      checked={selectedChunk === 'all'}
+                      onChange={() => setSelectedChunk('all')}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 bg-gray-800 border-gray-700"
+                    />
+                    <span className="font-medium text-blue-400">全部导出 (不限时间)</span>
+                  </label>
+
+                  {(local.claudeChunks || []).map((chunk) => (
+                    <div key={chunk} className="flex items-center justify-between p-2 rounded hover:bg-gray-700/30 text-sm">
+                      <label className="flex items-center space-x-3 cursor-pointer flex-1 text-gray-300 min-w-0">
+                        <input
+                          type="radio"
+                          name="claude-chunk"
+                          value={chunk}
+                          checked={selectedChunk === chunk}
+                          onChange={() => setSelectedChunk(chunk)}
+                          className="w-4 h-4 text-blue-600 focus:ring-blue-500 bg-gray-800 border-gray-700"
+                        />
+                        <span className="truncate" title={chunk}>{chunk}</span>
+                      </label>
+                      <button
+                        onClick={() => {
+                          const updated = (local.claudeChunks || []).filter(c => c !== chunk);
+                          setLocal(s => ({ ...s, claudeChunks: updated }));
+                          if (selectedChunk === chunk) {
+                            setSelectedChunk('all');
+                          }
+                        }}
+                        className="text-gray-500 hover:text-red-400 p-1 rounded transition-colors"
+                        title="删除分片时间"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-gray-700/50">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const nowStr = new Date().toISOString();
+                        const updated = [...(local.claudeChunks || [])];
+                        if (!updated.includes(nowStr)) {
+                          updated.push(nowStr);
+                          setLocal(s => ({ ...s, claudeChunks: updated }));
+                        }
+                      }}
+                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 px-3 rounded-lg transition-colors font-medium"
+                    >
+                      新增当前时间分片
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="自定义时间 (如 2026-07-16T13:10:27Z)"
+                      value={newCustomChunk}
+                      onChange={(e) => setNewCustomChunk(e.target.value)}
+                      className="flex-1 bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500"
+                    />
+                    <button
+                      onClick={() => {
+                        if (!newCustomChunk.trim()) return;
+                        const date = new Date(newCustomChunk);
+                        if (isNaN(date.getTime())) {
+                          alert('无效的日期格式！请使用 ISO 8601 格式，例如: 2026-07-16T13:10:27Z');
+                          return;
+                        }
+                        const isoStr = date.toISOString();
+                        const updated = [...(local.claudeChunks || [])];
+                        if (!updated.includes(isoStr)) {
+                          updated.push(isoStr);
+                          setLocal(s => ({ ...s, claudeChunks: updated }));
+                          setNewCustomChunk('');
+                        } else {
+                          alert('该分片时间已存在！');
+                        }
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs py-1.5 px-3 rounded-lg transition-colors font-medium shrink-0"
+                    >
+                      添加
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    onClick={() => setIsChunkModalOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setIsChunkModalOpen(false);
+                      await executeExport(selectedChunk);
+                    }}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    确认并导出
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Providers Tab */}
