@@ -192,7 +192,7 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
               <button
                 onClick={() => {
                   if (msg.id) {
-                    onCopy(msg.id, msg.content);
+                    onCopy(msg.id, mainContent);
                   }
                 }}
                 className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
