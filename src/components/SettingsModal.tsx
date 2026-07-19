@@ -428,7 +428,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
       const updatedSettings = { ...local, claudeChunks: updatedChunks };
       setLocal(updatedSettings);
-      onSave({ ...settings, claudeChunks: updatedChunks });
+      onSave(updatedSettings);
     } catch (err: any) {
       console.error('Export failed', err);
       alert('Export failed: ' + err.message);
