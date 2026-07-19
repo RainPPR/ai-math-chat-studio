@@ -319,8 +319,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
   const executeExport = async (chunkTime: string) => {
     try {
+      // Capture the pre-export boundary boundary time before listing sessions
+      const preExportBoundary = new Date().toISOString();
+
       const sessions = await api.sessions.list();
-      const characters = settings.characters || [];
+      const characters = local.characters || [];
 
       // Filter sessions based on chunkTime
       let filteredSessions = sessions;
@@ -330,6 +333,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
           const sDate = new Date(s.updatedAt || s.createdAt);
           return sDate >= chunkDate;
         });
+      }
+
+      if (filteredSessions.length === 0) {
+        alert('没有找到符合条件的会话进行导出！');
+        return;
       }
 
       const sessionsByCharacter: Record<string, typeof sessions> = {};
@@ -394,17 +402,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         masterZip.file(`${charName}.zip`, charZipBlob);
       }
 
-      // Add a new chunk for the current time
-      const nowStr = new Date().toISOString();
-      const updatedChunks = [...(local.claudeChunks || [])];
-      if (!updatedChunks.includes(nowStr)) {
-        updatedChunks.push(nowStr);
-      }
-
-      const updatedSettings = { ...local, claudeChunks: updatedChunks };
-      setLocal(updatedSettings);
-      onSave(updatedSettings);
-
       const now = new Date();
       const timestamp = now.getFullYear().toString() +
                         (now.getMonth() + 1).toString().padStart(2, '0') +
@@ -420,6 +417,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       a.download = `Claude_Export_${timestamp}.zip`;
       a.click();
       URL.revokeObjectURL(url);
+
+      // Only add a new chunk for preExportBoundary if build & download initiated successfully
+      const updatedChunks = [...(local.claudeChunks || [])];
+      const lastChunk = updatedChunks[updatedChunks.length - 1];
+      const isRecent = lastChunk && (Date.now() - new Date(lastChunk).getTime() < 10000);
+      if (!isRecent && !updatedChunks.includes(preExportBoundary)) {
+        updatedChunks.push(preExportBoundary);
+      }
+
+      const updatedSettings = { ...local, claudeChunks: updatedChunks };
+      setLocal(updatedSettings);
+      onSave(updatedSettings);
     } catch (err: any) {
       console.error('Export failed', err);
       alert('Export failed: ' + err.message);
@@ -625,8 +634,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <span className="font-medium text-blue-400">全部导出 (不限时间)</span>
                   </label>
 
-                  {(local.claudeChunks || []).map((chunk, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 rounded hover:bg-gray-700/30 text-sm">
+                  {(local.claudeChunks || []).map((chunk) => (
+                    <div key={chunk} className="flex items-center justify-between p-2 rounded hover:bg-gray-700/30 text-sm">
                       <label className="flex items-center space-x-3 cursor-pointer flex-1 text-gray-300 min-w-0">
                         <input
                           type="radio"
