@@ -319,7 +319,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
   const executeExport = async (chunkTime: string) => {
     try {
-      // Capture the pre-export boundary boundary time before listing sessions
+      // Capture the pre-export boundary time before listing sessions
       const preExportBoundary = new Date().toISOString();
 
       const sessions = await api.sessions.list();
@@ -330,8 +330,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       if (chunkTime !== 'all') {
         const chunkDate = new Date(chunkTime);
         filteredSessions = sessions.filter(s => {
-          const sDate = new Date(s.updatedAt || s.createdAt);
-          return sDate >= chunkDate;
+          const dateStr = s.updatedAt || s.createdAt;
+          if (!dateStr) return false;
+          const sDate = new Date(dateStr);
+          return !isNaN(sDate.getTime()) && sDate >= chunkDate;
         });
       }
 
@@ -420,15 +422,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
       // Only add a new chunk for preExportBoundary if build & download initiated successfully
       const updatedChunks = [...(local.claudeChunks || [])];
-      const lastChunk = updatedChunks[updatedChunks.length - 1];
-      const isRecent = lastChunk && (Date.now() - new Date(lastChunk).getTime() < 10000);
-      if (!isRecent && !updatedChunks.includes(preExportBoundary)) {
+      if (!updatedChunks.includes(preExportBoundary)) {
         updatedChunks.push(preExportBoundary);
       }
 
       const updatedSettings = { ...local, claudeChunks: updatedChunks };
       setLocal(updatedSettings);
-      onSave(updatedSettings);
+      onSave({ ...settings, claudeChunks: updatedChunks });
     } catch (err: any) {
       console.error('Export failed', err);
       alert('Export failed: ' + err.message);
