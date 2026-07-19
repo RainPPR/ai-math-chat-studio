@@ -47,6 +47,7 @@ export interface UserSettings {
   collapseThinkingFinished: boolean;
   gemmaTrimThinkingSpaces: boolean;
   starredSessions?: Record<string, StarColor>;
+  claudeChunks?: string[];
 }
 
 export type StarColor = 'yellow' | 'rose' | 'blue' | 'green' | 'orange';
@@ -61,6 +62,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   collapseThinkingFinished: true,
   gemmaTrimThinkingSpaces: false,
   starredSessions: {},
+  claudeChunks: [],
 };
 
 // Legacy type (kept for backward compatibility)
