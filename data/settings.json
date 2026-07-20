@@ -44,6 +44,14 @@
       "envKey": "",
       "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/opencode-free-ai-math.json",
       "baseURL": "https://opencode.ai/zen/v1"
+    },
+    {
+      "id": "bbc88b24-7dd7-433b-a44b-ab84781ab98f",
+      "type": "openai-compatible",
+      "name": "QWEN2API",
+      "apiKey": "",
+      "envKey": "QWEN_API_KEY",
+      "baseURL": "http://localhost:7860/v1"
     }
   ],
   "models": [
@@ -397,6 +405,14 @@
       "providerType": "openai-compatible",
       "modelId": "north-mini-code-free",
       "displayName": "North Mini Code (OpenCode)"
+    },
+    {
+      "id": "855b2545-b6ee-4796-b332-82bc9c2f0136",
+      "providerId": "bbc88b24-7dd7-433b-a44b-ab84781ab98f",
+      "providerType": "openai-compatible",
+      "modelId": "qwen3.8-max-preview-thinking",
+      "displayName": "Qwen 3.8 Max Preview (QWEN2API)",
+      "reasoningEffort": "max"
     }
   ],
   "characters": [
@@ -442,12 +458,13 @@
   "collapseThinkingFinished": true,
   "gemmaTrimThinkingSpaces": true,
   "starredSessions": {
-    "f6697785-4f1e-452e-a371-73a14c20783a": "yellow"
+    "f6697785-4f1e-452e-a371-73a14c20783a": "yellow",
+    "238e31ee-f1cb-4bd5-bbb2-3342f2182f12": "blue"
   },
   "claudeChunks": [
     "2026-07-19T08:53:15.252Z"
   ],
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeModelId": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
+  "activeModelId": "a0c2e1eb-26cd-464a-93b5-da6e4fd148ac",
   "activeCharacterId": "2f07ec33-8d87-4fe1-8ed6-85680844bfbb"
 }
