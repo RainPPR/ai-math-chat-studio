@@ -175,6 +175,14 @@
       "injectThinkingTemplate": false
     },
     {
+      "id": "855b2545-b6ee-4796-b332-82bc9c2f0136",
+      "providerId": "bbc88b24-7dd7-433b-a44b-ab84781ab98f",
+      "providerType": "openai-compatible",
+      "modelId": "qwen3.8-max-preview-thinking",
+      "displayName": "Qwen 3.8 Max Preview (QWEN2API)",
+      "reasoningEffort": "max"
+    },
+    {
       "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
       "providerId": "p-poe-8d3e",
       "providerType": "openai-compatible",
@@ -309,20 +317,6 @@
       "displayName": "Kimi K2.6 (LogFare)"
     },
     {
-      "id": "5ab7cacf-75df-5490-8295-8edd9c1d374b",
-      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-      "providerType": "openai-compatible",
-      "modelId": "deepseek-v4-flash",
-      "displayName": "DeepSeek V4 Flash (LogFare)"
-    },
-    {
-      "id": "c7995cd3-216c-5394-ad7c-c6458a16de51",
-      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-      "providerType": "openai-compatible",
-      "modelId": "glm-5.2",
-      "displayName": "GLM 5.2 (LogFare)"
-    },
-    {
       "id": "248c1cbe-0ff5-5ed2-b6cc-0f5d89abccae",
       "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
       "providerType": "openai-compatible",
@@ -337,20 +331,6 @@
       "displayName": "MiniMax M3 (LogFare)"
     },
     {
-      "id": "e1e8e975-b3ce-58d8-bc4b-812a5bd4b9c5",
-      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-      "providerType": "openai-compatible",
-      "modelId": "mimo-v2.5",
-      "displayName": "MiMo V2.5 (LogFare)"
-    },
-    {
-      "id": "2f8870b2-8c24-5d63-b382-a194a1b18398",
-      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-      "providerType": "openai-compatible",
-      "modelId": "mimo-v2.5-pro",
-      "displayName": "MiMo V2.5 Pro (LogFare)"
-    },
-    {
       "id": "d4cb5d70-7982-59d7-bd72-4337d101bf05",
       "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
       "providerType": "openai-compatible",
@@ -358,18 +338,18 @@
       "displayName": "Kimi K2.7 Code (LogFare)"
     },
     {
-      "id": "d8110e6a-edb8-5f9f-84bb-957bf68379e4",
+      "id": "5ab7cacf-75df-5490-8295-8edd9c1d374b",
       "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
       "providerType": "openai-compatible",
-      "modelId": "gemma-4-31b-it",
-      "displayName": "Gemma 4 31b IT (LogFare)"
+      "modelId": "deepseek-v4-flash",
+      "displayName": "DeepSeek V4 Flash (LogFare)"
     },
     {
-      "id": "581eadd1-f00a-55ce-bbdf-1bc0f905583b",
+      "id": "c7995cd3-216c-5394-ad7c-c6458a16de51",
       "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
       "providerType": "openai-compatible",
-      "modelId": "kimi-k3",
-      "displayName": "Kimi K3 (LogFare)"
+      "modelId": "glm-5.2",
+      "displayName": "GLM 5.2 (LogFare)"
     },
     {
       "id": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
@@ -405,14 +385,6 @@
       "providerType": "openai-compatible",
       "modelId": "north-mini-code-free",
       "displayName": "North Mini Code (OpenCode)"
-    },
-    {
-      "id": "855b2545-b6ee-4796-b332-82bc9c2f0136",
-      "providerId": "bbc88b24-7dd7-433b-a44b-ab84781ab98f",
-      "providerType": "openai-compatible",
-      "modelId": "qwen3.8-max-preview-thinking",
-      "displayName": "Qwen 3.8 Max Preview (QWEN2API)",
-      "reasoningEffort": "max"
     }
   ],
   "characters": [
@@ -458,13 +430,12 @@
   "collapseThinkingFinished": true,
   "gemmaTrimThinkingSpaces": true,
   "starredSessions": {
-    "f6697785-4f1e-452e-a371-73a14c20783a": "yellow",
-    "238e31ee-f1cb-4bd5-bbb2-3342f2182f12": "blue"
+    "f6697785-4f1e-452e-a371-73a14c20783a": "yellow"
   },
   "claudeChunks": [
     "2026-07-19T08:53:15.252Z"
   ],
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeModelId": "a0c2e1eb-26cd-464a-93b5-da6e4fd148ac",
+  "activeModelId": "a7cf2ab2-4cc2-4e54-a4ee-84ccbe1c4f76",
   "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
 }
