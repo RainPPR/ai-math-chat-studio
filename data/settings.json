@@ -211,13 +211,6 @@
       "displayName": "Qwen3.7-Max-T (Poe)"
     },
     {
-      "id": "75803372-dd81-579e-a7f6-394a8f0c5f3c",
-      "providerId": "p-poe-8d3e",
-      "providerType": "openai-compatible",
-      "modelId": "minimax-m3-t",
-      "displayName": "MiniMax-M3-T (Poe)"
-    },
-    {
       "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
       "providerId": "p-kilo-gw",
       "providerType": "openai-compatible",
@@ -231,6 +224,13 @@
       "modelId": "stepfun/step-3.7-flash:free",
       "displayName": "StepFun: Step 3.7 Flash (Kilo)",
       "reasoningEffort": "high"
+    },
+    {
+      "id": "8ca867d4-19c8-53b3-ae7c-38a3f7c37d12",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "poolside/laguna-s-2.1:free",
+      "displayName": "Poolside: Laguna S 2.1 (Kilo)"
     },
     {
       "id": "a1600296-046e-5465-b8ff-9bd743cbb72c",
@@ -366,13 +366,6 @@
       "displayName": "Mimo V2.5 (OpenCode)"
     },
     {
-      "id": "ac977b66-c8d1-5da3-a80f-9d44eceaed61",
-      "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-      "providerType": "openai-compatible",
-      "modelId": "hy3-free",
-      "displayName": "Hy3 (OpenCode)"
-    },
-    {
       "id": "14f57ded-622b-5af6-8331-a14e299bdd14",
       "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
       "providerType": "openai-compatible",
@@ -385,6 +378,13 @@
       "providerType": "openai-compatible",
       "modelId": "north-mini-code-free",
       "displayName": "North Mini Code (OpenCode)"
+    },
+    {
+      "id": "32d253e2-5a78-5c6b-9663-105cb03eb4e4",
+      "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+      "providerType": "openai-compatible",
+      "modelId": "laguna-s-2.1-free",
+      "displayName": "Laguna S 2.1 (OpenCode)"
     }
   ],
   "characters": [
@@ -437,5 +437,5 @@
   ],
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
   "activeModelId": "a0c2e1eb-26cd-464a-93b5-da6e4fd148ac",
-  "activeCharacterId": "de284d55-8398-4743-ada9-b620c94b2d2b"
+  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
 }
