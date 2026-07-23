@@ -247,12 +247,20 @@ const DRAFT_STORAGE_KEY = 'chat_drafts';
 const PRESET_TEMPLATES = [
   {
     name: '三角形基础',
-    content: '在 $\\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，已知 ',
+    content: String.raw`在 $\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，`,
   },
   {
     name: '锐角三角形',
-    content: '在锐角 $\\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，已知 ',
+    content: String.raw`在锐角 $\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，`,
   },
+  {
+    name: '数列 a',
+    content: String.raw`已知数列 $\{a_n\}$ 的前 $n$ 项和为 $S_n$，`
+  },
+  {
+    name: '数列 a b',
+    content: String.raw`已知数列 $\{a_n\}$ 的前 $n$ 项和为 $S_n$，数列 $\{b_n\}$ 的前 $n$ 项和为 $T_n$，`
+  }
 ];
 
 const saveDraft = (sessionId: string, content: string) => {
