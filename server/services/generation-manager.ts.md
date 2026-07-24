@@ -374,12 +374,12 @@ export class GenerationManager {
     const continueMsg: ServerChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: `The previous response was interrupted due to network error or stream timeout. Please review your previous reasoning and output, then continue to complete the response:
+      content: `The previous generation was interrupted. Please continue generating the response from where it left off, ensuring a seamless and complete output.
 
-- If you had already started generating the final output (outside thinking tags): Review your previous reasoning and the partial output already generated, then regenerate the COMPLETE final output from the beginning to ensure nothing is missing.
-- If you were still in the thinking/reasoning phase: Review your previous thinking content, continue your analysis from where you left off, and then generate the complete final response.
-
-Do not skip steps or assume previous content was sufficient. Ensure the final response is comprehensive and complete.`,
+Requirements:
+1. Do not start from the very beginning if you were already in the middle of the final response; simply pick up exactly where the text cut off and complete it.
+2. If the interruption occurred inside the thinking phase (within \`<think>\` tags), please complete the thinking process, close the \`</think>\` tag, and then output the final response.
+3. Do not apologize, explain, or mention that the generation was interrupted, timed out, or restarted. Do not write any meta-dialogue like "Continuing from..." or "Here is the rest of...". Just output the continuing content directly.`,
       createdAt: new Date().toISOString(),
     };
 
@@ -429,7 +429,12 @@ Do not skip steps or assume previous content was sufficient. Ensure the final re
     const regenerateMsg: ServerChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: `Based on your previous thinking process above, please continue your analysis and provide a comprehensive response. Review the reasoning you've done so far, identify any gaps or areas that need deeper exploration, and then generate a complete, well-structured output. Do not assume your previous thinking was perfect—critically examine it and extend it where necessary before producing the final response.`,
+      content: `Based on the thinking process preserved in the \`<think>\` block above, please directly output the final, complete, and well-structured response.
+
+Requirements:
+1. Do not re-evaluate, critique, or apologize for your previous reasoning or previous responses. Do not mention that you are repeating, revising, or analyzing past thinking.
+2. Under no circumstances should you generate any meta-commentary, conversational filler, or introductory phrases like "Based on my previous thinking..." or "I see an error in my previous reasoning...".
+3. Jump straight into the final response or solution cleanly, starting directly with the substantive content.`,
       createdAt: new Date().toISOString(),
     };
 
