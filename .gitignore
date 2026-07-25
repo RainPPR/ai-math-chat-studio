@@ -10,7 +10,7 @@ coverage/
 /build-electron/dist-server
 /dist-server
 /dist-compile
-ai-math-chat-studio.exe
 /cache
 data/log/
 context7-dist/
+ai-math-chat-studio.exe
