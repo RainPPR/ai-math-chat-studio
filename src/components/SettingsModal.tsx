@@ -317,6 +317,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     setIsChunkModalOpen(true);
   };
 
+  const sanitizeClaudeSession = (session: {
+    uuid: string;
+    name: string;
+    created_at: string;
+    updated_at: string;
+    chat_messages: any[];
+  }) => {
+    return {
+      uuid: session.uuid,
+      name: session.name,
+      created_at: session.created_at,
+      updated_at: session.updated_at,
+      chat_messages: session.chat_messages
+    };
+  };
+
   const executeExport = async (chunkTime: string) => {
     try {
       // Capture the pre-export boundary time before listing sessions
@@ -406,7 +422,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       // Sort the sessions primarily by _characterName, secondarily by _updatedAtTime (descending, newest first)
       // Note: Standalone ternary expressions are forbidden by project rule, so we use standard if/else statements.
       allExportedSessions.sort((a, b) => {
-        const charComp = a._characterName.localeCompare(b._characterName);
+        const charComp = a._characterName.localeCompare(b._characterName, 'zh-Hans-u-co-pinyin', { sensitivity: 'base' });
         if (charComp !== 0) {
           return charComp;
         } else {
@@ -417,15 +433,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       const masterZip = new JSZip();
 
       // Create a sub-ZIP named All_Conversations.zip containing a conversations.json file with all sorted sessions (helper fields stripped)
-      const cleanAllSessions = allExportedSessions.map(session => {
-        return {
-          uuid: session.uuid,
-          name: session.name,
-          created_at: session.created_at,
-          updated_at: session.updated_at,
-          chat_messages: session.chat_messages
-        };
-      });
+      const cleanAllSessions = allExportedSessions.map(sanitizeClaudeSession);
 
       const allConversationsZip = new JSZip();
       allConversationsZip.file('conversations.json', JSON.stringify(cleanAllSessions, null, 2));
@@ -453,15 +461,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
           charName = 'Default';
         }
 
-        const cleanCharSessions = charSessions.map(session => {
-          return {
-            uuid: session.uuid,
-            name: session.name,
-            created_at: session.created_at,
-            updated_at: session.updated_at,
-            chat_messages: session.chat_messages
-          };
-        });
+        const cleanCharSessions = charSessions.map(sanitizeClaudeSession);
 
         const charZip = new JSZip();
         charZip.file('conversations.json', JSON.stringify(cleanCharSessions, null, 2));
