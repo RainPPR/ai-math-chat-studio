@@ -317,6 +317,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     setIsChunkModalOpen(true);
   };
 
+  const sanitizeClaudeSession = (session: {
+    uuid: string;
+    name: string;
+    created_at: string;
+    updated_at: string;
+    chat_messages: any[];
+  }) => {
+    return {
+      uuid: session.uuid,
+      name: session.name,
+      created_at: session.created_at,
+      updated_at: session.updated_at,
+      chat_messages: session.chat_messages
+    };
+  };
+
   const executeExport = async (chunkTime: string) => {
     try {
       // Capture the pre-export boundary time before listing sessions
@@ -342,64 +358,113 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         return;
       }
 
-      const sessionsByCharacter: Record<string, typeof sessions> = {};
-
-      for (const s of filteredSessions) {
-        const charId = s.characterId || 'default';
-        if (!sessionsByCharacter[charId]) {
-          sessionsByCharacter[charId] = [];
+      const allExportedSessions = await Promise.all(filteredSessions.map(async (s) => {
+        const fullSession = await api.sessions.get(s.id);
+        const charId = fullSession.characterId || 'default';
+        const character = characters.find(c => c.id === charId);
+        let charName = 'Unknown';
+        if (character) {
+          charName = character.name;
+        } else if (charId === 'default') {
+          charName = 'Default';
         }
-        sessionsByCharacter[charId].push(s);
-      }
+
+        const rawTimeStr = fullSession.updatedAt || fullSession.createdAt;
+        let rawTime = 0;
+        if (rawTimeStr) {
+          const parsedDate = new Date(rawTimeStr);
+          rawTime = parsedDate.getTime();
+        }
+
+        const chat_messages = fullSession.messages.map(m => {
+          const contentBlocks: any[] = [];
+          const thinkRegex = /<think>([\s\S]*?)<\/think>/g;
+          let textWithoutThinking = m.content;
+          const matches = Array.from(m.content.matchAll(thinkRegex));
+
+          for (const match of matches) {
+            contentBlocks.push({
+              type: 'thinking',
+              thinking: (match as any)[1].trim()
+            });
+            textWithoutThinking = textWithoutThinking.replace(match[0], '');
+          }
+
+          textWithoutThinking = textWithoutThinking.trim();
+          contentBlocks.push({
+            type: 'text',
+            text: textWithoutThinking
+          });
+
+          return {
+            uuid: m.id,
+            sender: m.role === 'user' ? 'human' : 'assistant',
+            content: contentBlocks,
+            created_at: formatClaudeDate(m.createdAt),
+            updated_at: formatClaudeDate(m.createdAt),
+            attachments: [],
+            files: []
+          };
+        });
+
+        return {
+          uuid: fullSession.id,
+          name: fullSession.title || "",
+          created_at: formatClaudeDate(fullSession.createdAt),
+          updated_at: formatClaudeDate(fullSession.updatedAt),
+          chat_messages,
+          _characterId: charId,
+          _characterName: charName,
+          _updatedAtTime: rawTime
+        };
+      }));
+
+      // Sort the sessions primarily by _characterName, secondarily by _updatedAtTime (descending, newest first)
+      // Note: Standalone ternary expressions are forbidden by project rule, so we use standard if/else statements.
+      allExportedSessions.sort((a, b) => {
+        const charComp = a._characterName.localeCompare(b._characterName, 'zh-Hans-u-co-pinyin', { sensitivity: 'base' });
+        if (charComp !== 0) {
+          return charComp;
+        } else {
+          return b._updatedAtTime - a._updatedAtTime;
+        }
+      });
 
       const masterZip = new JSZip();
 
-      for (const [charId, charSessions] of Object.entries(sessionsByCharacter)) {
+      // Create a sub-ZIP named All_Conversations.zip containing a conversations.json file with all sorted sessions (helper fields stripped)
+      const cleanAllSessions = allExportedSessions.map(sanitizeClaudeSession);
+
+      const allConversationsZip = new JSZip();
+      allConversationsZip.file('conversations.json', JSON.stringify(cleanAllSessions, null, 2));
+      const allConversationsZipBlob = await allConversationsZip.generateAsync({ type: 'blob' });
+      masterZip.file('All_Conversations.zip', allConversationsZipBlob);
+
+      // Group the sorted session array by character ID to create non-empty individual character sub-ZIP files
+      // Since allExportedSessions is already sorted by character name and updated time, each group's sessions
+      // will also automatically preserve that exact sorted order.
+      const groupedByCharacter: Record<string, typeof allExportedSessions> = {};
+      for (const session of allExportedSessions) {
+        const charId = session._characterId;
+        if (!groupedByCharacter[charId]) {
+          groupedByCharacter[charId] = [];
+        }
+        groupedByCharacter[charId].push(session);
+      }
+
+      for (const [charId, charSessions] of Object.entries(groupedByCharacter)) {
         const character = characters.find(c => c.id === charId);
-        const charName = character ? character.name : (charId === 'default' ? 'Default' : 'Unknown');
+        let charName = 'Unknown';
+        if (character) {
+          charName = character.name;
+        } else if (charId === 'default') {
+          charName = 'Default';
+        }
 
-        const exportData = await Promise.all(charSessions.map(async (s) => {
-          const fullSession = await api.sessions.get(s.id);
-          return {
-            uuid: fullSession.id,
-            name: fullSession.title || "",
-            created_at: formatClaudeDate(fullSession.createdAt),
-            updated_at: formatClaudeDate(fullSession.updatedAt),
-            chat_messages: fullSession.messages.map(m => {
-              const contentBlocks: any[] = [];
-              const thinkRegex = /<think>([\s\S]*?)<\/think>/g;
-              let textWithoutThinking = m.content;
-              const matches = Array.from(m.content.matchAll(thinkRegex));
-
-              for (const match of matches) {
-                contentBlocks.push({
-                  type: 'thinking',
-                  thinking: (match as any)[1].trim()
-                });
-                textWithoutThinking = textWithoutThinking.replace(match[0], '');
-              }
-
-              textWithoutThinking = textWithoutThinking.trim();
-              contentBlocks.push({
-                type: 'text',
-                text: textWithoutThinking
-              });
-
-              return {
-                uuid: m.id,
-                sender: m.role === 'user' ? 'human' : 'assistant',
-                content: contentBlocks,
-                created_at: formatClaudeDate(m.createdAt),
-                updated_at: formatClaudeDate(m.createdAt),
-                attachments: [],
-                files: []
-              };
-            })
-          };
-        }));
+        const cleanCharSessions = charSessions.map(sanitizeClaudeSession);
 
         const charZip = new JSZip();
-        charZip.file('conversations.json', JSON.stringify(exportData, null, 2));
+        charZip.file('conversations.json', JSON.stringify(cleanCharSessions, null, 2));
         const charZipBlob = await charZip.generateAsync({ type: 'blob' });
         masterZip.file(`${charName}.zip`, charZipBlob);
       }
