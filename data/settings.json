@@ -359,13 +359,6 @@
       "displayName": "Qwen 3.8 Max (LogFare)"
     },
     {
-      "id": "28d54736-8e71-528a-a8d2-deb5d56a8aa8",
-      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-      "providerType": "openai-compatible",
-      "modelId": "claude-opus-5",
-      "displayName": "Claude Opus 5 (LogFare)"
-    },
-    {
       "id": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
       "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
       "providerType": "openai-compatible",
@@ -458,5 +451,5 @@
   ],
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
   "activeModelId": "a0c2e1eb-26cd-464a-93b5-da6e4fd148ac",
-  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
+  "activeCharacterId": "de284d55-8398-4743-ada9-b620c94b2d2b"
 }
