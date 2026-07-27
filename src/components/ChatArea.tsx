@@ -599,14 +599,20 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           setTimeout(() => { setCopiedId(null); }, 2000);
         })
         .catch(() => {
-          navigator.clipboard.writeText(content);
-          setCopiedId(id);
-          setTimeout(() => { setCopiedId(null); }, 2000);
+          navigator.clipboard.writeText(content)
+            .then(() => {
+              setCopiedId(id);
+              setTimeout(() => { setCopiedId(null); }, 2000);
+            })
+            .catch(() => {});
         });
     } else {
-      navigator.clipboard.writeText(content);
-      setCopiedId(id);
-      setTimeout(() => { setCopiedId(null); }, 2000);
+      navigator.clipboard.writeText(content)
+        .then(() => {
+          setCopiedId(id);
+          setTimeout(() => { setCopiedId(null); }, 2000);
+        })
+        .catch(() => {});
     }
   };
 
