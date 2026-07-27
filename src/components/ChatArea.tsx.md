@@ -106,7 +106,7 @@ export function parseMessageContent(
 
 const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue, onRegenerate, onView }: {
   msg: any; isLast: boolean; isGenerating: boolean; settings: UserSettings;
-  onCopy: (id: string, content: string) => void; copiedId: string | null;
+  onCopy: (id: string, content: string, htmlContent?: string) => void; copiedId: string | null;
   onRetry?: (msgId: string) => void; onContinue?: () => void; onRegenerate?: (msgId: string) => void;
   onView: () => void;
 }) => {
@@ -115,6 +115,8 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
   const parsed = parseMessageContent(msg.content, isUser, settings);
   const thoughts = parsed.thoughts;
   const mainContent = parsed.mainContent;
+
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const [isThoughtOpen, setIsThoughtOpen] = useState(() => {
     if (settings.collapseThinkingFinished) {
@@ -193,7 +195,8 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
               <button
                 onClick={() => {
                   if (msg.id) {
-                    onCopy(msg.id, mainContent);
+                    const htmlContent = contentRef.current?.innerHTML || '';
+                    onCopy(msg.id, mainContent, htmlContent);
                   }
                 }}
                 className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
@@ -203,7 +206,9 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
                 {copyIcon}
               </button>
             </div>
-            <MarkdownRenderer content={mainContent} />
+            <div ref={contentRef}>
+              <MarkdownRenderer content={mainContent} />
+            </div>
           </div>
         )}
         <div className="flex items-center gap-3 mt-1 opacity-0 group-hover:opacity-100 transition-opacity px-2 select-none">
@@ -581,10 +586,35 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     }, 0);
   };
 
-  const handleCopy = (id: string, content: string) => {
-    navigator.clipboard.writeText(content);
-    setCopiedId(id);
-    setTimeout(() => { setCopiedId(null); }, 2000);
+  const handleCopy = (id: string, content: string, htmlContent?: string) => {
+    if (htmlContent && typeof ClipboardItem !== 'undefined' && navigator.clipboard && navigator.clipboard.write) {
+      const textBlob = new Blob([content], { type: 'text/plain' });
+      const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+      const item = new ClipboardItem({
+        'text/plain': textBlob,
+        'text/html': htmlBlob,
+      });
+      navigator.clipboard.write([item])
+        .then(() => {
+          setCopiedId(id);
+          setTimeout(() => { setCopiedId(null); }, 2000);
+        })
+        .catch(() => {
+          navigator.clipboard.writeText(content)
+            .then(() => {
+              setCopiedId(id);
+              setTimeout(() => { setCopiedId(null); }, 2000);
+            })
+            .catch(() => {});
+        });
+    } else {
+      navigator.clipboard.writeText(content)
+        .then(() => {
+          setCopiedId(id);
+          setTimeout(() => { setCopiedId(null); }, 2000);
+        })
+        .catch(() => {});
+    }
   };
 
   const handleExport = () => {
