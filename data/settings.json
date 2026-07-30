@@ -171,7 +171,7 @@
       "providerType": "nvidia",
       "modelId": "thinkingmachines/inkling",
       "displayName": "Inkling (Nvidia)",
-      "maxTokens": 16384,
+      "maxTokens": 16353,
       "injectThinkingTemplate": false
     },
     {
@@ -433,7 +433,8 @@
     "f6697785-4f1e-452e-a371-73a14c20783a": "yellow"
   },
   "claudeChunks": [
-    "2026-07-19T08:53:15.252Z"
+    "2026-07-19T08:53:15.252Z",
+    "2026-07-30T05:14:11.684Z"
   ],
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
   "activeModelId": "a0c2e1eb-26cd-464a-93b5-da6e4fd148ac",
