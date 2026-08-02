@@ -87,7 +87,7 @@
     - 若抛出 401、403、404 等严重配置或模型不存在错误，则立即停止并向上抛出。
     - 若抛出与 `reasoning_effort` 相关的 400 或 422 错误，则立刻停止重试尝试并直接回退调用无 `reasoning_effort` 参数的模型流。
     - 若检测到请求过快或速率限制 (429/rate-limit)，为保证效率不进行后面的尝试，直接向用户抛出错误。
-  - **Nvidia NIM**：Nvidia NIM 供应商不走 `reasoningEffort` 自动尝试机制，按照原来的方式直接进行默认请求而不注入 `reasoningEffort` 参数。
+  - **Nvidia NIM**：Nvidia NIM 供应商不走 `reasoningEffort` 自动尝试级联机制。在未显式设置时，默认不注入该参数；但若显式指定了 `reasoningEffort`（如 Kimi K2.6），则会直接遵循并注入该配置。
 
 **Characters tab**：
 - 创建/管理角色（名称 + 系统提示词）。

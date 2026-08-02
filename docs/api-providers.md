@@ -53,7 +53,7 @@
 - **Base URL**：`https://integrate.api.nvidia.com/v1`
 - **特殊功能**：支持 `extraBody` 透传（如 `chat_template_kwargs`）
 - **推理过程**：通过 `delta.reasoning` 或 `delta.reasoning_content` 字段检测
-- **推理强度配置**：不启用 `reasoning_effort` 级联回退机制或自动参数注入，默认进行无 `reasoning_effort` 参数的请求，避免在不支持该参数的提供商下导致异常。
+- **推理强度配置**：不启用 `reasoning_effort` 级联回退机制或自动参数注入。在未显式设置 `reasoning_effort` 时，默认进行无 `reasoning_effort` 参数的请求；若用户显式配置了 `reasoning_effort`（例如 Kimi K2.6），则依然会直接遵循该显式配置发出请求。
 
 ## OpenAI Compatible
 

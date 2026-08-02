@@ -817,6 +817,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                       placeholder="搜索模型..."
                       value={modelSearchQuery}
                       onChange={(e) => setModelSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          e.preventDefault();
+                          setModelDropdownOpen(false);
+                        } else if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (allFilteredModels.length > 0) {
+                            const firstModel = allFilteredModels[0];
+                            onSelectModel?.(firstModel.id);
+                            setModelDropdownOpen(false);
+                          }
+                        }
+                      }}
                       className="w-full px-2 py-1 bg-gray-900 border border-gray-700 rounded text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
                       autoFocus
                     />
