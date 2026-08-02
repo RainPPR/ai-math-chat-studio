@@ -86,7 +86,13 @@ async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; a
 
 // ---- Generic OpenAI SDK helper ----
 
-async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: string, signal?: AbortSignal): AsyncGenerator<StreamChunk> {
+async function* streamOpenAIHelper(
+  req: StreamRequest,
+  apiKey: string,
+  baseURL: string,
+  signal?: AbortSignal,
+  disableReasoningEffort = false
+): AsyncGenerator<StreamChunk> {
   const client = new OpenAI({ baseURL, apiKey });
 
   const messages: any[] = [];
@@ -210,94 +216,99 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
     }
   }
 
-  if (!req.reasoningEffort) {
-    const efforts = ['max', 'xhigh', 'high'];
-    let successfulGen: AsyncGenerator<StreamChunk> | null = null;
-    let firstResult: IteratorResult<StreamChunk> | null = null;
-
-    let isFallbackToNoReasoning = false;
-
-    for (const effort of efforts) {
-      for (let attempt = 1; attempt <= 2; attempt++) {
-        if (signal) {
-          if (signal.aborted) {
-            throw new DOMException('Aborted', 'AbortError');
-          }
-        }
-        try {
-          console.log(`[OpenAI] Trial Cascade: Attempting model ${req.model} with reasoningEffort=${effort} (attempt ${attempt}/2)`);
-          const gen = runWithReasoningEffort(effort);
-          const res = await gen.next();
-          firstResult = res;
-          successfulGen = gen;
-          if (!res.done) {
-            console.log(`[OpenAI] Trial Cascade: Successfully connected to model ${req.model} using reasoningEffort=${effort}`);
-          } else {
-            console.warn(`[OpenAI] Trial Cascade: Model ${req.model} returned no chunks using reasoningEffort=${effort}`);
-          }
-          break;
-        } catch (err: any) {
-          if (isAbortError(err)) {
-            throw new DOMException('Aborted', 'AbortError');
-          }
-
-          const status = err?.status || err?.statusCode;
-          if (status === 401 || status === 403 || status === 404) {
-            throw err;
-          }
-
-          if (status === 400 || status === 422) {
-            const errMsg = typeof err?.message === 'string' ? err.message.toLowerCase() : '';
-            if (errMsg.includes('reasoning_effort') || errMsg.includes('reasoningeffort')) {
-              console.warn(`[OpenAI] Parameter reasoningEffort is unsupported (HTTP ${status}), falling back to no reasoning_effort immediately:`, err);
-              isFallbackToNoReasoning = true;
-              break;
-            } else {
-              throw err;
-            }
-          }
-
-          const isRateLimit = err && (
-            err.status === 429 ||
-            err.statusCode === 429 ||
-            (typeof err.message === 'string' && (
-              err.message.includes('429') ||
-              err.message.toLowerCase().includes('rate-limit') ||
-              err.message.toLowerCase().includes('rate limit') ||
-              err.message.includes('请求过快')
-            ))
-          );
-          if (isRateLimit) {
-            throw err;
-          }
-          console.warn(`[OpenAI] Request with reasoningEffort=${effort} (attempt ${attempt}/2) failed, trying fallback:`, err);
-        }
-      }
-      if (isFallbackToNoReasoning) {
-        break;
-      }
-      if (successfulGen) {
-        if (firstResult) {
-          break;
-        }
-      }
-    }
-
-    if (successfulGen) {
-      if (firstResult) {
-        if (!firstResult.done) {
-          yield firstResult.value;
-        }
-        yield* successfulGen;
-        return;
-      }
-    }
-
-    console.log(`[OpenAI] Trial Cascade: Falling back to model ${req.model} with no reasoningEffort parameter`);
+  if (disableReasoningEffort) {
+    console.log(`[OpenAI] Requesting model ${req.model} without reasoningEffort (disabled)`);
     yield* runWithReasoningEffort(undefined);
   } else {
-    console.log(`[OpenAI] Requesting model ${req.model} with explicit reasoningEffort=${req.reasoningEffort}`);
-    yield* runWithReasoningEffort(req.reasoningEffort);
+    if (!req.reasoningEffort) {
+      const efforts = ['max', 'xhigh', 'high'];
+      let successfulGen: AsyncGenerator<StreamChunk> | null = null;
+      let firstResult: IteratorResult<StreamChunk> | null = null;
+
+      let isFallbackToNoReasoning = false;
+
+      for (const effort of efforts) {
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          if (signal) {
+            if (signal.aborted) {
+              throw new DOMException('Aborted', 'AbortError');
+            }
+          }
+          try {
+            console.log(`[OpenAI] Trial Cascade: Attempting model ${req.model} with reasoningEffort=${effort} (attempt ${attempt}/2)`);
+            const gen = runWithReasoningEffort(effort);
+            const res = await gen.next();
+            firstResult = res;
+            successfulGen = gen;
+            if (!res.done) {
+              console.log(`[OpenAI] Trial Cascade: Successfully connected to model ${req.model} using reasoningEffort=${effort}`);
+            } else {
+              console.warn(`[OpenAI] Trial Cascade: Model ${req.model} returned no chunks using reasoningEffort=${effort}`);
+            }
+            break;
+          } catch (err: any) {
+            if (isAbortError(err)) {
+              throw new DOMException('Aborted', 'AbortError');
+            }
+
+            const status = err?.status || err?.statusCode;
+            if (status === 401 || status === 403 || status === 404) {
+              throw err;
+            }
+
+            if (status === 400 || status === 422) {
+              const errMsg = typeof err?.message === 'string' ? err.message.toLowerCase() : '';
+              if (errMsg.includes('reasoning_effort') || errMsg.includes('reasoningeffort')) {
+                console.warn(`[OpenAI] Parameter reasoningEffort is unsupported (HTTP ${status}), falling back to no reasoning_effort immediately:`, err);
+                isFallbackToNoReasoning = true;
+                break;
+              } else {
+                throw err;
+              }
+            }
+
+            const isRateLimit = err && (
+              err.status === 429 ||
+              err.statusCode === 429 ||
+              (typeof err.message === 'string' && (
+                err.message.includes('429') ||
+                err.message.toLowerCase().includes('rate-limit') ||
+                err.message.toLowerCase().includes('rate limit') ||
+                err.message.includes('请求过快')
+              ))
+            );
+            if (isRateLimit) {
+              throw err;
+            }
+            console.warn(`[OpenAI] Request with reasoningEffort=${effort} (attempt ${attempt}/2) failed, trying fallback:`, err);
+          }
+        }
+        if (isFallbackToNoReasoning) {
+          break;
+        }
+        if (successfulGen) {
+          if (firstResult) {
+            break;
+          }
+        }
+      }
+
+      if (successfulGen) {
+        if (firstResult) {
+          if (!firstResult.done) {
+            yield firstResult.value;
+          }
+          yield* successfulGen;
+          return;
+        }
+      }
+
+      console.log(`[OpenAI] Trial Cascade: Falling back to model ${req.model} with no reasoningEffort parameter`);
+      yield* runWithReasoningEffort(undefined);
+    } else {
+      console.log(`[OpenAI] Requesting model ${req.model} with explicit reasoningEffort=${req.reasoningEffort}`);
+      yield* runWithReasoningEffort(req.reasoningEffort);
+    }
   }
 }
 
@@ -309,7 +320,7 @@ async function* streamNvidia(req: StreamRequest, provider: { baseURL?: string; a
   if (!apiKey) throw new Error('Nvidia API key is not configured.');
   if (!baseURL) throw new Error('Nvidia Base URL is not configured.');
 
-  yield* streamOpenAIHelper(req, apiKey, baseURL, signal);
+  yield* streamOpenAIHelper(req, apiKey, baseURL, signal, true);
 }
 
 // ---- OpenAI Compatible ----

@@ -68,6 +68,26 @@ function convertNonStandardThinkingForDisplay(content: string): { thoughts: stri
   return { thoughts: [thinkingLines.join('\n')], mainContent };
 }
 
+function normalizeSearchString(str: string): string {
+  return str.toLowerCase().replace(/[\s\-,，_.]/g, '');
+}
+
+function isModelMatch(modelName: string, modelId: string, query: string): boolean {
+  if (!query) {
+    return true;
+  }
+  const normalizedQuery = normalizeSearchString(query);
+  const normalizedName = normalizeSearchString(modelName);
+  const normalizedId = normalizeSearchString(modelId);
+  if (normalizedName.includes(normalizedQuery)) {
+    return true;
+  }
+  if (normalizedId.includes(normalizedQuery)) {
+    return true;
+  }
+  return false;
+}
+
 export function parseMessageContent(
   content: string,
   isUser: boolean,
@@ -304,6 +324,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<string>('');
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [modelSearchQuery, setModelSearchQuery] = useState('');
   const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false);
   const [templateDropdownOpen, setTemplateDropdownOpen] = useState(false);
   const [headerCharacterDropdownOpen, setHeaderCharacterDropdownOpen] = useState(false);
@@ -311,6 +332,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const modelDropdownRef = useRef<HTMLDivElement>(null);
   const characterDropdownRef = useRef<HTMLDivElement>(null);
   const templateDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!modelDropdownOpen) {
+      setModelSearchQuery('');
+    }
+  }, [modelDropdownOpen]);
 
   // Load draft on session change
   useEffect(() => {
@@ -775,30 +802,69 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
               </span>
               <ChevronDown size={12} className={`transition-transform ${modelDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
-            {modelDropdownOpen && (
-              <div className="absolute bottom-full mb-1 left-0 z-50 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-72 overflow-auto">
-                {settings.providers.map(provider => {
-                  const providerModels = settings.models.filter(m => m.providerId === provider.id);
-                  if (providerModels.length === 0) return null;
-                  return (
-                    <div key={provider.id} className="border-b border-gray-700/50 last:border-b-0">
-                      <div className="px-2.5 py-1.5 bg-gray-800/80 sticky top-0">
-                        <span className="text-[10px] font-medium text-gray-400">{provider.name}</span>
+            {modelDropdownOpen && (() => {
+              const allFilteredModels = settings.models.filter(m => {
+                const match = isModelMatch(m.displayName || '', m.modelId || '', modelSearchQuery);
+                return match;
+              });
+
+              return (
+                <div className="absolute bottom-full mb-1 left-0 z-50 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-72 overflow-auto flex flex-col">
+                  {/* Sticky Search Bar */}
+                  <div className="p-2 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
+                    <input
+                      type="text"
+                      placeholder="搜索模型..."
+                      value={modelSearchQuery}
+                      onChange={(e) => setModelSearchQuery(e.target.value)}
+                      className="w-full px-2 py-1 bg-gray-900 border border-gray-700 rounded text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                      autoFocus
+                    />
+                  </div>
+
+                  {/* Scrollable list content */}
+                  <div className="flex-1 overflow-y-auto">
+                    {allFilteredModels.length === 0 && (
+                      <div className="px-3 py-4 text-center text-xs text-gray-500">
+                        No matching models
                       </div>
-                      {providerModels.map(m => (
-                        <button
-                          key={m.id}
-                          onClick={() => { onSelectModel?.(m.id); setModelDropdownOpen(false); }}
-                          className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${m.id === settings.activeModelId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
-                        >
-                          {m.displayName || m.modelId}
-                        </button>
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    )}
+
+                    {allFilteredModels.length > 0 && settings.providers.map(provider => {
+                      const providerModels = allFilteredModels.filter(m => m.providerId === provider.id);
+                      if (providerModels.length === 0) {
+                        return null;
+                      }
+                      return (
+                        <div key={provider.id} className="border-b border-gray-700/50 last:border-b-0">
+                          <div className="px-2.5 py-1.5 bg-gray-800/80 sticky top-0 z-10">
+                            <span className="text-[10px] font-medium text-gray-400">{provider.name}</span>
+                          </div>
+                          {providerModels.map(m => {
+                            let buttonClass = 'w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ';
+                            if (m.id === settings.activeModelId) {
+                              buttonClass += 'text-blue-300 bg-blue-600/10';
+                            } else {
+                              buttonClass += 'text-gray-300';
+                            }
+
+                            return (
+                              <button
+                                key={m.id}
+                                onClick={() => { onSelectModel?.(m.id); setModelDropdownOpen(false); }}
+                                className={buttonClass}
+                              >
+                                {m.displayName || m.modelId}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Character Selector */}

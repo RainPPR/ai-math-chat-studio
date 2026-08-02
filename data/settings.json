@@ -356,42 +356,46 @@
       "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
       "providerType": "openai-compatible",
       "modelId": "deepseek-v4-flash-free",
-      "displayName": "Deepseek V4 Flash (OpenCode)"
+      "displayName": "DeepSeek V4 Flash Free (New) (OpenCode)",
+      "reasoningEffort": "max"
     },
     {
       "id": "1a49d398-0224-583f-973a-a0bb2af90ee2",
       "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
       "providerType": "openai-compatible",
       "modelId": "mimo-v2.5-free",
-      "displayName": "Mimo V2.5 (OpenCode)"
+      "displayName": "MiMo V2.5 Free (OpenCode)"
     },
     {
       "id": "0b7c361b-63dc-5731-8d0e-d2315ec9d694",
       "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
       "providerType": "openai-compatible",
       "modelId": "ling-3.0-flash-free",
-      "displayName": "Ling 3.0 Flash (OpenCode)"
+      "displayName": "Ling-3.0-flash Free (OpenCode)",
+      "reasoningEffort": "high"
     },
     {
       "id": "14f57ded-622b-5af6-8331-a14e299bdd14",
       "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
       "providerType": "openai-compatible",
       "modelId": "nemotron-3-ultra-free",
-      "displayName": "Nemotron 3 Ultra (OpenCode)"
+      "displayName": "Nemotron 3 Ultra Free (OpenCode)"
     },
     {
       "id": "f4b831e8-6a1a-5403-a625-007ffcd3ac96",
       "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
       "providerType": "openai-compatible",
       "modelId": "north-mini-code-free",
-      "displayName": "North Mini Code (OpenCode)"
+      "displayName": "North Mini Code Free (OpenCode)",
+      "reasoningEffort": "high"
     },
     {
       "id": "32d253e2-5a78-5c6b-9663-105cb03eb4e4",
       "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
       "providerType": "openai-compatible",
       "modelId": "laguna-s-2.1-free",
-      "displayName": "Laguna S 2.1 (OpenCode)"
+      "displayName": "Laguna S 2.1 Free (OpenCode)",
+      "reasoningEffort": "high"
     }
   ],
   "characters": [
