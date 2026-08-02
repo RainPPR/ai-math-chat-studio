@@ -509,7 +509,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 - **`server/providers/stream.ts`** — 流式 API 调用
   - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
   - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
-  - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK）
+  - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK，不启用 `reasoning_effort` 级联回退机制）
   - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用，支持 `reasoning_effort` 自动重试机制（若未显式指定级别，会从 `max` -> `xhigh` -> `high` 依次尝试请求，每个级别失败后重试一次。若抛出 401、403、404 等严重配置或不存在错误，则立即停止并向上抛出；若抛出与 `reasoning_effort` 相关的 400 或 422 错误，则立刻停止重试尝试并直接回退调用无 `reasoning_effort` 参数的模型流；若检测到 429 速率限制，也会立即向上抛出错误以提升用户体验）
   - `StreamRequest` / `StreamChunk` 类型定义
 ```
@@ -542,6 +542,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 - **Base URL**：`https://integrate.api.nvidia.com/v1`
 - **特殊功能**：支持 `extraBody` 透传（如 `chat_template_kwargs`）
 - **推理过程**：通过 `delta.reasoning` 或 `delta.reasoning_content` 字段检测
+- **推理强度配置**：不启用 `reasoning_effort` 级联回退机制或自动参数注入。在未显式设置 `reasoning_effort` 时，默认进行无 `reasoning_effort` 参数的请求；若用户显式配置了 `reasoning_effort`（例如 Kimi K2.6），则依然会直接遵循该显式配置发出请求。
 ```
 
 ### AI 供应商集成文档 / OpenAI Compatible

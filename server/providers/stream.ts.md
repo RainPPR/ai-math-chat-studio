@@ -87,7 +87,13 @@ async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; a
 
 // ---- Generic OpenAI SDK helper ----
 
-async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: string, signal?: AbortSignal): AsyncGenerator<StreamChunk> {
+async function* streamOpenAIHelper(
+  req: StreamRequest,
+  apiKey: string,
+  baseURL: string,
+  signal?: AbortSignal,
+  disableReasoningEffort = false
+): AsyncGenerator<StreamChunk> {
   const client = new OpenAI({ baseURL, apiKey });
 
   const messages: any[] = [];
@@ -211,7 +217,13 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
     }
   }
 
-  if (!req.reasoningEffort) {
+  if (req.reasoningEffort) {
+    console.log(`[OpenAI] Requesting model ${req.model} with explicit reasoningEffort=${req.reasoningEffort}`);
+    yield* runWithReasoningEffort(req.reasoningEffort);
+  } else if (disableReasoningEffort) {
+    console.log(`[OpenAI] Requesting model ${req.model} without reasoningEffort (disabled)`);
+    yield* runWithReasoningEffort(undefined);
+  } else {
     const efforts = ['max', 'xhigh', 'high'];
     let successfulGen: AsyncGenerator<StreamChunk> | null = null;
     let firstResult: IteratorResult<StreamChunk> | null = null;
@@ -296,9 +308,6 @@ async function* streamOpenAIHelper(req: StreamRequest, apiKey: string, baseURL: 
 
     console.log(`[OpenAI] Trial Cascade: Falling back to model ${req.model} with no reasoningEffort parameter`);
     yield* runWithReasoningEffort(undefined);
-  } else {
-    console.log(`[OpenAI] Requesting model ${req.model} with explicit reasoningEffort=${req.reasoningEffort}`);
-    yield* runWithReasoningEffort(req.reasoningEffort);
   }
 }
 
@@ -310,7 +319,7 @@ async function* streamNvidia(req: StreamRequest, provider: { baseURL?: string; a
   if (!apiKey) throw new Error('Nvidia API key is not configured.');
   if (!baseURL) throw new Error('Nvidia Base URL is not configured.');
 
-  yield* streamOpenAIHelper(req, apiKey, baseURL, signal);
+  yield* streamOpenAIHelper(req, apiKey, baseURL, signal, true);
 }
 
 // ---- OpenAI Compatible ----
