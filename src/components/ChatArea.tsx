@@ -330,6 +330,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const [headerCharacterDropdownOpen, setHeaderCharacterDropdownOpen] = useState(false);
   const headerCharacterDropdownRef = useRef<HTMLDivElement>(null);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
+  const modelToggleBtnRef = useRef<HTMLButtonElement>(null);
   const characterDropdownRef = useRef<HTMLDivElement>(null);
   const templateDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -790,6 +791,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           {/* Model Selector */}
           <div ref={modelDropdownRef} className="relative">
             <button
+              ref={modelToggleBtnRef}
               onClick={() => { setCharacterDropdownOpen(false); setModelDropdownOpen(!modelDropdownOpen); }}
               className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
             >
@@ -821,12 +823,14 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                         if (e.key === 'Escape') {
                           e.preventDefault();
                           setModelDropdownOpen(false);
+                          modelToggleBtnRef.current?.focus();
                         } else if (e.key === 'Enter') {
                           e.preventDefault();
                           if (allFilteredModels.length > 0) {
                             const firstModel = allFilteredModels[0];
                             onSelectModel?.(firstModel.id);
                             setModelDropdownOpen(false);
+                            modelToggleBtnRef.current?.focus();
                           }
                         }
                       }}
