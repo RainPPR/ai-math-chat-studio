@@ -140,6 +140,12 @@
 - **最大化 Markdown 预览层 (Maximize View Overlay)**: 鼠标悬停在用户消息或 AI 模型消息上时，在“复制”按钮旁边会显示 👁️ (查看) 图标。点击后将展示覆盖整个可视区域的 `bg-gray-950` 底色全屏层，其具有 `prose-lg md:prose-xl text-gray-100` 等放大的字体样式，并锁死底层页面的滚动。
 - **劫持系统 Ctrl+P 与纯净打印**: 在预览层中，支持键盘按下 Ctrl+P 或点击“打印”按钮进行打印。系统会拦截默认的 Ctrl+P 行为，动态创建隐藏的 `iframe` 并传入纯净的 blank 页面。将所有的 CSS/KaTeX 样式与要打印的 HTML 片段拷贝至其中并直接执行打印指令。保证打印结果完全干净、无任何不相关的 UI 干扰。
 
+### 7. 动态 KaTeX 数学字体选择 (Dynamic KaTeX Math Font Selection)
+
+- **字体预设与路径**: 系统在 `src/types.ts` 中定义了 `KATEX_FONTS` 数组，支持 Default, Euler Math, Fira Math, 和 Cambria Math。源字体（OTF/TTF）与转换后的 WOFF2 字体资源存放于 `src/fonts/`。
+- **动态样式应用**: 活跃的字体类会通过模板字面量 `` `katex-font-${settings.katexFont || 'default'}` `` 动态拼接，并直接应用到 `App.tsx` 根 layout 以及 `ChatArea.tsx` 内的纯净打印 iframe 页面上，以确保更换字体无刷新渲染且打印字体一致。
+- **CJK 中文字体优雅降级**: 在自定义数学字体渲染时，为防止中文（`.cjk_fallback` 类）被衬线/无衬线数学符号字体异常覆盖或变畸，在 `src/index.css` 内为各类字体专门追加了高优先级的 `.cjk_fallback` 及它的子元素覆盖处理器，强制它们回退并使用网页正文字体 (`system-ui, sans-serif`)。
+
 ## ⚠️ 严禁事项（强制执行）
 
 ### 包管理器
