@@ -28,21 +28,21 @@
 /* Custom KaTeX Fonts - Targeting all elements except CJK fallback text */
 .katex-font-euler .katex:not(.cjk_fallback),
 .katex-font-euler .katex :not(.cjk_fallback) {
-  font-family: 'Euler Math', serif !important;
+  font-family: 'Euler Math', 'KaTeX_Main', sans-serif !important;
 }
 
 .katex-font-fira .katex:not(.cjk_fallback),
 .katex-font-fira .katex :not(.cjk_fallback) {
-  font-family: 'Fira Math', sans-serif !important;
+  font-family: 'Fira Math', 'KaTeX_Main', sans-serif !important;
 }
 
 .katex-font-cambria .katex:not(.cjk_fallback),
 .katex-font-cambria .katex :not(.cjk_fallback) {
-  font-family: 'Cambria Math', serif !important;
+  font-family: 'Cambria Math', 'KaTeX_Main', sans-serif !important;
 }
 
 /* Ensure CJK/Chinese characters inside math blocks fall back gracefully to the main body text font family */
 .katex .cjk_fallback,
 .katex .cjk_fallback * {
-  font-family: var(--font-sans) !important;
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont !important;
 }
