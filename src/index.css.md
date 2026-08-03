@@ -2,4 +2,50 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@font-face {
+  font-family: 'Euler Math';
+  src: url('./fonts/Euler-Math.woff2') format('woff2'),
+       url('./fonts/Euler-Math.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Fira Math';
+  src: url('./fonts/FiraMath-Regular.woff2') format('woff2'),
+       url('./fonts/FiraMath-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cambria Math';
+  src: url('./fonts/Cambria Math.woff2') format('woff2'),
+       url('./fonts/Cambria Math.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Custom KaTeX Fonts - Targeting all elements except CJK fallback text */
+.katex-font-euler .katex:not(.cjk_fallback),
+.katex-font-euler .katex :not(.cjk_fallback) {
+  font-family: 'Euler Math', 'KaTeX_Main', sans-serif !important;
+}
+
+.katex-font-fira .katex:not(.cjk_fallback),
+.katex-font-fira .katex :not(.cjk_fallback) {
+  font-family: 'Fira Math', 'KaTeX_Main', sans-serif !important;
+}
+
+.katex-font-cambria .katex:not(.cjk_fallback),
+.katex-font-cambria .katex :not(.cjk_fallback) {
+  font-family: 'Cambria Math', 'KaTeX_Main', sans-serif !important;
+}
+
+/* Ensure CJK/Chinese characters inside math blocks fall back gracefully to the main body text font family */
+.katex .cjk_fallback,
+.katex .cjk_fallback * {
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont !important;
+}
+
 ```

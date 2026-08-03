@@ -359,8 +359,14 @@ export default function App() {
 
   const currentSession = sessions.find(s => s.id === currentSessionId);
 
+  let fontName = 'default';
+  if (settings.katexFont) {
+    fontName = settings.katexFont;
+  }
+  const currentFontClass = `katex-font-${fontName}`;
+
   return (
-    <div className="flex h-screen bg-gray-900 text-gray-100 overflow-hidden font-sans relative">
+    <div className={`flex h-screen bg-gray-900 text-gray-100 overflow-hidden font-sans relative ${currentFontClass}`}>
       <Sidebar
         sessions={sessions}
         characters={settings.characters}

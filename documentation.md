@@ -107,6 +107,24 @@ bun run clean         # 清除 dist、dist-server、dist-compile、release 目�
 `@/*` 映射到项目根目录，配置在 `tsconfig.json` 和 `vite.config.ts` 中。
 ```
 
+### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts)
+
+```text
+本应用支持动态 KaTeX 数学字体选择，允许用户在设置（SettingsModal.tsx）中切换不同的数学渲染字体：
+- **Default**: KaTeX 默认自带字体。
+- **Euler Math**: 典雅的 Euler 数学字体 (Euler-Math.woff2 / Euler-Math.otf)。
+- **Fira Math**: 现代的 Fira 数学无衬线字体 (FiraMath-Regular.woff2 / FiraMath-Regular.otf)。
+- **Cambria Math**: 经典的 Cambria 数学衬线字体 (Cambria Math.woff2 / Cambria Math.ttf)。
+```
+
+### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts) / 字体实现细节
+
+```text
+1. **源字体与 WOFF2 转换**: 字体文件存放于 `src/fonts/` 下，转换使用标准的 `woff2_compress` 压缩技术将 OTF/TTF 转换为体积更小的 WOFF2 格式。
+2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义在 `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
+3. **CJK/中文优雅回退**: 避免定制数学字体对数学公式内的中文（如 `\text{中文}` 或 `.cjk_fallback`）造成非预期的强制覆盖，系统在 `src/index.css` 增加了高优先级的非冲突 CJK 回退处理器，强制使 `.cjk_fallback` 及它的子元素回退并使用网页正文字体 (`system-ui, sans-serif`)。
+```
+
 ### 组件结构文档
 
 ```text

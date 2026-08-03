@@ -48,6 +48,7 @@ export interface UserSettings {
   gemmaTrimThinkingSpaces: boolean;
   starredSessions?: Record<string, StarColor>;
   claudeChunks?: string[];
+  katexFont?: string;
 }
 
 export type StarColor = 'yellow' | 'rose' | 'blue' | 'green' | 'orange';
@@ -63,7 +64,15 @@ export const DEFAULT_SETTINGS: UserSettings = {
   gemmaTrimThinkingSpaces: false,
   starredSessions: {},
   claudeChunks: [],
+  katexFont: 'default',
 };
+
+export const KATEX_FONTS = [
+  { id: 'default', name: 'Default' },
+  { id: 'euler', name: 'Euler Math' },
+  { id: 'fira', name: 'Fira Math' },
+  { id: 'cambria', name: 'Cambria Math' },
+];
 
 // Legacy type (kept for backward compatibility)
 export interface ModelPoolEntry {

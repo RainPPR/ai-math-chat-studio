@@ -501,6 +501,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       .map(el => el.outerHTML)
       .join('\n');
 
+    let fontName = 'default';
+    if (settings.katexFont) {
+      fontName = settings.katexFont;
+    }
+    const currentFontClass = `katex-font-${fontName}`;
+
     const printStyles = `
       <style>
         @media print {
@@ -510,7 +516,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           body {
             background-color: white !important;
             color: black !important;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
             padding: 20px;
             margin: 0;
           }
@@ -547,7 +553,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       '    ' + styles + '\n' +
       '    ' + printStyles + '\n' +
       '  </head>\n' +
-      '  <body>\n' +
+      '  <body class="' + currentFontClass + '">\n' +
       '    <div class="prose">\n' +
       '      ' + printElement.innerHTML + '\n' +
       '    </div>\n' +
