@@ -25,7 +25,7 @@
   font-style: normal;
 }
 
-/* Custom KaTeX Fonts - Targeting all elements except .cjk_fallback */
+/* Custom KaTeX Fonts - Targeting all elements except CJK fallback text */
 .katex-font-euler .katex:not(.cjk_fallback),
 .katex-font-euler .katex :not(.cjk_fallback) {
   font-family: 'Euler Math', serif !important;
@@ -42,6 +42,7 @@
 }
 
 /* Ensure CJK/Chinese characters inside math blocks fall back gracefully to the main body text font family */
-.katex .cjk_fallback {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
+.katex .cjk_fallback,
+.katex .cjk_fallback * {
+  font-family: var(--font-sans) !important;
 }
