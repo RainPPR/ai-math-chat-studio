@@ -554,6 +554,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       '  </head>\n' +
       '  <body class="' + currentFontClass + '">\n' +
       '    <div class="prose">\n' +
+      '      <h1>Session ID: ' + (session?.id || '') + '</h1>\n' +
       '      ' + printElement.innerHTML + '\n' +
       '    </div>\n' +
       '  </body>\n' +
@@ -650,6 +651,107 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     }
   };
 
+  const handlePrintAll = () => {
+    if (!session) return;
+    const printElement = document.getElementById('print-all-session-content');
+    if (!printElement) return;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (!doc) {
+      if (iframe.parentNode) {
+        iframe.parentNode.removeChild(iframe);
+      }
+      return;
+    }
+
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+      .map(el => el.outerHTML)
+      .join('\n');
+
+    let fontName = 'default';
+    if (settings.katexFont) {
+      fontName = settings.katexFont;
+    }
+    const currentFontClass = `katex-font-${fontName}`;
+
+    const printStyles = `
+      <style>
+        @media print {
+          @page {
+            margin: 20mm;
+          }
+          body {
+            background-color: white !important;
+            color: black !important;
+            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
+            padding: 20px;
+            margin: 0;
+          }
+          .prose-invert {
+            color: black !important;
+          }
+          .prose {
+            max-width: none !important;
+            color: black !important;
+          }
+          .prose * {
+            color: black !important;
+            border-color: #ddd !important;
+            background-color: transparent !important;
+          }
+          .katex {
+            text-rendering: auto;
+          }
+        }
+        body {
+          background-color: white !important;
+          color: black !important;
+          padding: 20px;
+        }
+      </style>
+    `;
+
+    doc.open();
+    doc.write(
+      '<!DOCTYPE html>\n' +
+      '<html>\n' +
+      '  <head>\n' +
+      '    <title>Print Content</title>\n' +
+      '    ' + styles + '\n' +
+      '    ' + printStyles + '\n' +
+      '  </head>\n' +
+      '  <body class="' + currentFontClass + '">\n' +
+      '    <div class="prose">\n' +
+      '      <h1>Session ID: ' + session.id + '</h1>\n' +
+      '      ' + printElement.innerHTML + '\n' +
+      '    </div>\n' +
+      '  </body>\n' +
+      '</html>'
+    );
+    doc.close();
+
+    setTimeout(() => {
+      if (iframe.contentWindow) {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }
+      setTimeout(() => {
+        if (iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
+        }
+      }, 1000);
+    }, 500);
+  };
+
   const handleExport = () => {
     if (!session) return;
     let text = `# ${session.title}\n\n`;
@@ -725,7 +827,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             )}
           </div>
         </div>
-        <button onClick={handleExport} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors">
+        <button onClick={handlePrintAll} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer">
+          <Printer size={16} /><span>Print</span>
+        </button>
+        <button onClick={handleExport} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer">
           <Download size={16} /><span>Export</span>
         </button>
       </div>
@@ -1029,6 +1134,29 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                 <MarkdownRenderer content={viewingContent.modelContent} />
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden container for printing all messages of the session */}
+      {session && session.messages && (
+        <div id="print-all-session-content" className="hidden">
+          <div className="prose prose-invert prose-lg md:prose-xl max-w-none space-y-8">
+            {session.messages.map((msg, idx) => {
+              const isUser = msg.role === 'user';
+              const titleText = isUser ? '问题 (Question)' : '回答 (Answer)';
+              const titleColorClass = isUser ? 'text-blue-400' : 'text-green-400';
+              const parsed = parseMessageContent(msg.content, isUser, settings);
+
+              return (
+                <div key={msg.id || idx} className="border-b border-gray-800/80 pb-8 last:border-0">
+                  <h4 className={`text-xs font-semibold uppercase tracking-wider ${titleColorClass} mb-4 select-none`}>
+                    {titleText}
+                  </h4>
+                  <MarkdownRenderer content={parsed.mainContent} />
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
