@@ -653,8 +653,26 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
 
   const [isPrintingAll, setIsPrintingAll] = useState(false);
 
+  // Keep references to the latest mutable states to treat effect triggers as snapshots
+  const sessionRef = useRef(session);
+  const settingsRef = useRef(settings);
+
   useEffect(() => {
-    if (!isPrintingAll || !session) return;
+    sessionRef.current = session;
+  }, [session]);
+
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
+
+  useEffect(() => {
+    if (!isPrintingAll) return;
+
+    const currentSession = sessionRef.current;
+    if (!currentSession) {
+      setIsPrintingAll(false);
+      return;
+    }
 
     const printElement = document.getElementById('print-all-session-content');
     if (!printElement) {
@@ -685,8 +703,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       .join('\n');
 
     let fontName = 'default';
-    if (settings.katexFont) {
-      fontName = settings.katexFont;
+    if (settingsRef.current.katexFont) {
+      fontName = settingsRef.current.katexFont;
     }
     const currentFontClass = `katex-font-${fontName}`;
 
@@ -738,7 +756,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       '  </head>\n' +
       '  <body class="' + currentFontClass + '">\n' +
       '    <div class="prose">\n' +
-      '      <h1>Session ID: ' + session.id + '</h1>\n' +
+      '      <h1>Session ID: ' + currentSession.id + '</h1>\n' +
       '      ' + printElement.innerHTML + '\n' +
       '    </div>\n' +
       '  </body>\n' +
@@ -746,19 +764,30 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     );
     doc.close();
 
-    setTimeout(() => {
+    let cleanTimeout: ReturnType<typeof setTimeout> | null = null;
+    const triggerTimeout = setTimeout(() => {
       if (iframe.contentWindow) {
         iframe.contentWindow.focus();
         iframe.contentWindow.print();
       }
-      setTimeout(() => {
+      cleanTimeout = setTimeout(() => {
         if (iframe.parentNode) {
           iframe.parentNode.removeChild(iframe);
         }
         setIsPrintingAll(false);
       }, 1000);
     }, 500);
-  }, [isPrintingAll, session, settings.katexFont]);
+
+    return () => {
+      clearTimeout(triggerTimeout);
+      if (cleanTimeout) {
+        clearTimeout(cleanTimeout);
+      }
+      if (iframe.parentNode) {
+        iframe.parentNode.removeChild(iframe);
+      }
+    };
+  }, [isPrintingAll]);
 
   const handlePrintAll = () => {
     setIsPrintingAll(true);
