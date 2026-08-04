@@ -651,10 +651,16 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     }
   };
 
-  const handlePrintAll = () => {
-    if (!session) return;
+  const [isPrintingAll, setIsPrintingAll] = useState(false);
+
+  useEffect(() => {
+    if (!isPrintingAll || !session) return;
+
     const printElement = document.getElementById('print-all-session-content');
-    if (!printElement) return;
+    if (!printElement) {
+      setIsPrintingAll(false);
+      return;
+    }
 
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
@@ -670,6 +676,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       if (iframe.parentNode) {
         iframe.parentNode.removeChild(iframe);
       }
+      setIsPrintingAll(false);
       return;
     }
 
@@ -748,8 +755,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
         if (iframe.parentNode) {
           iframe.parentNode.removeChild(iframe);
         }
+        setIsPrintingAll(false);
       }, 1000);
     }, 500);
+  }, [isPrintingAll, session, settings.katexFont]);
+
+  const handlePrintAll = () => {
+    setIsPrintingAll(true);
   };
 
   const handleExport = () => {
@@ -1139,10 +1151,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       )}
 
       {/* Hidden container for printing all messages of the session */}
-      {session && session.messages && (
+      {isPrintingAll && session && (
         <div id="print-all-session-content" className="hidden">
           <div className="prose prose-invert prose-lg md:prose-xl max-w-none space-y-8">
-            {session.messages.map((msg, idx) => {
+            {displayMessages.map((msg, idx) => {
               const isUser = msg.role === 'user';
               const titleText = isUser ? '问题 (Question)' : '回答 (Answer)';
               const titleColorClass = isUser ? 'text-blue-400' : 'text-green-400';

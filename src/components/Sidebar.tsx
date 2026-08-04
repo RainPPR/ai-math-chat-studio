@@ -302,13 +302,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return filteredSessions.filter(s => starredSessions[s.id]);
   }, [filteredSessions, starredSessions]);
 
-  const groups = useMemo(() => groupSessions(filteredSessions), [filteredSessions]);
+  const groups = useMemo(() => {
+    let listForGroups = filteredSessions;
+    if (searchQuery.trim() && starredSessions) {
+      listForGroups = filteredSessions.filter(s => !starredSessions[s.id]);
+    }
+    return groupSessions(listForGroups);
+  }, [filteredSessions, searchQuery, starredSessions]);
 
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
     return new Set(ALWAYS_COLLAPSED);
   });
 
   const toggleGroup = (key: string) => {
+    if (searchQuery.trim()) return;
     setCollapsedGroups(prev => {
       const next = new Set(prev);
       if (next.has(key)) {
@@ -372,7 +379,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Search Bar */}
         <div className="relative group">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
             <Search size={14} />
@@ -409,8 +415,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {starredSessionsList.length > 0 && (
           <div className="px-3 mb-4">
             <button
-              onClick={() => { setIsStarredCollapsed(!isStarredCollapsed); }}
-              className="w-full flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-yellow-500 hover:text-yellow-400 rounded transition-colors select-none cursor-pointer"
+              onClick={() => {
+                if (searchQuery.trim()) return;
+                setIsStarredCollapsed(!isStarredCollapsed);
+              }}
+              className={`w-full flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-yellow-500 hover:text-yellow-400 rounded transition-colors select-none ${searchQuery.trim() ? 'cursor-default' : 'cursor-pointer'}`}
             >
               {(isStarredCollapsed && !searchQuery.trim()) ? <ChevronRight size={14} className="shrink-0" /> : <ChevronDown size={14} className="shrink-0" />}
               <Star size={14} className="shrink-0 text-yellow-500 fill-current" />
@@ -459,7 +468,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div key={group.key}>
                 <button
                   onClick={() => { toggleGroup(group.key); }}
-                  className={`w-full flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded transition-colors select-none cursor-pointer ${isOlder ? 'text-gray-600 hover:text-gray-500' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`w-full flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded transition-colors select-none ${searchQuery.trim() ? 'cursor-default' : 'cursor-pointer'} ${isOlder ? 'text-gray-600 hover:text-gray-500' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                   {isCollapsed ? <ChevronRight size={14} className="shrink-0" /> : <ChevronDown size={14} className="shrink-0" />}
                   <span>{group.label}</span>
