@@ -275,6 +275,13 @@
       "displayName": "OpenRouter Free Models Router (Kilo)"
     },
     {
+      "id": "04560a4e-43f1-5a34-ada1-8019b1d4dda6",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "tencent/hy3:free",
+      "displayName": "Tencent: Hy3 (Kilo)"
+    },
+    {
       "id": "cd2e2f5e-12a8-5000-acf6-7be3dcab4f48",
       "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
       "providerType": "openai-compatible",
@@ -455,6 +462,6 @@
   ],
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e",
+  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
   "activeModelId": "a0c2e1eb-26cd-464a-93b5-da6e4fd148ac"
 }
