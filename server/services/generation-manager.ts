@@ -68,6 +68,19 @@ function convertNonStandardThinking(content: string): string {
   return standardThinking.trim();
 }
 
+/**
+ * Merge consecutive <think> blocks into a single <think> block.
+ * Consecutive <think> blocks are defined as </think> followed by only whitespace
+ * (spaces, tabs, newlines, carriage returns, etc.) and then another <think>.
+ */
+function mergeConsecutiveThinking(content: string): string {
+  let merged = content.replace(/<\/think>\s*<think>/gi, '\n');
+  merged = merged.replace(/(<think>[\s\S]*?<\/think>)/gi, (match) => {
+    return match.replace(/\n{3,}/g, '\n\n');
+  });
+  return merged;
+}
+
 // Limit input length for title generation
 
 function generateTitleFromMarkdown(markdown: string): string {
@@ -370,31 +383,13 @@ export class GenerationManager {
     if (!session) throw new Error('Session not found');
     if (session.messages.length === 0) throw new Error('Session has no messages');
 
-    const continueMsg: ServerChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: `The previous generation was interrupted. Please continue generating the response from where it left off, ensuring a seamless and complete output.
-
-Requirements:
-1. Do not start from the very beginning if you were already in the middle of the final response; simply pick up exactly where the text cut off and complete it.
-2. If the interruption occurred inside the thinking phase (within \`<think>\` tags), please complete the thinking process, close the \`</think>\` tag, and then output the final response.
-3. Do not apologize, explain, or mention that the generation was interrupted, timed out, or restarted. Do not write any meta-dialogue like "Continuing from..." or "Here is the rest of...". Just output the continuing content directly.`,
-      createdAt: new Date().toISOString(),
-    };
-
-    const originalMessages = session.messages;
-    session.messages.push(continueMsg);
-    session.updatedAt = new Date().toISOString();
-
-    try {
-      await this.writeSession(session);
-      // Start generation (fire-and-forget, errors handled internally)
-      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
-    } catch (err) {
-      session.messages = originalMessages;
-      await this.writeSession(session);
-      throw err;
+    const lastMsg = session.messages[session.messages.length - 1];
+    if (lastMsg.role !== 'model') {
+      throw new Error('Can only continue generation from an assistant message');
     }
+
+    // Start generation (fire-and-forget, errors handled internally)
+    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
   }
 
   async regenerateMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
@@ -497,8 +492,19 @@ Requirements:
       content: m.content,
     }));
 
-    let fullContent = '';
+    const isContinuation = session.messages.length > 0 && session.messages[session.messages.length - 1].role === 'model';
+    const existingContent = isContinuation ? session.messages[session.messages.length - 1].content : '';
+
+    let fullContent = isContinuation ? existingContent : '';
     let isThinking = false;
+    if (isContinuation && existingContent) {
+      const thinkIndex = existingContent.lastIndexOf('<think>');
+      const closeThinkIndex = existingContent.lastIndexOf('</think>');
+      if (thinkIndex !== -1 && thinkIndex > closeThinkIndex) {
+        isThinking = true;
+      }
+    }
+
     let lastNotifyTime = 0;
     let pendingNotify = false;
     let pendingNotifyTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -571,17 +577,22 @@ Requirements:
       if (model.providerType === 'openai-compatible') {
         fullContent = convertNonStandardThinking(fullContent);
       }
+      fullContent = mergeConsecutiveThinking(fullContent);
       task.content = fullContent;
 
       if (fullContent.trim()) {
-        const modelMsg: ServerChatMessage = {
-          id: crypto.randomUUID(),
-          role: 'model',
-          content: fullContent,
-          createdAt: new Date().toISOString(),
-        };
         const latestSession = await this.readSession(session.id) || session;
-        latestSession.messages.push(modelMsg);
+        if (isContinuation && latestSession.messages.length > 0 && latestSession.messages[latestSession.messages.length - 1].role === 'model') {
+          latestSession.messages[latestSession.messages.length - 1].content = fullContent;
+        } else {
+          const modelMsg: ServerChatMessage = {
+            id: crypto.randomUUID(),
+            role: 'model',
+            content: fullContent,
+            createdAt: new Date().toISOString(),
+          };
+          latestSession.messages.push(modelMsg);
+        }
         latestSession.updatedAt = new Date().toISOString();
         await this.debouncedWrite(latestSession, 0);
       }
@@ -626,8 +637,8 @@ Requirements:
           fullContent += chunk.content || '';
         }
 
-        task.content = fullContent;
-        notifySubscribers('delta', { content: fullContent });
+        task.content = mergeConsecutiveThinking(fullContent);
+        notifySubscribers('delta', { content: task.content });
       }
 
       if (task.abortController.signal.aborted || task.status === 'stopped') {
@@ -680,6 +691,7 @@ Requirements:
       // Convert non-standard thinking format for old messages (from before this feature was added)
       if (m.role === 'model') {
         content = convertNonStandardThinking(content);
+        content = mergeConsecutiveThinking(content);
       }
       return {
         id: m.id ?? crypto.randomUUID(),

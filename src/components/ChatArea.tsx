@@ -728,19 +728,30 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
 
   const displayMessages = [...session.messages];
   const lastMsg = session.messages.length > 0 ? session.messages[session.messages.length - 1] : null;
-  let isStreamSaved = false;
-  if (lastMsg?.role === 'model' && streamingContent) {
-    const normalizedSaved = lastMsg.content;
-    const normalizedStream = streamingContent;
-    isStreamSaved = normalizedSaved.includes(normalizedStream.substring(0, Math.min(normalizedStream.length, 500)));
-  }
-  if (isGenerating && streamingContent && !isStreamSaved) {
-    displayMessages.push({
-      id: '__streaming__',
-      role: 'model',
-      content: streamingContent,
-      createdAt: new Date().toISOString(),
-    });
+
+  if (isGenerating && streamingContent) {
+    if (lastMsg?.role === 'model') {
+      // Continuation mode: update the last message in-place
+      displayMessages[displayMessages.length - 1] = {
+        ...lastMsg,
+        content: streamingContent,
+      };
+    } else {
+      // Normal mode: check if stream is already saved
+      let isStreamSaved = false;
+      const normalizedSaved = lastMsg?.content || '';
+      const normalizedStream = streamingContent;
+      isStreamSaved = normalizedSaved.includes(normalizedStream.substring(0, Math.min(normalizedStream.length, 500)));
+
+      if (!isStreamSaved) {
+        displayMessages.push({
+          id: '__streaming__',
+          role: 'model',
+          content: streamingContent,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    }
   }
 
   return (
