@@ -230,6 +230,13 @@
       "displayName": "Poolside: Laguna S 2.1 (Kilo)"
     },
     {
+      "id": "04560a4e-43f1-5a34-ada1-8019b1d4dda6",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "tencent/hy3:free",
+      "displayName": "Tencent: Hy3 (Kilo)"
+    },
+    {
       "id": "a1600296-046e-5465-b8ff-9bd743cbb72c",
       "providerId": "p-kilo-gw",
       "providerType": "openai-compatible",
@@ -277,13 +284,6 @@
       "providerType": "openai-compatible",
       "modelId": "openrouter/free",
       "displayName": "OpenRouter Free Models Router (Kilo)"
-    },
-    {
-      "id": "04560a4e-43f1-5a34-ada1-8019b1d4dda6",
-      "providerId": "p-kilo-gw",
-      "providerType": "openai-compatible",
-      "modelId": "tencent/hy3:free",
-      "displayName": "Tencent: Hy3 (Kilo)"
     },
     {
       "id": "cd2e2f5e-12a8-5000-acf6-7be3dcab4f48",
@@ -407,18 +407,6 @@
       "modelId": "laguna-s-2.1-free",
       "displayName": "Laguna S 2.1 Free (OpenCode)",
       "reasoningEffort": "high"
-    },
-    {
-      "id": "f8ab564c-755f-499f-b391-5b412028139d",
-      "providerId": "73766d3b-b243-4dcf-a64b-f7f9956f4df7",
-      "providerType": "openai-compatible",
-      "modelId": "zai-glm-4.7",
-      "displayName": "GLM 4.7 (Cerebras)",
-      "extraBody": {
-        "reasoning_format": "parsed",
-        "clear_thinking": false
-      },
-      "reasoningEffort": "high"
     }
   ],
   "characters": [
@@ -478,6 +466,6 @@
   ],
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
-  "activeModelId": "f4a17dec-ee5e-4557-924a-8c02dcb6b1a5"
+  "activeCharacterId": "95460bbd-f1d7-4d51-a7ea-fa039d1c81fc",
+  "activeModelId": "f8ab564c-755f-499f-b391-5b412028139d"
 }
