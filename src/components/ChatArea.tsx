@@ -475,10 +475,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     };
   }, [viewingContent]);
 
-  const handlePrint = () => {
-    const printElement = document.getElementById('print-content-render');
-    if (!printElement) return;
-
+  const executePrint = (htmlContent: string, sessionId?: string, katexFont?: string, onComplete?: () => void) => {
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
     iframe.style.right = '0';
@@ -493,6 +490,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       if (iframe.parentNode) {
         iframe.parentNode.removeChild(iframe);
       }
+      onComplete?.();
       return;
     }
 
@@ -500,45 +498,42 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       .map(el => el.outerHTML)
       .join('\n');
 
-    let fontName = 'default';
-    if (settings.katexFont) {
-      fontName = settings.katexFont;
-    }
+    const fontName = katexFont || 'default';
     const currentFontClass = `katex-font-${fontName}`;
 
     const printStyles = `
       <style>
-        @media print {
-          @page {
-            margin: 20mm;
-          }
-          body {
-            background-color: white !important;
-            color: black !important;
-            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
-            padding: 20px;
-            margin: 0;
-          }
-          .prose-invert {
-            color: black !important;
-          }
-          .prose {
-            max-width: none !important;
-            color: black !important;
-          }
-          .prose * {
-            color: black !important;
-            border-color: #ddd !important;
-            background-color: transparent !important;
-          }
-          .katex {
-            text-rendering: auto;
-          }
+        @page {
+          margin: 20mm;
         }
-        body {
+        html, body {
           background-color: white !important;
           color: black !important;
+          color-scheme: light !important;
+        }
+        body {
+          font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
           padding: 20px;
+          margin: 0;
+        }
+        .prose-invert {
+          color: black !important;
+        }
+        .prose {
+          max-width: none !important;
+          color: black !important;
+        }
+        .prose * {
+          color: black !important;
+          border-color: #ddd !important;
+          background-color: transparent !important;
+        }
+        .katex {
+          text-rendering: auto;
+        }
+        .katex .frac-line {
+          border-color: black !important;
+          color: black !important;
         }
       </style>
     `;
@@ -546,7 +541,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     doc.open();
     doc.write(
       '<!DOCTYPE html>\n' +
-      '<html>\n' +
+      '<html style="color-scheme: light;">\n' +
       '  <head>\n' +
       '    <title>Print Content</title>\n' +
       '    ' + styles + '\n' +
@@ -554,25 +549,43 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       '  </head>\n' +
       '  <body class="' + currentFontClass + '">\n' +
       '    <div class="prose">\n' +
-      '      <h1>Session ID: ' + (session?.id || '') + '</h1>\n' +
-      '      ' + printElement.innerHTML + '\n' +
+      (sessionId ? '      <h1>Session ID: ' + sessionId + '</h1>\n' : '') +
+      '      ' + htmlContent + '\n' +
       '    </div>\n' +
       '  </body>\n' +
       '</html>'
     );
     doc.close();
 
-    setTimeout(() => {
+    let cleanTimeout: ReturnType<typeof setTimeout> | null = null;
+    const triggerTimeout = setTimeout(() => {
       if (iframe.contentWindow) {
         iframe.contentWindow.focus();
         iframe.contentWindow.print();
       }
-      setTimeout(() => {
+      cleanTimeout = setTimeout(() => {
         if (iframe.parentNode) {
           iframe.parentNode.removeChild(iframe);
         }
+        onComplete?.();
       }, 1000);
     }, 500);
+
+    return () => {
+      clearTimeout(triggerTimeout);
+      if (cleanTimeout) {
+        clearTimeout(cleanTimeout);
+      }
+      if (iframe.parentNode) {
+        iframe.parentNode.removeChild(iframe);
+      }
+    };
+  };
+
+  const handlePrint = () => {
+    const printElement = document.getElementById('print-content-render');
+    if (!printElement) return;
+    executePrint(printElement.innerHTML, session?.id, settings.katexFont);
   };
 
   useEffect(() => {
@@ -680,113 +693,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       return;
     }
 
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentWindow?.document || iframe.contentDocument;
-    if (!doc) {
-      if (iframe.parentNode) {
-        iframe.parentNode.removeChild(iframe);
-      }
-      setIsPrintingAll(false);
-      return;
-    }
-
-    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
-      .map(el => el.outerHTML)
-      .join('\n');
-
-    let fontName = 'default';
-    if (settingsRef.current.katexFont) {
-      fontName = settingsRef.current.katexFont;
-    }
-    const currentFontClass = `katex-font-${fontName}`;
-
-    const printStyles = `
-      <style>
-        @media print {
-          @page {
-            margin: 20mm;
-          }
-          body {
-            background-color: white !important;
-            color: black !important;
-            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
-            padding: 20px;
-            margin: 0;
-          }
-          .prose-invert {
-            color: black !important;
-          }
-          .prose {
-            max-width: none !important;
-            color: black !important;
-          }
-          .prose * {
-            color: black !important;
-            border-color: #ddd !important;
-            background-color: transparent !important;
-          }
-          .katex {
-            text-rendering: auto;
-          }
-        }
-        body {
-          background-color: white !important;
-          color: black !important;
-          padding: 20px;
-        }
-      </style>
-    `;
-
-    doc.open();
-    doc.write(
-      '<!DOCTYPE html>\n' +
-      '<html>\n' +
-      '  <head>\n' +
-      '    <title>Print Content</title>\n' +
-      '    ' + styles + '\n' +
-      '    ' + printStyles + '\n' +
-      '  </head>\n' +
-      '  <body class="' + currentFontClass + '">\n' +
-      '    <div class="prose">\n' +
-      '      <h1>Session ID: ' + currentSession.id + '</h1>\n' +
-      '      ' + printElement.innerHTML + '\n' +
-      '    </div>\n' +
-      '  </body>\n' +
-      '</html>'
+    return executePrint(
+      printElement.innerHTML,
+      currentSession.id,
+      settingsRef.current.katexFont,
+      () => setIsPrintingAll(false)
     );
-    doc.close();
-
-    let cleanTimeout: ReturnType<typeof setTimeout> | null = null;
-    const triggerTimeout = setTimeout(() => {
-      if (iframe.contentWindow) {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-      }
-      cleanTimeout = setTimeout(() => {
-        if (iframe.parentNode) {
-          iframe.parentNode.removeChild(iframe);
-        }
-        setIsPrintingAll(false);
-      }, 1000);
-    }, 500);
-
-    return () => {
-      clearTimeout(triggerTimeout);
-      if (cleanTimeout) {
-        clearTimeout(cleanTimeout);
-      }
-      if (iframe.parentNode) {
-        iframe.parentNode.removeChild(iframe);
-      }
-    };
   }, [isPrintingAll]);
 
   const handlePrintAll = () => {
