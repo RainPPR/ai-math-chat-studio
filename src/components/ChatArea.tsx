@@ -508,13 +508,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
 
     const printStyles = `
       <style>
+        html {
+          color-scheme: light !important;
+        }
         @media print {
           @page {
             margin: 20mm;
           }
-          body {
+          html, body {
             background-color: white !important;
             color: black !important;
+            color-scheme: light !important;
+          }
+          body {
             font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
             padding: 20px;
             margin: 0;
@@ -534,11 +540,22 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           .katex {
             text-rendering: auto;
           }
+          .katex .frac-line {
+            border-color: black !important;
+            color: black !important;
+          }
         }
-        body {
+        html, body {
           background-color: white !important;
           color: black !important;
+          color-scheme: light !important;
+        }
+        body {
           padding: 20px;
+        }
+        .katex .frac-line {
+          border-color: black !important;
+          color: black !important;
         }
       </style>
     `;
@@ -546,7 +563,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     doc.open();
     doc.write(
       '<!DOCTYPE html>\n' +
-      '<html>\n' +
+      '<html style="color-scheme: light;">\n' +
       '  <head>\n' +
       '    <title>Print Content</title>\n' +
       '    ' + styles + '\n' +
@@ -710,13 +727,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
 
     const printStyles = `
       <style>
+        html {
+          color-scheme: light !important;
+        }
         @media print {
           @page {
             margin: 20mm;
           }
-          body {
+          html, body {
             background-color: white !important;
             color: black !important;
+            color-scheme: light !important;
+          }
+          body {
             font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
             padding: 20px;
             margin: 0;
@@ -736,11 +759,22 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           .katex {
             text-rendering: auto;
           }
+          .katex .frac-line {
+            border-color: black !important;
+            color: black !important;
+          }
         }
-        body {
+        html, body {
           background-color: white !important;
           color: black !important;
+          color-scheme: light !important;
+        }
+        body {
           padding: 20px;
+        }
+        .katex .frac-line {
+          border-color: black !important;
+          color: black !important;
         }
       </style>
     `;
@@ -748,7 +782,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     doc.open();
     doc.write(
       '<!DOCTYPE html>\n' +
-      '<html>\n' +
+      '<html style="color-scheme: light;">\n' +
       '  <head>\n' +
       '    <title>Print Content</title>\n' +
       '    ' + styles + '\n' +
