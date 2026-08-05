@@ -47,7 +47,10 @@ async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; a
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const history = req.messages.length > 40 ? req.messages.slice(-40) : req.messages;
+  let history = req.messages.length > 40 ? req.messages.slice(-40) : req.messages;
+  while (history.length > 0 && history[0].role !== 'user') {
+    history = history.slice(1);
+  }
   const contents: any[] = history.map(msg => ({
     role: msg.role === 'assistant' ? 'model' : msg.role,
     parts: [{ text: msg.content }],
@@ -100,7 +103,10 @@ async function* streamOpenAIHelper(
     messages.push({ role: 'system', content: req.systemPrompt });
   }
 
-  const history = req.messages.length > 40 ? req.messages.slice(-40) : req.messages;
+  let history = req.messages.length > 40 ? req.messages.slice(-40) : req.messages;
+  while (history.length > 0 && (history[0].role === 'assistant' || history[0].role === 'model')) {
+    history = history.slice(1);
+  }
   for (const msg of history) {
     if (msg.role === 'assistant' || msg.role === 'model') {
       messages.push({ role: 'assistant', content: msg.content });

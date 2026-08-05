@@ -529,7 +529,7 @@ Requirements:
 
 Requirements:
 1. Do not start from the very beginning if you were already in the middle of the final response; simply pick up exactly where the text cut off and complete it.
-2. If the interruption occurred inside the thinking phase (within \`<think>\` tags), please complete the thinking process, close the \`</think>\` tag, and then output the final response.
+2. If the interruption occurred inside the thinking/reasoning phase, please simply complete your remaining reasoning/thinking, and then continue with the final answer/response.
 3. Do not apologize, explain, or mention that the generation was interrupted, timed out, or restarted. Do not write any meta-dialogue like "Continuing from..." or "Here is the rest of...". Just output the continuing content directly.`,
       });
     }
