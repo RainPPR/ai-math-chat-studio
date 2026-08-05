@@ -46,12 +46,12 @@
       "baseURL": "https://opencode.ai/zen/v1"
     },
     {
-      "id": "bbc88b24-7dd7-433b-a44b-ab84781ab98f",
+      "id": "73766d3b-b243-4dcf-a64b-f7f9956f4df7",
       "type": "openai-compatible",
-      "name": "QWEN2API",
+      "name": "Cerebras",
       "apiKey": "",
-      "envKey": "QWEN_API_KEY",
-      "baseURL": "http://localhost:7860/v1"
+      "envKey": "CEREBRAS_API_KEY",
+      "baseURL": "https://api.cerebras.ai/v1"
     }
   ],
   "models": [
@@ -175,12 +175,16 @@
       "injectThinkingTemplate": false
     },
     {
-      "id": "855b2545-b6ee-4796-b332-82bc9c2f0136",
-      "providerId": "bbc88b24-7dd7-433b-a44b-ab84781ab98f",
+      "id": "f4a17dec-ee5e-4557-924a-8c02dcb6b1a5",
+      "providerId": "73766d3b-b243-4dcf-a64b-f7f9956f4df7",
       "providerType": "openai-compatible",
-      "modelId": "qwen3.8-max-preview-thinking",
-      "displayName": "Qwen 3.8 Max Preview (QWEN2API)",
-      "reasoningEffort": "max"
+      "modelId": "gemma-4-31b",
+      "displayName": "Gemma 4 31b (Cerebras)",
+      "reasoningEffort": "high",
+      "maxTokens": 32768,
+      "extraBody": {
+        "reasoning_format": "parsed"
+      }
     },
     {
       "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
@@ -403,6 +407,18 @@
       "modelId": "laguna-s-2.1-free",
       "displayName": "Laguna S 2.1 Free (OpenCode)",
       "reasoningEffort": "high"
+    },
+    {
+      "id": "f8ab564c-755f-499f-b391-5b412028139d",
+      "providerId": "73766d3b-b243-4dcf-a64b-f7f9956f4df7",
+      "providerType": "openai-compatible",
+      "modelId": "zai-glm-4.7",
+      "displayName": "GLM 4.7 (Cerebras)",
+      "extraBody": {
+        "reasoning_format": "parsed",
+        "clear_thinking": false
+      },
+      "reasoningEffort": "high"
     }
   ],
   "characters": [
@@ -462,6 +478,6 @@
   ],
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeCharacterId": "d8aecab7-14b5-4982-b285-1b875b783644",
-  "activeModelId": "a7cf2ab2-4cc2-4e54-a4ee-84ccbe1c4f76"
+  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "activeModelId": "f4a17dec-ee5e-4557-924a-8c02dcb6b1a5"
 }
