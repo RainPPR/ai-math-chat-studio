@@ -503,42 +503,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
 
     const printStyles = `
       <style>
-        html {
-          color-scheme: light !important;
-        }
-        @media print {
-          @page {
-            margin: 20mm;
-          }
-          html, body {
-            background-color: white !important;
-            color: black !important;
-            color-scheme: light !important;
-          }
-          body {
-            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
-            padding: 20px;
-            margin: 0;
-          }
-          .prose-invert {
-            color: black !important;
-          }
-          .prose {
-            max-width: none !important;
-            color: black !important;
-          }
-          .prose * {
-            color: black !important;
-            border-color: #ddd !important;
-            background-color: transparent !important;
-          }
-          .katex {
-            text-rendering: auto;
-          }
-          .katex .frac-line {
-            border-color: black !important;
-            color: black !important;
-          }
+        @page {
+          margin: 20mm;
         }
         html, body {
           background-color: white !important;
@@ -546,7 +512,24 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           color-scheme: light !important;
         }
         body {
+          font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
           padding: 20px;
+          margin: 0;
+        }
+        .prose-invert {
+          color: black !important;
+        }
+        .prose {
+          max-width: none !important;
+          color: black !important;
+        }
+        .prose * {
+          color: black !important;
+          border-color: #ddd !important;
+          background-color: transparent !important;
+        }
+        .katex {
+          text-rendering: auto;
         }
         .katex .frac-line {
           border-color: black !important;
