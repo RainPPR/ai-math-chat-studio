@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ChatSession, Character, StarColor } from '../types';
-import { Plus, Settings, MessageSquare, Trash2, Copy, ChevronDown, ChevronRight, User, Star } from 'lucide-react';
+import { Plus, Settings, MessageSquare, Trash2, Copy, ChevronDown, ChevronRight, User, Star, Search, X } from 'lucide-react';
 
 const STAR_COLORS = [
   { id: 'yellow', name: '黄', colorClass: 'text-yellow-500 hover:text-yellow-400', bgClass: 'bg-yellow-500' },
@@ -259,6 +259,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleStarSession,
 }) => {
   const [filterCharacterId, setFilterCharacterId] = useState<string | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeColorPickerId, setActiveColorPickerId] = useState<string | null>(null);
   const [isStarredCollapsed, setIsStarredCollapsed] = useState(false);
 
@@ -278,11 +279,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }, []);
 
   const filteredSessions = useMemo(() => {
-    if (filterCharacterId === 'all') {
-      return sessions;
+    let list = sessions;
+    if (filterCharacterId !== 'all') {
+      list = list.filter(s => s.characterId === filterCharacterId);
     }
-    return sessions.filter(s => s.characterId === filterCharacterId);
-  }, [sessions, filterCharacterId]);
+    const query = searchQuery.trim();
+    if (!query) {
+      return list;
+    }
+    const strippedQuery = query.toLowerCase().replace(/\s/g, '');
+    return list.filter(s => {
+      const titleMatch = s.title ? s.title.toLowerCase().replace(/\s/g, '').includes(strippedQuery) : false;
+      const idMatch = s.id ? s.id.toLowerCase().replace(/\s/g, '').includes(strippedQuery) : false;
+      return titleMatch || idMatch;
+    });
+  }, [sessions, filterCharacterId, searchQuery]);
 
   const starredSessionsList = useMemo(() => {
     if (!starredSessions) {
@@ -291,13 +302,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return filteredSessions.filter(s => starredSessions[s.id]);
   }, [filteredSessions, starredSessions]);
 
-  const groups = useMemo(() => groupSessions(filteredSessions), [filteredSessions]);
+  const groups = useMemo(() => {
+    let listForGroups = filteredSessions;
+    if (searchQuery.trim() && starredSessions) {
+      listForGroups = filteredSessions.filter(s => !starredSessions[s.id]);
+    }
+    return groupSessions(listForGroups);
+  }, [filteredSessions, searchQuery, starredSessions]);
 
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
     return new Set(ALWAYS_COLLAPSED);
   });
 
   const toggleGroup = (key: string) => {
+    if (searchQuery.trim()) return;
     setCollapsedGroups(prev => {
       const next = new Set(prev);
       if (next.has(key)) {
@@ -360,6 +378,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
         </div>
+
+        <div className="relative group">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+            <Search size={14} />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="搜索会话标题或 ID..."
+            className="w-full bg-gray-900 border border-gray-800 text-gray-300 text-xs rounded-lg pl-9 pr-8 py-2 focus:outline-none focus:border-blue-500/50 transition-colors hover:bg-gray-800/50"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+              title="Clear Search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
         <button
           onClick={onNewChat}
           className="w-full flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-3 rounded-lg transition-colors font-medium cursor-pointer"
@@ -374,10 +415,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {starredSessionsList.length > 0 && (
           <div className="px-3 mb-4">
             <button
-              onClick={() => { setIsStarredCollapsed(!isStarredCollapsed); }}
-              className="w-full flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-yellow-500 hover:text-yellow-400 rounded transition-colors select-none cursor-pointer"
+              onClick={() => {
+                if (searchQuery.trim()) return;
+                setIsStarredCollapsed(!isStarredCollapsed);
+              }}
+              className={`w-full flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-yellow-500 hover:text-yellow-400 rounded transition-colors select-none ${searchQuery.trim() ? 'cursor-default' : 'cursor-pointer'}`}
             >
-              {isStarredCollapsed ? <ChevronRight size={14} className="shrink-0" /> : <ChevronDown size={14} className="shrink-0" />}
+              {(isStarredCollapsed && !searchQuery.trim()) ? <ChevronRight size={14} className="shrink-0" /> : <ChevronDown size={14} className="shrink-0" />}
               <Star size={14} className="shrink-0 text-yellow-500 fill-current" />
               <span>已加星会话</span>
               <span className="ml-auto text-yellow-600/80 font-mono">
@@ -385,7 +429,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </span>
             </button>
 
-            {!isStarredCollapsed && (
+            {(!isStarredCollapsed || !!searchQuery.trim()) && (
               <div className="space-y-1 mt-1">
                 {starredSessionsList.map(session => {
                   const isSelected = currentSessionId === session.id;
@@ -417,14 +461,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <div className="px-3 space-y-1">
           {groups.map(group => {
-            const isCollapsed = collapsedGroups.has(group.key);
+            const isCollapsed = searchQuery.trim() ? false : collapsedGroups.has(group.key);
             const isOlder = group.key === 'older';
 
             return (
               <div key={group.key}>
                 <button
                   onClick={() => { toggleGroup(group.key); }}
-                  className={`w-full flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded transition-colors select-none cursor-pointer ${isOlder ? 'text-gray-600 hover:text-gray-500' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`w-full flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded transition-colors select-none ${searchQuery.trim() ? 'cursor-default' : 'cursor-pointer'} ${isOlder ? 'text-gray-600 hover:text-gray-500' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                   {isCollapsed ? <ChevronRight size={14} className="shrink-0" /> : <ChevronDown size={14} className="shrink-0" />}
                   <span>{group.label}</span>
