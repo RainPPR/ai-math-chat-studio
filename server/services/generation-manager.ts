@@ -74,11 +74,7 @@ function convertNonStandardThinking(content: string): string {
  * (spaces, tabs, newlines, carriage returns, etc.) and then another <think>.
  */
 function mergeConsecutiveThinking(content: string): string {
-  let merged = content.replace(/<\/think>\s*<think>/gi, '\n');
-  merged = merged.replace(/(<think>[\s\S]*?<\/think>)/gi, (match) => {
-    return match.replace(/\n{3,}/g, '\n\n');
-  });
-  return merged;
+  return content.replace(/<\/think>\s*<think>/gi, '\n');
 }
 
 // Limit input length for title generation
@@ -525,6 +521,18 @@ Requirements:
       role: m.role === 'model' ? 'assistant' : m.role,
       content: m.content,
     }));
+
+    if (isContinuation && model.providerType === 'google') {
+      reqMessages.push({
+        role: 'user',
+        content: `The previous generation was interrupted. Please continue generating the response from where it left off, ensuring a seamless and complete output.
+
+Requirements:
+1. Do not start from the very beginning if you were already in the middle of the final response; simply pick up exactly where the text cut off and complete it.
+2. If the interruption occurred inside the thinking phase (within \`<think>\` tags), please complete the thinking process, close the \`</think>\` tag, and then output the final response.
+3. Do not apologize, explain, or mention that the generation was interrupted, timed out, or restarted. Do not write any meta-dialogue like "Continuing from..." or "Here is the rest of...". Just output the continuing content directly.`,
+      });
+    }
 
     // Throttled notification to prevent overwhelming clients
     const notifySubscribers = (event: string, data: any, immediate = false) => {

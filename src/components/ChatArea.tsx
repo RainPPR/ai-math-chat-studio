@@ -340,6 +340,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     }
   }, [modelDropdownOpen]);
 
+  // Clear streaming content on session change
+  useEffect(() => {
+    setStreamingContent('');
+  }, [session?.id]);
+
   // Load draft on session change
   useEffect(() => {
     if (session) {
@@ -737,20 +742,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
         content: streamingContent,
       };
     } else {
-      // Normal mode: check if stream is already saved
-      let isStreamSaved = false;
-      const normalizedSaved = lastMsg?.content || '';
-      const normalizedStream = streamingContent;
-      isStreamSaved = normalizedSaved.includes(normalizedStream.substring(0, Math.min(normalizedStream.length, 500)));
-
-      if (!isStreamSaved) {
-        displayMessages.push({
-          id: '__streaming__',
-          role: 'model',
-          content: streamingContent,
-          createdAt: new Date().toISOString(),
-        });
-      }
+      // Normal mode: push a new streaming message
+      displayMessages.push({
+        id: '__streaming__',
+        role: 'model',
+        content: streamingContent,
+        createdAt: new Date().toISOString(),
+      });
     }
   }
 
@@ -791,12 +789,14 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             )}
           </div>
         </div>
-        <button onClick={handlePrintAll} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer">
-          <Printer size={16} /><span>Print</span>
-        </button>
-        <button onClick={handleExport} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer">
-          <Download size={16} /><span>Export</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handlePrintAll} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer">
+            <Printer size={16} /><span>Print</span>
+          </button>
+          <button onClick={handleExport} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer">
+            <Download size={16} /><span>Export</span>
+          </button>
+        </div>
       </div>
 
       <div id="chat-scroll-container" className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
