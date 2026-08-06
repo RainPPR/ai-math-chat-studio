@@ -458,7 +458,10 @@
   "gemmaTrimThinkingSpaces": true,
   "starredSessions": {
     "f6697785-4f1e-452e-a371-73a14c20783a": "yellow",
-    "b638cf2f-773c-4192-a083-4cd0074a2eb2": "rose"
+    "b638cf2f-773c-4192-a083-4cd0074a2eb2": "rose",
+    "0ff794b8-4189-4f7f-9ef6-2fd4b75fee29": "blue",
+    "0edc6287-a8d5-4c6e-a519-1a19e6105be0": "blue",
+    "5d113b6a-f355-4015-821a-c82bfd8bd905": "blue"
   },
   "claudeChunks": [
     "2026-07-19T08:53:15.252Z",
@@ -466,6 +469,6 @@
   ],
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeCharacterId": "95460bbd-f1d7-4d51-a7ea-fa039d1c81fc",
-  "activeModelId": "f8ab564c-755f-499f-b391-5b412028139d"
+  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "activeModelId": "f4a17dec-ee5e-4557-924a-8c02dcb6b1a5"
 }
