@@ -28,9 +28,9 @@ async function loadSettings(settingsFile: string): Promise<SettingsData> {
 }
 
 function resolveActiveModel(settings: SettingsData) {
-  if (!settings.activeModelId || !settings.models?.length) return null;
-  const model = settings.models.find((m: any) => m.id === settings.activeModelId);
-  if (!model) return null;
+  if (!settings.models?.length) return null;
+  const modelId = settings.activeModelId || settings.models[0].id;
+  const model = settings.models.find((m: any) => m.id === modelId) || settings.models[0];
   const provider = settings.providers?.find((p: any) => p.id === model.providerId);
   return { model, provider };
 }
