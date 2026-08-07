@@ -134,40 +134,7 @@ function processSource() {
   console.log('Generated source markdown files');
 }
 
-/**
- * Part 3: Process sessions
- */
-function processSessions() {
-  const sessionsDir = 'data/sessions';
-  if (!fs.existsSync(sessionsDir)) return;
-
-  const targetDataDir = path.join(DIST_DIR, 'data');
-  ensureDir(targetDataDir);
-
-  const files = fs.readdirSync(sessionsDir).filter(f => f.endsWith('.json'));
-
-  for (const file of files) {
-    const session = JSON.parse(fs.readFileSync(path.join(sessionsDir, file), 'utf-8'));
-    const uuid = path.basename(file, '.json');
-    
-    let mdContent = `# ${session.title || 'Untitled Session'}\n\n`;
-    
-    if (session.messages && Array.isArray(session.messages)) {
-      for (const msg of session.messages) {
-        const cleanedContent = (typeof msg.content === 'string' ? msg.content : '')
-          .replace(/<think>[\s\S]*?<\/think>/g, '')
-          .trim();
-        mdContent += `## ${msg.role}\n\n\`\`\`text\n${msg.role}/${msg.createdAt}\n\n${cleanedContent}\n\`\`\`\n\n`;
-      }
-    }
-
-    fs.writeFileSync(path.join(targetDataDir, `${uuid}.md`), mdContent);
-  }
-  console.log('Generated session markdown files');
-}
-
 processDocs();
 processSource();
-processSessions();
 
 ```
