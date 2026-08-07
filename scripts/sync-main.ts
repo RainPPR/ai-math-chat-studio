@@ -34,11 +34,56 @@ async function main() {
   console.log('Current remote URL:', remoteUrl);
 
   // Retrieve git extraheaders or auth config from workspace before resetting
-  let extraHeader = '';
+  const authConfigs: { key: string; value: string }[] = [];
   try {
-    extraHeader = execSync('git config --local --get http.https://github.com/.extraheader', { encoding: 'utf-8' }).trim();
+    const rawOutput = execSync('git config --local --get-regexp "^http\\."', { encoding: 'utf-8' }).trim();
+    if (rawOutput) {
+      const lines = rawOutput.split('\n');
+      for (const line of lines) {
+        const spaceIdx = line.indexOf(' ');
+        if (spaceIdx > 0) {
+          const key = line.substring(0, spaceIdx).trim();
+          const value = line.substring(spaceIdx + 1).trim();
+          if (key && value) {
+            authConfigs.push({ key, value });
+          }
+        }
+      }
+    }
   } catch {
-    console.log('No git extraheader found via exact path.');
+    console.log('No local http config found via get-regexp.');
+  }
+
+  if (authConfigs.length === 0) {
+    try {
+      const rawOutput = execSync('git config --global --get-regexp "^http\\."', { encoding: 'utf-8' }).trim();
+      if (rawOutput) {
+        const lines = rawOutput.split('\n');
+        for (const line of lines) {
+          const spaceIdx = line.indexOf(' ');
+          if (spaceIdx > 0) {
+            const key = line.substring(0, spaceIdx).trim();
+            const value = line.substring(spaceIdx + 1).trim();
+            if (key && value) {
+              authConfigs.push({ key, value });
+            }
+          }
+        }
+      }
+    } catch {
+      console.log('No global http config found via get-regexp.');
+    }
+  }
+
+  // Construct target remote URL with GITHUB_TOKEN or GH_TOKEN if available
+  let finalRemoteUrl = remoteUrl;
+  const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+  if (githubToken) {
+    if (!finalRemoteUrl.includes('@')) {
+      if (finalRemoteUrl.startsWith('https://')) {
+        finalRemoteUrl = finalRemoteUrl.replace('https://', `https://x-access-token:${githubToken}@`);
+      }
+    }
   }
 
   // Determine the commit message
@@ -108,11 +153,15 @@ async function main() {
   console.log('Initializing new Git repository...');
   execSync('git init', { cwd: DEPLOY_DIR, stdio: 'inherit' });
 
-  // Restore the extraheader credential to the new git repo configuration
-  if (extraHeader) {
-    // Write extraheader cleanly and quote properly to avoid git parsing errors
-    execSync(`git config --local http.https://github.com/.extraheader "${extraHeader}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
-    console.log('Restored http.https://github.com/.extraheader');
+  // Restore all http / auth configs to the new git repo configuration
+  for (const item of authConfigs) {
+    try {
+      const escapedValue = item.value.replace(/"/g, '\\"');
+      execSync(`git config --local "${item.key}" "${escapedValue}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
+      console.log(`Restored git config: ${item.key}`);
+    } catch (err) {
+      console.warn(`Failed to restore git config: ${item.key}`, err);
+    }
   }
 
   // Configure author to RainPPR <PPR2125773894@163.com> and git bot user info
@@ -134,9 +183,9 @@ async function main() {
 
   // Add origin remote
   try {
-    execSync(`git remote add origin "${remoteUrl}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
+    execSync(`git remote add origin "${finalRemoteUrl}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
   } catch {
-    execSync(`git remote set-url origin "${remoteUrl}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
+    execSync(`git remote set-url origin "${finalRemoteUrl}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
   }
 
   // Force push to main
