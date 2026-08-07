@@ -136,19 +136,36 @@ async function main() {
   // Track all files
   execSync('git add -A', { cwd: DEPLOY_DIR, stdio: 'inherit' });
 
-  // Formulate the Co-authored-by message
-  const coAuthorMsg = '\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>';
-  const finalCommitMessage = commitMessage + coAuthorMsg;
+  let hasChanges = false;
+  try {
+    execSync('git diff --cached --quiet', { cwd: DEPLOY_DIR });
+    hasChanges = false;
+  } catch {
+    hasChanges = true;
+  }
 
-  // Commit
-  const commitMsgFile = path.join(DEPLOY_DIR, '.git-commit-msg');
-  fs.writeFileSync(commitMsgFile, finalCommitMessage, 'utf-8');
-  execSync('git commit -F .git-commit-msg', { cwd: DEPLOY_DIR, stdio: 'inherit' });
-  fs.unlinkSync(commitMsgFile);
+  if (hasChanges) {
+    // Formulate the Co-authored-by message
+    const coAuthorMsg = '\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>';
+    const finalCommitMessage = commitMessage + coAuthorMsg;
 
-  // Force push to main
-  console.log('Force pushing to main branch...');
-  execSync('git push -f origin main', { cwd: DEPLOY_DIR, stdio: 'inherit' });
+    // Commit
+    const commitMsgFile = path.join(DEPLOY_DIR, '.git-commit-msg');
+    fs.writeFileSync(commitMsgFile, finalCommitMessage, 'utf-8');
+    try {
+      execSync('git commit -F .git-commit-msg', { cwd: DEPLOY_DIR, stdio: 'inherit' });
+    } finally {
+      if (fs.existsSync(commitMsgFile)) {
+        fs.unlinkSync(commitMsgFile);
+      }
+    }
+
+    // Force push to main
+    console.log('Force pushing to main branch...');
+    execSync('git push -f origin main', { cwd: DEPLOY_DIR, stdio: 'inherit' });
+  } else {
+    console.log('No changes detected, skipping commit and push for main branch.');
+  }
 
   // Clean up the worktree cleanly before finishing
   try {
