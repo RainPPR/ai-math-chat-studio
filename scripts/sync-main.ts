@@ -5,7 +5,7 @@ import path from 'path';
 const DEPLOY_DIR = path.resolve('../deploy-main-env');
 const WORKSPACE_DIR = process.cwd();
 
-// Helper to copy recursively
+// Helper to copy recursively without explicit exclusion arrays
 function copyRecursiveSync(src: string, dest: string) {
   const exists = fs.existsSync(src);
   if (!exists) {
@@ -15,14 +15,18 @@ function copyRecursiveSync(src: string, dest: string) {
   if (stats.isDirectory()) {
     fs.mkdirSync(dest, { recursive: true });
     fs.readdirSync(src).forEach((childItemName) => {
+      // Avoid copying git index or external deployment areas
       if (
-        childItemName === '.git' ||
-        childItemName === 'node_modules' ||
-        childItemName === 'data' ||
-        childItemName === 'deploy-main-env' ||
-        childItemName === 'deploy-env' ||
-        childItemName === 'context7-dist'
+        childItemName.startsWith('.') &&
+        childItemName !== '.github' &&
+        childItemName !== '.gitignore' &&
+        childItemName !== '.gitignore-main-append' &&
+        childItemName !== '.prettierignore' &&
+        childItemName !== '.env.example'
       ) {
+        return;
+      }
+      if (childItemName === 'node_modules' || childItemName === 'context7-dist') {
         return;
       }
       copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName));
