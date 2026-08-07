@@ -318,7 +318,11 @@ export default function App() {
 
   const handleUpdateSessionCharacter = async (characterId: string) => {
     if (!currentSessionId) return;
-    await handleUpdateSession(currentSessionId, { characterId });
+    try {
+      await handleUpdateSession(currentSessionId, { characterId });
+    } catch {
+      // Swallowed/handled since handleUpdateSession already set the global error state
+    }
   };
 
   const handleSelectCharacter = async (characterId: string) => {

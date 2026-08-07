@@ -403,6 +403,7 @@ const parseMessagesToBlocks = (messages: ChatMessage[], settings: UserSettings):
 const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
   const messages: ChatMessage[] = [];
   let currentModelBlocks: EditBlock[] = [];
+  const usedIds = new Set<string>();
 
   const flushModelBlocks = () => {
     if (currentModelBlocks.length === 0) return;
@@ -426,10 +427,12 @@ const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
     });
 
     // Resolve model message's id and createdAt:
-    // If we have blocks with originalMessageId/originalCreatedAt, preserve them.
-    // Default to a new UUID and current timestamp.
-    const originalBlockWithMetadata = currentModelBlocks.find(b => b.originalMessageId);
+    // If we have blocks with originalMessageId/originalCreatedAt, preserve them,
+    // as long as the ID hasn't been consumed yet in this save session.
+    const originalBlockWithMetadata = currentModelBlocks.find(b => b.originalMessageId && !usedIds.has(b.originalMessageId));
     const id = originalBlockWithMetadata?.originalMessageId || crypto.randomUUID();
+    usedIds.add(id);
+
     const createdAt = originalBlockWithMetadata?.originalCreatedAt || new Date().toISOString();
 
     messages.push({
@@ -444,8 +447,14 @@ const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
   blocks.forEach(block => {
     if (block.type === 'input') {
       flushModelBlocks();
+      let id = block.originalMessageId || crypto.randomUUID();
+      if (usedIds.has(id)) {
+        id = crypto.randomUUID();
+      }
+      usedIds.add(id);
+
       messages.push({
-        id: block.originalMessageId || crypto.randomUUID(),
+        id,
         role: 'user',
         content: block.content,
         createdAt: block.originalCreatedAt || new Date().toISOString(),
@@ -1336,7 +1345,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                             onChange={(e) => {
                               const newType = e.target.value as 'input' | 'thinking' | 'output';
                               setEditBlocks(prev =>
-                                prev.map(b => (b.id === block.id ? { ...b, type: newType } : b))
+                              prev.map(b => (b.id === block.id ? { ...b, type: newType, originalMessageId: undefined, originalCreatedAt: undefined } : b))
                               );
                             }}
                             className={`px-2 py-1 rounded text-xs font-semibold focus:outline-none cursor-pointer ${getSelectClass(

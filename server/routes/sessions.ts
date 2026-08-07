@@ -31,9 +31,16 @@ export function createSessionRouter(gm: GenerationManager) {
           typeof message.id !== 'string' ||
           (message.role !== 'user' && message.role !== 'model') ||
           typeof message.content !== 'string' ||
-          typeof message.createdAt !== 'string'
+          typeof message.createdAt !== 'string' ||
+          !Number.isFinite(Date.parse(message.createdAt))
         ))) {
           return res.status(400).json({ error: 'Invalid messages' });
+        }
+        // Verify unique IDs
+        const ids = messages.map((m: any) => m.id);
+        const uniqueIds = new Set(ids);
+        if (ids.length !== uniqueIds.size) {
+          return res.status(400).json({ error: 'Duplicate message IDs' });
         }
         updates.messages = messages;
       }
