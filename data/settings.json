@@ -216,13 +216,6 @@
       "reasoningEffort": "high"
     },
     {
-      "id": "ceb18c3b-f2bb-5ffc-9e78-35c7747122ed",
-      "providerId": "p-kilo-gw",
-      "providerType": "openai-compatible",
-      "modelId": "inclusionai/ling-3.0-flash:free",
-      "displayName": "Ling-3.0-flash (Kilo)"
-    },
-    {
       "id": "8ca867d4-19c8-53b3-ae7c-38a3f7c37d12",
       "providerId": "p-kilo-gw",
       "providerType": "openai-compatible",
@@ -234,7 +227,15 @@
       "providerId": "p-kilo-gw",
       "providerType": "openai-compatible",
       "modelId": "tencent/hy3:free",
-      "displayName": "Tencent: Hy3 (Kilo)"
+      "displayName": "Tencent: Hy3 (Kilo)",
+      "reasoningEffort": "high"
+    },
+    {
+      "id": "298ac01e-1d80-5b4a-b4e7-1252aa26e59f",
+      "providerId": "p-kilo-gw",
+      "providerType": "openai-compatible",
+      "modelId": "inclusionai/ling-3.0-tiny:free",
+      "displayName": "inclusionAI: Ling 3.0 Tiny (Kilo)"
     },
     {
       "id": "a1600296-046e-5465-b8ff-9bd743cbb72c",
@@ -262,7 +263,8 @@
       "providerId": "p-kilo-gw",
       "providerType": "openai-compatible",
       "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "displayName": "NVIDIA: Nemotron 3 Ultra (Kilo)"
+      "displayName": "NVIDIA: Nemotron 3 Ultra (Kilo)",
+      "reasoningEffort": "high"
     },
     {
       "id": "cfcdca0f-3efd-5c17-9003-8d05a905ce00",
@@ -276,7 +278,8 @@
       "providerId": "p-kilo-gw",
       "providerType": "openai-compatible",
       "modelId": "nvidia/nemotron-3-super-120b-a12b:free",
-      "displayName": "NVIDIA: Nemotron 3 Super (Kilo)"
+      "displayName": "NVIDIA: Nemotron 3 Super (Kilo)",
+      "reasoningEffort": "medium"
     },
     {
       "id": "14949368-d0cb-5c39-a1bd-8e78a0ef89fa",
@@ -407,6 +410,37 @@
       "modelId": "laguna-s-2.1-free",
       "displayName": "Laguna S 2.1 Free (OpenCode)",
       "reasoningEffort": "high"
+    },
+    {
+      "id": "d853c7fc-b7ae-515e-b52f-f6ec206dbbef",
+      "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+      "providerType": "openai-compatible",
+      "modelId": "longcat-2.0-free",
+      "displayName": "LongCat-2.0 Free (OpenCode)"
+    },
+    {
+      "id": "3d4c0dbb-fafc-4877-9405-2b8ff8bfa7ff",
+      "providerId": "p-google-fc62",
+      "providerType": "google",
+      "modelId": "gemini-3.6-flash",
+      "displayName": "Gemini 3.6 Flash (Google)",
+      "thinkingLevel": "high"
+    },
+    {
+      "id": "0a4df899-3617-4a54-ae03-b8f5377f45d1",
+      "providerId": "p-google-fc62",
+      "providerType": "google",
+      "modelId": "gemini-3.5-flash-lite",
+      "displayName": "Gemini 3.5 Flash Lite (Google)",
+      "thinkingLevel": "high"
+    },
+    {
+      "id": "d3d587d2-59df-4dc8-b3ca-e19c63a6cd53",
+      "providerId": "p-google-fc62",
+      "providerType": "google",
+      "modelId": "gemini-robotics-er-2-preview",
+      "displayName": "Gemini Robotics ER 2 (Google)",
+      "thinkingLevel": "high"
     }
   ],
   "characters": [
@@ -466,6 +500,6 @@
   ],
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeCharacterId": "de284d55-8398-4743-ada9-b620c94b2d2b",
-  "activeModelId": "a0c2e1eb-26cd-464a-93b5-da6e4fd148ac"
+  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "activeModelId": "3d4c0dbb-fafc-4877-9405-2b8ff8bfa7ff"
 }
