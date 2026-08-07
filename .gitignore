@@ -6,11 +6,11 @@ coverage/
 *.log
 .env*
 !.env.example
-/release
-/build-electron/dist-server
-/dist-server
-/dist-compile
-/cache
+release/
+build-electron/
+dist-server/
+dist-compile/
+cache/
 data/log/
 context7-dist/
 ai-math-chat-studio.exe

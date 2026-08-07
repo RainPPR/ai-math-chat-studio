@@ -16,17 +16,7 @@ function copyRecursiveSync(src: string, dest: string) {
     fs.mkdirSync(dest, { recursive: true });
     fs.readdirSync(src).forEach((childItemName) => {
       // Avoid copying git index or external deployment areas
-      if (
-        childItemName.startsWith('.') &&
-        childItemName !== '.github' &&
-        childItemName !== '.gitignore' &&
-        childItemName !== '.gitignore-main-append' &&
-        childItemName !== '.prettierignore' &&
-        childItemName !== '.env.example'
-      ) {
-        return;
-      }
-      if (childItemName === 'node_modules' || childItemName === 'hint') {
+      if (childItemName === 'node_modules') {
         return;
       }
       copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName));
