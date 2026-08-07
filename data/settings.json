@@ -187,6 +187,30 @@
       }
     },
     {
+      "id": "3d4c0dbb-fafc-4877-9405-2b8ff8bfa7ff",
+      "providerId": "p-google-fc62",
+      "providerType": "google",
+      "modelId": "gemini-3.6-flash",
+      "displayName": "Gemini 3.6 Flash (Google)",
+      "thinkingLevel": "high"
+    },
+    {
+      "id": "0a4df899-3617-4a54-ae03-b8f5377f45d1",
+      "providerId": "p-google-fc62",
+      "providerType": "google",
+      "modelId": "gemini-3.5-flash-lite",
+      "displayName": "Gemini 3.5 Flash Lite (Google)",
+      "thinkingLevel": "high"
+    },
+    {
+      "id": "d3d587d2-59df-4dc8-b3ca-e19c63a6cd53",
+      "providerId": "p-google-fc62",
+      "providerType": "google",
+      "modelId": "gemini-robotics-er-2-preview",
+      "displayName": "Gemini Robotics ER 2 (Google)",
+      "thinkingLevel": "high"
+    },
+    {
       "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
       "providerId": "p-poe-8d3e",
       "providerType": "openai-compatible",
@@ -417,30 +441,6 @@
       "providerType": "openai-compatible",
       "modelId": "longcat-2.0-free",
       "displayName": "LongCat-2.0 Free (OpenCode)"
-    },
-    {
-      "id": "3d4c0dbb-fafc-4877-9405-2b8ff8bfa7ff",
-      "providerId": "p-google-fc62",
-      "providerType": "google",
-      "modelId": "gemini-3.6-flash",
-      "displayName": "Gemini 3.6 Flash (Google)",
-      "thinkingLevel": "high"
-    },
-    {
-      "id": "0a4df899-3617-4a54-ae03-b8f5377f45d1",
-      "providerId": "p-google-fc62",
-      "providerType": "google",
-      "modelId": "gemini-3.5-flash-lite",
-      "displayName": "Gemini 3.5 Flash Lite (Google)",
-      "thinkingLevel": "high"
-    },
-    {
-      "id": "d3d587d2-59df-4dc8-b3ca-e19c63a6cd53",
-      "providerId": "p-google-fc62",
-      "providerType": "google",
-      "modelId": "gemini-robotics-er-2-preview",
-      "displayName": "Gemini Robotics ER 2 (Google)",
-      "thinkingLevel": "high"
     }
   ],
   "characters": [
@@ -500,6 +500,6 @@
   ],
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
-  "activeModelId": "3d4c0dbb-fafc-4877-9405-2b8ff8bfa7ff"
+  "activeCharacterId": "d8aecab7-14b5-4982-b285-1b875b783644",
+  "activeModelId": "090f132d-1796-47d5-b6fa-32244e602e13"
 }
