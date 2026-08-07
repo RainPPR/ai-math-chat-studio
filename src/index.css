@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@font-face {
+  font-family: 'Euler Math';
+  src: url('./fonts/Euler-Math.woff2') format('woff2'),
+       url('./fonts/Euler-Math.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Fira Math';
+  src: url('./fonts/FiraMath-Regular.woff2') format('woff2'),
+       url('./fonts/FiraMath-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cambria Math';
+  src: url('./fonts/Cambria Math.woff2') format('woff2'),
+       url('./fonts/Cambria Math.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* =========================================================
+   1. 使用 CSS 原生变量管理数学字体，大幅简化代码
+   ========================================================= */
+.katex-font-euler   { --katex-math-font: 'Euler Math', 'KaTeX_Main', serif; }
+.katex-font-fira    { --katex-math-font: 'Fira Math', 'KaTeX_Main', sans-serif; }
+.katex-font-cambria { --katex-math-font: 'Cambria Math', 'KaTeX_Main', serif; }
+
+/* =========================================================
+   2. 统一覆盖 KaTeX 内部数学节点
+   ========================================================= */
+[class*="katex-font-"] .katex,
+[class*="katex-font-"] .katex .mbin,
+[class*="katex-font-"] .katex .mrel,
+[class*="katex-font-"] .katex .merl,
+[class*="katex-font-"] .katex .mrel,
+[class*="katex-font-"] .katex .mopen,
+[class*="katex-font-"] .katex .mclose,
+[class*="katex-font-"] .katex .mpunct,
+[class*="katex-font-"] .katex .minner,
+[class*="katex-font-"] .katex .mord:not(.cjk_fallback),
+[class*="katex-font-"] .katex .text:not(.cjk_fallback),
+[class*="katex-font-"] .katex .text :not(.cjk_fallback) {
+  font-family: var(--katex-math-font) !important;
+}
+
+/* =========================================================
+   3. CJK / 中文字符优雅回退 (覆盖精准的中文字体栈)
+   ========================================================= */
+.katex .cjk_fallback,
+.katex .cjk_fallback * {
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont !important;
+}

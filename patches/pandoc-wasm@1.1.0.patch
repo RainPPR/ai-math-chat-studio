@@ -1,0 +1,33 @@
+diff --git a/src/index.node.js b/src/index.node.js
+index 01bb0fec18a6fdbe78f2616ee0c4071beb0aa841..b4ca8333f18dcad25810cdb637f445e8089f46f9 100644
+--- a/src/index.node.js
++++ b/src/index.node.js
+@@ -15,10 +15,21 @@ const __dirname = dirname(__filename)
+ const wasmPath = join(__dirname, "pandoc.wasm")
+ const pandocWasm = readFileSync(wasmPath)
+ 
+-// Create pandoc instance
+-const pandocInstance = await createPandocInstance(pandocWasm)
+-
+-// Export the API
+-export const convert = pandocInstance.convert
+-export const query = pandocInstance.query
+-export const pandoc = pandocInstance.pandoc
++// 改为保存 Promise，不在顶层 await 阻塞
++const pandocInstancePromise = createPandocInstance(pandocWasm)
++
++// 包装导出函数，让它们在被调用时才去 await 实例
++export const convert = async (...args) => {
++  const instance = await pandocInstancePromise;
++  return instance.convert(...args);
++};
++
++export const query = async (...args) => {
++  const instance = await pandocInstancePromise;
++  return instance.query(...args);
++};
++
++export const pandoc = async (...args) => {
++  const instance = await pandocInstancePromise;
++  return instance.pandoc(...args);
++};

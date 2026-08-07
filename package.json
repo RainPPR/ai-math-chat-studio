@@ -1,0 +1,82 @@
+{
+  "name": "react-example",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "vite build",
+    "build:bundle": "bun scripts/build-bundle.ts",
+    "build:compile": "bun scripts/build-bun-compile.ts",
+    "preview": "vite preview",
+    "clean": "rm -rf dist dist-server dist-compile release",
+    "check": "tsc --noEmit --strict",
+    "pretty": "prettier --check .",
+    "lint:fix": "eslint . --fix",
+    "pretty:fix": "prettier --write .",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@google/genai": "^2.13.0",
+    "@tailwindcss/typography": "^0.5.20",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/uuid": "^11.0.0",
+    "@vitejs/plugin-react": "^6.0.4",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jszip": "^3.10.1",
+    "katex": "^0.18.1",
+    "lodash": "^4.18.1",
+    "lucide-react": "^1.25.0",
+    "markdown-to-txt": "^2.0.1",
+    "motion": "^12.42.2",
+    "openai": "^6.48.0",
+    "pandoc-wasm": "^1.1.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0",
+    "rehype-external-links": "^3.0.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-breaks": "^4.0.0",
+    "remark-cjk-friendly": "^2.3.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-squeeze-paragraphs": "^6.0.0",
+    "remark-stringify": "^11.0.0",
+    "sanitize-filename": "^1.6.4",
+    "strip-markdown": "^6.0.0",
+    "tailwind-merge": "^3.6.0",
+    "unicodeit": "^0.7.5",
+    "unified": "^11.0.5",
+    "uuid": "^14.0.1",
+    "vite": "^8.1.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/bun": "^1.3.14",
+    "@types/express": "^5.0.6",
+    "@types/jszip": "^3.4.1",
+    "@types/node": "^26.1.1",
+    "autoprefixer": "^10.5.4",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.7.0",
+    "prettier": "^3.9.6",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.65.0"
+  },
+  "patchedDependencies": {
+    "pandoc-wasm@1.1.0": "patches/pandoc-wasm@1.1.0.patch"
+  },
+  "overrides": {
+    "katex": "^0.18.1"
+  },
+  "resolutions": {
+    "katex": "^0.17.0"
+  }
+}

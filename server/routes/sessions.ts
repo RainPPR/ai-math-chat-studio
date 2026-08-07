@@ -1,0 +1,86 @@
+import { Router } from 'express';
+import { GenerationManager } from '../services/generation-manager';
+
+export function createSessionRouter(gm: GenerationManager) {
+  const router = Router();
+
+  router.get('/api/sessions', async (_req, res) => {
+    try {
+      res.json(await gm.listSessions());
+    } catch {
+      res.json([]);
+    }
+  });
+
+  router.get('/api/sessions/:id', async (req, res) => {
+    const session = await gm.readSession(req.params.id);
+    if (!session) return res.status(404).json({ error: 'Not found' });
+    res.json(session);
+  });
+
+  router.patch('/api/sessions/:id', async (req, res) => {
+    try {
+      const { title, characterId, messages } = req.body || {};
+      const updates: any = {};
+      if (title !== undefined) updates.title = title;
+      if (characterId !== undefined) updates.characterId = characterId;
+      if (messages !== undefined) {
+        if (!Array.isArray(messages) || messages.some((message: any) => (
+          !message ||
+          typeof message !== 'object' ||
+          typeof message.id !== 'string' ||
+          (message.role !== 'user' && message.role !== 'model') ||
+          typeof message.content !== 'string' ||
+          typeof message.createdAt !== 'string' ||
+          !Number.isFinite(Date.parse(message.createdAt))
+        ))) {
+          return res.status(400).json({ error: 'Invalid messages' });
+        }
+        // Verify unique IDs
+        const ids = messages.map((m: any) => m.id);
+        const uniqueIds = new Set(ids);
+        if (ids.length !== uniqueIds.size) {
+          return res.status(400).json({ error: 'Duplicate message IDs' });
+        }
+        updates.messages = messages;
+      }
+
+      const updated = await gm.updateSession(req.params.id, updates);
+      if (!updated) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      res.json(updated);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Update failed' });
+    }
+  });
+
+  router.delete('/api/sessions/:id', async (req, res) => {
+    gm.stop(req.params.id);
+    await gm.deleteSession(req.params.id);
+    res.json({ ok: true });
+  });
+
+  router.post('/api/sessions/:id/duplicate', async (req, res) => {
+    try {
+      const duplicated = await gm.duplicateSession(req.params.id);
+      if (!duplicated) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      res.json(duplicated);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Duplicate failed' });
+    }
+  });
+
+  router.post('/api/sessions/clean', async (req, res) => {
+    try {
+      const result = await gm.cleanSessions();
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Clean failed' });
+    }
+  });
+
+  return router;
+}
