@@ -1,3 +1,607 @@
+### 技术栈详情
+
+```text
+
+```
+
+### 技术栈详情 / 前端框架
+
+```text
+| 技术 | 版本 |
+|---|---|
+| React | ^19.2.7 |
+| TypeScript | ~6.0.3 |
+| Vite | ^8.0.16 |
+| Tailwind CSS | ^4.3.1 |
+| @tailwindcss/typography | ^0.5.20 |
+```
+
+### 技术栈详情 / 后端
+
+```text
+| 技术 | 版本 |
+|---|---|
+| Express | ^5.2.1 |
+| tsx | ^4.22.4 |
+| OpenAI SDK | ^6.44.0 |
+| dotenv | ^17.4.2 |
+```
+
+### 技术栈详情 / AI/数学库
+
+```text
+| 技术 | 版本 |
+|---|---|
+| @google/genai | ^2.8.0 |
+| KaTeX | ^0.17.0 |
+```
+
+### 技术栈详情 / Markdown 渲染管线
+
+```text
+| 技术 | 版本 |
+|---|---|
+| react-markdown | ^10.1.0 |
+| remark-math | ^6.0.0 |
+| remark-gfm | ^4.0.1 |
+| remark-breaks | ^4.0.0 |
+| remark-cjk-friendly | ^2.2.0 |
+| remark-squeeze-paragraphs | ^6.0.0 |
+| rehype-katex | ^7.0.1 |
+| rehype-raw | ^7.0.0 |
+| rehype-sanitize | ^6.0.0 |
+| rehype-external-links | ^3.0.0 |
+| katex/contrib/mhchem | (Bundled with KaTeX) |
+```
+
+### 技术栈详情 / 其他依赖
+
+```text
+| 技术 | 版本 |
+|---|---|
+| lucide-react | ^1.21.0 |
+| motion | ^12.40.0 |
+| clsx | ^2.1.1 |
+| tailwind-merge | ^3.6.0 |
+| uuid | ^14.0.1 |
+| unicodeit | ^0.7.5 |
+| markdown-to-txt | ^2.0.1 |
+```
+
+### 技术栈详情 / 其他依赖 / 标题生成
+
+```text
+标题生成使用纯 JavaScript 字符串操作，无需异步：
+
+- **unicodeit**: 将 LaTeX 数学公式转换为 Unicode 字符（如 `\alpha` → `α`)
+- **markdown-to-txt**: 清理 Markdown 语法（标题、粗体、链接等）
+- 处理流程：替换 `\dfrac` → `\frac` → 处理块级数学 `$$...$$` → 处理行内数学 `$...$` → Markdown 转文本 → 移除剩余 `$` 和 `\`
+- 只处理前200个字符，保证极快的处理速度
+```
+
+### 技术栈详情 / 开发工具
+
+```text
+| 工具 | 用途 |
+|---|---|
+| Bun | 依赖管理、脚本运行、构建 |
+| TypeScript (`tsc --noEmit`) | 类型检查 (`bun run lint`) |
+| Vite HMR | 热模块替换 |
+```
+
+### 技术栈详情 / 构建命令
+
+```text
+bun run dev           # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
+bun run build         # Vite 生产构建
+bun run preview       # 预览生产构建
+bun run build:bundle    # 打包服务端代码为单个 bundle
+bun run build:compile  # 使用 Bun 编译为可执行文件
+bun run lint          # TypeScript 类型检查
+bun run clean         # 清除 dist、dist-server、dist-compile、release 目录
+```
+
+### 技术栈详情 / 路径别名
+
+```text
+`@/*` 映射到项目根目录，配置在 `tsconfig.json` 和 `vite.config.ts` 中。
+```
+
+### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts)
+
+```text
+本应用支持动态 KaTeX 数学字体选择，允许用户在设置（SettingsModal.tsx）中切换不同的数学渲染字体：
+- **Default**: KaTeX 默认自带字体。
+- **Euler Math**: 典雅的 Euler 数学字体 (Euler-Math.woff2 / Euler-Math.otf)。
+- **Fira Math**: 现代的 Fira 数学无衬线字体 (FiraMath-Regular.woff2 / FiraMath-Regular.otf)。
+- **Cambria Math**: 经典的 Cambria 数学衬线字体 (Cambria Math.woff2 / Cambria Math.ttf)。
+```
+
+### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts) / 字体实现细节
+
+```text
+1. **源字体与 WOFF2 转换**: 字体文件存放于 `src/fonts/` 下，转换使用标准的 `woff2_compress` 压缩技术将 OTF/TTF 转换为体积更小的 WOFF2 格式。
+2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义在 `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
+3. **CJK/中文优雅回退**: 避免定制数学字体对数学公式内的中文（如 `\text{中文}` 或 `.cjk_fallback`）造成非预期的强制覆盖，系统在 `src/index.css` 增加了高优先级的非冲突 CJK 回退处理器，强制使 `.cjk_fallback` 及它的子元素回退并使用网页正文字体 (`system-ui, sans-serif`)。
+```
+
+### 组件结构文档
+
+```text
+
+```
+
+### 组件结构文档 / 组件树
+
+```text
+graph TD
+    App[App.tsx]
+    subgraph App Children
+        Sidebar[Sidebar.tsx]
+        ChatArea[ChatArea.tsx]
+        SettingsModal[SettingsModal.tsx]
+    end
+
+    App --> Sidebar
+    App --> ChatArea
+    App --> SettingsModal
+
+    subgraph ChatArea Children
+        MessageItem[MessageItem]
+    end
+
+    subgraph MessageItem Children
+        MarkdownRenderer[MarkdownRenderer.tsx]
+    end
+
+    subgraph SettingsModal Children
+        ProviderEditor[ProviderEditor]
+        ModelEditor[ModelEditor]
+    end
+
+    ChatArea --> MessageItem
+    MessageItem --> MarkdownRenderer
+    SettingsModal --> ProviderEditor
+    SettingsModal --> ModelEditor
+```
+
+### 组件结构文档 / `App.tsx` — 状态管理中心
+
+```text
+**职责**:
+
+*   **状态中心**: 作为整个应用的顶层组件，管理所有核心状态。
+*   **数据获取**: 在应用启动时，通过 `api.ts` 从后端获取初始设置和会话数据。
+*   **状态管理**: 管理会话列表 (`sessions`)、当前会话 (`currentSessionId`)、用户设置 (`settings`)、以及全局 UI 状态（如 `isSettingsOpen`）。
+*   **业务逻辑**: 实现核心业务逻辑，如新建/删除会话、发送/重试消息，并将这些函数作为 props 传递给子组件。
+*   **持久化**: 调用 `api.ts` 中的函数将变更（如保存设置、发送消息）持久化到后端。
+```
+
+### 组件结构文档 / `Sidebar.tsx` — 左侧栏
+
+```text
+**职责**:
+
+*   **会话列表**: 显示所有聊天会话，按更新时间排序。
+*   **分类过滤**: 在会话列表上方提供角色选择器，允许用户按 Character 过滤显示的会话。
+*   **加星功能 (Starring)**: 允许用户给每个会话进行加星标记，并提供黄、红、蓝、绿、橙五种预设星星颜色。加星数据保存在 `settings.json` 的 `starredSessions` 映射中。
+*   **置顶快速访问 (Starred Sections)**: 当有被加星的会话存在时，在侧边栏最顶端显示一个单独的、可折叠的“已加星会话”分组，保证极高的数据查看和切换效率。
+*   **用户交互**: 允许用户切换会话、新建会话、复制会话、删除会话、加星会话。
+*   **导航**: 提供打开设置模态框的入口。
+```
+
+### 组件结构文档 / `ChatArea.tsx` — 聊天主区域
+
+```text
+**职责**:
+
+*   **消息显示**: 渲染当前会话的消息列表，包括用户消息和 AI 回复。
+*   **SSE 订阅**: 这是处理实时响应的核心。它通过 `api.subscribeGeneration` 订阅后端 SSE 端点，并根据接收到的事件 (`delta`, `done`, `error`, `stopped`) 实时更新 `streamingContent` 状态。
+*   **输入处理**: 管理用户输入框，支持 `Ctrl+Enter` 发送和 `Shift+Enter` 换行。
+*   **交互操作**: 提供停止生成、导出聊天记录等功能。支持手动修改当前会话绑定的 Character（点击标题下方的角色名称）。
+*   **快捷选择栏**: 在输入框上方提供浮动栏，允许用户快速切换当前活跃模型和角色。切换后即时保存到 `settings.json`。
+```
+
+### 组件结构文档 / `ChatArea.tsx` — 聊天主区域 / `MessageItem` (子组件)
+
+```text
+*   **职责**: 渲染单条消息，包括消息内容、头像、以及操作按钮（复制、查看/全屏预览、重试、重新生成、继续）。
+*   **思考过程处理**: 解析并渲染 AI 回复中包含的 `<details>` 思考过程块，并提供折叠/展开功能。
+*   **消息操作**:
+    *   **Copy（复制）**: 复制消息的正文内容。除了复制 markdown 源码外，还会调用 `ClipboardItem` 同时向剪贴板写入对应的 HTML 源码（`text/html`），并且永远不包含 `<think>` 块中的思考过程，完美复用已渲染完毕的 DOM HTML 以免多余渲染，保证了粘贴到 Word、飞书等富文本编辑器时的完美格式还原度。
+    *   **View（查看）**: 鼠标悬浮时在消息左侧/右侧（按钮改成竖着并排展示以防错位）显示 👁️ 图标按钮。点击后在页面顶层覆盖一个最大化（填充整个可视页面）的 Markdown 渲染结果遮罩层。如果查看/打印的是模型消息，会往上找到最近的一个用户消息并一同在渲染层中进行“问题”与“回答”拼接显示。支持关闭将其隐藏，并且大遮罩页面支持单独滚动、不与底层页面冲突。
+    *   **Print（纯净打印）**: 在 Markdown 渲染结果遮罩层中支持 Ctrl+P 或点击“打印”按钮，通过构建隐藏的 blank iframe 传入打印命令来实现纯净打印，不带有任何多余的前端 UI 插曲。如果打印模型消息，将同时打印上面找到并拼接的最近用户消息。
+    *   **Retry（重试）**: 从当前消息往前找到最近的 user 消息，抛弃其后所有内容重新生成。
+    *   **Regenerate（重新生成）**: 保留当前 model 消息的 thinking process，删除正文，抛弃后续消息，注入 continue 指令让 AI 基于原有思考继续输出。
+    *   **Continue（继续）**: 仅对最后一条 model 消息显示，在会话末尾添加 continue 指令让 AI 继续被中断的输出。
+```
+
+### 组件结构文档 / `MarkdownRenderer.tsx` — Markdown 渲染器
+
+```text
+**职责**:
+
+*   **Markdown-to-HTML**: 使用 `react-markdown` 将 Markdown 文本安全地转换为 React 组件。
+*   **插件管线**: 集成 `remark-*` 和 `rehype-*` 插件生态，以支持 GFM (GitHub Flavored Markdown)、数学公式、化学方程式等高级功能。
+*   **数学渲染**: 通过 `remark-math` 和 `rehype-katex` 插件，将 LaTeX 格式的数学公式（`$...$` 和 `$$...$$`）渲染为 HTML 和 CSS。
+*   **安全**: 使用 `rehype-sanitize` 清理 HTML，防止 XSS 攻击，同时通过 `rehype-raw` 允许安全的、用于特定功能的 HTML 标签（如 `<details>`)。
+```
+
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗
+
+```text
+**职责**: 提供一个集中的界面，让用户管理应用的所有配置。它被设计为一个包含四个选项卡的模态框。
+```
+
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / General Tab
+
+```text
+*   **活跃模型选择**: 允许用户从所有已配置的模型中选择一个作为当前聊天使用的模型。
+*   **活跃角色预览**: 显示当前激活的角色名称及其系统提示词摘要（角色管理已移至 Characters tab）。
+*   **UI 开关**: 控制各种前端显示效果，如自动滚动、是否折叠思考过程等。
+```
+
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Providers Tab
+
+```text
+*   **供应商管理**: 允许用户添加、编辑、删除 AI 供应商实例 (ProviderInstance)。
+*   **连接配置**: 在 `ProviderEditor` 子组件中，用户可以配置供应商类型（Google, Nvidia, OpenAI Compatible）、API Key、Base URL 等连接信息。
+```
+
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Models Tab
+
+```text
+*   **模型管理**: 允许用户添加、编辑、删除模型实例 (ModelInstance)。
+*   **参数配置**: 在 `ModelEditor` 子组件中，用户可以将一个模型绑定到一个供应商，并配置其特定参数，如模型 ID、Temperature、Max Tokens 等。
+
+
+*   **危险区域操作**:
+    *   **Claude 格式导出**: 将所有会话数据转换为符合 Claude 官方规范的 JSON 格式并下载，自动处理思考过程块和时间戳精度。导出的主 ZIP 包含一个特殊的 `All_Conversations.zip` 子压缩包（内含所有符合日期限制且经过排序的对话记录），以及各个角色的独立子压缩包。所有导出数据均先按 character 拼音或字母正序排序，然后按更新时间降序排序。
+    *   **强制清洗数据**: 移除数据中的废弃字段，保持数据整洁。
+```
+
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Characters Tab
+
+```text
+*   **角色管理**: 允许用户添加、编辑、删除角色 (Character)。每个角色包含名称和系统提示词。
+*   **系统提示词迁移**: 原有 `systemPrompt` 字段被迁移为默认角色。后端生成时优先使用 `activeCharacterId` 对应的角色的 `systemPrompt`，若不存在则回退到 `systemPrompt` 字段。
+```
+
+### 数据模型与存储
+
+```text
+
+```
+
+### 数据模型与存储 / TypeScript 类型定义
+
+```text
+
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / ProviderInstance（提供商实例）
+
+```text
+interface ProviderInstance {
+  id: string;           // UUID
+  type: 'google' | 'nvidia' | 'openai-compatible';  // 内置类型
+  name: string;         // 显示名称
+  baseURL?: string;     // 自定义 Base URL（覆盖内置默认值）
+  apiKey?: string;      // 自定义 API Key（覆盖环境变量）
+  envKey?: string;      // 环境变量前缀（如 NVIDIA_API_KEY）
+  extra?: Record<string, any>;  // 额外配置（高拓展性）
+  modelSource?: string; // 远程模型列表 JSON URL（仅适用于 nvidia/openai-compatible，启动时自动同步）
+}
+
+> **特殊行为**：
+> - `nvidia` 类型的 `baseURL` 固定为 `https://integrate.api.nvidia.com/v1`，无法覆盖
+> - `google` 类型不支持 `modelSource`（模型列表通过 API 获取）
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / ModelInstance（模型实例）
+
+```text
+interface ModelInstance {
+  id: string;                       // UUID
+  providerId: string;               // 关联的 ProviderInstance.id
+  providerType: 'google' | 'nvidia' | 'openai-compatible';  // 冗余字段，高效传递
+  modelId: string;                  // 模型 ID（如 gemini-3.5-flash）
+  displayName?: string;             // 显示名称（可选）
+  temperature?: number;             // 温度参数（Unset 时不传给 API）
+  maxTokens?: number;               // 最大 token 数（Unset 时不传给 API）
+  reasoningEffort?: string;         // 推理努力程度（max/xhigh/high/medium/low/minimal/none，OpenAI 兼容用）
+  thinkingLevel?: string;           // 思考级别（Gemini 专用）
+  extraBody?: Record<string, any>;  // 额外请求体（JSON 对象，合并到 API 请求中）
+  injectThinkingTemplate?: boolean; // 注入 chat_template_kwargs thinking（Nvidia 用）
+}
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / Character（角色）
+
+```text
+interface Character {
+  id: string;            // UUID
+  name: string;          // 角色名称
+  systemPrompt: string;  // 系统提示词
+}
+
+> **设计意图**：角色是系统提示词的容器。用户可在设置中创建多个角色（如"数学导师"、"代码助手"），每个角色携带不同的 `systemPrompt`。发送消息时，后端根据 `activeCharacterId` 查找对应角色的 `systemPrompt` 注入请求。
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / UserSettings（用户设置）
+
+```text
+interface UserSettings {
+  activeModelId?: string;           // 当前活跃模型的 ModelInstance.id
+  activeCharacterId?: string;       // 当前活跃角色的 Character.id
+  providers: ProviderInstance[];    // 提供商实例列表
+  models: ModelInstance[];          // 模型实例列表
+  characters: Character[];          // 角色列表
+  systemPrompt: string;             // 全局回退系统提示词（向后兼容）
+  renderThinkingAsMarkdown: boolean;
+  autoScroll: boolean;
+  collapseThinkingFinished: boolean;
+  gemmaTrimThinkingSpaces: boolean;
+  starredSessions?: Record<string, string>; // 加星会话映射（会话 ID => 星星颜色 ID）
+}
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / ChatMessage（聊天消息）
+
+```text
+interface ChatMessage {
+  id: string;                       // UUID
+  role: 'user' | 'model';          // 角色
+  content: string;                   // 消息内容（含 Markdown 和思考过程包装）
+  createdAt: string;                // ISO 时间戳
+ }
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / ChatSession（聊天会话）
+
+```text
+interface ChatSession {
+  id: string;               // UUID
+  title: string;            // 会话标题
+  messages: ChatMessage[];  // 消息列表
+  characterId?: string;    // 创建时使用的角色 ID（仅记录首次）
+  createdAt: string;        // ISO 时间戳
+  updatedAt: string;        // ISO 时间戳
+}
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / 服务端类型（GenerationManager 内部）
+
+```text
+interface GenerationModel {
+  id: string;
+  providerId: string;
+  providerType: string;
+  modelId: string;
+  displayName?: string;
+  temperature?: number;
+  maxTokens?: number;
+  reasoningEffort?: string;
+  extraBody?: Record<string, any>;
+  thinkingLevel?: string;
+}
+
+interface GenerationProvider {
+  baseURL?: string;
+  apiKey?: string;
+  envKey?: string;
+  type: string;
+  name: string;
+}
+```
+
+### 数据模型与存储 / 存储方案
+
+```text
+
+```
+
+### 数据模型与存储 / 存储方案 / 本地 JSON 文件存储
+
+```text
+数据通过 Express 服务端 REST API 读写本地 JSON 文件：
+
+**文件结构**：
+
+/data/
+  settings.json           # UserSettings（单文件）
+  sessions/{sessionId}.json  # ChatSession（每会话一个文件）
+  log/                    # 日志文件（YYYY-MM-DD.log）
+
+**API 端点**：
+
+- `GET /api/settings` — 读取设置
+- `PUT /api/settings` — 写入设置
+- `GET /api/sessions` — 列出所有会话
+- `GET /api/sessions/:id` — 获取单个会话
+- `DELETE /api/sessions/:id` — 删除会话
+- `PATCH /api/sessions/:id` — 更新会话元数据或消息。接受 `title`、`characterId` 和 `messages`（数组类型，元素结构需符合 `ChatMessage` 规范，必须包含 `id`、`role`、`content`、`createdAt`）
+- `POST /api/sessions/:id/messages` — 发送消息并触发生成
+- `GET /api/sessions/:id/generation` — SSE 订阅生成进度
+- `DELETE /api/sessions/:id/generation` — 停止生成
+- `GET /api/generation-status` — 获取正在运行的会话 ID 列表（页面刷新后恢复状态用）
+- `POST /api/sessions/:id/retry` — 重试消息
+- `POST /api/sessions/:id/continue` — 继续生成
+- `GET /api/providers` — 获取内置提供商类型列表
+- `POST /api/providers/:type/models` — 获取指定类型的模型列表（POST 避免在 URL 中传递敏感信息）
+```
+
+### 数据模型与存储 / 默认设置
+
+```text
+const DEFAULT_SETTINGS: UserSettings = {
+  providers: [],
+  models: [],
+  characters: [],
+  systemPrompt: '',
+  renderThinkingAsMarkdown: false,
+  autoScroll: true,
+  collapseThinkingFinished: true,
+  gemmaTrimThinkingSpaces: false,
+  starredSessions: {},
+};
+
+> **设计要点**：所有参数（temperature、maxTokens 等）为 "Unset" 时不传给 API，由供应商使用默认值。已删除 `topP` 参数。
+```
+
+### 代码质量与 Lint 规范
+
+```text
+本项目执行严格的代码质量检查。所有代码必须通过 ESLint、Prettier 和 TypeScript 的严格模式检查。
+```
+
+### 代码质量与 Lint 规范 / 检查工具
+
+```text
+- **Lint**: `bun run lint` (eslint)
+- **Formatting**: `bun run pretty` (prettier --check)
+- **Type Check**: `bun run check` (tsc --noEmit --strict)
+```
+
+### 代码质量与 Lint 规范 / 修复工具
+
+```text
+- **自动修复 Lint**: `bun run lint:fix`
+- **自动修复格式**: `bun run pretty:fix`
+```
+
+### 代码质量与 Lint 规范 / 严格修复规则
+
+```text
+1. **禁止未使用变量**: 所有的 `unused-vars` 必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
+2. **禁止未使用的表达式**: 严禁将三元运算符或逻辑表达式作为独立语句使用。应使用标准的 `if/else` 语句。
+3. **严格类型检查**: TypeScript 必须处于 `--strict` 模式。严禁无故使用 `@ts-ignore` 或 `@ts-expect-error`。如果第三方库缺少类型或存在上游 Bug，必须在注释中说明原因。
+4. **文档同步**: 任何逻辑变更必须同步更新 `AGENTS.md` 和 `docs/` 目录下的相关文档。
+```
+
+### 代码质量与 Lint 规范 / 最佳实践 (TypeScript)
+
+```text
+- **Make Illegal States Unrepresentable**: 使用辨析联合类型 (Discriminated Unions) 确保状态合法。
+- **Runtime Validation**: 对外部数据（API 响应、本地存储）使用 Zod 等工具进行运行时验证。
+- **Branded Types**: 对 ID 等原始类型使用 Branded Types 以增强区分度。
+- **Exhaustive Checks**: 使用 `never` 类型确保 `switch` 语句处理了所有可能的情况。
+```
+
+### AI 供应商集成文档
+
+```text
+
+```
+
+### AI 供应商集成文档 / 供应商总览
+
+```text
+本项目内置 3 种提供商类型，均通过服务端代理调用：
+
+| 类型 | ID | 默认 Base URL | 默认 Env Key |
+|------|-------------|----------|----------|
+| Google Gemini | `google` | generativelanguage.googleapis.com/v1beta | `GEMINI_API_KEY` |
+| Nvidia NIM | `nvidia` | integrate.api.nvidia.com/v1 | `NVIDIA_API_KEY` |
+| OpenAI Compatible | `openai-compatible` | 用户配置 | `OPENAI_API_KEY` |
+
+> 用户可自行添加任意数量的 `openai-compatible` 提供商实例。
+```
+
+### AI 供应商集成文档 / 架构
+
+```text
+
+```
+
+### AI 供应商集成文档 / 架构 / 服务端模块
+
+```text
+- **`server/providers/built-in.ts`** — 内置提供商类型定义
+  - `BUILT_IN_PROVIDERS` 记录：存储每种内置类型的默认配置
+  
+- **`server/providers/config.ts`** — 提供商配置解析
+  - `resolveApiKey()` — 解析 API Key（优先配置项，其次环境变量，最后 `OPENAI_API_KEY` 回退）
+  - `resolveBaseURL()` — 解析 Base URL（优先配置项，其次内置默认值）
+
+- **`server/providers/stream.ts`** — 流式 API 调用
+  - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
+  - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
+  - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK，不启用 `reasoning_effort` 级联回退机制）
+  - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用，支持 `reasoning_effort` 自动重试机制（若未显式指定级别，会从 `max` -> `xhigh` -> `high` 依次尝试请求，每个级别失败后重试一次。若抛出 401、403、404 等严重配置或不存在错误，则立即停止并向上抛出；若抛出与 `reasoning_effort` 相关的 400 或 422 错误，则立刻停止重试尝试并直接回退调用无 `reasoning_effort` 参数的模型流；若检测到 429 速率限制，也会立即向上抛出错误以提升用户体验）
+  - `StreamRequest` / `StreamChunk` 类型定义
+```
+
+### AI 供应商集成文档 / 架构 / 前端统一客户端
+
+```text
+- **`src/lib/api.ts`** — 统一 API 客户端
+  - `api.settings` — 设置读写
+  - `api.sessions` — 会话 CRUD
+  - `api.chat` — 消息发送、停止、重试、继续
+  - `api.providers` — 获取内置提供商类型列表和模型列表
+  - `api.subscribeGeneration()` — SSE 订阅生成进度
+```
+
+### AI 供应商集成文档 / Google Gemini
+
+```text
+- **SDK**：`@google/genai`
+- **特殊功能**：
+  - Thinking Level 配置（minimal/low/medium/high）
+  - `includeThoughts: true` 确保思考过程可见
+  - 流式响应 + 思考过程分段（`part.thought` 标记）
+```
+
+### AI 供应商集成文档 / Nvidia NIM
+
+```text
+- **SDK**：OpenAI SDK
+- **Base URL**：`https://integrate.api.nvidia.com/v1`
+- **特殊功能**：支持 `extraBody` 透传（如 `chat_template_kwargs`）
+- **推理过程**：通过 `delta.reasoning` 或 `delta.reasoning_content` 字段检测
+- **推理强度配置**：不启用 `reasoning_effort` 级联回退机制或自动参数注入。在未显式设置 `reasoning_effort` 时，默认进行无 `reasoning_effort` 参数的请求；若用户显式配置了 `reasoning_effort`（例如 Kimi K2.6），则依然会直接遵循该显式配置发出请求。
+```
+
+### AI 供应商集成文档 / OpenAI Compatible
+
+```text
+- **SDK**：OpenAI SDK
+- **用途**：支持任意 OpenAI 兼容 API 端点
+- **配置方式**：在 Settings → Providers tab 中手动填写名称、Base URL、API Key、Env Key Prefix
+```
+
+### AI 供应商集成文档 / SSE 流式协议
+
+```text
+前端通过 `EventSource` 订阅 `/api/sessions/:id/generation`，服务端发送以下事件：
+
+event: delta
+data: {"content": "完整内容（含思考过程包装）"}
+
+event: done
+data: {"content": "最终内容"}
+
+event: error
+data: {"message": "错误信息"}
+
+event: stopped
+data: {}
+
+**标题生成**：当新建会话时，服务端同步生成标题（使用 `unicodeit` + `markdown-to-txt` 转换 Markdown 为 Plain Text）。标题生成后立即保存到 session.json。
+```
+
+### AI 供应商集成文档 / 环境变量汇总
+
+```text
+GEMINI_API_KEY=          # Google Gemini
+NVIDIA_API_KEY=          # Nvidia NIM
+OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
+
+> 所有 API Key 均在服务端读取（通过 dotenv），前端不暴露任何 Key。
+> API Key 解析优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量（如 `GEMINI_API_KEY`）> `OPENAI_API_KEY` 回退。
+```
+
 ### 项目架构概览
 
 ```text
@@ -245,227 +849,6 @@ graph TD
 -   **文档同步规则**: `AGENTS.md` 中明确规定，任何对代码、架构或数据模型的修改都必须同步更新相关的文档，以保持其准确性。
 ```
 
-### 代码质量与 Lint 规范
-
-```text
-本项目执行严格的代码质量检查。所有代码必须通过 ESLint、Prettier 和 TypeScript 的严格模式检查。
-```
-
-### 代码质量与 Lint 规范 / 检查工具
-
-```text
-- **Lint**: `bun run lint` (eslint)
-- **Formatting**: `bun run pretty` (prettier --check)
-- **Type Check**: `bun run check` (tsc --noEmit --strict)
-```
-
-### 代码质量与 Lint 规范 / 修复工具
-
-```text
-- **自动修复 Lint**: `bun run lint:fix`
-- **自动修复格式**: `bun run pretty:fix`
-```
-
-### 代码质量与 Lint 规范 / 严格修复规则
-
-```text
-1. **禁止未使用变量**: 所有的 `unused-vars` 必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
-2. **禁止未使用的表达式**: 严禁将三元运算符或逻辑表达式作为独立语句使用。应使用标准的 `if/else` 语句。
-3. **严格类型检查**: TypeScript 必须处于 `--strict` 模式。严禁无故使用 `@ts-ignore` 或 `@ts-expect-error`。如果第三方库缺少类型或存在上游 Bug，必须在注释中说明原因。
-4. **文档同步**: 任何逻辑变更必须同步更新 `AGENTS.md` 和 `docs/` 目录下的相关文档。
-```
-
-### 代码质量与 Lint 规范 / 最佳实践 (TypeScript)
-
-```text
-- **Make Illegal States Unrepresentable**: 使用辨析联合类型 (Discriminated Unions) 确保状态合法。
-- **Runtime Validation**: 对外部数据（API 响应、本地存储）使用 Zod 等工具进行运行时验证。
-- **Branded Types**: 对 ID 等原始类型使用 Branded Types 以增强区分度。
-- **Exhaustive Checks**: 使用 `never` 类型确保 `switch` 语句处理了所有可能的情况。
-```
-
-### 数据模型与存储
-
-```text
-
-```
-
-### 数据模型与存储 / TypeScript 类型定义
-
-```text
-
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / ProviderInstance（提供商实例）
-
-```text
-interface ProviderInstance {
-  id: string;           // UUID
-  type: 'google' | 'nvidia' | 'openai-compatible';  // 内置类型
-  name: string;         // 显示名称
-  baseURL?: string;     // 自定义 Base URL（覆盖内置默认值）
-  apiKey?: string;      // 自定义 API Key（覆盖环境变量）
-  envKey?: string;      // 环境变量前缀（如 NVIDIA_API_KEY）
-  extra?: Record<string, any>;  // 额外配置（高拓展性）
-  modelSource?: string; // 远程模型列表 JSON URL（仅适用于 nvidia/openai-compatible，启动时自动同步）
-}
-
-> **特殊行为**：
-> - `nvidia` 类型的 `baseURL` 固定为 `https://integrate.api.nvidia.com/v1`，无法覆盖
-> - `google` 类型不支持 `modelSource`（模型列表通过 API 获取）
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / ModelInstance（模型实例）
-
-```text
-interface ModelInstance {
-  id: string;                       // UUID
-  providerId: string;               // 关联的 ProviderInstance.id
-  providerType: 'google' | 'nvidia' | 'openai-compatible';  // 冗余字段，高效传递
-  modelId: string;                  // 模型 ID（如 gemini-3.5-flash）
-  displayName?: string;             // 显示名称（可选）
-  temperature?: number;             // 温度参数（Unset 时不传给 API）
-  maxTokens?: number;               // 最大 token 数（Unset 时不传给 API）
-  reasoningEffort?: string;         // 推理努力程度（max/xhigh/high/medium/low/minimal/none，OpenAI 兼容用）
-  thinkingLevel?: string;           // 思考级别（Gemini 专用）
-  extraBody?: Record<string, any>;  // 额外请求体（JSON 对象，合并到 API 请求中）
-  injectThinkingTemplate?: boolean; // 注入 chat_template_kwargs thinking（Nvidia 用）
-}
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / Character（角色）
-
-```text
-interface Character {
-  id: string;            // UUID
-  name: string;          // 角色名称
-  systemPrompt: string;  // 系统提示词
-}
-
-> **设计意图**：角色是系统提示词的容器。用户可在设置中创建多个角色（如"数学导师"、"代码助手"），每个角色携带不同的 `systemPrompt`。发送消息时，后端根据 `activeCharacterId` 查找对应角色的 `systemPrompt` 注入请求。
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / UserSettings（用户设置）
-
-```text
-interface UserSettings {
-  activeModelId?: string;           // 当前活跃模型的 ModelInstance.id
-  activeCharacterId?: string;       // 当前活跃角色的 Character.id
-  providers: ProviderInstance[];    // 提供商实例列表
-  models: ModelInstance[];          // 模型实例列表
-  characters: Character[];          // 角色列表
-  systemPrompt: string;             // 全局回退系统提示词（向后兼容）
-  renderThinkingAsMarkdown: boolean;
-  autoScroll: boolean;
-  collapseThinkingFinished: boolean;
-  gemmaTrimThinkingSpaces: boolean;
-  starredSessions?: Record<string, string>; // 加星会话映射（会话 ID => 星星颜色 ID）
-}
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / ChatMessage（聊天消息）
-
-```text
-interface ChatMessage {
-  id: string;                       // UUID
-  role: 'user' | 'model';          // 角色
-  content: string;                   // 消息内容（含 Markdown 和思考过程包装）
-  createdAt: string;                // ISO 时间戳
- }
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / ChatSession（聊天会话）
-
-```text
-interface ChatSession {
-  id: string;               // UUID
-  title: string;            // 会话标题
-  messages: ChatMessage[];  // 消息列表
-  characterId?: string;    // 创建时使用的角色 ID（仅记录首次）
-  createdAt: string;        // ISO 时间戳
-  updatedAt: string;        // ISO 时间戳
-}
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / 服务端类型（GenerationManager 内部）
-
-```text
-interface GenerationModel {
-  id: string;
-  providerId: string;
-  providerType: string;
-  modelId: string;
-  displayName?: string;
-  temperature?: number;
-  maxTokens?: number;
-  reasoningEffort?: string;
-  extraBody?: Record<string, any>;
-  thinkingLevel?: string;
-}
-
-interface GenerationProvider {
-  baseURL?: string;
-  apiKey?: string;
-  envKey?: string;
-  type: string;
-  name: string;
-}
-```
-
-### 数据模型与存储 / 存储方案
-
-```text
-
-```
-
-### 数据模型与存储 / 存储方案 / 本地 JSON 文件存储
-
-```text
-数据通过 Express 服务端 REST API 读写本地 JSON 文件：
-
-**文件结构**：
-
-/data/
-  settings.json           # UserSettings（单文件）
-  sessions/{sessionId}.json  # ChatSession（每会话一个文件）
-  log/                    # 日志文件（YYYY-MM-DD.log）
-
-**API 端点**：
-
-- `GET /api/settings` — 读取设置
-- `PUT /api/settings` — 写入设置
-- `GET /api/sessions` — 列出所有会话
-- `GET /api/sessions/:id` — 获取单个会话
-- `DELETE /api/sessions/:id` — 删除会话
-- `PATCH /api/sessions/:id` — 更新会话元数据或消息。接受 `title`、`characterId` 和 `messages`（数组类型，元素结构需符合 `ChatMessage` 规范，必须包含 `id`、`role`、`content`、`createdAt`）
-- `POST /api/sessions/:id/messages` — 发送消息并触发生成
-- `GET /api/sessions/:id/generation` — SSE 订阅生成进度
-- `DELETE /api/sessions/:id/generation` — 停止生成
-- `GET /api/generation-status` — 获取正在运行的会话 ID 列表（页面刷新后恢复状态用）
-- `POST /api/sessions/:id/retry` — 重试消息
-- `POST /api/sessions/:id/continue` — 继续生成
-- `GET /api/providers` — 获取内置提供商类型列表
-- `POST /api/providers/:type/models` — 获取指定类型的模型列表（POST 避免在 URL 中传递敏感信息）
-```
-
-### 数据模型与存储 / 默认设置
-
-```text
-const DEFAULT_SETTINGS: UserSettings = {
-  providers: [],
-  models: [],
-  characters: [],
-  systemPrompt: '',
-  renderThinkingAsMarkdown: false,
-  autoScroll: true,
-  collapseThinkingFinished: true,
-  gemmaTrimThinkingSpaces: false,
-  starredSessions: {},
-};
-
-> **设计要点**：所有参数（temperature、maxTokens 等）为 "Unset" 时不传给 API，由供应商使用默认值。已删除 `topP` 参数。
-```
-
 ### 文件结构
 
 ```text
@@ -548,388 +931,5 @@ ai-math-chat-studio/
 | `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
 | `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
 | `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
-```
-
-### 组件结构文档
-
-```text
-
-```
-
-### 组件结构文档 / 组件树
-
-```text
-graph TD
-    App[App.tsx]
-    subgraph App Children
-        Sidebar[Sidebar.tsx]
-        ChatArea[ChatArea.tsx]
-        SettingsModal[SettingsModal.tsx]
-    end
-
-    App --> Sidebar
-    App --> ChatArea
-    App --> SettingsModal
-
-    subgraph ChatArea Children
-        MessageItem[MessageItem]
-    end
-
-    subgraph MessageItem Children
-        MarkdownRenderer[MarkdownRenderer.tsx]
-    end
-
-    subgraph SettingsModal Children
-        ProviderEditor[ProviderEditor]
-        ModelEditor[ModelEditor]
-    end
-
-    ChatArea --> MessageItem
-    MessageItem --> MarkdownRenderer
-    SettingsModal --> ProviderEditor
-    SettingsModal --> ModelEditor
-```
-
-### 组件结构文档 / `App.tsx` — 状态管理中心
-
-```text
-**职责**:
-
-*   **状态中心**: 作为整个应用的顶层组件，管理所有核心状态。
-*   **数据获取**: 在应用启动时，通过 `api.ts` 从后端获取初始设置和会话数据。
-*   **状态管理**: 管理会话列表 (`sessions`)、当前会话 (`currentSessionId`)、用户设置 (`settings`)、以及全局 UI 状态（如 `isSettingsOpen`）。
-*   **业务逻辑**: 实现核心业务逻辑，如新建/删除会话、发送/重试消息，并将这些函数作为 props 传递给子组件。
-*   **持久化**: 调用 `api.ts` 中的函数将变更（如保存设置、发送消息）持久化到后端。
-```
-
-### 组件结构文档 / `Sidebar.tsx` — 左侧栏
-
-```text
-**职责**:
-
-*   **会话列表**: 显示所有聊天会话，按更新时间排序。
-*   **分类过滤**: 在会话列表上方提供角色选择器，允许用户按 Character 过滤显示的会话。
-*   **加星功能 (Starring)**: 允许用户给每个会话进行加星标记，并提供黄、红、蓝、绿、橙五种预设星星颜色。加星数据保存在 `settings.json` 的 `starredSessions` 映射中。
-*   **置顶快速访问 (Starred Sections)**: 当有被加星的会话存在时，在侧边栏最顶端显示一个单独的、可折叠的“已加星会话”分组，保证极高的数据查看和切换效率。
-*   **用户交互**: 允许用户切换会话、新建会话、复制会话、删除会话、加星会话。
-*   **导航**: 提供打开设置模态框的入口。
-```
-
-### 组件结构文档 / `ChatArea.tsx` — 聊天主区域
-
-```text
-**职责**:
-
-*   **消息显示**: 渲染当前会话的消息列表，包括用户消息和 AI 回复。
-*   **SSE 订阅**: 这是处理实时响应的核心。它通过 `api.subscribeGeneration` 订阅后端 SSE 端点，并根据接收到的事件 (`delta`, `done`, `error`, `stopped`) 实时更新 `streamingContent` 状态。
-*   **输入处理**: 管理用户输入框，支持 `Ctrl+Enter` 发送和 `Shift+Enter` 换行。
-*   **交互操作**: 提供停止生成、导出聊天记录等功能。支持手动修改当前会话绑定的 Character（点击标题下方的角色名称）。
-*   **快捷选择栏**: 在输入框上方提供浮动栏，允许用户快速切换当前活跃模型和角色。切换后即时保存到 `settings.json`。
-```
-
-### 组件结构文档 / `ChatArea.tsx` — 聊天主区域 / `MessageItem` (子组件)
-
-```text
-*   **职责**: 渲染单条消息，包括消息内容、头像、以及操作按钮（复制、查看/全屏预览、重试、重新生成、继续）。
-*   **思考过程处理**: 解析并渲染 AI 回复中包含的 `<details>` 思考过程块，并提供折叠/展开功能。
-*   **消息操作**:
-    *   **Copy（复制）**: 复制消息的正文内容。除了复制 markdown 源码外，还会调用 `ClipboardItem` 同时向剪贴板写入对应的 HTML 源码（`text/html`），并且永远不包含 `<think>` 块中的思考过程，完美复用已渲染完毕的 DOM HTML 以免多余渲染，保证了粘贴到 Word、飞书等富文本编辑器时的完美格式还原度。
-    *   **View（查看）**: 鼠标悬浮时在消息左侧/右侧（按钮改成竖着并排展示以防错位）显示 👁️ 图标按钮。点击后在页面顶层覆盖一个最大化（填充整个可视页面）的 Markdown 渲染结果遮罩层。如果查看/打印的是模型消息，会往上找到最近的一个用户消息并一同在渲染层中进行“问题”与“回答”拼接显示。支持关闭将其隐藏，并且大遮罩页面支持单独滚动、不与底层页面冲突。
-    *   **Print（纯净打印）**: 在 Markdown 渲染结果遮罩层中支持 Ctrl+P 或点击“打印”按钮，通过构建隐藏的 blank iframe 传入打印命令来实现纯净打印，不带有任何多余的前端 UI 插曲。如果打印模型消息，将同时打印上面找到并拼接的最近用户消息。
-    *   **Retry（重试）**: 从当前消息往前找到最近的 user 消息，抛弃其后所有内容重新生成。
-    *   **Regenerate（重新生成）**: 保留当前 model 消息的 thinking process，删除正文，抛弃后续消息，注入 continue 指令让 AI 基于原有思考继续输出。
-    *   **Continue（继续）**: 仅对最后一条 model 消息显示，在会话末尾添加 continue 指令让 AI 继续被中断的输出。
-```
-
-### 组件结构文档 / `MarkdownRenderer.tsx` — Markdown 渲染器
-
-```text
-**职责**:
-
-*   **Markdown-to-HTML**: 使用 `react-markdown` 将 Markdown 文本安全地转换为 React 组件。
-*   **插件管线**: 集成 `remark-*` 和 `rehype-*` 插件生态，以支持 GFM (GitHub Flavored Markdown)、数学公式、化学方程式等高级功能。
-*   **数学渲染**: 通过 `remark-math` 和 `rehype-katex` 插件，将 LaTeX 格式的数学公式（`$...$` 和 `$$...$$`）渲染为 HTML 和 CSS。
-*   **安全**: 使用 `rehype-sanitize` 清理 HTML，防止 XSS 攻击，同时通过 `rehype-raw` 允许安全的、用于特定功能的 HTML 标签（如 `<details>`)。
-```
-
-### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗
-
-```text
-**职责**: 提供一个集中的界面，让用户管理应用的所有配置。它被设计为一个包含四个选项卡的模态框。
-```
-
-### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / General Tab
-
-```text
-*   **活跃模型选择**: 允许用户从所有已配置的模型中选择一个作为当前聊天使用的模型。
-*   **活跃角色预览**: 显示当前激活的角色名称及其系统提示词摘要（角色管理已移至 Characters tab）。
-*   **UI 开关**: 控制各种前端显示效果，如自动滚动、是否折叠思考过程等。
-```
-
-### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Providers Tab
-
-```text
-*   **供应商管理**: 允许用户添加、编辑、删除 AI 供应商实例 (ProviderInstance)。
-*   **连接配置**: 在 `ProviderEditor` 子组件中，用户可以配置供应商类型（Google, Nvidia, OpenAI Compatible）、API Key、Base URL 等连接信息。
-```
-
-### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Models Tab
-
-```text
-*   **模型管理**: 允许用户添加、编辑、删除模型实例 (ModelInstance)。
-*   **参数配置**: 在 `ModelEditor` 子组件中，用户可以将一个模型绑定到一个供应商，并配置其特定参数，如模型 ID、Temperature、Max Tokens 等。
-
-
-*   **危险区域操作**:
-    *   **Claude 格式导出**: 将所有会话数据转换为符合 Claude 官方规范的 JSON 格式并下载，自动处理思考过程块和时间戳精度。导出的主 ZIP 包含一个特殊的 `All_Conversations.zip` 子压缩包（内含所有符合日期限制且经过排序的对话记录），以及各个角色的独立子压缩包。所有导出数据均先按 character 拼音或字母正序排序，然后按更新时间降序排序。
-    *   **强制清洗数据**: 移除数据中的废弃字段，保持数据整洁。
-```
-
-### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Characters Tab
-
-```text
-*   **角色管理**: 允许用户添加、编辑、删除角色 (Character)。每个角色包含名称和系统提示词。
-*   **系统提示词迁移**: 原有 `systemPrompt` 字段被迁移为默认角色。后端生成时优先使用 `activeCharacterId` 对应的角色的 `systemPrompt`，若不存在则回退到 `systemPrompt` 字段。
-```
-
-### 技术栈详情
-
-```text
-
-```
-
-### 技术栈详情 / 前端框架
-
-```text
-| 技术 | 版本 |
-|---|---|
-| React | ^19.2.7 |
-| TypeScript | ~6.0.3 |
-| Vite | ^8.0.16 |
-| Tailwind CSS | ^4.3.1 |
-| @tailwindcss/typography | ^0.5.20 |
-```
-
-### 技术栈详情 / 后端
-
-```text
-| 技术 | 版本 |
-|---|---|
-| Express | ^5.2.1 |
-| tsx | ^4.22.4 |
-| OpenAI SDK | ^6.44.0 |
-| dotenv | ^17.4.2 |
-```
-
-### 技术栈详情 / AI/数学库
-
-```text
-| 技术 | 版本 |
-|---|---|
-| @google/genai | ^2.8.0 |
-| KaTeX | ^0.17.0 |
-```
-
-### 技术栈详情 / Markdown 渲染管线
-
-```text
-| 技术 | 版本 |
-|---|---|
-| react-markdown | ^10.1.0 |
-| remark-math | ^6.0.0 |
-| remark-gfm | ^4.0.1 |
-| remark-breaks | ^4.0.0 |
-| remark-cjk-friendly | ^2.2.0 |
-| remark-squeeze-paragraphs | ^6.0.0 |
-| rehype-katex | ^7.0.1 |
-| rehype-raw | ^7.0.0 |
-| rehype-sanitize | ^6.0.0 |
-| rehype-external-links | ^3.0.0 |
-| katex/contrib/mhchem | (Bundled with KaTeX) |
-```
-
-### 技术栈详情 / 其他依赖
-
-```text
-| 技术 | 版本 |
-|---|---|
-| lucide-react | ^1.21.0 |
-| motion | ^12.40.0 |
-| clsx | ^2.1.1 |
-| tailwind-merge | ^3.6.0 |
-| uuid | ^14.0.1 |
-| unicodeit | ^0.7.5 |
-| markdown-to-txt | ^2.0.1 |
-```
-
-### 技术栈详情 / 其他依赖 / 标题生成
-
-```text
-标题生成使用纯 JavaScript 字符串操作，无需异步：
-
-- **unicodeit**: 将 LaTeX 数学公式转换为 Unicode 字符（如 `\alpha` → `α`)
-- **markdown-to-txt**: 清理 Markdown 语法（标题、粗体、链接等）
-- 处理流程：替换 `\dfrac` → `\frac` → 处理块级数学 `$$...$$` → 处理行内数学 `$...$` → Markdown 转文本 → 移除剩余 `$` 和 `\`
-- 只处理前200个字符，保证极快的处理速度
-```
-
-### 技术栈详情 / 开发工具
-
-```text
-| 工具 | 用途 |
-|---|---|
-| Bun | 依赖管理、脚本运行、构建 |
-| TypeScript (`tsc --noEmit`) | 类型检查 (`bun run lint`) |
-| Vite HMR | 热模块替换 |
-```
-
-### 技术栈详情 / 构建命令
-
-```text
-bun run dev           # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
-bun run build         # Vite 生产构建
-bun run preview       # 预览生产构建
-bun run build:bundle    # 打包服务端代码为单个 bundle
-bun run build:compile  # 使用 Bun 编译为可执行文件
-bun run lint          # TypeScript 类型检查
-bun run clean         # 清除 dist、dist-server、dist-compile、release 目录
-```
-
-### 技术栈详情 / 路径别名
-
-```text
-`@/*` 映射到项目根目录，配置在 `tsconfig.json` 和 `vite.config.ts` 中。
-```
-
-### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts)
-
-```text
-本应用支持动态 KaTeX 数学字体选择，允许用户在设置（SettingsModal.tsx）中切换不同的数学渲染字体：
-- **Default**: KaTeX 默认自带字体。
-- **Euler Math**: 典雅的 Euler 数学字体 (Euler-Math.woff2 / Euler-Math.otf)。
-- **Fira Math**: 现代的 Fira 数学无衬线字体 (FiraMath-Regular.woff2 / FiraMath-Regular.otf)。
-- **Cambria Math**: 经典的 Cambria 数学衬线字体 (Cambria Math.woff2 / Cambria Math.ttf)。
-```
-
-### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts) / 字体实现细节
-
-```text
-1. **源字体与 WOFF2 转换**: 字体文件存放于 `src/fonts/` 下，转换使用标准的 `woff2_compress` 压缩技术将 OTF/TTF 转换为体积更小的 WOFF2 格式。
-2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义在 `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
-3. **CJK/中文优雅回退**: 避免定制数学字体对数学公式内的中文（如 `\text{中文}` 或 `.cjk_fallback`）造成非预期的强制覆盖，系统在 `src/index.css` 增加了高优先级的非冲突 CJK 回退处理器，强制使 `.cjk_fallback` 及它的子元素回退并使用网页正文字体 (`system-ui, sans-serif`)。
-```
-
-### AI 供应商集成文档
-
-```text
-
-```
-
-### AI 供应商集成文档 / 供应商总览
-
-```text
-本项目内置 3 种提供商类型，均通过服务端代理调用：
-
-| 类型 | ID | 默认 Base URL | 默认 Env Key |
-|------|-------------|----------|----------|
-| Google Gemini | `google` | generativelanguage.googleapis.com/v1beta | `GEMINI_API_KEY` |
-| Nvidia NIM | `nvidia` | integrate.api.nvidia.com/v1 | `NVIDIA_API_KEY` |
-| OpenAI Compatible | `openai-compatible` | 用户配置 | `OPENAI_API_KEY` |
-
-> 用户可自行添加任意数量的 `openai-compatible` 提供商实例。
-```
-
-### AI 供应商集成文档 / 架构
-
-```text
-
-```
-
-### AI 供应商集成文档 / 架构 / 服务端模块
-
-```text
-- **`server/providers/built-in.ts`** — 内置提供商类型定义
-  - `BUILT_IN_PROVIDERS` 记录：存储每种内置类型的默认配置
-  
-- **`server/providers/config.ts`** — 提供商配置解析
-  - `resolveApiKey()` — 解析 API Key（优先配置项，其次环境变量，最后 `OPENAI_API_KEY` 回退）
-  - `resolveBaseURL()` — 解析 Base URL（优先配置项，其次内置默认值）
-
-- **`server/providers/stream.ts`** — 流式 API 调用
-  - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
-  - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
-  - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK，不启用 `reasoning_effort` 级联回退机制）
-  - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用，支持 `reasoning_effort` 自动重试机制（若未显式指定级别，会从 `max` -> `xhigh` -> `high` 依次尝试请求，每个级别失败后重试一次。若抛出 401、403、404 等严重配置或不存在错误，则立即停止并向上抛出；若抛出与 `reasoning_effort` 相关的 400 或 422 错误，则立刻停止重试尝试并直接回退调用无 `reasoning_effort` 参数的模型流；若检测到 429 速率限制，也会立即向上抛出错误以提升用户体验）
-  - `StreamRequest` / `StreamChunk` 类型定义
-```
-
-### AI 供应商集成文档 / 架构 / 前端统一客户端
-
-```text
-- **`src/lib/api.ts`** — 统一 API 客户端
-  - `api.settings` — 设置读写
-  - `api.sessions` — 会话 CRUD
-  - `api.chat` — 消息发送、停止、重试、继续
-  - `api.providers` — 获取内置提供商类型列表和模型列表
-  - `api.subscribeGeneration()` — SSE 订阅生成进度
-```
-
-### AI 供应商集成文档 / Google Gemini
-
-```text
-- **SDK**：`@google/genai`
-- **特殊功能**：
-  - Thinking Level 配置（minimal/low/medium/high）
-  - `includeThoughts: true` 确保思考过程可见
-  - 流式响应 + 思考过程分段（`part.thought` 标记）
-```
-
-### AI 供应商集成文档 / Nvidia NIM
-
-```text
-- **SDK**：OpenAI SDK
-- **Base URL**：`https://integrate.api.nvidia.com/v1`
-- **特殊功能**：支持 `extraBody` 透传（如 `chat_template_kwargs`）
-- **推理过程**：通过 `delta.reasoning` 或 `delta.reasoning_content` 字段检测
-- **推理强度配置**：不启用 `reasoning_effort` 级联回退机制或自动参数注入。在未显式设置 `reasoning_effort` 时，默认进行无 `reasoning_effort` 参数的请求；若用户显式配置了 `reasoning_effort`（例如 Kimi K2.6），则依然会直接遵循该显式配置发出请求。
-```
-
-### AI 供应商集成文档 / OpenAI Compatible
-
-```text
-- **SDK**：OpenAI SDK
-- **用途**：支持任意 OpenAI 兼容 API 端点
-- **配置方式**：在 Settings → Providers tab 中手动填写名称、Base URL、API Key、Env Key Prefix
-```
-
-### AI 供应商集成文档 / SSE 流式协议
-
-```text
-前端通过 `EventSource` 订阅 `/api/sessions/:id/generation`，服务端发送以下事件：
-
-event: delta
-data: {"content": "完整内容（含思考过程包装）"}
-
-event: done
-data: {"content": "最终内容"}
-
-event: error
-data: {"message": "错误信息"}
-
-event: stopped
-data: {}
-
-**标题生成**：当新建会话时，服务端同步生成标题（使用 `unicodeit` + `markdown-to-txt` 转换 Markdown 为 Plain Text）。标题生成后立即保存到 session.json。
-```
-
-### AI 供应商集成文档 / 环境变量汇总
-
-```text
-GEMINI_API_KEY=          # Google Gemini
-NVIDIA_API_KEY=          # Nvidia NIM
-OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
-
-> 所有 API Key 均在服务端读取（通过 dotenv），前端不暴露任何 Key。
-> API Key 解析优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量（如 `GEMINI_API_KEY`）> `OPENAI_API_KEY` 回退。
 ```
 
