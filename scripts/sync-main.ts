@@ -16,7 +16,7 @@ function copyRecursiveSync(src: string, dest: string) {
     fs.mkdirSync(dest, { recursive: true });
     fs.readdirSync(src).forEach((childItemName) => {
       // Avoid copying git index or external deployment areas
-      if (childItemName === 'node_modules') {
+      if (childItemName === 'node_modules' || childItemName === '.git') {
         return;
       }
       copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName));
@@ -133,7 +133,11 @@ async function main() {
   fs.unlinkSync(commitMsgFile);
 
   // Add origin remote
-  execSync(`git remote add origin "${remoteUrl}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
+  try {
+    execSync(`git remote add origin "${remoteUrl}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
+  } catch {
+    execSync(`git remote set-url origin "${remoteUrl}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
+  }
 
   // Force push to main
   console.log('Force pushing to main branch...');
