@@ -28,6 +28,8 @@ interface EditBlock {
   id: string;
   type: 'input' | 'thinking' | 'output';
   content: string;
+  originalMessageId?: string;
+  originalCreatedAt?: string;
 }
 
 /**
@@ -330,6 +332,8 @@ const parseMessagesToBlocks = (messages: ChatMessage[], settings: UserSettings):
         id: crypto.randomUUID(),
         type: 'input',
         content: msg.content,
+        originalMessageId: msg.id,
+        originalCreatedAt: msg.createdAt,
       });
     } else {
       const converted = convertNonStandardThinkingForDisplay(msg.content);
@@ -342,12 +346,21 @@ const parseMessagesToBlocks = (messages: ChatMessage[], settings: UserSettings):
       let lastIndex = 0;
       let match;
       while ((match = thinkRegex.exec(content)) !== null) {
-        const textBefore = content.substring(lastIndex, match.index).trim();
+        let textBefore = content.substring(lastIndex, match.index).trim();
+        textBefore = textBefore.replace(/<!--\s*block:thinking\s*-->/g, '').trim();
         if (textBefore) {
-          blocks.push({
-            id: crypto.randomUUID(),
-            type: 'output',
-            content: textBefore,
+          const outputSubBlocks = textBefore.split(/<!--\s*block:output\s*-->/);
+          outputSubBlocks.forEach(sub => {
+            const trimmed = sub.trim();
+            if (trimmed) {
+              blocks.push({
+                id: crypto.randomUUID(),
+                type: 'output',
+                content: trimmed,
+                originalMessageId: msg.id,
+                originalCreatedAt: msg.createdAt,
+              });
+            }
           });
         }
         let thought = match[1].trim();
@@ -359,16 +372,27 @@ const parseMessagesToBlocks = (messages: ChatMessage[], settings: UserSettings):
             id: crypto.randomUUID(),
             type: 'thinking',
             content: thought,
+            originalMessageId: msg.id,
+            originalCreatedAt: msg.createdAt,
           });
         }
         lastIndex = thinkRegex.lastIndex;
       }
-      const textAfter = content.substring(lastIndex).trim();
+      let textAfter = content.substring(lastIndex).trim();
+      textAfter = textAfter.replace(/<!--\s*block:thinking\s*-->/g, '').trim();
       if (textAfter) {
-        blocks.push({
-          id: crypto.randomUUID(),
-          type: 'output',
-          content: textAfter,
+        const outputSubBlocks = textAfter.split(/<!--\s*block:output\s*-->/);
+        outputSubBlocks.forEach(sub => {
+          const trimmed = sub.trim();
+          if (trimmed) {
+            blocks.push({
+              id: crypto.randomUUID(),
+              type: 'output',
+              content: trimmed,
+              originalMessageId: msg.id,
+              originalCreatedAt: msg.createdAt,
+            });
+          }
         });
       }
     }
@@ -383,18 +407,36 @@ const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
   const flushModelBlocks = () => {
     if (currentModelBlocks.length === 0) return;
     const contentParts: string[] = [];
+    let lastType: 'thinking' | 'output' | null = null;
+
     currentModelBlocks.forEach(b => {
       if (b.type === 'thinking') {
+        if (lastType === 'thinking') {
+          contentParts.push('<!-- block:thinking -->');
+        }
         contentParts.push(`<think>\n${b.content.trim()}\n</think>`);
+        lastType = 'thinking';
       } else if (b.type === 'output') {
+        if (lastType === 'output') {
+          contentParts.push('<!-- block:output -->');
+        }
         contentParts.push(b.content.trim());
+        lastType = 'output';
       }
     });
+
+    // Resolve model message's id and createdAt:
+    // If we have blocks with originalMessageId/originalCreatedAt, preserve them.
+    // Default to a new UUID and current timestamp.
+    const originalBlockWithMetadata = currentModelBlocks.find(b => b.originalMessageId);
+    const id = originalBlockWithMetadata?.originalMessageId || crypto.randomUUID();
+    const createdAt = originalBlockWithMetadata?.originalCreatedAt || new Date().toISOString();
+
     messages.push({
-      id: crypto.randomUUID(),
+      id,
       role: 'model',
       content: contentParts.join('\n\n').trim(),
-      createdAt: new Date().toISOString(),
+      createdAt,
     });
     currentModelBlocks = [];
   };
@@ -403,10 +445,10 @@ const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
     if (block.type === 'input') {
       flushModelBlocks();
       messages.push({
-        id: crypto.randomUUID(),
+        id: block.originalMessageId || crypto.randomUUID(),
         role: 'user',
         content: block.content,
-        createdAt: new Date().toISOString(),
+        createdAt: block.originalCreatedAt || new Date().toISOString(),
       });
     } else {
       currentModelBlocks.push(block);
@@ -424,6 +466,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const [viewingContent, setViewingContent] = useState<{ userContent?: string; modelContent: string } | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editBlocks, setEditBlocks] = useState<EditBlock[]>([]);
+  const [editModalError, setEditModalError] = useState<string | null>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<string>('');
@@ -897,9 +941,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           <button
             onClick={() => {
               setEditBlocks(parseMessagesToBlocks(session.messages, settings));
+              setEditModalError(null);
               setIsEditModalOpen(true);
             }}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer"
+            disabled={isGenerating || isStopping}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed rounded-md transition-colors cursor-pointer"
           >
             <Edit size={16} /><span>Edit</span>
           </button>
@@ -1231,107 +1277,141 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
               </button>
             </div>
 
+            {editModalError && (
+              <div className="mx-6 mt-4 p-3 bg-red-900/30 border border-red-700/50 rounded-lg flex items-center gap-3">
+                <AlertCircle size={18} className="text-red-400 shrink-0" />
+                <span className="text-sm text-red-200">{editModalError}</span>
+              </div>
+            )}
+
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {editBlocks.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">暂无内容，请添加块</div>
               ) : (
-                editBlocks.map((block, index) => (
-                  <div
-                    key={block.id}
-                    className={`p-4 rounded-lg border flex flex-col gap-3 transition-colors ${
-                      block.type === 'input'
-                        ? 'bg-blue-950/20 border-blue-900/40'
-                        : block.type === 'thinking'
-                        ? 'bg-amber-950/10 border-amber-900/30'
-                        : 'bg-gray-800/40 border-gray-700/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <select
-                          value={block.type}
-                          onChange={(e) => {
-                            const newType = e.target.value as 'input' | 'thinking' | 'output';
-                            setEditBlocks(prev =>
-                              prev.map(b => (b.id === block.id ? { ...b, type: newType } : b))
-                            );
-                          }}
-                          className={`px-2 py-1 rounded text-xs font-semibold focus:outline-none cursor-pointer ${
-                            block.type === 'input'
-                              ? 'bg-blue-600/20 text-blue-300'
-                              : block.type === 'thinking'
-                              ? 'bg-amber-600/20 text-amber-300'
-                              : 'bg-green-600/20 text-green-300'
-                          }`}
-                        >
-                          <option value="input" className="bg-gray-900 text-gray-100">输入</option>
-                          <option value="thinking" className="bg-gray-900 text-gray-100">思考</option>
-                          <option value="output" className="bg-gray-900 text-gray-100">输出</option>
-                        </select>
-                        <span className="text-xs text-gray-500 font-mono">Block #{index + 1}</span>
+                editBlocks.map((block, index) => {
+                  // Helper function to resolve block container class names
+                  const getBlockContainerClass = (type: 'input' | 'thinking' | 'output') => {
+                    if (type === 'input') {
+                      return 'bg-blue-950/20 border-blue-900/40';
+                    }
+                    if (type === 'thinking') {
+                      return 'bg-amber-950/10 border-amber-900/30';
+                    }
+                    return 'bg-gray-800/40 border-gray-700/50';
+                  };
+
+                  // Helper function to resolve select element class names
+                  const getSelectClass = (type: 'input' | 'thinking' | 'output') => {
+                    if (type === 'input') {
+                      return 'bg-blue-600/20 text-blue-300';
+                    }
+                    if (type === 'thinking') {
+                      return 'bg-amber-600/20 text-amber-300';
+                    }
+                    return 'bg-green-600/20 text-green-300';
+                  };
+
+                  // Helper function to resolve textarea placeholder
+                  const getTextareaPlaceholder = (type: 'input' | 'thinking' | 'output') => {
+                    if (type === 'input') {
+                      return '输入用户输入内容...';
+                    }
+                    if (type === 'thinking') {
+                      return '输入思考过程内容...';
+                    }
+                    return '输入模型输出内容...';
+                  };
+
+                  return (
+                    <div
+                      key={block.id}
+                      className={`p-4 rounded-lg border flex flex-col gap-3 transition-colors ${getBlockContainerClass(
+                        block.type
+                      )}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <select
+                            value={block.type}
+                            onChange={(e) => {
+                              const newType = e.target.value as 'input' | 'thinking' | 'output';
+                              setEditBlocks(prev =>
+                                prev.map(b => (b.id === block.id ? { ...b, type: newType } : b))
+                              );
+                            }}
+                            className={`px-2 py-1 rounded text-xs font-semibold focus:outline-none cursor-pointer ${getSelectClass(
+                              block.type
+                            )}`}
+                          >
+                            <option value="input" className="bg-gray-900 text-gray-100">输入</option>
+                            <option value="thinking" className="bg-gray-900 text-gray-100">思考</option>
+                            <option value="output" className="bg-gray-900 text-gray-100">输出</option>
+                          </select>
+                          <span className="text-xs text-gray-500 font-mono">Block #{index + 1}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              if (index === 0) return;
+                              setEditBlocks(prev => {
+                                const next = [...prev];
+                                const temp = next[index];
+                                next[index] = next[index - 1];
+                                next[index - 1] = temp;
+                                return next;
+                              });
+                            }}
+                            disabled={index === 0}
+                            className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-30 disabled:hover:bg-transparent rounded transition-colors"
+                            title="上移"
+                          >
+                            <ArrowUp size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (index === editBlocks.length - 1) return;
+                              setEditBlocks(prev => {
+                                const next = [...prev];
+                                const temp = next[index];
+                                next[index] = next[index + 1];
+                                next[index + 1] = temp;
+                                return next;
+                              });
+                            }}
+                            disabled={index === editBlocks.length - 1}
+                            className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-30 disabled:hover:bg-transparent rounded transition-colors"
+                            title="下移"
+                          >
+                            <ArrowDown size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditBlocks(prev => prev.filter(b => b.id !== block.id));
+                            }}
+                            className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-950/30 rounded transition-colors"
+                            title="删除"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => {
-                            if (index === 0) return;
-                            setEditBlocks(prev => {
-                              const next = [...prev];
-                              const temp = next[index];
-                              next[index] = next[index - 1];
-                              next[index - 1] = temp;
-                              return next;
-                            });
-                          }}
-                          disabled={index === 0}
-                          className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-30 disabled:hover:bg-transparent rounded transition-colors"
-                          title="上移"
-                        >
-                          <ArrowUp size={16} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (index === editBlocks.length - 1) return;
-                            setEditBlocks(prev => {
-                              const next = [...prev];
-                              const temp = next[index];
-                              next[index] = next[index + 1];
-                              next[index + 1] = temp;
-                              return next;
-                            });
-                          }}
-                          disabled={index === editBlocks.length - 1}
-                          className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-30 disabled:hover:bg-transparent rounded transition-colors"
-                          title="下移"
-                        >
-                          <ArrowDown size={16} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditBlocks(prev => prev.filter(b => b.id !== block.id));
-                          }}
-                          className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-950/30 rounded transition-colors"
-                          title="删除"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                      <textarea
+                        value={block.content}
+                        onChange={(e) => {
+                          const newContent = e.target.value;
+                          setEditBlocks(prev =>
+                            prev.map(b => (b.id === block.id ? { ...b, content: newContent } : b))
+                          );
+                        }}
+                        placeholder={getTextareaPlaceholder(block.type)}
+                        className="w-full bg-gray-950/60 border border-gray-800 focus:border-gray-700 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none resize-y min-h-[80px]"
+                        rows={3}
+                      />
                     </div>
-
-                    <textarea
-                      value={block.content}
-                      onChange={(e) => {
-                        const newContent = e.target.value;
-                        setEditBlocks(prev =>
-                          prev.map(b => (b.id === block.id ? { ...b, content: newContent } : b))
-                        );
-                      }}
-                      placeholder={`输入${block.type === 'input' ? '用户输入' : block.type === 'thinking' ? '思考过程' : '模型输出'}内容...`}
-                      className="w-full bg-gray-950/60 border border-gray-800 focus:border-gray-700 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none resize-y min-h-[80px]"
-                      rows={3}
-                    />
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
@@ -1378,21 +1458,34 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+                  disabled={isSavingEdit}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
                 >
                   取消
                 </button>
                 <button
                   onClick={async () => {
                     if (onUpdateSession) {
-                      const compiled = compileBlocksToMessages(editBlocks);
-                      await onUpdateSession(session.id, { messages: compiled });
+                      setIsSavingEdit(true);
+                      setEditModalError(null);
+                      try {
+                        const compiled = compileBlocksToMessages(editBlocks);
+                        await onUpdateSession(session.id, { messages: compiled });
+                        setIsEditModalOpen(false);
+                      } catch (err: any) {
+                        setEditModalError(err.message || '保存失败，请重试');
+                      } finally {
+                        setIsSavingEdit(false);
+                      }
+                    } else {
+                      setIsEditModalOpen(false);
                     }
-                    setIsEditModalOpen(false);
                   }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer"
+                  disabled={isSavingEdit}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-2"
                 >
-                  保存
+                  {isSavingEdit && <Loader2 size={16} className="animate-spin" />}
+                  <span>保存</span>
                 </button>
               </div>
             </div>

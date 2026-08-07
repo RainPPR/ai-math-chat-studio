@@ -312,6 +312,7 @@ export default function App() {
       setSessions(prev => prev.map(s => s.id === sessionId ? updated : s));
     } catch (e: any) {
       setError(e.message || "Failed to update session");
+      throw e;
     }
   };
 

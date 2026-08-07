@@ -24,7 +24,19 @@ export function createSessionRouter(gm: GenerationManager) {
       const updates: any = {};
       if (title !== undefined) updates.title = title;
       if (characterId !== undefined) updates.characterId = characterId;
-      if (messages !== undefined) updates.messages = messages;
+      if (messages !== undefined) {
+        if (!Array.isArray(messages) || messages.some((message: any) => (
+          !message ||
+          typeof message !== 'object' ||
+          typeof message.id !== 'string' ||
+          (message.role !== 'user' && message.role !== 'model') ||
+          typeof message.content !== 'string' ||
+          typeof message.createdAt !== 'string'
+        ))) {
+          return res.status(400).json({ error: 'Invalid messages' });
+        }
+        updates.messages = messages;
+      }
 
       const updated = await gm.updateSession(req.params.id, updates);
       if (!updated) {
