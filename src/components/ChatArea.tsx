@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatSession, UserSettings } from '../types';
+import { ChatSession, ChatMessage, UserSettings } from '../types';
 import { api } from '../lib/api';
-import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal, AlertCircle, X, ChevronDown, Bot, Sparkles, FileText, Eye, Printer } from 'lucide-react';
+import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal, AlertCircle, X, ChevronDown, Bot, Sparkles, FileText, Eye, Printer, Edit, Trash2, ArrowUp, ArrowDown, Plus } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface ChatAreaProps {
@@ -18,9 +18,16 @@ interface ChatAreaProps {
   onSelectModel?: (modelId: string) => void;
   onSelectCharacter?: (characterId: string) => void;
   onUpdateSessionCharacter?: (characterId: string) => void;
+  onUpdateSession?: (sessionId: string, updates: Partial<ChatSession>) => Promise<void>;
   error?: string | null;
   onClearError?: () => void;
   onError?: (message: string) => void;
+}
+
+interface EditBlock {
+  id: string;
+  type: 'input' | 'thinking' | 'output';
+  content: string;
 }
 
 /**
@@ -315,11 +322,108 @@ const clearDraft = (sessionId: string) => {
   } catch { /* ignore storage errors */ }
 };
 
-export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, isStopping, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel, onSelectCharacter, onUpdateSessionCharacter, error, onClearError, onError }) => {
+const parseMessagesToBlocks = (messages: ChatMessage[], settings: UserSettings): EditBlock[] => {
+  const blocks: EditBlock[] = [];
+  messages.forEach(msg => {
+    if (msg.role === 'user') {
+      blocks.push({
+        id: crypto.randomUUID(),
+        type: 'input',
+        content: msg.content,
+      });
+    } else {
+      const converted = convertNonStandardThinkingForDisplay(msg.content);
+      let content = msg.content;
+      if (converted.thoughts.length > 0) {
+        content = `<think>\n${converted.thoughts.join('\n')}\n</think>\n\n${converted.mainContent}`;
+      }
+
+      const thinkRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/g;
+      let lastIndex = 0;
+      let match;
+      while ((match = thinkRegex.exec(content)) !== null) {
+        const textBefore = content.substring(lastIndex, match.index).trim();
+        if (textBefore) {
+          blocks.push({
+            id: crypto.randomUUID(),
+            type: 'output',
+            content: textBefore,
+          });
+        }
+        let thought = match[1].trim();
+        if (settings.gemmaTrimThinkingSpaces) {
+          thought = thought.split('\n').map((l: string) => l.trimStart()).join('\n');
+        }
+        if (thought) {
+          blocks.push({
+            id: crypto.randomUUID(),
+            type: 'thinking',
+            content: thought,
+          });
+        }
+        lastIndex = thinkRegex.lastIndex;
+      }
+      const textAfter = content.substring(lastIndex).trim();
+      if (textAfter) {
+        blocks.push({
+          id: crypto.randomUUID(),
+          type: 'output',
+          content: textAfter,
+        });
+      }
+    }
+  });
+  return blocks;
+};
+
+const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
+  const messages: ChatMessage[] = [];
+  let currentModelBlocks: EditBlock[] = [];
+
+  const flushModelBlocks = () => {
+    if (currentModelBlocks.length === 0) return;
+    const contentParts: string[] = [];
+    currentModelBlocks.forEach(b => {
+      if (b.type === 'thinking') {
+        contentParts.push(`<think>\n${b.content.trim()}\n</think>`);
+      } else if (b.type === 'output') {
+        contentParts.push(b.content.trim());
+      }
+    });
+    messages.push({
+      id: crypto.randomUUID(),
+      role: 'model',
+      content: contentParts.join('\n\n').trim(),
+      createdAt: new Date().toISOString(),
+    });
+    currentModelBlocks = [];
+  };
+
+  blocks.forEach(block => {
+    if (block.type === 'input') {
+      flushModelBlocks();
+      messages.push({
+        id: crypto.randomUUID(),
+        role: 'user',
+        content: block.content,
+        createdAt: new Date().toISOString(),
+      });
+    } else {
+      currentModelBlocks.push(block);
+    }
+  });
+  flushModelBlocks();
+
+  return messages;
+};
+
+export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, isStopping, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel, onSelectCharacter, onUpdateSessionCharacter, onUpdateSession, error, onClearError, onError }) => {
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
   const [viewingContent, setViewingContent] = useState<{ userContent?: string; modelContent: string } | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editBlocks, setEditBlocks] = useState<EditBlock[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<string>('');
@@ -790,6 +894,15 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setEditBlocks(parseMessagesToBlocks(session.messages, settings));
+              setIsEditModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer"
+          >
+            <Edit size={16} /><span>Edit</span>
+          </button>
           <button onClick={handlePrintAll} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer">
             <Printer size={16} /><span>Print</span>
           </button>
@@ -1096,6 +1209,191 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-green-400 mb-4 select-none">回答 (Answer)</h4>
                 )}
                 <MarkdownRenderer content={viewingContent.modelContent} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-200 flex items-center gap-2">
+                <Edit size={18} className="text-blue-400" />
+                <span>编辑对话</span>
+              </h3>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {editBlocks.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">暂无内容，请添加块</div>
+              ) : (
+                editBlocks.map((block, index) => (
+                  <div
+                    key={block.id}
+                    className={`p-4 rounded-lg border flex flex-col gap-3 transition-colors ${
+                      block.type === 'input'
+                        ? 'bg-blue-950/20 border-blue-900/40'
+                        : block.type === 'thinking'
+                        ? 'bg-amber-950/10 border-amber-900/30'
+                        : 'bg-gray-800/40 border-gray-700/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <select
+                          value={block.type}
+                          onChange={(e) => {
+                            const newType = e.target.value as 'input' | 'thinking' | 'output';
+                            setEditBlocks(prev =>
+                              prev.map(b => (b.id === block.id ? { ...b, type: newType } : b))
+                            );
+                          }}
+                          className={`px-2 py-1 rounded text-xs font-semibold focus:outline-none cursor-pointer ${
+                            block.type === 'input'
+                              ? 'bg-blue-600/20 text-blue-300'
+                              : block.type === 'thinking'
+                              ? 'bg-amber-600/20 text-amber-300'
+                              : 'bg-green-600/20 text-green-300'
+                          }`}
+                        >
+                          <option value="input" className="bg-gray-900 text-gray-100">输入</option>
+                          <option value="thinking" className="bg-gray-900 text-gray-100">思考</option>
+                          <option value="output" className="bg-gray-900 text-gray-100">输出</option>
+                        </select>
+                        <span className="text-xs text-gray-500 font-mono">Block #{index + 1}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            if (index === 0) return;
+                            setEditBlocks(prev => {
+                              const next = [...prev];
+                              const temp = next[index];
+                              next[index] = next[index - 1];
+                              next[index - 1] = temp;
+                              return next;
+                            });
+                          }}
+                          disabled={index === 0}
+                          className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-30 disabled:hover:bg-transparent rounded transition-colors"
+                          title="上移"
+                        >
+                          <ArrowUp size={16} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (index === editBlocks.length - 1) return;
+                            setEditBlocks(prev => {
+                              const next = [...prev];
+                              const temp = next[index];
+                              next[index] = next[index + 1];
+                              next[index + 1] = temp;
+                              return next;
+                            });
+                          }}
+                          disabled={index === editBlocks.length - 1}
+                          className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-30 disabled:hover:bg-transparent rounded transition-colors"
+                          title="下移"
+                        >
+                          <ArrowDown size={16} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditBlocks(prev => prev.filter(b => b.id !== block.id));
+                          }}
+                          className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-950/30 rounded transition-colors"
+                          title="删除"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <textarea
+                      value={block.content}
+                      onChange={(e) => {
+                        const newContent = e.target.value;
+                        setEditBlocks(prev =>
+                          prev.map(b => (b.id === block.id ? { ...b, content: newContent } : b))
+                        );
+                      }}
+                      placeholder={`输入${block.type === 'input' ? '用户输入' : block.type === 'thinking' ? '思考过程' : '模型输出'}内容...`}
+                      className="w-full bg-gray-950/60 border border-gray-800 focus:border-gray-700 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none resize-y min-h-[80px]"
+                      rows={3}
+                    />
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-4 border-t border-gray-800 bg-gray-900/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => {
+                    setEditBlocks(prev => [
+                      ...prev,
+                      { id: crypto.randomUUID(), type: 'input', content: '' },
+                    ]);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                >
+                  <Plus size={14} />
+                  <span>添加输入</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setEditBlocks(prev => [
+                      ...prev,
+                      { id: crypto.randomUUID(), type: 'thinking', content: '' },
+                    ]);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600/10 hover:bg-amber-600/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                >
+                  <Plus size={14} />
+                  <span>添加思考</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setEditBlocks(prev => [
+                      ...prev,
+                      { id: crypto.randomUUID(), type: 'output', content: '' },
+                    ]);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600/10 hover:bg-green-600/20 text-green-300 border border-green-500/30 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                >
+                  <Plus size={14} />
+                  <span>添加输出</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={async () => {
+                    if (onUpdateSession) {
+                      const compiled = compileBlocksToMessages(editBlocks);
+                      await onUpdateSession(session.id, { messages: compiled });
+                    }
+                    setIsEditModalOpen(false);
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer"
+                >
+                  保存
+                </button>
               </div>
             </div>
           </div>

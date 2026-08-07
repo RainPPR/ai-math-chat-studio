@@ -306,14 +306,18 @@ export default function App() {
     await settingsSaveQueue;
   };
 
+  const handleUpdateSession = async (sessionId: string, updates: Partial<ChatSession>) => {
+    try {
+      const updated = await api.sessions.update(sessionId, updates);
+      setSessions(prev => prev.map(s => s.id === sessionId ? updated : s));
+    } catch (e: any) {
+      setError(e.message || "Failed to update session");
+    }
+  };
+
   const handleUpdateSessionCharacter = async (characterId: string) => {
     if (!currentSessionId) return;
-    try {
-      const updated = await api.sessions.update(currentSessionId, { characterId });
-      setSessions(prev => prev.map(s => s.id === currentSessionId ? updated : s));
-    } catch (e: any) {
-      setError(e.message || "Failed to update session character");
-    }
+    await handleUpdateSession(currentSessionId, { characterId });
   };
 
   const handleSelectCharacter = async (characterId: string) => {
@@ -399,6 +403,7 @@ export default function App() {
           onSelectModel={handleSelectModel}
           onSelectCharacter={handleSelectCharacter}
           onUpdateSessionCharacter={handleUpdateSessionCharacter}
+          onUpdateSession={handleUpdateSession}
           error={error}
           onClearError={clearError}
           onError={setError}

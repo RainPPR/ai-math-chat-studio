@@ -20,10 +20,11 @@ export function createSessionRouter(gm: GenerationManager) {
 
   router.patch('/api/sessions/:id', async (req, res) => {
     try {
-      const { title, characterId } = req.body || {};
+      const { title, characterId, messages } = req.body || {};
       const updates: any = {};
       if (title !== undefined) updates.title = title;
       if (characterId !== undefined) updates.characterId = characterId;
+      if (messages !== undefined) updates.messages = messages;
 
       const updated = await gm.updateSession(req.params.id, updates);
       if (!updated) {
