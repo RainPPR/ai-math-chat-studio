@@ -28,64 +28,7 @@ function copyRecursiveSync(src: string, dest: string) {
 }
 
 async function main() {
-  console.log('Starting sync-main process...');
-
-  // Get current workspace remote url
-  const remoteUrl = execSync('git remote get-url origin', { encoding: 'utf-8' }).trim();
-  console.log('Current remote URL:', remoteUrl);
-
-  // Retrieve git extraheaders or auth config from workspace before resetting
-  const authConfigs: { key: string; value: string }[] = [];
-  try {
-    const rawOutput = execSync('git config --local --get-regexp "^http\\."', { encoding: 'utf-8' }).trim();
-    if (rawOutput) {
-      const lines = rawOutput.split('\n');
-      for (const line of lines) {
-        const spaceIdx = line.indexOf(' ');
-        if (spaceIdx > 0) {
-          const key = line.substring(0, spaceIdx).trim();
-          const value = line.substring(spaceIdx + 1).trim();
-          if (key && value) {
-            authConfigs.push({ key, value });
-          }
-        }
-      }
-    }
-  } catch {
-    console.log('No local http config found via get-regexp.');
-  }
-
-  if (authConfigs.length === 0) {
-    try {
-      const rawOutput = execSync('git config --global --get-regexp "^http\\."', { encoding: 'utf-8' }).trim();
-      if (rawOutput) {
-        const lines = rawOutput.split('\n');
-        for (const line of lines) {
-          const spaceIdx = line.indexOf(' ');
-          if (spaceIdx > 0) {
-            const key = line.substring(0, spaceIdx).trim();
-            const value = line.substring(spaceIdx + 1).trim();
-            if (key && value) {
-              authConfigs.push({ key, value });
-            }
-          }
-        }
-      }
-    } catch {
-      console.log('No global http config found via get-regexp.');
-    }
-  }
-
-  // Construct target remote URL with GITHUB_TOKEN or GH_TOKEN if available
-  let finalRemoteUrl = remoteUrl;
-  const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-  if (githubToken) {
-    if (!finalRemoteUrl.includes('@')) {
-      if (finalRemoteUrl.startsWith('https://')) {
-        finalRemoteUrl = finalRemoteUrl.replace('https://', `https://x-access-token:${githubToken}@`);
-      }
-    }
-  }
+  console.log('Starting sync-main process using git worktree...');
 
   // Determine the commit message
   let commitMessage = '';
@@ -104,11 +47,52 @@ async function main() {
   }
   console.log('Using commit message:', commitMessage);
 
-  // Clean and recreate deployment directory
+  // Clean up any existing stale worktree registrations cleanly
+  try {
+    execSync(`git worktree remove -f "${DEPLOY_DIR}"`, { stdio: 'ignore' });
+  } catch {
+    // ignore
+  }
+  try {
+    execSync('git worktree prune', { stdio: 'ignore' });
+  } catch {
+    // ignore
+  }
+
+  // Double check directory cleanup
   if (fs.existsSync(DEPLOY_DIR)) {
     fs.rmSync(DEPLOY_DIR, { recursive: true, force: true });
   }
-  fs.mkdirSync(DEPLOY_DIR, { recursive: true });
+
+  let hasRemoteBranch = false;
+  try {
+    execSync('git fetch origin main', { stdio: 'ignore' });
+    hasRemoteBranch = true;
+  } catch {
+    console.log('No remote main branch found.');
+  }
+
+  if (hasRemoteBranch) {
+    console.log('Found remote branch main, associating worktree...');
+    execSync(`git worktree add "${DEPLOY_DIR}" FETCH_HEAD`, { stdio: 'inherit' });
+    execSync('git checkout -B main', { cwd: DEPLOY_DIR, stdio: 'inherit' });
+  } else {
+    console.log('No remote branch main found, creating fresh orphan branch...');
+    execSync(`git worktree add "${DEPLOY_DIR}" --detach`, { stdio: 'inherit' });
+    execSync('git checkout --orphan main', { cwd: DEPLOY_DIR, stdio: 'inherit' });
+  }
+
+  // Configure author to RainPPR <PPR2125773894@163.com>
+  execSync('git config user.name "RainPPR"', { cwd: DEPLOY_DIR, stdio: 'inherit' });
+  execSync('git config user.email "PPR2125773894@163.com"', { cwd: DEPLOY_DIR, stdio: 'inherit' });
+
+  // Clear old code in worktree
+  console.log('Cleaning old files in worktree...');
+  try {
+    execSync('git rm -rfq .', { cwd: DEPLOY_DIR, stdio: 'ignore' });
+  } catch {
+    // ignore
+  }
 
   // Copy files
   console.log('Copying files from workspace to deploy directory...');
@@ -150,25 +134,6 @@ async function main() {
     fs.unlinkSync(appendPath);
   }
 
-  // Initialize new git repository in DEPLOY_DIR
-  console.log('Initializing new Git repository...');
-  execSync('git init', { cwd: DEPLOY_DIR, stdio: 'inherit' });
-
-  // Restore all http / auth configs to the new git repo configuration
-  for (const item of authConfigs) {
-    try {
-      const escapedValue = item.value.replace(/"/g, '\\"');
-      execSync(`git config --local "${item.key}" "${escapedValue}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
-      console.log(`Restored git config: ${item.key}`);
-    } catch (err) {
-      console.warn(`Failed to restore git config: ${item.key}`, err);
-    }
-  }
-
-  // Configure author to RainPPR <PPR2125773894@163.com> and git bot user info
-  execSync('git config user.name "RainPPR"', { cwd: DEPLOY_DIR, stdio: 'inherit' });
-  execSync('git config user.email "PPR2125773894@163.com"', { cwd: DEPLOY_DIR, stdio: 'inherit' });
-
   // Track all files
   execSync('git add -A', { cwd: DEPLOY_DIR, stdio: 'inherit' });
 
@@ -182,16 +147,21 @@ async function main() {
   execSync('git commit -F .git-commit-msg', { cwd: DEPLOY_DIR, stdio: 'inherit' });
   fs.unlinkSync(commitMsgFile);
 
-  // Add origin remote
-  try {
-    execSync(`git remote add origin "${finalRemoteUrl}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
-  } catch {
-    execSync(`git remote set-url origin "${finalRemoteUrl}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
-  }
-
   // Force push to main
   console.log('Force pushing to main branch...');
-  execSync('git push -f origin HEAD:main', { cwd: DEPLOY_DIR, stdio: 'inherit' });
+  execSync('git push -f origin main', { cwd: DEPLOY_DIR, stdio: 'inherit' });
+
+  // Clean up the worktree cleanly before finishing
+  try {
+    execSync(`git worktree remove -f "${DEPLOY_DIR}"`, { stdio: 'ignore' });
+  } catch {
+    // ignore
+  }
+  try {
+    execSync('git worktree prune', { stdio: 'ignore' });
+  } catch {
+    // ignore
+  }
 
   console.log('Sync to main completed successfully!');
 }
