@@ -26,7 +26,7 @@ function copyRecursiveSync(src: string, dest: string) {
       ) {
         return;
       }
-      if (childItemName === 'node_modules' || childItemName === 'context7-dist') {
+      if (childItemName === 'node_modules' || childItemName === 'hint') {
         return;
       }
       copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName));
