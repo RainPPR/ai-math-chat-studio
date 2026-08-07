@@ -46,14 +46,9 @@ async function main() {
   // Retrieve git extraheaders or auth config from workspace before resetting
   let extraHeader = '';
   try {
-    extraHeader = execSync('git config --local http.https://github.com/.extraheader', { encoding: 'utf-8' }).trim();
+    extraHeader = execSync('git config --local --get http.https://github.com/.extraheader', { encoding: 'utf-8' }).trim();
   } catch {
-    // If not set, check general extraheader config
-    try {
-      extraHeader = execSync('git config --local --get-regexp "http\\..*\\.extraheader"', { encoding: 'utf-8' }).trim();
-    } catch {
-      console.log('No git extraheader found in workspace configuration.');
-    }
+    console.log('No git extraheader found via exact path.');
   }
 
   // Determine the commit message
@@ -125,19 +120,9 @@ async function main() {
 
   // Restore the extraheader credential to the new git repo configuration
   if (extraHeader) {
-    if (extraHeader.includes(' ')) {
-      // It's a key-value pair output from get-regexp
-      const match = extraHeader.match(/^(\S+)\s+(.+)$/);
-      if (match) {
-        const key = match[1];
-        const val = match[2];
-        execSync(`git config --local "${key}" "${val}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
-        console.log(`Restored git configuration: ${key}`);
-      }
-    } else {
-      execSync(`git config --local http.https://github.com/.extraheader "${extraHeader}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
-      console.log('Restored http.https://github.com/.extraheader');
-    }
+    // Write extraheader cleanly and quote properly to avoid git parsing errors
+    execSync(`git config --local http.https://github.com/.extraheader "${extraHeader}"`, { cwd: DEPLOY_DIR, stdio: 'inherit' });
+    console.log('Restored http.https://github.com/.extraheader');
   }
 
   // Configure author to RainPPR <PPR2125773894@163.com> and git bot user info

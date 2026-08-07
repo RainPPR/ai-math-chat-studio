@@ -8,11 +8,19 @@ const DIST_DIR = path.resolve('context7-dist');
 async function main() {
   console.log('Starting sync-context7 process...');
 
-  // Configure Git bot identity
-  execSync('git config --global user.name "github-actions[bot]"');
-  execSync('git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"');
+  // Clean up any existing stale worktree registrations cleanly
+  try {
+    execSync(`git worktree remove -f "${DEPLOY_DIR}"`, { stdio: 'ignore' });
+  } catch {
+    // ignore
+  }
+  try {
+    execSync('git worktree prune', { stdio: 'ignore' });
+  } catch {
+    // ignore
+  }
 
-  // Fetch or check out context7 branch via worktree
+  // Double check directory cleanup
   if (fs.existsSync(DEPLOY_DIR)) {
     fs.rmSync(DEPLOY_DIR, { recursive: true, force: true });
   }
@@ -34,6 +42,10 @@ async function main() {
     execSync(`git worktree add "${DEPLOY_DIR}" --detach`, { stdio: 'inherit' });
     execSync('git checkout --orphan context7', { cwd: DEPLOY_DIR, stdio: 'inherit' });
   }
+
+  // Configure Git bot identity locally in the worktree repo, not globally
+  execSync('git config --local user.name "github-actions[bot]"', { cwd: DEPLOY_DIR, stdio: 'inherit' });
+  execSync('git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"', { cwd: DEPLOY_DIR, stdio: 'inherit' });
 
   // Clear old code
   console.log('Cleaning old files...');
@@ -63,7 +75,7 @@ async function main() {
 
   let hasChanges = false;
   try {
-    const status = execSync('git diff --cached --quiet', { cwd: DEPLOY_DIR });
+    execSync('git diff --cached --quiet', { cwd: DEPLOY_DIR });
     hasChanges = false;
   } catch {
     hasChanges = true;
@@ -76,6 +88,18 @@ async function main() {
     console.log('Deployment to context7 successful!');
   } else {
     console.log('No changes detected, skipping commit for context7.');
+  }
+
+  // Clean up the worktree cleanly before finishing
+  try {
+    execSync(`git worktree remove -f "${DEPLOY_DIR}"`, { stdio: 'ignore' });
+  } catch {
+    // ignore
+  }
+  try {
+    execSync('git worktree prune', { stdio: 'ignore' });
+  } catch {
+    // ignore
   }
 }
 

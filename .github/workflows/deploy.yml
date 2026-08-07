@@ -6,6 +6,10 @@ on:
       - desktop
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -15,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: desktop
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
@@ -43,6 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: desktop
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
