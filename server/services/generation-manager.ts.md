@@ -508,14 +508,7 @@ Requirements:
     let firstTokenReceived = false;
 
     const buildSystemPrompt = () => {
-      // For Google, we must provide a system prompt.
-      // We append MATH_INSTRUCTIONS only if it's not already present in the prompt to ensure LaTeX rendering rules are clear.
-      if (model.providerType === 'google') {
-        const hasMath = systemPrompt && (systemPrompt.includes('KaTeX') || systemPrompt.includes('LaTeX'));
-        if (hasMath) return systemPrompt;
-        return systemPrompt ? systemPrompt + '\n\n' + MATH_INSTRUCTIONS : MATH_INSTRUCTIONS;
-      }
-      return systemPrompt;
+      return systemPrompt + '\n\n' + MATH_INSTRUCTIONS;
     };
 
     const reqMessages = messages.map((m: any) => ({

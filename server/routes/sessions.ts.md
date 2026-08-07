@@ -21,10 +21,30 @@ export function createSessionRouter(gm: GenerationManager) {
 
   router.patch('/api/sessions/:id', async (req, res) => {
     try {
-      const { title, characterId } = req.body || {};
+      const { title, characterId, messages } = req.body || {};
       const updates: any = {};
       if (title !== undefined) updates.title = title;
       if (characterId !== undefined) updates.characterId = characterId;
+      if (messages !== undefined) {
+        if (!Array.isArray(messages) || messages.some((message: any) => (
+          !message ||
+          typeof message !== 'object' ||
+          typeof message.id !== 'string' ||
+          (message.role !== 'user' && message.role !== 'model') ||
+          typeof message.content !== 'string' ||
+          typeof message.createdAt !== 'string' ||
+          !Number.isFinite(Date.parse(message.createdAt))
+        ))) {
+          return res.status(400).json({ error: 'Invalid messages' });
+        }
+        // Verify unique IDs
+        const ids = messages.map((m: any) => m.id);
+        const uniqueIds = new Set(ids);
+        if (ids.length !== uniqueIds.size) {
+          return res.status(400).json({ error: 'Duplicate message IDs' });
+        }
+        updates.messages = messages;
+      }
 
       const updated = await gm.updateSession(req.params.id, updates);
       if (!updated) {

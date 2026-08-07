@@ -1,7 +1,7 @@
 ```typescript
 import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
-import { resolveBaseURL, resolveApiKey, MATH_INSTRUCTIONS } from './config';
+import { resolveBaseURL, resolveApiKey } from './config';
 
 export interface StreamRequest {
   model: string;
@@ -58,7 +58,7 @@ async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; a
   }));
 
   const config: any = {};
-  config.systemInstruction = req.systemPrompt || MATH_INSTRUCTIONS;
+  config.systemInstruction = req.systemPrompt;
 
   if (req.thinkingLevel && req.thinkingLevel !== 'none') {
     const valid = ['minimal', 'low', 'medium', 'high'];
