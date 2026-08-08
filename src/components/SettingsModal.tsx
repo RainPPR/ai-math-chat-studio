@@ -1,8 +1,8 @@
 import JSZip from "jszip";
 import React, { useState, useEffect, useRef } from 'react';
-import { UserSettings, ProviderInstance, ModelInstance, Character, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS } from '../types';
+import { UserSettings, ProviderInstance, ModelInstance, Character, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
 import { api } from '../lib/api';
-import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download } from 'lucide-react';
+import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
 
 
 function formatClaudeDate(dateStr: string) {
@@ -17,10 +17,12 @@ function formatClaudeDate(dateStr: string) {
 interface SettingsModalProps {
   settings: UserSettings;
   onSave: (settings: UserSettings) => void;
+  templates: Template[];
+  onSaveTemplates: (templates: Template[]) => Promise<void>;
   onClose: () => void;
 }
 
-type Tab = 'general' | 'providers' | 'models' | 'characters';
+type Tab = 'general' | 'providers' | 'models' | 'characters' | 'templates';
 
 // ===== Active Model Dropdown Component =====
 
@@ -278,8 +280,9 @@ const getDefaultBaseURL = (type: string): string | undefined => {
   }
 };
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, onClose }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, templates, onSaveTemplates, onClose }) => {
   const [local, setLocal] = useState<UserSettings>({ ...DEFAULT_SETTINGS, ...settings });
+  const [localTemplates, setLocalTemplates] = useState<Template[]>(templates || []);
   const [tab, setTab] = useState<Tab>('general');
   const [builtInTypes, setBuiltInTypes] = useState<{ id: string; name: string }[]>([]);
 
@@ -294,6 +297,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const [cleanResult, setCleanResult] = useState<{ cleaned: number; total: number } | null>(null);
 
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
 
   const [isChunkModalOpen, setIsChunkModalOpen] = useState(false);
   const [selectedChunk, setSelectedChunk] = useState<string>('all');
@@ -596,6 +600,53 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     }));
   };
 
+  // ----- Template CRUD -----
+  const addTemplate = () => {
+    setEditingTemplate({
+      id: crypto.randomUUID(),
+      name: '',
+      content: '',
+    });
+  };
+
+  const saveTemplate = () => {
+    if (!editingTemplate?.name.trim()) return;
+    setLocalTemplates(prev => {
+      const list = [...prev];
+      const idx = list.findIndex(t => t.id === editingTemplate.id);
+      if (idx >= 0) list[idx] = editingTemplate;
+      else list.push(editingTemplate);
+      return list;
+    });
+    setEditingTemplate(null);
+  };
+
+  const deleteTemplate = (id: string) => {
+    setLocalTemplates(prev => prev.filter(t => t.id !== id));
+  };
+
+  const moveTemplateUp = (index: number) => {
+    if (index === 0) return;
+    setLocalTemplates(prev => {
+      const next = [...prev];
+      const temp = next[index];
+      next[index] = next[index - 1];
+      next[index - 1] = temp;
+      return next;
+    });
+  };
+
+  const moveTemplateDown = (index: number) => {
+    if (index === localTemplates.length - 1) return;
+    setLocalTemplates(prev => {
+      const next = [...prev];
+      const temp = next[index];
+      next[index] = next[index + 1];
+      next[index + 1] = temp;
+      return next;
+    });
+  };
+
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -606,9 +657,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         </div>
 
         <div className="flex border-b border-gray-800 shrink-0">
-          {(['general', 'providers', 'models', 'characters'] as Tab[]).map(t => (
+          {(['general', 'providers', 'models', 'characters', 'templates'] as Tab[]).map(t => (
             <button key={t} onClick={() => { setTab(t); }} className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === t ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>
-              {t === 'general' ? 'General' : t === 'providers' ? 'Providers' : t === 'models' ? 'Models' : 'Characters'}
+              {t === 'general' ? 'General' : t === 'providers' ? 'Providers' : t === 'models' ? 'Models' : t === 'characters' ? 'Characters' : 'Templates'}
             </button>
           ))}
         </div>
@@ -974,11 +1025,78 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
               )}
             </>
           )}
+
+          {/* Templates Tab */}
+          {tab === 'templates' && (
+            <>
+              {editingTemplate ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300">Template Name</label>
+                    <input
+                      value={editingTemplate.name}
+                      onChange={e => { setEditingTemplate({ ...editingTemplate, name: e.target.value }); }}
+                      placeholder="e.g. 三角形基础"
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300">Content</label>
+                    <textarea
+                      value={editingTemplate.content}
+                      onChange={e => { setEditingTemplate({ ...editingTemplate, content: e.target.value }); }}
+                      placeholder="Template content..."
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 h-40 resize-none font-mono text-sm"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button onClick={() => { setEditingTemplate(null); }} className="px-4 py-2 text-gray-300 hover:text-white transition-colors">Cancel</button>
+                    <button onClick={saveTemplate} disabled={!editingTemplate.name.trim()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg transition-colors flex items-center gap-2"><Save size={14} /> Save Template</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {localTemplates.length === 0 && <p className="text-xs text-gray-500">No templates configured.</p>}
+                  {localTemplates.map((t, idx) => (
+                    <div key={t.id} className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-white truncate">{t.name}</div>
+                        <div className="text-xs text-gray-400 line-clamp-2 mt-1 font-mono">{t.content}</div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-3">
+                        <button
+                          onClick={() => moveTemplateUp(idx)}
+                          disabled={idx === 0}
+                          className="p-1 text-gray-400 hover:text-white disabled:opacity-30 rounded transition-colors"
+                          title="Move Up"
+                        >
+                          <ArrowUp size={14} />
+                        </button>
+                        <button
+                          onClick={() => moveTemplateDown(idx)}
+                          disabled={idx === localTemplates.length - 1}
+                          className="p-1 text-gray-400 hover:text-white disabled:opacity-30 rounded transition-colors"
+                          title="Move Down"
+                        >
+                          <ArrowDown size={14} />
+                        </button>
+                        <button onClick={() => { setEditingTemplate({ ...t }); }} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
+                        <button onClick={() => { deleteTemplate(t.id); }} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={addTemplate} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-4 transition-colors">
+                    <Plus size={18} /> Add Template
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         <div className="p-6 border-t border-gray-800 bg-gray-950 flex justify-end gap-3 shrink-0">
           <button onClick={onClose} className="px-5 py-2.5 text-gray-300 hover:text-white font-medium transition-colors">Cancel</button>
-          <button onClick={() => { onSave(local); }} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"><Save size={16} /> Save</button>
+          <button onClick={async () => { onSave(local); await onSaveTemplates(localTemplates); }} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"><Save size={16} /> Save</button>
         </div>
       </div>
       {cleaning && (
