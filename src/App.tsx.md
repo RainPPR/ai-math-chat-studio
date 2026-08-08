@@ -1,7 +1,7 @@
 ```typescript
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './lib/api';
-import { ChatSession, ChatMessage, UserSettings, DEFAULT_SETTINGS, StarColor } from './types';
+import { ChatSession, ChatMessage, UserSettings, DEFAULT_SETTINGS, StarColor, Template } from './types';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
@@ -13,6 +13,7 @@ export default function App() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(256);
@@ -24,13 +25,15 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
-      const [loadedSessions, loadedSettings, { runningSessionIds }] = await Promise.all([
+      const [loadedSessions, loadedSettings, loadedTemplates, { runningSessionIds }] = await Promise.all([
         api.sessions.list(),
         api.settings.get(),
+        api.templates.get().catch(() => []),
         api.chat.getRunningSessions().catch(() => ({ runningSessionIds: [] as string[] })),
       ]);
       setSessions(loadedSessions);
       if (loadedSessions.length > 0) setCurrentSessionId(loadedSessions[0].id);
+      setTemplates(loadedTemplates);
       if (loadedSettings) {
         const merged = { ...DEFAULT_SETTINGS, ...loadedSettings };
         // Detect old format (modelPool instead of providers/models)
@@ -268,6 +271,17 @@ export default function App() {
     await settingsSaveQueue;
   };
 
+  const handleSaveTemplates = async (newTemplates: Template[]) => {
+    const previousTemplates = templates;
+    setTemplates(newTemplates);
+    try {
+      await api.templates.save(newTemplates);
+    } catch (e: any) {
+      setTemplates(previousTemplates);
+      setError(e.message || 'Failed to save templates');
+    }
+  };
+
   const handleSelectModel = async (modelId: string) => {
     const previousSettings = { ...settings };
     const newSettings = { ...settings, activeModelId: modelId };
@@ -402,6 +416,7 @@ export default function App() {
           isGenerating={currentSessionId ? generatingSessions.has(currentSessionId) : false}
           isStopping={currentSessionId ? stoppingSessions.has(currentSessionId) : false}
           settings={settings}
+          templates={templates}
           onStop={handleStop}
           onRetry={handleRetry}
           onContinue={handleContinue}
@@ -439,6 +454,8 @@ export default function App() {
         <SettingsModal
           settings={settings}
           onSave={handleSaveSettings}
+          templates={templates}
+          onSaveTemplates={handleSaveTemplates}
           onClose={() => { setIsSettingsOpen(false); }}
         />
       )}

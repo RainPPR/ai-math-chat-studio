@@ -8,6 +8,7 @@ import { createSettingsRouter } from './routes/settings';
 import { createSessionRouter } from './routes/sessions';
 import { createChatRouter } from './routes/chat';
 import { createModelsRouter } from './routes/models';
+import { createTemplatesRouter } from './routes/templates';
 import { initLogger } from './services/logger';
 
 interface RemoteModelDef {
@@ -171,6 +172,7 @@ export async function startApp() {
 
   const SESSIONS_DIR = path.join(DATA_DIR, 'sessions');
   const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
+  const TEMPLATES_FILE = path.join(DATA_DIR, 'templates.json');
 
   if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
   if (!existsSync(SESSIONS_DIR)) mkdirSync(SESSIONS_DIR, { recursive: true });
@@ -185,6 +187,7 @@ export async function startApp() {
   app.use(createSessionRouter(gm));
   app.use(createChatRouter(gm, SETTINGS_FILE));
   app.use(createModelsRouter());
+  app.use(createTemplatesRouter(TEMPLATES_FILE));
 
   if (process.env.NODE_ENV !== 'production') {
     const { createViteServer } = await import('./vite-helper');

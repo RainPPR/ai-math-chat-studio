@@ -199,7 +199,7 @@ graph TD
 *   **SSE 订阅**: 这是处理实时响应的核心。它通过 `api.subscribeGeneration` 订阅后端 SSE 端点，并根据接收到的事件 (`delta`, `done`, `error`, `stopped`) 实时更新 `streamingContent` 状态。
 *   **输入处理**: 管理用户输入框，支持 `Ctrl+Enter` 发送和 `Shift+Enter` 换行。
 *   **交互操作**: 提供停止生成、导出聊天记录等功能。支持手动修改当前会话绑定的 Character（点击标题下方的角色名称）。
-*   **快捷选择栏**: 在输入框上方提供浮动栏，允许用户快速切换当前活跃模型和角色。切换后即时保存到 `settings.json`。
+*   **快捷选择栏**: 在输入框上方提供浮动栏，允许用户快速切换当前活跃模型和角色。切换后即时保存到 `settings.json`。此外，提供模板选择器按钮，可拉取并显示通过 `SettingsModal` 自定义的全部自动填入模板，点击任意模板可将其内容追加到当前输入框中。
 ```
 
 ### 组件结构文档 / `ChatArea.tsx` — 聊天主区域 / `MessageItem` (子组件)
@@ -267,6 +267,12 @@ graph TD
 *   **系统提示词迁移**: 原有 `systemPrompt` 字段被迁移为默认角色。后端生成时优先使用 `activeCharacterId` 对应的角色的 `systemPrompt`，若不存在则回退到 `systemPrompt` 字段。
 ```
 
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Templates Tab
+
+```text
+*   **模板管理**: 允许用户通过图形界面添加、编辑、删除、上下移动（Reorder）聊天自动填入模板（如三角形基础、锐角三角形等数学题目常用句式）。编辑内容支持多行文本。保存后会通过 `/api/templates` 持久化到服务器的 `data/templates.json` 中。
+```
+
 ### 数据模型与存储
 
 ```text
@@ -326,6 +332,18 @@ interface Character {
 }
 
 > **设计意图**：角色是系统提示词的容器。用户可在设置中创建多个角色（如"数学导师"、"代码助手"），每个角色携带不同的 `systemPrompt`。发送消息时，后端根据 `activeCharacterId` 查找对应角色的 `systemPrompt` 注入请求。
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / Template（自动填入模板）
+
+```text
+interface Template {
+  id: string;            // UUID / 唯一标识符
+  name: string;          // 模板名称（显示在菜单中）
+  content: string;       // 模板具体内容（支持 LaTeX，可自动追加到输入框）
+}
+
+> **设计意图**：聊天自动填入模板是一个独立的数据模型。用户可以在设置中配置三角形、数列等高频填入的数学句式，并在聊天中一键快捷 append 到输入框中，避免重复输入。
 ```
 
 ### 数据模型与存储 / TypeScript 类型定义 / UserSettings（用户设置）
@@ -410,6 +428,7 @@ interface GenerationProvider {
 
 /data/
   settings.json           # UserSettings（单文件）
+  templates.json          # Template[]（聊天自动填入模板单文件）
   sessions/{sessionId}.json  # ChatSession（每会话一个文件）
   log/                    # 日志文件（YYYY-MM-DD.log）
 
@@ -417,6 +436,8 @@ interface GenerationProvider {
 
 - `GET /api/settings` — 读取设置
 - `PUT /api/settings` — 写入设置
+- `GET /api/templates` — 读取模板列表
+- `PUT /api/templates` — 保存/更新模板列表（带严格的结构和非空校验）
 - `GET /api/sessions` — 列出所有会话
 - `GET /api/sessions/:id` — 获取单个会话
 - `DELETE /api/sessions/:id` — 删除会话
@@ -868,6 +889,7 @@ ai-math-chat-studio/
 │   └── file-structure.md     # 本文件
 ├── data/                     # 本地数据存储（不提交）
 │   ├── settings.json         # 用户设置
+│   ├── templates.json        # 聊天自动填入模板设置
 │   ├── sessions/             # 会话数据
 │   └── log/                  # 日志数据 (YYYY-MM-DD.log)
 ├── index.html                # SPA 入口 HTML
@@ -884,6 +906,7 @@ ai-math-chat-studio/
 │   │   └── stream.ts         # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
 │   ├── routes/               # API 路由
 │   │   ├── settings.ts       # /api/settings GET/PUT
+│   │   ├── templates.ts      # /api/templates GET/PUT
 │   │   ├── sessions.ts       # /api/sessions GET/GET/:id/DELETE
 │   │   ├── chat.ts           # /api/sessions/:id/messages, generation, retry, continue
 │   │   └── models.ts         # /api/providers, /api/providers/:type/models
@@ -922,6 +945,7 @@ ai-math-chat-studio/
 | `server/services/logger.ts` | **日志服务**：拦截 console 输出并持久化到 `data/log/`。 |
 | `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
 | `server/routes/settings.ts` | `/api/settings` GET/PUT |
+| `server/routes/templates.ts` | `/api/templates` GET/PUT |
 | `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
 | `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
 | `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
