@@ -51,6 +51,18 @@ interface Character {
 
 > **设计意图**：角色是系统提示词的容器。用户可在设置中创建多个角色（如"数学导师"、"代码助手"），每个角色携带不同的 `systemPrompt`。发送消息时，后端根据 `activeCharacterId` 查找对应角色的 `systemPrompt` 注入请求。
 
+### Template（自动填入模板）
+
+```typescript
+interface Template {
+  id: string;            // UUID / 唯一标识符
+  name: string;          // 模板名称（显示在菜单中）
+  content: string;       // 模板具体内容（支持 LaTeX，可自动追加到输入框）
+}
+```
+
+> **设计意图**：聊天自动填入模板是一个独立的数据模型。用户可以在设置中配置三角形、数列等高频填入的数学句式，并在聊天中一键快捷 append 到输入框中，避免重复输入。
+
 ### UserSettings（用户设置）
 
 ```typescript
@@ -129,6 +141,7 @@ interface GenerationProvider {
 ```
 /data/
   settings.json           # UserSettings（单文件）
+  templates.json          # Template[]（聊天自动填入模板单文件）
   sessions/{sessionId}.json  # ChatSession（每会话一个文件）
   log/                    # 日志文件（YYYY-MM-DD.log）
 ```
@@ -137,6 +150,8 @@ interface GenerationProvider {
 
 - `GET /api/settings` — 读取设置
 - `PUT /api/settings` — 写入设置
+- `GET /api/templates` — 读取模板列表
+- `PUT /api/templates` — 保存/更新模板列表（带严格的结构和非空校验）
 - `GET /api/sessions` — 列出所有会话
 - `GET /api/sessions/:id` — 获取单个会话
 - `DELETE /api/sessions/:id` — 删除会话

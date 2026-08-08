@@ -146,6 +146,12 @@
 - **动态样式应用**: 活跃的字体类会通过模板字面量 `` `katex-font-${settings.katexFont || 'default'}` `` 动态拼接，并直接应用到 `App.tsx` 根 layout 以及 `ChatArea.tsx` 内的纯净打印 iframe 页面上，以确保更换字体无刷新渲染且打印字体一致。
 - **CJK 中文字体优雅降级**: 在自定义数学字体渲染时，为防止中文（`.cjk_fallback` 类）被衬线/无衬线数学符号字体异常覆盖或变畸，在 `src/index.css` 内为各类字体专门追加了高优先级的 `.cjk_fallback` 及它的子元素覆盖处理器，强制它们回退并使用网页正文字体 (`system-ui, sans-serif`)。
 
+### 8. 聊天自动填入模板架构 (Chat Auto-fill Templates)
+
+- **存储路径**: 模板数据不编码在前端中，而是以标准的 JSON 数组格式持久化保存在 `/data/templates.json` 中。
+- **API 集成**: 服务端通过 `GET /api/templates` 和 `PUT /api/templates` 路由实现模板数据的读取与存储。前端在 `App` 启动时拉取并注入 `ChatArea` 及设置模态框中。
+- **模态框管理 (Templates Tab)**: `SettingsModal.tsx` 提供一个专用的 "Templates" 选项卡，允许用户在图形界面中进行添加、编辑、删除以及在列表中上下移动（Reorder）等完整操作，极大地改善了模板配置的可维护性和易用性。
+
 ## ⚠️ 严禁事项（强制执行）
 
 ### 包管理器

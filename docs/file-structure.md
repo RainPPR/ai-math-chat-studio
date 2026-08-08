@@ -17,6 +17,7 @@ ai-math-chat-studio/
 │   └── file-structure.md     # 本文件
 ├── data/                     # 本地数据存储（不提交）
 │   ├── settings.json         # 用户设置
+│   ├── templates.json        # 聊天自动填入模板设置
 │   ├── sessions/             # 会话数据
 │   └── log/                  # 日志数据 (YYYY-MM-DD.log)
 ├── index.html                # SPA 入口 HTML
@@ -33,6 +34,7 @@ ai-math-chat-studio/
 │   │   └── stream.ts         # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
 │   ├── routes/               # API 路由
 │   │   ├── settings.ts       # /api/settings GET/PUT
+│   │   ├── templates.ts      # /api/templates GET/PUT
 │   │   ├── sessions.ts       # /api/sessions GET/GET/:id/DELETE
 │   │   ├── chat.ts           # /api/sessions/:id/messages, generation, retry, continue
 │   │   └── models.ts         # /api/providers, /api/providers/:type/models
@@ -70,6 +72,7 @@ ai-math-chat-studio/
 | `server/services/logger.ts` | **日志服务**：拦截 console 输出并持久化到 `data/log/`。 |
 | `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
 | `server/routes/settings.ts` | `/api/settings` GET/PUT |
+| `server/routes/templates.ts` | `/api/templates` GET/PUT |
 | `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
 | `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
 | `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
