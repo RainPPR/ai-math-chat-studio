@@ -327,13 +327,6 @@
       "displayName": "MiniMax M3 (LogFare)"
     },
     {
-      "id": "6ff1f6f8-28ba-5fe5-baed-6b3c96e9874d",
-      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-      "providerType": "openai-compatible",
-      "modelId": "kimi-k2.6",
-      "displayName": "Kimi K2.6 (LogFare)"
-    },
-    {
       "id": "248c1cbe-0ff5-5ed2-b6cc-0f5d89abccae",
       "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
       "providerType": "openai-compatible",
@@ -390,11 +383,18 @@
       "displayName": "DeepSeek v4 Flash 0731 (LogFare)"
     },
     {
+      "id": "ad77b720-8b36-5c4f-ad92-00ccc885f50d",
+      "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+      "providerType": "openai-compatible",
+      "modelId": "grape-2-pro",
+      "displayName": "GRaPE 2 Pro (LogFare)"
+    },
+    {
       "id": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
       "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
       "providerType": "openai-compatible",
       "modelId": "deepseek-v4-flash-free",
-      "displayName": "DeepSeek V4 Flash Free (New) (OpenCode)",
+      "displayName": "DeepSeek V4 Flash Free (OpenCode)",
       "reasoningEffort": "max"
     },
     {
@@ -411,6 +411,13 @@
       "modelId": "ling-3.0-flash-free",
       "displayName": "Ling-3.0-flash Free (OpenCode)",
       "reasoningEffort": "high"
+    },
+    {
+      "id": "ee8f6b9a-edd7-5d92-8925-1f93d1ba2b62",
+      "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+      "providerType": "openai-compatible",
+      "modelId": "ling-3.0-tiny-free",
+      "displayName": "Ling-3.0-tiny Free (OpenCode)"
     },
     {
       "id": "14f57ded-622b-5af6-8331-a14e299bdd14",

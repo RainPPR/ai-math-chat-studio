@@ -1,4 +1,4 @@
-import { UserSettings, ChatSession } from '../types';
+import { UserSettings, ChatSession, Template } from '../types';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
@@ -16,6 +16,15 @@ export const api = {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(s),
+    }),
+  },
+
+  templates: {
+    get: () => request<Template[]>('/api/templates'),
+    save: (t: Template[]) => request<{ ok: true; templates: Template[] }>('/api/templates', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(t),
     }),
   },
 

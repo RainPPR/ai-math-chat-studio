@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatSession, ChatMessage, UserSettings } from '../types';
+import { ChatSession, ChatMessage, UserSettings, Template } from '../types';
 import { api } from '../lib/api';
 import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal, AlertCircle, X, ChevronDown, Bot, Sparkles, FileText, Eye, Printer, Edit, Trash2, ArrowUp, ArrowDown, Plus } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
@@ -10,6 +10,7 @@ interface ChatAreaProps {
   isGenerating: boolean;
   isStopping?: boolean;
   settings: UserSettings;
+  templates: Template[];
   onStop?: () => void;
   onRetry?: (msgId: string) => void;
   onContinue?: () => void;
@@ -277,25 +278,6 @@ const estimateTokens = (text: string) => {
 
 const DRAFT_STORAGE_KEY = 'chat_drafts';
 
-const PRESET_TEMPLATES = [
-  {
-    name: '三角形基础',
-    content: String.raw`在 $\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，`,
-  },
-  {
-    name: '锐角三角形',
-    content: String.raw`在锐角 $\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，`,
-  },
-  {
-    name: '数列 a',
-    content: String.raw`已知数列 $\{a_n\}$ 的前 $n$ 项和为 $S_n$，`
-  },
-  {
-    name: '数列 a b',
-    content: String.raw`已知数列 $\{a_n\}$ 的前 $n$ 项和为 $S_n$，数列 $\{b_n\}$ 的前 $n$ 项和为 $T_n$，`
-  }
-];
-
 const saveDraft = (sessionId: string, content: string) => {
   try {
     const drafts = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || '{}');
@@ -468,7 +450,7 @@ const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
   return messages;
 };
 
-export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, isStopping, settings, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel, onSelectCharacter, onUpdateSessionCharacter, onUpdateSession, error, onClearError, onError }) => {
+export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, isStopping, settings, templates, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel, onSelectCharacter, onUpdateSessionCharacter, onUpdateSession, error, onClearError, onError }) => {
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
@@ -1172,9 +1154,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             </button>
             {templateDropdownOpen && (
               <div className="absolute bottom-full mb-1 left-0 z-50 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
-                {PRESET_TEMPLATES.map((t, idx) => (
+                {templates.length === 0 && (
+                  <div className="px-2.5 py-2 text-xs text-gray-500">No templates configured</div>
+                )}
+                {templates.map((t) => (
                   <button
-                    key={idx}
+                    key={t.id}
                     onClick={() => handleTemplateSelect(t.content)}
                     className="w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate text-gray-300"
                   >

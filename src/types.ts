@@ -34,6 +34,12 @@ export interface Character {
   systemPrompt: string;
 }
 
+export interface Template {
+  id: string;
+  name: string;
+  content: string;
+}
+
 export interface UserSettings {
   activeModelId?: string;
   activeCharacterId?: string;
