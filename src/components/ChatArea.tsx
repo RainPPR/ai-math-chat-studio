@@ -472,10 +472,15 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const modelToggleBtnRef = useRef<HTMLButtonElement>(null);
   const characterDropdownRef = useRef<HTMLDivElement>(null);
   const templateDropdownRef = useRef<HTMLDivElement>(null);
+  const activeModelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!modelDropdownOpen) {
       setModelSearchQuery('');
+    } else {
+      setTimeout(() => {
+        activeModelRef.current?.scrollIntoView({ block: 'nearest' });
+      }, 50);
     }
   }, [modelDropdownOpen]);
 
@@ -1083,8 +1088,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                             <span className="text-[10px] font-medium text-gray-400">{provider.name}</span>
                           </div>
                           {providerModels.map(m => {
+                            const isActive = m.id === settings.activeModelId;
                             let buttonClass = 'w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ';
-                            if (m.id === settings.activeModelId) {
+                            if (isActive) {
                               buttonClass += 'text-blue-300 bg-blue-600/10';
                             } else {
                               buttonClass += 'text-gray-300';
@@ -1093,6 +1099,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                             return (
                               <button
                                 key={m.id}
+                                ref={isActive ? activeModelRef : undefined}
                                 onClick={() => { onSelectModel?.(m.id); setModelDropdownOpen(false); }}
                                 className={buttonClass}
                               >
@@ -1400,8 +1407,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                           );
                         }}
                         placeholder={getTextareaPlaceholder(block.type)}
-                        className="w-full bg-gray-950/60 border border-gray-800 focus:border-gray-700 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none resize-y min-h-[80px]"
-                        rows={3}
+                        className="w-full bg-gray-950/60 border border-gray-800 focus:border-gray-700 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none resize-y min-h-[160px]"
+                        rows={6}
                       />
                     </div>
                   );
