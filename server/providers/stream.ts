@@ -41,121 +41,7 @@ export async function* streamChat(
 
 // ---- Google Gemini ----
 
-interface ProcessedThoughtResult {
-  state: 'IN_THOUGHT' | 'NORMAL';
-  thoughtBuffer: string;
-  yields: StreamChunk[];
-}
-
-function handleThoughtBuffer(thoughtBuffer: string): ProcessedThoughtResult {
-  const yields: StreamChunk[] = [];
-  const endTagIndex = thoughtBuffer.indexOf('</thought>');
-
-  if (endTagIndex !== -1) {
-    const reasoningContent = thoughtBuffer.slice(0, endTagIndex);
-    const remainingContent = thoughtBuffer.slice(endTagIndex + '</thought>'.length);
-    if (reasoningContent.length > 0) {
-      yields.push({ type: 'reasoning', content: reasoningContent });
-    }
-    if (remainingContent.length > 0) {
-      yields.push({ type: 'content', content: remainingContent });
-    }
-    return {
-      state: 'NORMAL',
-      thoughtBuffer: '',
-      yields,
-    };
-  } else {
-    let partialMatchLength = 0;
-    const tag = '</thought>';
-    for (let i = 1; i < tag.length; i++) {
-      const partialTag = tag.slice(0, i);
-      if (thoughtBuffer.endsWith(partialTag)) {
-        partialMatchLength = i;
-      }
-    }
-    let newThoughtBuffer = thoughtBuffer;
-    if (thoughtBuffer.length > partialMatchLength) {
-      const yieldContent = thoughtBuffer.slice(0, thoughtBuffer.length - partialMatchLength);
-      yields.push({ type: 'reasoning', content: yieldContent });
-      newThoughtBuffer = thoughtBuffer.slice(thoughtBuffer.length - partialMatchLength);
-    }
-    return {
-      state: 'IN_THOUGHT',
-      thoughtBuffer: newThoughtBuffer,
-      yields,
-    };
-  }
-}
-
-export async function* processGoogleStream(stream: AsyncIterable<StreamChunk>): AsyncGenerator<StreamChunk> {
-  let state: 'DETECTING' | 'IN_THOUGHT' | 'NORMAL' = 'DETECTING';
-  let contentBuffer = '';
-  let thoughtBuffer = '';
-
-  for await (const chunk of stream) {
-    if (chunk.type === 'reasoning') {
-      yield chunk;
-      continue;
-    }
-
-    const text = chunk.content || '';
-    if (!text) continue;
-
-    if (state === 'NORMAL') {
-      yield chunk;
-    } else if (state === 'DETECTING') {
-      contentBuffer += text;
-      const trimmed = contentBuffer.trimStart();
-      if (trimmed.length === 0) {
-        // Only whitespaces, keep buffering
-      } else if ('<thought>'.startsWith(trimmed)) {
-        if (trimmed === '<thought>') {
-          state = 'IN_THOUGHT';
-          contentBuffer = '';
-        }
-      } else if (trimmed.startsWith('<thought>')) {
-        state = 'IN_THOUGHT';
-        const remaining = trimmed.slice('<thought>'.length);
-        contentBuffer = '';
-        if (remaining.length > 0) {
-          thoughtBuffer += remaining;
-        }
-      } else {
-        state = 'NORMAL';
-        yield { type: 'content', content: contentBuffer };
-        contentBuffer = '';
-      }
-
-      // If we transitioned to IN_THOUGHT, process the thoughtBuffer immediately
-      if (state === 'IN_THOUGHT' && thoughtBuffer.length > 0) {
-        const result = handleThoughtBuffer(thoughtBuffer);
-        state = result.state;
-        thoughtBuffer = result.thoughtBuffer;
-        for (const chunkToYield of result.yields) {
-          yield chunkToYield;
-        }
-      }
-    } else if (state === 'IN_THOUGHT') {
-      thoughtBuffer += text;
-      const result = handleThoughtBuffer(thoughtBuffer);
-      state = result.state;
-      thoughtBuffer = result.thoughtBuffer;
-      for (const chunkToYield of result.yields) {
-        yield chunkToYield;
-      }
-    }
-  }
-
-  // Flush remaining buffers at the end of the stream
-  if (state === 'DETECTING' && contentBuffer.length > 0) {
-    yield { type: 'content', content: contentBuffer };
-  } else if (state === 'IN_THOUGHT' && thoughtBuffer.length > 0) {
-    yield { type: 'reasoning', content: thoughtBuffer };
-  }
-}
-
-async function* streamGoogleRaw(req: StreamRequest, provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string }, signal?: AbortSignal): AsyncGenerator<StreamChunk> {
+async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string }, signal?: AbortSignal): AsyncGenerator<StreamChunk> {
   const apiKey = resolveApiKey(provider);
   if (!apiKey) throw new Error('Gemini API key is not configured. Please set it in the provider settings or use the GEMINI_API_KEY environment variable.');
 
@@ -199,10 +85,6 @@ async function* streamGoogleRaw(req: StreamRequest, provider: { baseURL?: string
       else if (part.text) yield { type: 'content', content: part.text };
     }
   }
-}
-
-async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; apiKey?: string; envKey?: string; type: string }, signal?: AbortSignal): AsyncGenerator<StreamChunk> {
-  yield* processGoogleStream(streamGoogleRaw(req, provider, signal));
 }
 
 // ---- Generic OpenAI SDK helper ----
