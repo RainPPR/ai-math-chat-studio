@@ -478,9 +478,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     if (!modelDropdownOpen) {
       setModelSearchQuery('');
     } else {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         activeModelRef.current?.scrollIntoView({ block: 'nearest' });
       }, 50);
+      return () => clearTimeout(timer);
     }
   }, [modelDropdownOpen]);
 
