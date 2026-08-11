@@ -213,6 +213,14 @@
       "reasoningEffort": "high"
     },
     {
+      "id": "5682d9a8-7c24-4f0d-ba99-8d4e3819b5d6",
+      "providerId": "p-nvidia-9a1b",
+      "providerType": "nvidia",
+      "modelId": "meta/muse-glimmer-30b",
+      "displayName": "Muse Glimmer 30B (Nvidia)",
+      "maxTokens": 16353
+    },
+    {
       "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
       "providerId": "p-poe-8d3e",
       "providerType": "openai-compatible",
@@ -510,5 +518,5 @@
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
   "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
-  "activeModelId": "f4a17dec-ee5e-4557-924a-8c02dcb6b1a5"
+  "activeModelId": "5682d9a8-7c24-4f0d-ba99-8d4e3819b5d6"
 }
