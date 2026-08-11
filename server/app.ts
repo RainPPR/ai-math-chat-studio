@@ -1,7 +1,6 @@
 import express from 'express';
 import path from 'path';
 import { existsSync, mkdirSync } from 'fs';
-import { readFile, writeFile } from 'fs/promises';
 import { GenerationManager } from './services/generation-manager';
 import { createSettingsRouter } from './routes/settings';
 import { createSessionRouter } from './routes/sessions';
@@ -9,6 +8,7 @@ import { createChatRouter } from './routes/chat';
 import { createModelsRouter } from './routes/models';
 import { createTemplatesRouter } from './routes/templates';
 import { initLogger } from './services/logger';
+import { loadSettings, saveSettings } from './lib/settings-helper';
 
 interface RemoteModelDef {
   id: string;
@@ -23,59 +23,13 @@ interface RemoteModelDef {
   [key: string]: any;
 }
 
-interface ProviderInstance {
-  id: string;
-  type: string;
-  name: string;
-  baseURL?: string;
-  apiKey?: string;
-  envKey?: string;
-  extra?: Record<string, any>;
-  modelSource?: string;
-}
-
-interface ModelInstance {
-  id: string;
-  providerId: string;
-  providerType: string;
-  modelId: string;
-  displayName?: string;
-  temperature?: number;
-  maxTokens?: number;
-  reasoningEffort?: string;
-  thinkingLevel?: string;
-  extraBody?: Record<string, any>;
-  injectThinkingTemplate?: boolean;
-}
-
-interface Character {
-  id: string;
-  name: string;
-  systemPrompt: string;
-}
-
-interface UserSettings {
-  activeModelId?: string;
-  activeCharacterId?: string;
-  providers: ProviderInstance[];
-  models: ModelInstance[];
-  characters: Character[];
-  systemPrompt: string;
-  renderThinkingAsMarkdown: boolean;
-  autoScroll: boolean;
-  collapseThinkingFinished: boolean;
-  gemmaTrimThinkingSpaces: boolean;
-  starredSessions?: Record<string, string>;
-}
-
 async function syncRemoteModels(settingsFile: string) {
   try {
-    const content = await readFile(settingsFile, 'utf-8');
-    const settings: UserSettings = JSON.parse(content);
+    const settings = await loadSettings(settingsFile);
 
     let modified = false;
-    const syncableProviders = settings.providers.filter(
-      p => (p.type === 'nvidia' || p.type === 'openai-compatible') && p.modelSource
+    const syncableProviders = (settings.providers || []).filter(
+      (p: any) => (p.type === 'nvidia' || p.type === 'openai-compatible') && p.modelSource
     );
 
     for (const provider of syncableProviders) {
@@ -118,7 +72,7 @@ async function syncRemoteModels(settingsFile: string) {
         const removedCount = originalModelCount - settings.models.length;
 
         // Add new models from remote source
-        const newModels: ModelInstance[] = validModels.map(remote => ({
+        const newModels: any[] = validModels.map(remote => ({
           id: remote.id,
           providerId: provider.id,
           providerType: provider.type,
@@ -132,10 +86,11 @@ async function syncRemoteModels(settingsFile: string) {
           injectThinkingTemplate: remote.injectThinkingTemplate,
         }));
 
+        if (!settings.models) settings.models = [];
         settings.models.push(...newModels);
 
         // Clear activeModelId if it was removed
-        if (settings.activeModelId && !settings.models.find(m => m.id === settings.activeModelId)) {
+        if (settings.activeModelId && !settings.models.find((m: any) => m.id === settings.activeModelId)) {
           settings.activeModelId = undefined;
         }
 
@@ -147,15 +102,13 @@ async function syncRemoteModels(settingsFile: string) {
     }
 
     if (modified) {
-      await writeFile(settingsFile, JSON.stringify(settings, null, 2), 'utf-8');
+      await saveSettings(settingsFile, settings);
       console.log(`[Sync] Settings saved to ${settingsFile}`);
     } else {
       console.log('[Sync] No remote model sources to sync or no changes needed');
     }
   } catch (err: any) {
-    if (err.code !== 'ENOENT') {
-      console.error(`[Sync] Error reading settings: ${err.message}`);
-    }
+    console.error(`[Sync] Error syncing settings: ${err.message}`);
   }
 }
 

@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import fs from 'fs/promises';
+import { loadSettings, saveSettings } from '../lib/settings-helper';
 
 export function createSettingsRouter(settingsFile: string) {
   const router = Router();
 
   router.get('/api/settings', async (_req, res) => {
     try {
-      const data = await fs.readFile(settingsFile, 'utf-8');
-      res.json(JSON.parse(data));
+      const settings = await loadSettings(settingsFile);
+      res.json(settings);
     } catch {
       res.json(null);
     }
@@ -15,7 +15,7 @@ export function createSettingsRouter(settingsFile: string) {
 
   router.put('/api/settings', async (req, res) => {
     try {
-      await fs.writeFile(settingsFile, JSON.stringify(req.body, null, 2));
+      await saveSettings(settingsFile, req.body);
       res.json({ ok: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });

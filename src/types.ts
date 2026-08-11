@@ -53,6 +53,8 @@ export interface UserSettings {
   gemmaTrimThinkingSpaces: boolean;
   starredSessions?: Record<string, StarColor>;
   claudeChunks?: string[];
+  claudeChunkRemarks?: Record<string, string>;
+  stickyNotes?: { id: string; content: string; createdAt: string }[];
   katexFont?: string;
 }
 
@@ -69,6 +71,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   gemmaTrimThinkingSpaces: false,
   starredSessions: {},
   claudeChunks: [],
+  claudeChunkRemarks: {},
+  stickyNotes: [],
   katexFont: 'default',
 };
 
