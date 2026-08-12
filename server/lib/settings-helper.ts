@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import crypto from 'crypto';
 
 export interface UserSettings {
   activeModelId?: string;
@@ -28,9 +29,16 @@ async function writeIfChanged(filepath: string, newJSON: string): Promise<void> 
   } catch {
     // File does not exist, proceed
   }
-  const tempPath = `${filepath}.tmp`;
-  await fs.writeFile(tempPath, newJSON, 'utf-8');
-  await fs.rename(tempPath, filepath);
+  const tempPath = `${filepath}.tmp-${crypto.randomUUID()}`;
+  try {
+    await fs.writeFile(tempPath, newJSON, 'utf-8');
+    await fs.rename(tempPath, filepath);
+  } catch (err) {
+    try {
+      await fs.unlink(tempPath);
+    } catch {}
+    throw err;
+  }
 }
 
 export async function loadSettings(settingsFile: string): Promise<UserSettings> {
@@ -51,72 +59,87 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
 
   // Load providers from split file with Array.isArray guard
   let providers: any[] = [];
+  let providersLoaded = false;
   try {
     const content = await fs.readFile(providersFile, 'utf-8');
     const parsed = JSON.parse(content);
-    if (Array.isArray(parsed)) {
+    if (Array.isArray(parsed) && parsed.length > 0) {
       providers = parsed;
+      providersLoaded = true;
     }
   } catch {
-    // If separate file read fails or isn't array, and settings has providers, migrate
-    if (settings.providers && Array.isArray(settings.providers)) {
-      providers = settings.providers;
-    }
+    // ignore
   }
 
   // Load models from split file with Array.isArray guard
   let models: any[] = [];
+  let modelsLoaded = false;
   try {
     const content = await fs.readFile(modelsFile, 'utf-8');
     const parsed = JSON.parse(content);
-    if (Array.isArray(parsed)) {
+    if (Array.isArray(parsed) && parsed.length > 0) {
       models = parsed;
+      modelsLoaded = true;
     }
   } catch {
-    // If separate file read fails or isn't array, and settings has models, migrate
-    if (settings.models && Array.isArray(settings.models)) {
-      models = settings.models;
-    }
+    // ignore
   }
 
   // Load characters from split file with Array.isArray guard
   let characters: any[] = [];
+  let charactersLoaded = false;
   try {
     const content = await fs.readFile(charactersFile, 'utf-8');
     const parsed = JSON.parse(content);
-    if (Array.isArray(parsed)) {
+    if (Array.isArray(parsed) && parsed.length > 0) {
       characters = parsed;
+      charactersLoaded = true;
     }
   } catch {
-    // If separate file read fails or isn't array, and settings has characters, migrate
-    if (settings.characters && Array.isArray(settings.characters)) {
-      characters = settings.characters;
-    }
+    // ignore
   }
 
-  // On-the-fly migration: if keys exist in settings.json, perform the split & save
+  // On-the-fly migration check
   const hasProvidersInSettings = settings.providers && Array.isArray(settings.providers);
   const hasModelsInSettings = settings.models && Array.isArray(settings.models);
   const hasCharactersInSettings = settings.characters && Array.isArray(settings.characters);
 
   if (hasProvidersInSettings || hasModelsInSettings || hasCharactersInSettings) {
-    if (hasProvidersInSettings) providers = settings.providers;
-    if (hasModelsInSettings) models = settings.models;
-    if (hasCharactersInSettings) characters = settings.characters;
+    let needWriteProviders = false;
+    let needWriteModels = false;
+    let needWriteCharacters = false;
 
-    delete settings.providers;
-    delete settings.models;
-    delete settings.characters;
+    if (hasProvidersInSettings) {
+      if (!providersLoaded) {
+        providers = settings.providers;
+        needWriteProviders = true;
+      }
+      delete settings.providers;
+    }
+    if (hasModelsInSettings) {
+      if (!modelsLoaded) {
+        models = settings.models;
+        needWriteModels = true;
+      }
+      delete settings.models;
+    }
+    if (hasCharactersInSettings) {
+      if (!charactersLoaded) {
+        characters = settings.characters;
+        needWriteCharacters = true;
+      }
+      delete settings.characters;
+    }
 
     try {
       await fs.mkdir(dataDir, { recursive: true });
-      if (hasProvidersInSettings) {
+      if (needWriteProviders) {
         await writeIfChanged(providersFile, JSON.stringify(providers, null, 2));
       }
-      if (hasModelsInSettings) {
+      if (needWriteModels) {
         await writeIfChanged(modelsFile, JSON.stringify(models, null, 2));
       }
-      if (hasCharactersInSettings) {
+      if (needWriteCharacters) {
         await writeIfChanged(charactersFile, JSON.stringify(characters, null, 2));
       }
       if (settingsExist) {
@@ -143,7 +166,6 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
 
   const settingsCopy = JSON.parse(JSON.stringify(settings));
 
-  // Extract from incoming settings if they are valid arrays
   const incomingProviders = settingsCopy.providers;
   const incomingModels = settingsCopy.models;
   const incomingCharacters = settingsCopy.characters;
@@ -154,17 +176,56 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
 
   await fs.mkdir(dataDir, { recursive: true });
 
-  // Save general settings
-  await writeIfChanged(settingsFile, JSON.stringify(settingsCopy, null, 2));
+  const filesToWrite: { filepath: string; content: string }[] = [];
 
-  // Guard: Only write split files if they were present in settings and are valid arrays
+  const addIfChanged = async (filepath: string, content: string) => {
+    try {
+      const existing = await fs.readFile(filepath, 'utf-8');
+      if (existing === content) {
+        return;
+      }
+    } catch {
+      // File missing
+    }
+    filesToWrite.push({ filepath, content });
+  };
+
+  await addIfChanged(settingsFile, JSON.stringify(settingsCopy, null, 2));
+
   if (incomingProviders && Array.isArray(incomingProviders)) {
-    await writeIfChanged(providersFile, JSON.stringify(incomingProviders, null, 2));
+    await addIfChanged(providersFile, JSON.stringify(incomingProviders, null, 2));
   }
   if (incomingModels && Array.isArray(incomingModels)) {
-    await writeIfChanged(modelsFile, JSON.stringify(incomingModels, null, 2));
+    await addIfChanged(modelsFile, JSON.stringify(incomingModels, null, 2));
   }
   if (incomingCharacters && Array.isArray(incomingCharacters)) {
-    await writeIfChanged(charactersFile, JSON.stringify(incomingCharacters, null, 2));
+    await addIfChanged(charactersFile, JSON.stringify(incomingCharacters, null, 2));
+  }
+
+  if (filesToWrite.length === 0) {
+    return;
+  }
+
+  // Transactional multi-file temporary writes
+  const writtenOps: { tempPath: string; filepath: string }[] = [];
+  try {
+    for (const op of filesToWrite) {
+      const tempPath = `${op.filepath}.tmp-${crypto.randomUUID()}`;
+      await fs.writeFile(tempPath, op.content, 'utf-8');
+      writtenOps.push({ tempPath, filepath: op.filepath });
+    }
+
+    // Rename all if success
+    for (const op of writtenOps) {
+      await fs.rename(op.tempPath, op.filepath);
+    }
+  } catch (err: any) {
+    // Cleanup on fail
+    for (const op of writtenOps) {
+      try {
+        await fs.unlink(op.tempPath);
+      } catch {}
+    }
+    throw err;
   }
 }

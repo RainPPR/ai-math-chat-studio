@@ -697,6 +697,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     });
   };
 
+  const handleSaveAll = async () => {
+    const finalSettings = { ...local };
+    if (editingNoteId) {
+      let updatedNotes = [];
+      if (!editingNoteContent.trim()) {
+        updatedNotes = (local.stickyNotes || []).filter(note => note.id !== editingNoteId);
+      } else {
+        updatedNotes = (local.stickyNotes || []).map(note => {
+          if (note.id === editingNoteId) {
+            return { ...note, content: editingNoteContent.trim() };
+          }
+          return note;
+        });
+      }
+      finalSettings.stickyNotes = updatedNotes;
+      setLocal(finalSettings);
+      setEditingNoteId(null);
+    }
+    onSave(finalSettings);
+    await onSaveTemplates(localTemplates);
+  };
+
   let stickyNotesContent = null;
   if (!local.stickyNotes || local.stickyNotes.length === 0) {
     stickyNotesContent = (
@@ -1295,7 +1317,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
         <div className="p-6 border-t border-gray-800 bg-gray-950 flex justify-end gap-3 shrink-0">
           <button onClick={onClose} className="px-5 py-2.5 text-gray-300 hover:text-white font-medium transition-colors">Cancel</button>
-          <button onClick={async () => { onSave(local); await onSaveTemplates(localTemplates); }} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"><Save size={16} /> Save</button>
+          <button onClick={handleSaveAll} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"><Save size={16} /> Save</button>
         </div>
       </div>
       {cleaning && (
