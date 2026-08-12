@@ -318,19 +318,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     setEditingNoteContent('');
   };
 
-  const handleSaveNote = (id: string) => {
-    if (!editingNoteContent.trim()) {
-      const updatedNotes = (local.stickyNotes || []).filter(note => note.id !== id);
-      setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
-    } else {
-      const updatedNotes = (local.stickyNotes || []).map(note => {
-        if (note.id === id) {
-          return { ...note, content: editingNoteContent.trim() };
-        }
-        return note;
-      });
-      setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
+  const applyActiveNoteEdit = (notes: any[], id: string, content: string): any[] => {
+    const trimmed = content.trim();
+    if (!trimmed) {
+      return notes.filter(note => note.id !== id);
     }
+    return notes.map(note => {
+      if (note.id === id) {
+        return { ...note, content: trimmed };
+      }
+      return note;
+    });
+  };
+
+  const handleSaveNote = (id: string) => {
+    const updatedNotes = applyActiveNoteEdit(local.stickyNotes || [], id, editingNoteContent);
+    setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
     setEditingNoteId(null);
   };
 
@@ -700,17 +703,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const handleSaveAll = async () => {
     const finalSettings = { ...local };
     if (editingNoteId) {
-      let updatedNotes = [];
-      if (!editingNoteContent.trim()) {
-        updatedNotes = (local.stickyNotes || []).filter(note => note.id !== editingNoteId);
-      } else {
-        updatedNotes = (local.stickyNotes || []).map(note => {
-          if (note.id === editingNoteId) {
-            return { ...note, content: editingNoteContent.trim() };
-          }
-          return note;
-        });
-      }
+      const updatedNotes = applyActiveNoteEdit(local.stickyNotes || [], editingNoteId, editingNoteContent);
       finalSettings.stickyNotes = updatedNotes;
       setLocal(finalSettings);
       setEditingNoteId(null);

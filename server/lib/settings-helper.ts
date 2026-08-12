@@ -63,7 +63,7 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
   try {
     const content = await fs.readFile(providersFile, 'utf-8');
     const parsed = JSON.parse(content);
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    if (Array.isArray(parsed)) {
       providers = parsed;
       providersLoaded = true;
     }
@@ -77,7 +77,7 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
   try {
     const content = await fs.readFile(modelsFile, 'utf-8');
     const parsed = JSON.parse(content);
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    if (Array.isArray(parsed)) {
       models = parsed;
       modelsLoaded = true;
     }
@@ -91,7 +91,7 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
   try {
     const content = await fs.readFile(charactersFile, 'utf-8');
     const parsed = JSON.parse(content);
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    if (Array.isArray(parsed)) {
       characters = parsed;
       charactersLoaded = true;
     }
@@ -206,21 +206,49 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
     return;
   }
 
-  // Transactional multi-file temporary writes
+  // Transactional multi-file temporary writes with rollback capability
   const writtenOps: { tempPath: string; filepath: string }[] = [];
+  const backupOps: { backupPath: string; filepath: string }[] = [];
+
   try {
+    // 1. Write all new contents to temporary files (and track them immediately to prevent leaks)
     for (const op of filesToWrite) {
       const tempPath = `${op.filepath}.tmp-${crypto.randomUUID()}`;
-      await fs.writeFile(tempPath, op.content, 'utf-8');
       writtenOps.push({ tempPath, filepath: op.filepath });
+      await fs.writeFile(tempPath, op.content, 'utf-8');
     }
 
-    // Rename all if success
+    // 2. Back up existing target files (rename target to backupPath if it exists)
+    for (const op of filesToWrite) {
+      try {
+        await fs.access(op.filepath);
+        const backupPath = `${op.filepath}.bak-${crypto.randomUUID()}`;
+        await fs.rename(op.filepath, backupPath);
+        backupOps.push({ backupPath, filepath: op.filepath });
+      } catch {
+        // Target does not exist, no backup needed
+      }
+    }
+
+    // 3. Rename all temporary files to targets
     for (const op of writtenOps) {
       await fs.rename(op.tempPath, op.filepath);
     }
+
+    // 4. Everything succeeded! Clean up backup files
+    for (const op of backupOps) {
+      try {
+        await fs.unlink(op.backupPath);
+      } catch {}
+    }
   } catch (err: any) {
-    // Cleanup on fail
+    // 5. Failure occurred: Roll back completed renames
+    for (const op of backupOps) {
+      try {
+        await fs.rename(op.backupPath, op.filepath);
+      } catch {}
+    }
+    // Clean up temporary files
     for (const op of writtenOps) {
       try {
         await fs.unlink(op.tempPath);
