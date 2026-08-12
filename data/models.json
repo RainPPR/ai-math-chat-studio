@@ -201,6 +201,20 @@
     "reasoningEffort": "high"
   },
   {
+    "id": "12012cba-e7fa-55b8-afee-2434e2a2e1ab",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "liquid/lfm-2.5-2.6b:free",
+    "displayName": "LiquidAI: LFM2.5-2.6B (Kilo)"
+  },
+  {
+    "id": "b73bcb80-f456-54cb-9512-0abee644a874",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "nvidia/nemotron-3.5-lightning:free",
+    "displayName": "NVIDIA: Nemotron 3.5 Lightning (Kilo)"
+  },
+  {
     "id": "298ac01e-1d80-5b4a-b4e7-1252aa26e59f",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -351,6 +365,14 @@
     "displayName": "MiMo V2.5 Free (OpenCode)"
   },
   {
+    "id": "ac977b66-c8d1-5da3-a80f-9d44eceaed61",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "hy3-free",
+    "displayName": "Hy3 Free (OpenCode)",
+    "reasoningEffort": "high"
+  },
+  {
     "id": "0b7c361b-63dc-5731-8d0e-d2315ec9d694",
     "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
     "providerType": "openai-compatible",
@@ -371,6 +393,13 @@
     "providerType": "openai-compatible",
     "modelId": "nemotron-3-ultra-free",
     "displayName": "Nemotron 3 Ultra Free (OpenCode)"
+  },
+  {
+    "id": "0944c784-0e4c-5e44-a48d-c9b608953465",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "nemotron-3.5-lightning-free",
+    "displayName": "Nemotron 3.5 Lightning Free (OpenCode)"
   },
   {
     "id": "f4b831e8-6a1a-5403-a625-007ffcd3ac96",
