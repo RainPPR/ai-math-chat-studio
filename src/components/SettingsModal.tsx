@@ -303,6 +303,59 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const [selectedChunk, setSelectedChunk] = useState<string>('all');
   const [newCustomChunk, setNewCustomChunk] = useState<string>('');
 
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteContent, setEditingNoteContent] = useState<string>('');
+
+  const handleAddNote = () => {
+    const newNote = {
+      id: crypto.randomUUID(),
+      content: '',
+      createdAt: new Date().toLocaleString('zh-CN', { hour12: false }),
+    };
+    const updatedNotes = [...(local.stickyNotes || []), newNote];
+    setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
+    setEditingNoteId(newNote.id);
+    setEditingNoteContent('');
+  };
+
+  const applyActiveNoteEdit = (notes: any[], id: string, content: string): any[] => {
+    const trimmed = content.trim();
+    if (!trimmed) {
+      return notes.filter(note => note.id !== id);
+    }
+    return notes.map(note => {
+      if (note.id === id) {
+        return { ...note, content: trimmed };
+      }
+      return note;
+    });
+  };
+
+  const handleSaveNote = (id: string) => {
+    const updatedNotes = applyActiveNoteEdit(local.stickyNotes || [], id, editingNoteContent);
+    setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
+    setEditingNoteId(null);
+  };
+
+  const handleCancelNote = (id: string) => {
+    const note = (local.stickyNotes || []).find(n => n.id === id);
+    if (note && !note.content.trim()) {
+      const updatedNotes = (local.stickyNotes || []).filter(n => n.id !== id);
+      setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
+    }
+    setEditingNoteId(null);
+  };
+
+  const handleDeleteNote = (id: string) => {
+    if (window.confirm('确定要删除这张便利贴吗？')) {
+      const updatedNotes = (local.stickyNotes || []).filter(note => note.id !== id);
+      setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
+      if (editingNoteId === id) {
+        setEditingNoteId(null);
+      }
+    }
+  };
+
   const handleCleanClick = async () => {
     if (!window.confirm('警告：这将重写所有会话数据，移除任何已废弃的字段。此操作不可撤销。确定要继续吗？')) {
       return;
@@ -647,6 +700,113 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     });
   };
 
+  const handleSaveAll = async () => {
+    const finalSettings = { ...local };
+    if (editingNoteId) {
+      const updatedNotes = applyActiveNoteEdit(local.stickyNotes || [], editingNoteId, editingNoteContent);
+      finalSettings.stickyNotes = updatedNotes;
+      setLocal(finalSettings);
+      setEditingNoteId(null);
+    }
+    onSave(finalSettings);
+    await onSaveTemplates(localTemplates);
+  };
+
+  let stickyNotesContent = null;
+  if (!local.stickyNotes || local.stickyNotes.length === 0) {
+    stickyNotesContent = (
+      <div className="bg-gray-900/40 border border-gray-800/80 rounded-lg p-6 text-center">
+        <p className="text-xs text-gray-500">暂无便利贴，您可以记录一些小的注释（如：到底导出到哪里了）</p>
+      </div>
+    );
+  } else {
+    stickyNotesContent = (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {local.stickyNotes.map(note => {
+          const isEditing = editingNoteId === note.id;
+          let cardInner = null;
+
+          if (isEditing) {
+            cardInner = (
+              <div className="space-y-2 mt-2">
+                <textarea
+                  value={editingNoteContent}
+                  onChange={e => setEditingNoteContent(e.target.value)}
+                  className="w-full bg-amber-100/50 border border-amber-300 text-gray-800 rounded p-2 text-xs focus:outline-none focus:border-amber-500 resize-none"
+                  rows={4}
+                  placeholder="写下一些注释..."
+                  autoFocus
+                />
+                <div className="flex justify-end gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleCancelNote(note.id)}
+                    className="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded transition-colors font-medium"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveNote(note.id)}
+                    className="text-[10px] bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded transition-colors font-medium flex items-center gap-1"
+                  >
+                    <Check size={10} />
+                    保存
+                  </button>
+                </div>
+              </div>
+            );
+          } else {
+            cardInner = (
+              <>
+                <div className="space-y-3 mt-1">
+                  <p className="text-xs font-normal whitespace-pre-wrap leading-relaxed text-gray-700 select-text break-words">
+                    {note.content}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between border-t border-amber-200/50 pt-2 mt-3 text-[10px] text-gray-500">
+                  <span>{note.createdAt}</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingNoteId(note.id);
+                        setEditingNoteContent(note.content);
+                      }}
+                      className="text-gray-500 hover:text-amber-700 p-1 rounded hover:bg-amber-200/50 transition-colors"
+                      title="编辑"
+                    >
+                      <Pencil size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteNote(note.id)}
+                      className="text-gray-500 hover:text-red-600 p-1 rounded hover:bg-amber-200/50 transition-colors"
+                      title="删除"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              </>
+            );
+          }
+
+          return (
+            <div
+              key={note.id}
+              className="bg-amber-50 border border-amber-200/80 rounded-xl p-4 shadow-sm text-gray-800 flex flex-col justify-between min-h-[140px] transform hover:scale-[1.01] transition-all relative overflow-hidden"
+            >
+              {/* Real tape effect on sticky note */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-16 h-4 bg-amber-200/40 border-b border-amber-300/30 rotate-1 shadow-sm"></div>
+              {cardInner}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -725,6 +885,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                 ))}
               </div>
 
+              {/* 全局便利贴 (Sticky Notes) */}
+              <div className="space-y-4 pt-6 border-t border-gray-800">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-gray-300">全局便利贴 (Sticky Notes)</h3>
+                  <button
+                    type="button"
+                    onClick={handleAddNote}
+                    className="flex items-center gap-1 text-xs bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 px-2.5 py-1.5 rounded-lg border border-amber-500/30 transition-colors"
+                  >
+                    <Plus size={14} />
+                    添加便利贴
+                  </button>
+                </div>
+
+                {stickyNotesContent}
+              </div>
+
               <div className="space-y-3 pt-4 border-t border-red-900/50">
                 <button onClick={handleExportClaude} className="w-full bg-red-600/90 hover:bg-red-600 text-white rounded-lg p-3 font-medium transition-colors flex items-center justify-center gap-2">
                   <Download size={16} />
@@ -763,34 +940,71 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <span className="font-medium text-blue-400">全部导出 (不限时间)</span>
                   </label>
 
-                  {(local.claudeChunks || []).map((chunk) => (
-                    <div key={chunk} className="flex items-center justify-between p-2 rounded hover:bg-gray-700/30 text-sm">
-                      <label className="flex items-center space-x-3 cursor-pointer flex-1 text-gray-300 min-w-0">
-                        <input
-                          type="radio"
-                          name="claude-chunk"
-                          value={chunk}
-                          checked={selectedChunk === chunk}
-                          onChange={() => setSelectedChunk(chunk)}
-                          className="w-4 h-4 text-blue-600 focus:ring-blue-500 bg-gray-800 border-gray-700"
-                        />
-                        <span className="truncate" title={chunk}>{chunk}</span>
-                      </label>
-                      <button
-                        onClick={() => {
-                          const updated = (local.claudeChunks || []).filter(c => c !== chunk);
-                          setLocal(s => ({ ...s, claudeChunks: updated }));
-                          if (selectedChunk === chunk) {
-                            setSelectedChunk('all');
-                          }
-                        }}
-                        className="text-gray-500 hover:text-red-400 p-1 rounded transition-colors"
-                        title="删除分片时间"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
+                  {(local.claudeChunks || []).map((chunk) => {
+                    const remark = local.claudeChunkRemarks?.[chunk] || '';
+                    return (
+                      <div key={chunk} className="flex items-center justify-between p-2 rounded hover:bg-gray-700/30 text-sm">
+                        <label className="flex items-center space-x-3 cursor-pointer flex-1 text-gray-300 min-w-0">
+                          <input
+                            type="radio"
+                            name="claude-chunk"
+                            value={chunk}
+                            checked={selectedChunk === chunk}
+                            onChange={() => setSelectedChunk(chunk)}
+                            className="w-4 h-4 text-blue-600 focus:ring-blue-500 bg-gray-800 border-gray-700"
+                          />
+                          <span className="truncate flex items-center gap-1.5 min-w-0" title={chunk}>
+                            <span className="truncate shrink-0">{chunk}</span>
+                            {remark && (
+                              <span className="text-[10px] shrink bg-blue-900/40 text-blue-300 px-1.5 py-0.5 rounded border border-blue-800/40 font-normal truncate" title={remark}>
+                                {remark}
+                              </span>
+                            )}
+                          </span>
+                        </label>
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => {
+                              const currentRemark = local.claudeChunkRemarks?.[chunk] || '';
+                              const newRemark = window.prompt('编辑该时间点的备注：', currentRemark);
+                              if (newRemark !== null) {
+                                setLocal(s => {
+                                  const remarks = { ...(s.claudeChunkRemarks || {}) };
+                                  if (newRemark.trim()) {
+                                    remarks[chunk] = newRemark.trim();
+                                  } else {
+                                    delete remarks[chunk];
+                                  }
+                                  return { ...s, claudeChunkRemarks: remarks };
+                                });
+                              }
+                            }}
+                            className="text-gray-500 hover:text-blue-400 p-1 rounded transition-colors"
+                            title="编辑备注"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              const updated = (local.claudeChunks || []).filter(c => c !== chunk);
+                              setLocal(s => {
+                                const remarks = { ...(s.claudeChunkRemarks || {}) };
+                                delete remarks[chunk];
+                                return { ...s, claudeChunks: updated, claudeChunkRemarks: remarks };
+                              });
+                              if (selectedChunk === chunk) {
+                                setSelectedChunk('all');
+                              }
+                            }}
+                            className="text-gray-500 hover:text-red-400 p-1 rounded transition-colors"
+                            title="删除分片时间"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="space-y-2 pt-2 border-t border-gray-700/50">
@@ -1096,7 +1310,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
         <div className="p-6 border-t border-gray-800 bg-gray-950 flex justify-end gap-3 shrink-0">
           <button onClick={onClose} className="px-5 py-2.5 text-gray-300 hover:text-white font-medium transition-colors">Cancel</button>
-          <button onClick={async () => { onSave(local); await onSaveTemplates(localTemplates); }} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"><Save size={16} /> Save</button>
+          <button onClick={handleSaveAll} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"><Save size={16} /> Save</button>
         </div>
       </div>
       {cleaning && (
