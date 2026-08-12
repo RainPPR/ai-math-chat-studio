@@ -19,6 +19,20 @@ export interface UserSettings {
   [key: string]: any;
 }
 
+async function writeIfChanged(filepath: string, newJSON: string): Promise<void> {
+  try {
+    const existing = await fs.readFile(filepath, 'utf-8');
+    if (existing === newJSON) {
+      return; // Skip writing if identical
+    }
+  } catch {
+    // File does not exist, proceed
+  }
+  const tempPath = `${filepath}.tmp`;
+  await fs.writeFile(tempPath, newJSON, 'utf-8');
+  await fs.rename(tempPath, filepath);
+}
+
 export async function loadSettings(settingsFile: string): Promise<UserSettings> {
   const dataDir = path.dirname(settingsFile);
   const providersFile = path.join(dataDir, 'providers.json');
@@ -35,77 +49,89 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
     settings = {};
   }
 
-  // Load providers
+  // Load providers from split file with Array.isArray guard
   let providers: any[] = [];
-  let providersMigrated = false;
   try {
     const content = await fs.readFile(providersFile, 'utf-8');
-    providers = JSON.parse(content);
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) {
+      providers = parsed;
+    }
   } catch {
-    // If separate file is missing but exists in settings.json, we migrate it
-    if (settings.providers) {
+    // If separate file read fails or isn't array, and settings has providers, migrate
+    if (settings.providers && Array.isArray(settings.providers)) {
       providers = settings.providers;
-      providersMigrated = true;
     }
   }
 
-  // Load models
+  // Load models from split file with Array.isArray guard
   let models: any[] = [];
-  let modelsMigrated = false;
   try {
     const content = await fs.readFile(modelsFile, 'utf-8');
-    models = JSON.parse(content);
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) {
+      models = parsed;
+    }
   } catch {
-    // If separate file is missing but exists in settings.json, we migrate it
-    if (settings.models) {
+    // If separate file read fails or isn't array, and settings has models, migrate
+    if (settings.models && Array.isArray(settings.models)) {
       models = settings.models;
-      modelsMigrated = true;
     }
   }
 
-  // Load characters
+  // Load characters from split file with Array.isArray guard
   let characters: any[] = [];
-  let charactersMigrated = false;
   try {
     const content = await fs.readFile(charactersFile, 'utf-8');
-    characters = JSON.parse(content);
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) {
+      characters = parsed;
+    }
   } catch {
-    // If separate file is missing but exists in settings.json, we migrate it
-    if (settings.characters) {
+    // If separate file read fails or isn't array, and settings has characters, migrate
+    if (settings.characters && Array.isArray(settings.characters)) {
       characters = settings.characters;
-      charactersMigrated = true;
     }
   }
 
-  // If any key was migrated, write them down so they are separated right now
-  if (providersMigrated) {
-    await fs.mkdir(dataDir, { recursive: true });
-    await fs.writeFile(providersFile, JSON.stringify(providers, null, 2), 'utf-8');
-  }
-  if (modelsMigrated) {
-    await fs.mkdir(dataDir, { recursive: true });
-    await fs.writeFile(modelsFile, JSON.stringify(models, null, 2), 'utf-8');
-  }
-  if (charactersMigrated) {
-    await fs.mkdir(dataDir, { recursive: true });
-    await fs.writeFile(charactersFile, JSON.stringify(characters, null, 2), 'utf-8');
-  }
+  // On-the-fly migration: if keys exist in settings.json, perform the split & save
+  const hasProvidersInSettings = settings.providers && Array.isArray(settings.providers);
+  const hasModelsInSettings = settings.models && Array.isArray(settings.models);
+  const hasCharactersInSettings = settings.characters && Array.isArray(settings.characters);
 
-  // Remove keys from root settings object to prevent redundancy
-  delete settings.providers;
-  delete settings.models;
-  delete settings.characters;
+  if (hasProvidersInSettings || hasModelsInSettings || hasCharactersInSettings) {
+    if (hasProvidersInSettings) providers = settings.providers;
+    if (hasModelsInSettings) models = settings.models;
+    if (hasCharactersInSettings) characters = settings.characters;
 
-  // If migration occurred, we should rewrite settings.json without these three keys
-  if (settingsExist && (providersMigrated || modelsMigrated || charactersMigrated)) {
-    await fs.writeFile(settingsFile, JSON.stringify(settings, null, 2), 'utf-8');
+    delete settings.providers;
+    delete settings.models;
+    delete settings.characters;
+
+    try {
+      await fs.mkdir(dataDir, { recursive: true });
+      if (hasProvidersInSettings) {
+        await writeIfChanged(providersFile, JSON.stringify(providers, null, 2));
+      }
+      if (hasModelsInSettings) {
+        await writeIfChanged(modelsFile, JSON.stringify(models, null, 2));
+      }
+      if (hasCharactersInSettings) {
+        await writeIfChanged(charactersFile, JSON.stringify(characters, null, 2));
+      }
+      if (settingsExist) {
+        await writeIfChanged(settingsFile, JSON.stringify(settings, null, 2));
+      }
+    } catch (err: any) {
+      console.warn(`[Settings Migration] Non-blocking failure while saving migrated files: ${err.message}`);
+    }
   }
 
   return {
     ...settings,
     providers,
     models,
-    characters
+    characters,
   };
 }
 
@@ -115,12 +141,12 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
   const modelsFile = path.join(dataDir, 'models.json');
   const charactersFile = path.join(dataDir, 'characters.json');
 
-  // Deep clone to avoid mutating the original object passed by the caller
   const settingsCopy = JSON.parse(JSON.stringify(settings));
 
-  const providers = settingsCopy.providers || [];
-  const models = settingsCopy.models || [];
-  const characters = settingsCopy.characters || [];
+  // Extract from incoming settings if they are valid arrays
+  const incomingProviders = settingsCopy.providers;
+  const incomingModels = settingsCopy.models;
+  const incomingCharacters = settingsCopy.characters;
 
   delete settingsCopy.providers;
   delete settingsCopy.models;
@@ -128,8 +154,17 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
 
   await fs.mkdir(dataDir, { recursive: true });
 
-  await fs.writeFile(settingsFile, JSON.stringify(settingsCopy, null, 2), 'utf-8');
-  await fs.writeFile(providersFile, JSON.stringify(providers, null, 2), 'utf-8');
-  await fs.writeFile(modelsFile, JSON.stringify(models, null, 2), 'utf-8');
-  await fs.writeFile(charactersFile, JSON.stringify(characters, null, 2), 'utf-8');
+  // Save general settings
+  await writeIfChanged(settingsFile, JSON.stringify(settingsCopy, null, 2));
+
+  // Guard: Only write split files if they were present in settings and are valid arrays
+  if (incomingProviders && Array.isArray(incomingProviders)) {
+    await writeIfChanged(providersFile, JSON.stringify(incomingProviders, null, 2));
+  }
+  if (incomingModels && Array.isArray(incomingModels)) {
+    await writeIfChanged(modelsFile, JSON.stringify(incomingModels, null, 2));
+  }
+  if (incomingCharacters && Array.isArray(incomingCharacters)) {
+    await writeIfChanged(charactersFile, JSON.stringify(incomingCharacters, null, 2));
+  }
 }

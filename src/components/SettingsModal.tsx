@@ -309,23 +309,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const handleAddNote = () => {
     const newNote = {
       id: crypto.randomUUID(),
-      content: '新便利贴...',
+      content: '',
       createdAt: new Date().toLocaleString('zh-CN', { hour12: false }),
     };
     const updatedNotes = [...(local.stickyNotes || []), newNote];
     setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
     setEditingNoteId(newNote.id);
-    setEditingNoteContent(newNote.content);
+    setEditingNoteContent('');
   };
 
   const handleSaveNote = (id: string) => {
-    const updatedNotes = (local.stickyNotes || []).map(note => {
-      if (note.id === id) {
-        return { ...note, content: editingNoteContent };
-      }
-      return note;
-    });
-    setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
+    if (!editingNoteContent.trim()) {
+      const updatedNotes = (local.stickyNotes || []).filter(note => note.id !== id);
+      setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
+    } else {
+      const updatedNotes = (local.stickyNotes || []).map(note => {
+        if (note.id === id) {
+          return { ...note, content: editingNoteContent.trim() };
+        }
+        return note;
+      });
+      setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
+    }
+    setEditingNoteId(null);
+  };
+
+  const handleCancelNote = (id: string) => {
+    const note = (local.stickyNotes || []).find(n => n.id === id);
+    if (note && !note.content.trim()) {
+      const updatedNotes = (local.stickyNotes || []).filter(n => n.id !== id);
+      setLocal(s => ({ ...s, stickyNotes: updatedNotes }));
+    }
     setEditingNoteId(null);
   };
 
@@ -683,6 +697,101 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     });
   };
 
+  let stickyNotesContent = null;
+  if (!local.stickyNotes || local.stickyNotes.length === 0) {
+    stickyNotesContent = (
+      <div className="bg-gray-900/40 border border-gray-800/80 rounded-lg p-6 text-center">
+        <p className="text-xs text-gray-500">暂无便利贴，您可以记录一些小的注释（如：到底导出到哪里了）</p>
+      </div>
+    );
+  } else {
+    stickyNotesContent = (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {local.stickyNotes.map(note => {
+          const isEditing = editingNoteId === note.id;
+          let cardInner = null;
+
+          if (isEditing) {
+            cardInner = (
+              <div className="space-y-2 mt-2">
+                <textarea
+                  value={editingNoteContent}
+                  onChange={e => setEditingNoteContent(e.target.value)}
+                  className="w-full bg-amber-100/50 border border-amber-300 text-gray-800 rounded p-2 text-xs focus:outline-none focus:border-amber-500 resize-none"
+                  rows={4}
+                  placeholder="写下一些注释..."
+                  autoFocus
+                />
+                <div className="flex justify-end gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleCancelNote(note.id)}
+                    className="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded transition-colors font-medium"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveNote(note.id)}
+                    className="text-[10px] bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded transition-colors font-medium flex items-center gap-1"
+                  >
+                    <Check size={10} />
+                    保存
+                  </button>
+                </div>
+              </div>
+            );
+          } else {
+            cardInner = (
+              <>
+                <div className="space-y-3 mt-1">
+                  <p className="text-xs font-normal whitespace-pre-wrap leading-relaxed text-gray-700 select-text break-words">
+                    {note.content}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between border-t border-amber-200/50 pt-2 mt-3 text-[10px] text-gray-500">
+                  <span>{note.createdAt}</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingNoteId(note.id);
+                        setEditingNoteContent(note.content);
+                      }}
+                      className="text-gray-500 hover:text-amber-700 p-1 rounded hover:bg-amber-200/50 transition-colors"
+                      title="编辑"
+                    >
+                      <Pencil size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteNote(note.id)}
+                      className="text-gray-500 hover:text-red-600 p-1 rounded hover:bg-amber-200/50 transition-colors"
+                      title="删除"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              </>
+            );
+          }
+
+          return (
+            <div
+              key={note.id}
+              className="bg-amber-50 border border-amber-200/80 rounded-xl p-4 shadow-sm text-gray-800 flex flex-col justify-between min-h-[140px] transform hover:scale-[1.01] transition-all relative overflow-hidden"
+            >
+              {/* Real tape effect on sticky note */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-16 h-4 bg-amber-200/40 border-b border-amber-300/30 rotate-1 shadow-sm"></div>
+              {cardInner}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -775,89 +884,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   </button>
                 </div>
 
-                {(!local.stickyNotes || local.stickyNotes.length === 0) ? (
-                  <div className="bg-gray-900/40 border border-gray-800/80 rounded-lg p-6 text-center">
-                    <p className="text-xs text-gray-500">暂无便利贴，您可以记录一些小的注释（如：到底导出到哪里了）</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {local.stickyNotes.map(note => {
-                      const isEditing = editingNoteId === note.id;
-                      return (
-                        <div
-                          key={note.id}
-                          className="bg-amber-50 border border-amber-200/80 rounded-xl p-4 shadow-sm text-gray-800 flex flex-col justify-between min-h-[140px] transform hover:scale-[1.01] transition-all relative overflow-hidden"
-                        >
-                          {/* Real tape effect on sticky note */}
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-16 h-4 bg-amber-200/40 border-b border-amber-300/30 rotate-1 shadow-sm"></div>
-
-                          {isEditing ? (
-                            <div className="space-y-2 mt-2">
-                              <textarea
-                                value={editingNoteContent}
-                                onChange={e => setEditingNoteContent(e.target.value)}
-                                className="w-full bg-amber-100/50 border border-amber-300 text-gray-800 rounded p-2 text-xs focus:outline-none focus:border-amber-500 resize-none"
-                                rows={4}
-                                placeholder="写下一些注释..."
-                                autoFocus
-                              />
-                              <div className="flex justify-end gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingNoteId(null)}
-                                  className="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-600 px-2 py-1 rounded transition-colors font-medium"
-                                >
-                                  取消
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleSaveNote(note.id)}
-                                  className="text-[10px] bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded transition-colors font-medium flex items-center gap-1"
-                                >
-                                  <Check size={10} />
-                                  保存
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="space-y-3 mt-1">
-                              <p className="text-xs font-normal whitespace-pre-wrap leading-relaxed text-gray-700 select-text break-words">
-                                {note.content}
-                              </p>
-                            </div>
-                          )}
-
-                          {!isEditing && (
-                            <div className="flex items-center justify-between border-t border-amber-200/50 pt-2 mt-3 text-[10px] text-gray-500">
-                              <span>{note.createdAt}</span>
-                              <div className="flex items-center gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingNoteId(note.id);
-                                    setEditingNoteContent(note.content);
-                                  }}
-                                  className="text-gray-500 hover:text-amber-700 p-1 rounded hover:bg-amber-200/50 transition-colors"
-                                  title="编辑"
-                                >
-                                  <Pencil size={12} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteNote(note.id)}
-                                  className="text-gray-500 hover:text-red-600 p-1 rounded hover:bg-amber-200/50 transition-colors"
-                                  title="删除"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                {stickyNotesContent}
               </div>
 
               <div className="space-y-3 pt-4 border-t border-red-900/50">

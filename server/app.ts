@@ -86,7 +86,6 @@ async function syncRemoteModels(settingsFile: string) {
           injectThinkingTemplate: remote.injectThinkingTemplate,
         }));
 
-        if (!settings.models) settings.models = [];
         settings.models.push(...newModels);
 
         // Clear activeModelId if it was removed

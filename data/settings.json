@@ -12,16 +12,8 @@
     "2026-07-19T08:53:15.252Z",
     "2026-07-30T05:14:11.684Z"
   ],
-  "claudeChunkRemarks": {
-    "2026-07-19T08:53:15.252Z": "7月第一次导出，数学竞赛和解题方案"
-  },
-  "stickyNotes": [
-    {
-      "id": "62b4568e-0828-488f-937b-f735a2633378",
-      "content": "重要备份记录：2026年第三季度数学模型分析全部归档到 C:/Backups/Claude_Math_Q3 文件夹。重要！",
-      "createdAt": "2026/8/11 14:33:07"
-    }
-  ],
+  "claudeChunkRemarks": {},
+  "stickyNotes": [],
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
   "activeCharacterId": "d8aecab7-14b5-4982-b285-1b875b783644",
