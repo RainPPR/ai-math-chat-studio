@@ -1,7 +1,7 @@
 ```typescript
 import { Router } from 'express';
 import { GenerationManager } from '../services/generation-manager';
-import fs from 'fs/promises';
+import { loadSettings } from '../lib/settings-helper';
 
 interface Character {
   id: string;
@@ -18,14 +18,6 @@ interface SettingsData {
   systemPrompt?: string;
   injectThinkingTemplate?: boolean;
   [key: string]: any;
-}
-
-async function loadSettings(settingsFile: string): Promise<SettingsData> {
-  try {
-    return JSON.parse(await fs.readFile(settingsFile, 'utf-8'));
-  } catch {
-    return {};
-  }
 }
 
 function resolveActiveModel(settings: SettingsData) {

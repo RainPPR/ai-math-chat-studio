@@ -1,3 +1,129 @@
+### 代码质量与 Lint 规范
+
+```text
+本项目执行严格的代码质量检查。所有代码必须通过 ESLint、Prettier 和 TypeScript 的严格模式检查。
+```
+
+### 代码质量与 Lint 规范 / 检查工具
+
+```text
+- **Lint**: `bun run lint` (eslint)
+- **Formatting**: `bun run pretty` (prettier --check)
+- **Type Check**: `bun run check` (tsc --noEmit --strict)
+```
+
+### 代码质量与 Lint 规范 / 修复工具
+
+```text
+- **自动修复 Lint**: `bun run lint:fix`
+- **自动修复格式**: `bun run pretty:fix`
+```
+
+### 代码质量与 Lint 规范 / 严格修复规则
+
+```text
+1. **禁止未使用变量**: 所有的 `unused-vars` 必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
+2. **禁止未使用的表达式**: 严禁将三元运算符或逻辑表达式作为独立语句使用。应使用标准的 `if/else` 语句。
+3. **严格类型检查**: TypeScript 必须处于 `--strict` 模式。严禁无故使用 `@ts-ignore` 或 `@ts-expect-error`。如果第三方库缺少类型或存在上游 Bug，必须在注释中说明原因。
+4. **文档同步**: 任何逻辑变更必须同步更新 `AGENTS.md` 和 `docs/` 目录下的相关文档。
+```
+
+### 代码质量与 Lint 规范 / 最佳实践 (TypeScript)
+
+```text
+- **Make Illegal States Unrepresentable**: 使用辨析联合类型 (Discriminated Unions) 确保状态合法。
+- **Runtime Validation**: 对外部数据（API 响应、本地存储）使用 Zod 等工具进行运行时验证。
+- **Branded Types**: 对 ID 等原始类型使用 Branded Types 以增强区分度。
+- **Exhaustive Checks**: 使用 `never` 类型确保 `switch` 语句处理了所有可能的情况。
+```
+
+### 文件结构
+
+```text
+ai-math-chat-studio/
+├── .env                      # 环境变量（不提交）
+├── .env.example              # 环境变量模板
+├── .gitignore
+├── .prettierignore           # Prettier 忽略文件
+├── AGENTS.md                 # AI 开发指导文件
+├── docs/                     # 项目文档
+│   ├── architecture.md       # 架构概览
+│   ├── api-providers.md      # AI 供应商集成
+│   ├── components.md         # 组件结构
+│   ├── data-models.md        # 数据模型
+│   ├── tech-stack.md         # 技术栈
+│   ├── linting-and-quality.md # 代码质量指南
+│   └── file-structure.md     # 本文件
+├── data/                     # 本地数据存储（不提交）
+│   ├── settings.json         # 用户设置
+│   ├── templates.json        # 聊天自动填入模板设置
+│   ├── sessions/             # 会话数据
+│   └── log/                  # 日志数据 (YYYY-MM-DD.log)
+├── index.html                # SPA 入口 HTML
+├── package.json              # 项目依赖和脚本
+├── bun.lock                  # Bun 依赖锁定文件
+├── eslint.config.mjs         # ESLint 配置
+├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
+├── server/                   # 后端模块
+│   ├── app.ts                # Express 5 应用组装，挂载所有路由
+│   ├── vite-helper.ts        # Vite 开发服务器辅助
+│   ├── providers/            # AI 供应商相关
+│   │   ├── built-in.ts       # 内置提供商类型定义
+│   │   ├── config.ts         # 提供商配置解析（apiKey、baseURL）
+│   │   └── stream.ts         # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
+│   ├── routes/               # API 路由
+│   │   ├── settings.ts       # /api/settings GET/PUT
+│   │   ├── templates.ts      # /api/templates GET/PUT
+│   │   ├── sessions.ts       # /api/sessions GET/GET/:id/DELETE
+│   │   ├── chat.ts           # /api/sessions/:id/messages, generation, retry, continue
+│   │   └── models.ts         # /api/providers, /api/providers/:type/models
+│   └── services/             # 核心服务
+│       ├── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
+│       └── logger.ts             # 日志服务：拦截 console 输出并持久化到 data/log/
+├── src/
+│   ├── App.tsx               # 主应用组件（状态管理）
+│   ├── main.tsx              # React 入口
+│   ├── index.css             # Tailwind 导入
+│   ├── types.ts              # TypeScript 类型定义
+│   ├── vite-env.d.ts         # Vite 类型声明
+│   ├── components/
+│   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
+│   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
+│   │   ├── SettingsModal.tsx # 设置弹窗（4 Tab：General / Providers / Models / Characters）
+│   │   └── Sidebar.tsx       # 左侧栏（会话列表）
+│   └── lib/
+│       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
+│       └── utils.ts          # cn() 样式合并工具
+├── tsconfig.json             # TypeScript 配置
+└── vite.config.ts            # Vite 构建配置
+```
+
+### 文件结构 / 关键文件说明
+
+```text
+| 文件 | 职责 |
+|------|------|
+| `server.ts` | 入口文件，`import 'dotenv/config'` + `startApp()` |
+| `server/app.ts` | Express 5 应用组装，挂载路由，创建 GenerationManager |
+| `server/providers/built-in.ts` | 内置 3 种提供商类型定义（google / nvidia / openai-compatible） |
+| `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
+| `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
+| `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、取消。 |
+| `server/services/logger.ts` | **日志服务**：拦截 console 输出并持久化到 `data/log/`。 |
+| `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
+| `server/routes/settings.ts` | `/api/settings` GET/PUT |
+| `server/routes/templates.ts` | `/api/templates` GET/PUT |
+| `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
+| `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
+| `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
+| `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
+| `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
+| `src/components/SettingsModal.tsx` | 4 Tab 设置（General / Providers / Models / Characters） |
+| `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
+| `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
+| `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
+```
+
 ### 技术栈详情
 
 ```text
@@ -470,159 +596,6 @@ const DEFAULT_SETTINGS: UserSettings = {
 > **设计要点**：所有参数（temperature、maxTokens 等）为 "Unset" 时不传给 API，由供应商使用默认值。已删除 `topP` 参数。
 ```
 
-### 代码质量与 Lint 规范
-
-```text
-本项目执行严格的代码质量检查。所有代码必须通过 ESLint、Prettier 和 TypeScript 的严格模式检查。
-```
-
-### 代码质量与 Lint 规范 / 检查工具
-
-```text
-- **Lint**: `bun run lint` (eslint)
-- **Formatting**: `bun run pretty` (prettier --check)
-- **Type Check**: `bun run check` (tsc --noEmit --strict)
-```
-
-### 代码质量与 Lint 规范 / 修复工具
-
-```text
-- **自动修复 Lint**: `bun run lint:fix`
-- **自动修复格式**: `bun run pretty:fix`
-```
-
-### 代码质量与 Lint 规范 / 严格修复规则
-
-```text
-1. **禁止未使用变量**: 所有的 `unused-vars` 必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
-2. **禁止未使用的表达式**: 严禁将三元运算符或逻辑表达式作为独立语句使用。应使用标准的 `if/else` 语句。
-3. **严格类型检查**: TypeScript 必须处于 `--strict` 模式。严禁无故使用 `@ts-ignore` 或 `@ts-expect-error`。如果第三方库缺少类型或存在上游 Bug，必须在注释中说明原因。
-4. **文档同步**: 任何逻辑变更必须同步更新 `AGENTS.md` 和 `docs/` 目录下的相关文档。
-```
-
-### 代码质量与 Lint 规范 / 最佳实践 (TypeScript)
-
-```text
-- **Make Illegal States Unrepresentable**: 使用辨析联合类型 (Discriminated Unions) 确保状态合法。
-- **Runtime Validation**: 对外部数据（API 响应、本地存储）使用 Zod 等工具进行运行时验证。
-- **Branded Types**: 对 ID 等原始类型使用 Branded Types 以增强区分度。
-- **Exhaustive Checks**: 使用 `never` 类型确保 `switch` 语句处理了所有可能的情况。
-```
-
-### AI 供应商集成文档
-
-```text
-
-```
-
-### AI 供应商集成文档 / 供应商总览
-
-```text
-本项目内置 3 种提供商类型，均通过服务端代理调用：
-
-| 类型 | ID | 默认 Base URL | 默认 Env Key |
-|------|-------------|----------|----------|
-| Google Gemini | `google` | generativelanguage.googleapis.com/v1beta | `GEMINI_API_KEY` |
-| Nvidia NIM | `nvidia` | integrate.api.nvidia.com/v1 | `NVIDIA_API_KEY` |
-| OpenAI Compatible | `openai-compatible` | 用户配置 | `OPENAI_API_KEY` |
-
-> 用户可自行添加任意数量的 `openai-compatible` 提供商实例。
-```
-
-### AI 供应商集成文档 / 架构
-
-```text
-
-```
-
-### AI 供应商集成文档 / 架构 / 服务端模块
-
-```text
-- **`server/providers/built-in.ts`** — 内置提供商类型定义
-  - `BUILT_IN_PROVIDERS` 记录：存储每种内置类型的默认配置
-  
-- **`server/providers/config.ts`** — 提供商配置解析
-  - `resolveApiKey()` — 解析 API Key（优先配置项，其次环境变量，最后 `OPENAI_API_KEY` 回退）
-  - `resolveBaseURL()` — 解析 Base URL（优先配置项，其次内置默认值）
-
-- **`server/providers/stream.ts`** — 流式 API 调用
-  - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
-  - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
-  - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK，不启用 `reasoning_effort` 级联回退机制）
-  - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用，支持 `reasoning_effort` 自动重试机制（若未显式指定级别，会从 `max` -> `xhigh` -> `high` 依次尝试请求，每个级别失败后重试一次。若抛出 401、403、404 等严重配置或不存在错误，则立即停止并向上抛出；若抛出与 `reasoning_effort` 相关的 400 或 422 错误，则立刻停止重试尝试并直接回退调用无 `reasoning_effort` 参数的模型流；若检测到 429 速率限制，也会立即向上抛出错误以提升用户体验）
-  - `StreamRequest` / `StreamChunk` 类型定义
-```
-
-### AI 供应商集成文档 / 架构 / 前端统一客户端
-
-```text
-- **`src/lib/api.ts`** — 统一 API 客户端
-  - `api.settings` — 设置读写
-  - `api.sessions` — 会话 CRUD
-  - `api.chat` — 消息发送、停止、重试、继续
-  - `api.providers` — 获取内置提供商类型列表和模型列表
-  - `api.subscribeGeneration()` — SSE 订阅生成进度
-```
-
-### AI 供应商集成文档 / Google Gemini
-
-```text
-- **SDK**：`@google/genai`
-- **特殊功能**：
-  - Thinking Level 配置（minimal/low/medium/high）
-  - `includeThoughts: true` 确保思考过程可见
-  - 流式响应 + 思考过程分段（`part.thought` 标记）
-```
-
-### AI 供应商集成文档 / Nvidia NIM
-
-```text
-- **SDK**：OpenAI SDK
-- **Base URL**：`https://integrate.api.nvidia.com/v1`
-- **特殊功能**：支持 `extraBody` 透传（如 `chat_template_kwargs`）
-- **推理过程**：通过 `delta.reasoning` 或 `delta.reasoning_content` 字段检测
-- **推理强度配置**：不启用 `reasoning_effort` 级联回退机制或自动参数注入。在未显式设置 `reasoning_effort` 时，默认进行无 `reasoning_effort` 参数的请求；若用户显式配置了 `reasoning_effort`（例如 Kimi K2.6），则依然会直接遵循该显式配置发出请求。
-```
-
-### AI 供应商集成文档 / OpenAI Compatible
-
-```text
-- **SDK**：OpenAI SDK
-- **用途**：支持任意 OpenAI 兼容 API 端点
-- **配置方式**：在 Settings → Providers tab 中手动填写名称、Base URL、API Key、Env Key Prefix
-```
-
-### AI 供应商集成文档 / SSE 流式协议
-
-```text
-前端通过 `EventSource` 订阅 `/api/sessions/:id/generation`，服务端发送以下事件：
-
-event: delta
-data: {"content": "完整内容（含思考过程包装）"}
-
-event: done
-data: {"content": "最终内容"}
-
-event: error
-data: {"message": "错误信息"}
-
-event: stopped
-data: {}
-
-**标题生成**：当新建会话时，服务端同步生成标题（使用 `unicodeit` + `markdown-to-txt` 转换 Markdown 为 Plain Text）。标题生成后立即保存到 session.json。
-```
-
-### AI 供应商集成文档 / 环境变量汇总
-
-```text
-GEMINI_API_KEY=          # Google Gemini
-NVIDIA_API_KEY=          # Nvidia NIM
-OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
-
-> 所有 API Key 均在服务端读取（通过 dotenv），前端不暴露任何 Key。
-> API Key 解析优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量（如 `GEMINI_API_KEY`）> `OPENAI_API_KEY` 回退。
-```
-
 ### 项目架构概览
 
 ```text
@@ -870,90 +843,117 @@ graph TD
 -   **文档同步规则**: `AGENTS.md` 中明确规定，任何对代码、架构或数据模型的修改都必须同步更新相关的文档，以保持其准确性。
 ```
 
-### 文件结构
+### AI 供应商集成文档
 
 ```text
-ai-math-chat-studio/
-├── .env                      # 环境变量（不提交）
-├── .env.example              # 环境变量模板
-├── .gitignore
-├── .prettierignore           # Prettier 忽略文件
-├── AGENTS.md                 # AI 开发指导文件
-├── docs/                     # 项目文档
-│   ├── architecture.md       # 架构概览
-│   ├── api-providers.md      # AI 供应商集成
-│   ├── components.md         # 组件结构
-│   ├── data-models.md        # 数据模型
-│   ├── tech-stack.md         # 技术栈
-│   ├── linting-and-quality.md # 代码质量指南
-│   └── file-structure.md     # 本文件
-├── data/                     # 本地数据存储（不提交）
-│   ├── settings.json         # 用户设置
-│   ├── templates.json        # 聊天自动填入模板设置
-│   ├── sessions/             # 会话数据
-│   └── log/                  # 日志数据 (YYYY-MM-DD.log)
-├── index.html                # SPA 入口 HTML
-├── package.json              # 项目依赖和脚本
-├── bun.lock                  # Bun 依赖锁定文件
-├── eslint.config.mjs         # ESLint 配置
-├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
-├── server/                   # 后端模块
-│   ├── app.ts                # Express 5 应用组装，挂载所有路由
-│   ├── vite-helper.ts        # Vite 开发服务器辅助
-│   ├── providers/            # AI 供应商相关
-│   │   ├── built-in.ts       # 内置提供商类型定义
-│   │   ├── config.ts         # 提供商配置解析（apiKey、baseURL）
-│   │   └── stream.ts         # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
-│   ├── routes/               # API 路由
-│   │   ├── settings.ts       # /api/settings GET/PUT
-│   │   ├── templates.ts      # /api/templates GET/PUT
-│   │   ├── sessions.ts       # /api/sessions GET/GET/:id/DELETE
-│   │   ├── chat.ts           # /api/sessions/:id/messages, generation, retry, continue
-│   │   └── models.ts         # /api/providers, /api/providers/:type/models
-│   └── services/             # 核心服务
-│       ├── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
-│       └── logger.ts             # 日志服务：拦截 console 输出并持久化到 data/log/
-├── src/
-│   ├── App.tsx               # 主应用组件（状态管理）
-│   ├── main.tsx              # React 入口
-│   ├── index.css             # Tailwind 导入
-│   ├── types.ts              # TypeScript 类型定义
-│   ├── vite-env.d.ts         # Vite 类型声明
-│   ├── components/
-│   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
-│   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
-│   │   ├── SettingsModal.tsx # 设置弹窗（4 Tab：General / Providers / Models / Characters）
-│   │   └── Sidebar.tsx       # 左侧栏（会话列表）
-│   └── lib/
-│       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
-│       └── utils.ts          # cn() 样式合并工具
-├── tsconfig.json             # TypeScript 配置
-└── vite.config.ts            # Vite 构建配置
+
 ```
 
-### 文件结构 / 关键文件说明
+### AI 供应商集成文档 / 供应商总览
 
 ```text
-| 文件 | 职责 |
-|------|------|
-| `server.ts` | 入口文件，`import 'dotenv/config'` + `startApp()` |
-| `server/app.ts` | Express 5 应用组装，挂载路由，创建 GenerationManager |
-| `server/providers/built-in.ts` | 内置 3 种提供商类型定义（google / nvidia / openai-compatible） |
-| `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
-| `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
-| `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、取消。 |
-| `server/services/logger.ts` | **日志服务**：拦截 console 输出并持久化到 `data/log/`。 |
-| `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
-| `server/routes/settings.ts` | `/api/settings` GET/PUT |
-| `server/routes/templates.ts` | `/api/templates` GET/PUT |
-| `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
-| `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
-| `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
-| `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
-| `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
-| `src/components/SettingsModal.tsx` | 4 Tab 设置（General / Providers / Models / Characters） |
-| `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
-| `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
-| `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
+本项目内置 3 种提供商类型，均通过服务端代理调用：
+
+| 类型 | ID | 默认 Base URL | 默认 Env Key |
+|------|-------------|----------|----------|
+| Google Gemini | `google` | generativelanguage.googleapis.com/v1beta | `GEMINI_API_KEY` |
+| Nvidia NIM | `nvidia` | integrate.api.nvidia.com/v1 | `NVIDIA_API_KEY` |
+| OpenAI Compatible | `openai-compatible` | 用户配置 | `OPENAI_API_KEY` |
+
+> 用户可自行添加任意数量的 `openai-compatible` 提供商实例。
+```
+
+### AI 供应商集成文档 / 架构
+
+```text
+
+```
+
+### AI 供应商集成文档 / 架构 / 服务端模块
+
+```text
+- **`server/providers/built-in.ts`** — 内置提供商类型定义
+  - `BUILT_IN_PROVIDERS` 记录：存储每种内置类型的默认配置
+  
+- **`server/providers/config.ts`** — 提供商配置解析
+  - `resolveApiKey()` — 解析 API Key（优先配置项，其次环境变量，最后 `OPENAI_API_KEY` 回退）
+  - `resolveBaseURL()` — 解析 Base URL（优先配置项，其次内置默认值）
+
+- **`server/providers/stream.ts`** — 流式 API 调用
+  - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
+  - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
+  - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK，不启用 `reasoning_effort` 级联回退机制）
+  - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用，支持 `reasoning_effort` 自动重试机制（若未显式指定级别，会从 `max` -> `xhigh` -> `high` 依次尝试请求，每个级别失败后重试一次。若抛出 401、403、404 等严重配置或不存在错误，则立即停止并向上抛出；若抛出与 `reasoning_effort` 相关的 400 或 422 错误，则立刻停止重试尝试并直接回退调用无 `reasoning_effort` 参数的模型流；若检测到 429 速率限制，也会立即向上抛出错误以提升用户体验）
+  - `StreamRequest` / `StreamChunk` 类型定义
+```
+
+### AI 供应商集成文档 / 架构 / 前端统一客户端
+
+```text
+- **`src/lib/api.ts`** — 统一 API 客户端
+  - `api.settings` — 设置读写
+  - `api.sessions` — 会话 CRUD
+  - `api.chat` — 消息发送、停止、重试、继续
+  - `api.providers` — 获取内置提供商类型列表和模型列表
+  - `api.subscribeGeneration()` — SSE 订阅生成进度
+```
+
+### AI 供应商集成文档 / Google Gemini
+
+```text
+- **SDK**：`@google/genai`
+- **特殊功能**：
+  - Thinking Level 配置（minimal/low/medium/high）
+  - `includeThoughts: true` 确保思考过程可见
+  - 流式响应 + 思考过程分段（`part.thought` 标记）
+```
+
+### AI 供应商集成文档 / Nvidia NIM
+
+```text
+- **SDK**：OpenAI SDK
+- **Base URL**：`https://integrate.api.nvidia.com/v1`
+- **特殊功能**：支持 `extraBody` 透传（如 `chat_template_kwargs`）
+- **推理过程**：通过 `delta.reasoning` 或 `delta.reasoning_content` 字段检测
+- **推理强度配置**：不启用 `reasoning_effort` 级联回退机制或自动参数注入。在未显式设置 `reasoning_effort` 时，默认进行无 `reasoning_effort` 参数的请求；若用户显式配置了 `reasoning_effort`（例如 Kimi K2.6），则依然会直接遵循该显式配置发出请求。
+```
+
+### AI 供应商集成文档 / OpenAI Compatible
+
+```text
+- **SDK**：OpenAI SDK
+- **用途**：支持任意 OpenAI 兼容 API 端点
+- **配置方式**：在 Settings → Providers tab 中手动填写名称、Base URL、API Key、Env Key Prefix
+```
+
+### AI 供应商集成文档 / SSE 流式协议
+
+```text
+前端通过 `EventSource` 订阅 `/api/sessions/:id/generation`，服务端发送以下事件：
+
+event: delta
+data: {"content": "完整内容（含思考过程包装）"}
+
+event: done
+data: {"content": "最终内容"}
+
+event: error
+data: {"message": "错误信息"}
+
+event: stopped
+data: {}
+
+**标题生成**：当新建会话时，服务端同步生成标题（使用 `unicodeit` + `markdown-to-txt` 转换 Markdown 为 Plain Text）。标题生成后立即保存到 session.json。
+```
+
+### AI 供应商集成文档 / 环境变量汇总
+
+```text
+GEMINI_API_KEY=          # Google Gemini
+NVIDIA_API_KEY=          # Nvidia NIM
+OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
+
+> 所有 API Key 均在服务端读取（通过 dotenv），前端不暴露任何 Key。
+> API Key 解析优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量（如 `GEMINI_API_KEY`）> `OPENAI_API_KEY` 回退。
 ```
 
