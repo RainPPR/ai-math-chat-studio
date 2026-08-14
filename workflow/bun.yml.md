@@ -56,10 +56,6 @@ jobs:
             ${{ runner.os }}-bun-
       - run: bun install
       - run: bun run build:bundle
-      - uses: actions/upload-artifact@v7
-        with:
-          name: server-bundle
-          path: dist-server/
 
   build-compile:
     runs-on: windows-latest
@@ -77,9 +73,5 @@ jobs:
             ${{ runner.os }}-bun-
       - run: bun install
       - run: bun run build:compile
-      - uses: actions/upload-artifact@v7
-        with:
-          name: bun-compile-windows
-          path: release/*.exe
 
 ```
