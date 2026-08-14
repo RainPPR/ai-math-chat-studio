@@ -74,7 +74,7 @@ ai-math-chat-studio/
 | `server/routes/templates.ts` | `/api/templates` GET/PUT |
 | `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
 | `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
-| `src/App.tsx` | 状态 management、会话 CRUD、per-session generating 状态 |
+| `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
 | `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
 | `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
 | `src/components/SettingsModal.tsx` | 4 Tab 设置（General / Providers / Models / Characters） |

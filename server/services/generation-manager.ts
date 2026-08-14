@@ -414,21 +414,6 @@ export class GenerationManager {
 
     // Truncate messages after this one
     session.messages = session.messages.slice(0, idx + 1);
-
-    // Add regenerate instruction
-    const regenerateMsg: ServerChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: `Based on the thinking process preserved in the \`<think>\` block above, please directly output the final, complete, and well-structured response.
-
-Requirements:
-1. Do not re-evaluate, critique, or apologize for your previous reasoning or previous responses. Do not mention that you are repeating, revising, or analyzing past thinking.
-2. Under no circumstances should you generate any meta-commentary, conversational filler, or introductory phrases like "Based on my previous thinking..." or "I see an error in my previous reasoning...".
-3. Jump straight into the final response or solution cleanly, starting directly with the substantive content.`,
-      createdAt: new Date().toISOString(),
-    };
-
-    session.messages.push(regenerateMsg);
     session.updatedAt = new Date().toISOString();
 
     try {

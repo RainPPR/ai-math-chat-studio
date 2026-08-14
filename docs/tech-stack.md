@@ -3,25 +3,25 @@
 ## 前端框架
 | 技术 | 版本 |
 |---|---|
-| React | ^19.2.7 |
+| React | ^19.2.8 |
 | TypeScript | ^7.0.2 |
-| Vite | ^8.0.16 |
-| Tailwind CSS | ^4.3.1 |
+| Vite | ^8.2.1 |
+| Tailwind CSS | ^4.3.3 |
 | @tailwindcss/typography | ^0.5.20 |
 
 ## 后端
 | 技术 | 版本 |
 |---|---|
 | Express | ^5.2.1 |
-| tsx | ^4.22.4 |
-| OpenAI SDK | ^6.44.0 |
+| tsx | ^4.23.12 |
+| OpenAI SDK | ^7.4.0 |
 | dotenv | ^17.4.2 |
 
 ## AI/数学库
 | 技术 | 版本 |
 |---|---|
-| @google/genai | ^2.8.0 |
-| KaTeX | ^0.17.0 |
+| @google/genai | ^2.17.1 |
+| KaTeX | ^0.18.4 |
 
 ## Markdown 渲染管线
 | 技术 | 版本 |
@@ -30,7 +30,7 @@
 | remark-math | ^6.0.0 |
 | remark-gfm | ^4.0.1 |
 | remark-breaks | ^4.0.0 |
-| remark-cjk-friendly | ^2.2.0 |
+| remark-cjk-friendly | ^2.3.1 |
 | remark-squeeze-paragraphs | ^6.0.0 |
 | rehype-katex | ^7.0.1 |
 | rehype-raw | ^7.0.0 |
@@ -41,8 +41,8 @@
 ## 其他依赖
 | 技术 | 版本 |
 |---|---|
-| lucide-react | ^1.21.0 |
-| motion | ^12.40.0 |
+| lucide-react | ^1.31.0 |
+| motion | ^13.1.0 |
 | clsx | ^2.1.1 |
 | tailwind-merge | ^3.6.0 |
 | uuid | ^14.0.1 |
@@ -91,5 +91,5 @@ bun run clean         # 清除 dist、dist-server、dist-compile、release 目�
 
 ### 字体实现细节
 1. **源字体与 WOFF2 转换**: 字体文件存放于 `src/fonts/` 下，转换使用标准的 `woff2_compress` 压缩技术将 OTF/TTF 转换为体积更小的 WOFF2 格式。
-2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义 in `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
+2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义在 `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
 3. **CJK/中文优雅回退**: 避免定制数学字体对数学公式内的中文（如 `\text{中文}` 或 `.cjk_fallback`）造成非预期的强制覆盖，系统在 `src/index.css` 增加了高优先级的非冲突 CJK 回退处理器，强制使 `.cjk_fallback` 及它的子元素回退并使用网页正文字体 (`system-ui, sans-serif`)。
