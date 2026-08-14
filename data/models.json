@@ -157,6 +157,14 @@
     "maxTokens": 16353
   },
   {
+    "id": "f63d2321-12be-42e0-a957-e1fd0ae30475",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3.7-flash",
+    "displayName": "Gemini 3.7 Flash (Google)",
+    "thinkingLevel": "high"
+  },
+  {
     "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
     "providerId": "p-poe-8d3e",
     "providerType": "openai-compatible",
@@ -213,13 +221,6 @@
     "providerType": "openai-compatible",
     "modelId": "nvidia/nemotron-3.5-lightning:free",
     "displayName": "NVIDIA: Nemotron 3.5 Lightning (Kilo)"
-  },
-  {
-    "id": "298ac01e-1d80-5b4a-b4e7-1252aa26e59f",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "inclusionai/ling-3.0-tiny:free",
-    "displayName": "inclusionAI: Ling 3.0 Tiny (Kilo)"
   },
   {
     "id": "a1600296-046e-5465-b8ff-9bd743cbb72c",
@@ -373,21 +374,6 @@
     "reasoningEffort": "high"
   },
   {
-    "id": "0b7c361b-63dc-5731-8d0e-d2315ec9d694",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "ling-3.0-flash-free",
-    "displayName": "Ling-3.0-flash Free (OpenCode)",
-    "reasoningEffort": "high"
-  },
-  {
-    "id": "ee8f6b9a-edd7-5d92-8925-1f93d1ba2b62",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "ling-3.0-tiny-free",
-    "displayName": "Ling-3.0-tiny Free (OpenCode)"
-  },
-  {
     "id": "14f57ded-622b-5af6-8331-a14e299bdd14",
     "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
     "providerType": "openai-compatible",
@@ -402,26 +388,11 @@
     "displayName": "Nemotron 3.5 Lightning Free (OpenCode)"
   },
   {
-    "id": "f4b831e8-6a1a-5403-a625-007ffcd3ac96",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "north-mini-code-free",
-    "displayName": "North Mini Code Free (OpenCode)",
-    "reasoningEffort": "high"
-  },
-  {
     "id": "32d253e2-5a78-5c6b-9663-105cb03eb4e4",
     "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
     "providerType": "openai-compatible",
     "modelId": "laguna-s-2.1-free",
     "displayName": "Laguna S 2.1 Free (OpenCode)",
     "reasoningEffort": "high"
-  },
-  {
-    "id": "d853c7fc-b7ae-515e-b52f-f6ec206dbbef",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "longcat-2.0-free",
-    "displayName": "LongCat-2.0 Free (OpenCode)"
   }
 ]

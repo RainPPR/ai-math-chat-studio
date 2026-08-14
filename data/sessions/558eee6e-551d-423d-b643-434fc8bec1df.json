@@ -1,0 +1,21 @@
+{
+  "id": "558eee6e-551d-423d-b643-434fc8bec1df",
+  "title": "在正方体 ABCD−A₁B₁C₁D₁ 中，M,N 分别为线段 AB,AD₁ 的中点，P 为正方形 B...",
+  "messages": [
+    {
+      "id": "59146923-fe4a-4a41-b6b3-acd66194e696",
+      "role": "user",
+      "content": "在正方体 $ABCD-A_1B_1C_1D_1$ 中，$M,N$ 分别为线段 $AB,AD_1$ 的中点，$P$ 为正方形 $BB_1CC_1$ 内部（含边界）上一点，证明或推翻：存在唯一的点 $P$ 使得 $D_1P\\parallel$ 平面 $B_1MN$",
+      "createdAt": "2026-08-13T08:13:34.865Z"
+    },
+    {
+      "id": "5501bdfe-2dc9-4fd9-aca1-86c5f364538a",
+      "role": "model",
+      "content": "<think>\n**Defining the Midpoints**\n\nOkay, I've got a grasp of the initial problem; it involves a cube and midpoints. I'm focusing now on precisely defining $M$ and $N$ within the cube. My goal is to work from there to either validate or refute the initial statement. I'm visualizing the cube in relation to the midpoints.\n\n\n\n</think>\n\n**结论：推翻原命题。** \n\n存在**无数个**满足条件的点 $P$，这些点在正方形 $BB_1CC_1$ 表面上构成一条**线段**，而非“唯一的点”。\n\n---\n\n### 【常规解法】空间向量坐标法（精准量化）\n\n为了做到严密无误的代数证明，建立空间直角坐标系进行定量分析。\n\n#### 1. 建系与坐标设定\n\n设正方体的棱长为 $2$。以顶点 $A$ 为坐标原点，分别以 $\\vec{AB}, \\vec{AD}, \\vec{AA_1}$ 的方向为 $x, y, z$ 轴正方向建立空间直角坐标系 $A-xyz$。\n\n各关键顶点坐标如下：\n\n$$\nA(0,0,0), \\quad B(2,0,0), \\quad D_1(0,2,2), \\quad B_1(2,0,2)\n$$\n\n由题意，取中点坐标：\n* $M$ 为 $AB$ 中点 $\\implies M(1,0,0)$；\n* $N$ 为 $AD_1$ 中点 $\\implies N(0,1,1)$。\n\n动点 $P$ 位于正方形 $BB_1CC_1$ 内部（含边界），该平面方程为 $x = 2$，故设 $P(2, y, z)$，其中约束条件为：\n\n$$\ny \\in [0, 2], \\quad z \\in [0, 2]\n$$\n\n---\n\n#### 2. 求解平面 $B_1MN$ 的法向量\n\n计算平面 $B_1MN$ 内的两个基底向量：\n\n$$\n\\vec{MB_1} = (2-1, 0-0, 2-0) = (1, 0, 2)\n$$\n\n$$\n\\vec{MN} = (0-1, 1-0, 1-0) = (-1, 1, 1)\n$$\n\n设平面 $B_1MN$ 的法向量为 $\\vec{n} = (a, b, c)$，则满足：\n\n$$\n\\begin{cases}\n\\vec{n} \\cdot \\vec{MB_1} = a + 2c = 0 \\\\\n\\vec{n} \\cdot \\vec{MN} = -a + b + c = 0\n\\end{cases}\n$$\n\n令 $c = -1$，解得 $a = 2$，$b = 3$。因此，平面 $B_1MN$ 的一个法向量为：\n\n$$\n\\vec{n} = (2, 3, -1)\n$$\n\n---\n\n#### 3. 平行条件的代数表达与解集分析\n\n计算向量 $\\vec{D_1P}$：\n\n$$\n\\vec{D_1P} = (2-0, y-2, z-2) = (2, y-2, z-2)\n$$\n\n要使直线 $D_1P \\parallel \\text{平面 } B_1MN$，需满足向量 $\\vec{D_1P}$ 与法向量 $\\vec{n}$ 垂直，且点 $D_1$ 不在平面 $B_1MN$ 内（易验证 $D_1 \\notin \\text{平面 } B_1MN$）：\n\n$$\n\\vec{D_1P} \\cdot \\vec{n} = 0\n$$\n\n展开代数式：\n\n$$\n2 \\times 2 + 3(y - 2) - 1(z - 2) = 0 \\implies 4 + 3y - 6 - z + 2 = 0 \\implies z = 3y\n$$\n\n结合点 $P$ 的边界约束 $y \\in [0, 2]$ 和 $z \\in [0, 2]$：\n\n$$\n0 \\le 3y \\le 2 \\implies 0 \\le y \\le \\frac{2}{3}\n$$\n\n因此，点 $P$ 的坐标集合为：\n\n$$\n\\left\\{ P(2, y, 3y) \\;\\middle|\\; y \\in \\left[0, \\frac{2}{3}\\right] \\right\\}\n$$\n\n当 $y = 0$ 时，$P$ 为顶点 $B(2,0,0)$；当 $y = \\frac{2}{3}$ 时，$P$ 为上棱 $B_1C_1$ 上的点 $\\left(2, \\frac{2}{3}, 2\\right)$。所有满足条件的点 $P$ 构成了线段 $BP$，其长度为 $\\frac{2\\sqrt{10}}{3} > 0$。\n\n故存在**无穷多个**点 $P$，“存在唯一点 $P$” 的命题被推翻。\n\n---\n\n### 【进阶解法】几何视角（轨迹面交线）\n\n如果不依赖坐标系，从高维几何直观的角度，该问题的本质是**过定点做平行平面的交线问题**。\n\n1. **平面平移构造**：过点 $D_1$ 作一个平面 $\\alpha$，使得 $\\alpha \\parallel \\text{平面 } B_1MN$。\n2. **平行线网**：空间中所有过点 $D_1$ 且平行于平面 $B_1MN$ 的直线，必**完全落在平面 $\\alpha$ 内**。\n3. **轨迹判定**：因此，满足 $D_1P \\parallel \\text{平面 } B_1MN$ 的点 $P$，本质上就是平面 $\\alpha$ 与正方形 $BB_1CC_1$ 所在平面（即右侧壁面）的**交线段上的点**。\n4. **非退化交线**：两个不平行平面的交线是一条**直线**。该直线穿过正方形 $BB_1CC_1$ 的内部，因此截得的轨迹是一条长度大于 0 的**线段**。\n\n显而易见，线段上包含无数个点，因此不可能“唯一”。\n\n---\n\n### 【总结与反思】认知复盘\n\n在本题这类立体几何命题辨析中，需建立如下元认知 Schema：\n\n1. **“线面平行”的本质结构**：\n   * 寻找“过定点与已知平面平行的直线”的集合，几何本质是**过该定点的平行平面**。\n   * 动点 $P$ 在某个区域内的轨迹，就是**平行平面与该区域的交集**。\n\n2. **常见逻辑陷阱**：\n   * 许多同学易将“在某条线上找到一个特定点”误认为是“唯一解”。在立体几何中，只要约束条件比自由度少 1（如本题中仅限制了 $z = 3y$，而未限制 $y$ 的具体值），动点的轨迹通常是**线（一维轨迹）**而非**点（零维轨迹）**。\n\n3. **解题策略建议**：\n   * **考场快速验证**：遇到“唯一性”判断题，可先寻找两个特例点（如本题中的顶点 $B$ 以及棱 $B_1C_1$ 上的分点）。若两点均满足条件，即可瞬间否定“唯一性”。",
+      "createdAt": "2026-08-13T08:14:36.115Z"
+    }
+  ],
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "createdAt": "2026-08-13T08:13:34.865Z",
+  "updatedAt": "2026-08-13T08:14:36.115Z"
+}
