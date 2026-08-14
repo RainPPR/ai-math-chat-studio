@@ -102,7 +102,7 @@ async function syncRemoteModels(settingsFile: string) {
 
     // Ensure all models are sorted on startup
     const sorted = sortModels(settings.models, settings.providers);
-    const orderChanged = JSON.stringify(settings.models.map(m => m.id)) !== JSON.stringify(sorted.map(m => m.id));
+    const orderChanged = JSON.stringify(settings.models.map((m: any) => m.id)) !== JSON.stringify(sorted.map((m: any) => m.id));
     if (orderChanged) {
       settings.models = sorted;
       modified = true;
