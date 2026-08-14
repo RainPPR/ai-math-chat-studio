@@ -2,6 +2,71 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 
+export function sortProviders(providers: any[]): any[] {
+  if (!Array.isArray(providers)) return [];
+  return [...providers].sort((a, b) => {
+    const nameA = (a.name || '').toLowerCase();
+    const nameB = (b.name || '').toLowerCase();
+    const nameCompare = nameA.localeCompare(nameB);
+    if (nameCompare !== 0) {
+      return nameCompare;
+    }
+
+    const origNameA = a.name || '';
+    const origNameB = b.name || '';
+    if (origNameA !== origNameB) {
+      if (origNameA < origNameB) {
+        return -1;
+      } else {
+        return 1;
+      }
+    }
+    return 0;
+  });
+}
+
+export function sortModels(models: any[], providers: any[]): any[] {
+  if (!Array.isArray(models)) return [];
+  const provs = Array.isArray(providers) ? providers : [];
+  return [...models].sort((a, b) => {
+    const provA = provs.find(p => p.id === a.providerId);
+    const provB = provs.find(p => p.id === b.providerId);
+    const nameA = (provA?.name || '').toLowerCase();
+    const nameB = (provB?.name || '').toLowerCase();
+    const provCompare = nameA.localeCompare(nameB);
+    if (provCompare !== 0) {
+      return provCompare;
+    }
+
+    const idA = (a.modelId || '').toLowerCase();
+    const idB = (b.modelId || '').toLowerCase();
+    const idCompare = idA.localeCompare(idB);
+    if (idCompare !== 0) {
+      return idCompare;
+    }
+
+    const origNameA = provA?.name || '';
+    const origNameB = provB?.name || '';
+    if (origNameA !== origNameB) {
+      if (origNameA < origNameB) {
+        return -1;
+      } else {
+        return 1;
+      }
+    }
+    const origIdA = a.modelId || '';
+    const origIdB = b.modelId || '';
+    if (origIdA !== origIdB) {
+      if (origIdA < origIdB) {
+        return -1;
+      } else {
+        return 1;
+      }
+    }
+    return 0;
+  });
+}
+
 export interface UserSettings {
   activeModelId?: string;
   activeCharacterId?: string;
@@ -166,8 +231,14 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
 
   const settingsCopy = JSON.parse(JSON.stringify(settings));
 
-  const incomingProviders = settingsCopy.providers;
-  const incomingModels = settingsCopy.models;
+  let incomingProviders = settingsCopy.providers;
+  if (incomingProviders && Array.isArray(incomingProviders)) {
+    incomingProviders = sortProviders(incomingProviders);
+  }
+  let incomingModels = settingsCopy.models;
+  if (incomingModels && Array.isArray(incomingModels)) {
+    incomingModels = sortModels(incomingModels, incomingProviders || []);
+  }
   const incomingCharacters = settingsCopy.characters;
 
   delete settingsCopy.providers;

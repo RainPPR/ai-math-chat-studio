@@ -13,6 +13,71 @@ function formatClaudeDate(dateStr: string) {
   });
 }
 
+function sortProviders(providers: ProviderInstance[]): ProviderInstance[] {
+  if (!Array.isArray(providers)) return [];
+  return [...providers].sort((a, b) => {
+    const nameA = (a.name || '').toLowerCase();
+    const nameB = (b.name || '').toLowerCase();
+    const nameCompare = nameA.localeCompare(nameB);
+    if (nameCompare !== 0) {
+      return nameCompare;
+    }
+
+    const origNameA = a.name || '';
+    const origNameB = b.name || '';
+    if (origNameA !== origNameB) {
+      if (origNameA < origNameB) {
+        return -1;
+      } else {
+        return 1;
+      }
+    }
+    return 0;
+  });
+}
+
+function sortModels(models: ModelInstance[], providers: ProviderInstance[]): ModelInstance[] {
+  if (!Array.isArray(models)) return [];
+  const provs = Array.isArray(providers) ? providers : [];
+  return [...models].sort((a, b) => {
+    const provA = provs.find(p => p.id === a.providerId);
+    const provB = provs.find(p => p.id === b.providerId);
+    const nameA = (provA?.name || '').toLowerCase();
+    const nameB = (provB?.name || '').toLowerCase();
+    const provCompare = nameA.localeCompare(nameB);
+    if (provCompare !== 0) {
+      return provCompare;
+    }
+
+    const idA = (a.modelId || '').toLowerCase();
+    const idB = (b.modelId || '').toLowerCase();
+    const idCompare = idA.localeCompare(idB);
+    if (idCompare !== 0) {
+      return idCompare;
+    }
+
+    const origNameA = provA?.name || '';
+    const origNameB = provB?.name || '';
+    if (origNameA !== origNameB) {
+      if (origNameA < origNameB) {
+        return -1;
+      } else {
+        return 1;
+      }
+    }
+    const origIdA = a.modelId || '';
+    const origIdB = b.modelId || '';
+    if (origIdA !== origIdB) {
+      if (origIdA < origIdB) {
+        return -1;
+      } else {
+        return 1;
+      }
+    }
+    return 0;
+  });
+}
+
 
 interface SettingsModalProps {
   settings: UserSettings;
@@ -567,22 +632,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const saveProvider = () => {
     if (!editingProvider?.name || !editingProvider.type) return;
     setLocal(s => {
-      const providers = [...s.providers];
-      const idx = providers.findIndex(p => p.id === editingProvider.id);
-      if (idx >= 0) providers[idx] = editingProvider;
-      else providers.push(editingProvider);
-      return { ...s, providers };
+      const providersList = [...s.providers];
+      const idx = providersList.findIndex(p => p.id === editingProvider.id);
+      if (idx >= 0) {
+        providersList[idx] = editingProvider;
+      } else {
+        providersList.push(editingProvider);
+      }
+      const providers = sortProviders(providersList);
+      const models = sortModels(s.models, providers);
+      return { ...s, providers, models };
     });
     setEditingProvider(null);
   };
 
   const deleteProvider = (id: string) => {
-    setLocal(s => ({
-      ...s,
-      providers: s.providers.filter(p => p.id !== id),
-      models: s.models.filter(m => m.providerId !== id),
-      activeModelId: s.models.some(m => m.id === s.activeModelId && m.providerId === id) ? undefined : s.activeModelId,
-    }));
+    setLocal(s => {
+      const providersList = s.providers.filter(p => p.id !== id);
+      const providers = sortProviders(providersList);
+      const filteredModels = s.models.filter(m => m.providerId !== id);
+      const models = sortModels(filteredModels, providers);
+      let nextActiveModelId = s.activeModelId;
+      if (s.models.some(m => m.id === s.activeModelId && m.providerId === id)) {
+        nextActiveModelId = undefined;
+      }
+      return {
+        ...s,
+        providers,
+        models,
+        activeModelId: nextActiveModelId,
+      };
+    });
   };
 
   // ----- Model CRUD -----
@@ -610,10 +690,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const saveModel = () => {
     if (!editingModel?.providerId || !editingModel.modelId) return;
     setLocal(s => {
-      const models = [...s.models];
-      const idx = models.findIndex(m => m.id === editingModel.id);
-      if (idx >= 0) models[idx] = editingModel;
-      else models.push(editingModel);
+      const modelsList = [...s.models];
+      const idx = modelsList.findIndex(m => m.id === editingModel.id);
+      if (idx >= 0) {
+        modelsList[idx] = editingModel;
+      } else {
+        modelsList.push(editingModel);
+      }
+      const models = sortModels(modelsList, s.providers);
       return { ...s, models };
     });
     setEditingModel(null);
@@ -621,11 +705,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   };
 
   const deleteModelEntry = (id: string) => {
-    setLocal(s => ({
-      ...s,
-      models: s.models.filter(m => m.id !== id),
-      activeModelId: s.activeModelId === id ? undefined : s.activeModelId,
-    }));
+    setLocal(s => {
+      const filteredModels = s.models.filter(m => m.id !== id);
+      const models = sortModels(filteredModels, s.providers);
+      let nextActiveModelId = s.activeModelId;
+      if (s.activeModelId === id) {
+        nextActiveModelId = undefined;
+      }
+      return {
+        ...s,
+        models,
+        activeModelId: nextActiveModelId,
+      };
+    });
   };
 
   // ----- Character CRUD -----

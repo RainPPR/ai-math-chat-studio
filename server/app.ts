@@ -8,7 +8,7 @@ import { createChatRouter } from './routes/chat';
 import { createModelsRouter } from './routes/models';
 import { createTemplatesRouter } from './routes/templates';
 import { initLogger } from './services/logger';
-import { loadSettings, saveSettings } from './lib/settings-helper';
+import { loadSettings, saveSettings, sortModels } from './lib/settings-helper';
 
 interface RemoteModelDef {
   id: string;
@@ -98,6 +98,14 @@ async function syncRemoteModels(settingsFile: string) {
       } catch (err: any) {
         console.error(`[Sync] Error syncing ${provider.modelSource}: ${err.message}`);
       }
+    }
+
+    // Ensure all models are sorted on startup
+    const sorted = sortModels(settings.models, settings.providers);
+    const orderChanged = JSON.stringify(settings.models.map(m => m.id)) !== JSON.stringify(sorted.map(m => m.id));
+    if (orderChanged) {
+      settings.models = sorted;
+      modified = true;
     }
 
     if (modified) {
