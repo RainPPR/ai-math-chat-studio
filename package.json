@@ -17,21 +17,21 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@google/genai": "^2.13.0",
+    "@google/genai": "^2.17.1",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
     "@types/uuid": "^11.0.0",
-    "@vitejs/plugin-react": "^6.0.4",
+    "@vitejs/plugin-react": "^6.0.5",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jszip": "^3.10.1",
-    "katex": "^0.18.1",
+    "katex": "^0.18.4",
     "lodash": "^4.18.1",
-    "lucide-react": "^1.25.0",
+    "lucide-react": "^1.31.0",
     "markdown-to-txt": "^2.0.1",
-    "motion": "^12.42.2",
-    "openai": "^6.48.0",
+    "motion": "^13.1.0",
+    "openai": "^7.4.0",
     "pandoc-wasm": "^1.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -53,30 +53,30 @@
     "unicodeit": "^0.7.5",
     "unified": "^11.0.5",
     "uuid": "^14.0.1",
-    "vite": "^8.1.5"
+    "vite": "^8.2.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/bun": "^1.3.14",
     "@types/express": "^5.0.6",
     "@types/jszip": "^3.4.1",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.2.0",
     "autoprefixer": "^10.5.4",
-    "esbuild": "^0.28.1",
-    "eslint": "^10.7.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.8.1",
     "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.23.1",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.65.0"
+    "tsx": "^4.23.12",
+    "typescript": "<7.0.0",
+    "typescript-eslint": "^8.67.0"
   },
   "patchedDependencies": {
     "pandoc-wasm@1.1.0": "patches/pandoc-wasm@1.1.0.patch"
   },
   "overrides": {
-    "katex": "^0.18.1"
+    "katex": "^0.18.4"
   },
   "resolutions": {
-    "katex": "^0.17.0"
+    "katex": "^0.18.4"
   }
 }

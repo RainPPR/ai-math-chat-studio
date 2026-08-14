@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, Character, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
+import { sortProviders, sortModels } from '../../shared/sorting';
 
 
 function formatClaudeDate(dateStr: string) {
@@ -567,22 +568,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const saveProvider = () => {
     if (!editingProvider?.name || !editingProvider.type) return;
     setLocal(s => {
-      const providers = [...s.providers];
-      const idx = providers.findIndex(p => p.id === editingProvider.id);
-      if (idx >= 0) providers[idx] = editingProvider;
-      else providers.push(editingProvider);
-      return { ...s, providers };
+      const providersList = [...s.providers];
+      const idx = providersList.findIndex(p => p.id === editingProvider.id);
+      if (idx >= 0) {
+        providersList[idx] = editingProvider;
+      } else {
+        providersList.push(editingProvider);
+      }
+      const providers = sortProviders(providersList);
+      const models = sortModels(s.models, providers);
+      return { ...s, providers, models };
     });
     setEditingProvider(null);
   };
 
   const deleteProvider = (id: string) => {
-    setLocal(s => ({
-      ...s,
-      providers: s.providers.filter(p => p.id !== id),
-      models: s.models.filter(m => m.providerId !== id),
-      activeModelId: s.models.some(m => m.id === s.activeModelId && m.providerId === id) ? undefined : s.activeModelId,
-    }));
+    setLocal(s => {
+      const providersList = s.providers.filter(p => p.id !== id);
+      const providers = sortProviders(providersList);
+      const filteredModels = s.models.filter(m => m.providerId !== id);
+      const models = sortModels(filteredModels, providers);
+      let nextActiveModelId = s.activeModelId;
+      if (s.models.some(m => m.id === s.activeModelId && m.providerId === id)) {
+        nextActiveModelId = undefined;
+      }
+      return {
+        ...s,
+        providers,
+        models,
+        activeModelId: nextActiveModelId,
+      };
+    });
   };
 
   // ----- Model CRUD -----
@@ -610,10 +626,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const saveModel = () => {
     if (!editingModel?.providerId || !editingModel.modelId) return;
     setLocal(s => {
-      const models = [...s.models];
-      const idx = models.findIndex(m => m.id === editingModel.id);
-      if (idx >= 0) models[idx] = editingModel;
-      else models.push(editingModel);
+      const modelsList = [...s.models];
+      const idx = modelsList.findIndex(m => m.id === editingModel.id);
+      if (idx >= 0) {
+        modelsList[idx] = editingModel;
+      } else {
+        modelsList.push(editingModel);
+      }
+      const models = sortModels(modelsList, s.providers);
       return { ...s, models };
     });
     setEditingModel(null);
@@ -621,11 +641,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   };
 
   const deleteModelEntry = (id: string) => {
-    setLocal(s => ({
-      ...s,
-      models: s.models.filter(m => m.id !== id),
-      activeModelId: s.activeModelId === id ? undefined : s.activeModelId,
-    }));
+    setLocal(s => {
+      const filteredModels = s.models.filter(m => m.id !== id);
+      const models = sortModels(filteredModels, s.providers);
+      let nextActiveModelId = s.activeModelId;
+      if (s.activeModelId === id) {
+        nextActiveModelId = undefined;
+      }
+      return {
+        ...s,
+        models,
+        activeModelId: nextActiveModelId,
+      };
+    });
   };
 
   // ----- Character CRUD -----
