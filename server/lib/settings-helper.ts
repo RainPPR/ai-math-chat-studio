@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
-import { sortProviders, sortModels } from '../../src/lib/sorting';
+import { sortProviders, sortModels } from '../../shared/sorting';
 
 export { sortProviders, sortModels };
 

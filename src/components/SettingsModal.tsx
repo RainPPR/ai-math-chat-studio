@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, Character, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
-import { sortProviders, sortModels } from '../lib/sorting';
+import { sortProviders, sortModels } from '../../shared/sorting';
 
 
 function formatClaudeDate(dateStr: string) {

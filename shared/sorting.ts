@@ -1,8 +1,11 @@
 export function sortProviders(providers: any[]): any[] {
   if (!Array.isArray(providers)) return [];
   return [...providers].sort((a, b) => {
-    if (!a || typeof a !== "object") return 1;
-    if (!b || typeof b !== "object") return -1;
+    const isValA = a && typeof a === "object";
+    const isValB = b && typeof b === "object";
+    if (!isValA && !isValB) return 0;
+    if (!isValA) return 1;
+    if (!isValB) return -1;
 
     const nameA = String(a.name || "").toLocaleLowerCase("en");
     const nameB = String(b.name || "").toLocaleLowerCase("en");
@@ -28,8 +31,11 @@ export function sortModels(models: any[], providers: any[]): any[] {
   if (!Array.isArray(models)) return [];
   const provs = Array.isArray(providers) ? providers : [];
   return [...models].sort((a, b) => {
-    if (!a || typeof a !== "object") return 1;
-    if (!b || typeof b !== "object") return -1;
+    const isValA = a && typeof a === "object";
+    const isValB = b && typeof b === "object";
+    if (!isValA && !isValB) return 0;
+    if (!isValA) return 1;
+    if (!isValB) return -1;
 
     const provA = provs.find(
       (p) => p && typeof p === "object" && p.id === a.providerId,
@@ -45,6 +51,8 @@ export function sortModels(models: any[], providers: any[]): any[] {
       return provCompare;
     }
 
+    // NOTE: Strictly sorting by `modelId` (e.g. 'gemini-3.5-flash') rather than `displayName`
+    // is a strict and explicit requirement from the user ("第二关键字是 模型id 字典序").
     const idA = String(a.modelId || "").toLocaleLowerCase("en");
     const idB = String(b.modelId || "").toLocaleLowerCase("en");
     const idCompare = idA.localeCompare(idB, "en");
