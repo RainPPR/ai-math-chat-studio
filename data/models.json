@@ -4,7 +4,7 @@
     "providerId": "p-google-fc62",
     "providerType": "google",
     "modelId": "gemma-4-31b-it",
-    "displayName": "Gemma 4 31b (Google)",
+    "displayName": "Gemma 4 31b IT (Google)",
     "enableTools": true,
     "disabledTools": [],
     "thinkingLevel": "high"
@@ -155,14 +155,6 @@
     "modelId": "meta/muse-glimmer-30b",
     "displayName": "Muse Glimmer 30B (Nvidia)",
     "maxTokens": 16353
-  },
-  {
-    "id": "f63d2321-12be-42e0-a957-e1fd0ae30475",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-3.7-flash",
-    "displayName": "Gemini 3.7 Flash (Google)",
-    "thinkingLevel": "high"
   },
   {
     "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
@@ -394,5 +386,29 @@
     "modelId": "laguna-s-2.1-free",
     "displayName": "Laguna S 2.1 Free (OpenCode)",
     "reasoningEffort": "high"
+  },
+  {
+    "id": "f63d2321-12be-42e0-a957-e1fd0ae30475",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3.7-flash",
+    "displayName": "Gemini 3.7 Flash (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "b9425e46-a961-49c8-9b5f-7da094f48532",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3-flash-preview",
+    "displayName": "Gemini 3 Flash (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "f557ecf3-eabb-44b8-a76b-ed8310805820",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemma-4-26b-a4b-it",
+    "displayName": "Gemma 4 26B A4B IT (Google)",
+    "thinkingLevel": "high"
   }
 ]
