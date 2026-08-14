@@ -1,4 +1,5 @@
 *
-!/src
-!/server
 !/scripts
+!/server
+!/shared
+!/src
