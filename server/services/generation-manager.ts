@@ -151,6 +151,7 @@ export interface GenerationProvider {
 export interface GenerationTask {
   sessionId: string;
   status: 'running' | 'done' | 'error' | 'stopped';
+  type?: 'send' | 'retry' | 'continue' | 'regenerate';
   content: string;
   subscribers: Set<(event: string, data: any) => void>;
   abortController: AbortController;
@@ -345,7 +346,7 @@ export class GenerationManager {
     await this.debouncedWrite(session, 0); // Immediate write for first message
 
     // Start generation immediately (fire-and-forget, errors handled internally)
-    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
+    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, 'send').catch(() => {});
   }
 
   async retryMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
@@ -366,7 +367,7 @@ export class GenerationManager {
     try {
       await this.writeSession(session);
       // Start generation (fire-and-forget, errors handled internally)
-      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, 'retry').catch(() => {});
     } catch (err) {
       session.messages = originalMessages;
       await this.writeSession(session);
@@ -385,7 +386,7 @@ export class GenerationManager {
     }
 
     // Start generation (fire-and-forget, errors handled internally)
-    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
+    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, 'continue').catch(() => {});
   }
 
   async regenerateMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
@@ -414,27 +415,12 @@ export class GenerationManager {
 
     // Truncate messages after this one
     session.messages = session.messages.slice(0, idx + 1);
-
-    // Add regenerate instruction
-    const regenerateMsg: ServerChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: `Based on the thinking process preserved in the \`<think>\` block above, please directly output the final, complete, and well-structured response.
-
-Requirements:
-1. Do not re-evaluate, critique, or apologize for your previous reasoning or previous responses. Do not mention that you are repeating, revising, or analyzing past thinking.
-2. Under no circumstances should you generate any meta-commentary, conversational filler, or introductory phrases like "Based on my previous thinking..." or "I see an error in my previous reasoning...".
-3. Jump straight into the final response or solution cleanly, starting directly with the substantive content.`,
-      createdAt: new Date().toISOString(),
-    };
-
-    session.messages.push(regenerateMsg);
     session.updatedAt = new Date().toISOString();
 
     try {
       await this.writeSession(session);
       // Start generation (fire-and-forget, errors handled internally)
-      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, 'regenerate').catch(() => {});
     } catch (err) {
       session.messages = originalMessages;
       await this.writeSession(session);
@@ -442,7 +428,7 @@ Requirements:
     }
   }
 
-  private async startGeneration(session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
+  private async startGeneration(session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, taskType?: 'send' | 'retry' | 'continue' | 'regenerate'): Promise<void> {
     const existing = this.tasks.get(session.id);
     if (existing?.status === 'running') {
       // Abort existing task
@@ -460,6 +446,7 @@ Requirements:
     const task: GenerationTask = {
       sessionId: session.id,
       status: 'running',
+      type: taskType,
       content: '',
       subscribers: new Set(),
       abortController,
@@ -515,7 +502,7 @@ Requirements:
       content: m.content,
     }));
 
-    if (isContinuation && model.providerType === 'google') {
+    if (isContinuation && model.providerType === 'google' && task.type === 'continue') {
       reqMessages.push({
         role: 'user',
         content: `The previous generation was interrupted. Please continue generating the response from where it left off, ensuring a seamless and complete output.

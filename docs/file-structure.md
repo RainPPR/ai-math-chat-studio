@@ -23,7 +23,6 @@ ai-math-chat-studio/
 ├── index.html                # SPA 入口 HTML
 ├── package.json              # 项目依赖和脚本
 ├── bun.lock                  # Bun 依赖锁定文件
-├── eslint.config.mjs         # ESLint 配置
 ├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
 ├── server/                   # 后端模块
 │   ├── app.ts                # Express 5 应用组装，挂载所有路由

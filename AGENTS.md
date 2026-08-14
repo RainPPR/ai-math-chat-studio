@@ -32,7 +32,7 @@
 | 数据模型和存储 | `docs/data-models.md` |
 | 组件结构和职责 | `docs/components.md` |
 | 数学公式渲染 | `docs/tech-stack.md` |
-| 代码质量与 Lint 规范 | `docs/linting-and-quality.md` |
+| 代码质量规范 | `docs/linting-and-quality.md` |
 | 文件结构 | `docs/file-structure.md` |
 
 ## 开发规范
@@ -162,4 +162,4 @@
 
 ### 代码质量
 - **禁止使用三元表达式**：必须使用标准的 `if/else` 块。
-- **配置一致性**：不得为了绕过错误而修改 `tsconfig.json` 或 `.eslintrc.json`。
+- **配置一致性**：不得为了绕过错误而修改 `tsconfig.json`。

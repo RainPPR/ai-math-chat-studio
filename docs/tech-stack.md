@@ -3,25 +3,25 @@
 ## 前端框架
 | 技术 | 版本 |
 |---|---|
-| React | ^19.2.7 |
-| TypeScript | ~6.0.3 |
-| Vite | ^8.0.16 |
-| Tailwind CSS | ^4.3.1 |
+| React | ^19.2.8 |
+| TypeScript | ^7.0.2 |
+| Vite | ^8.2.1 |
+| Tailwind CSS | ^4.3.3 |
 | @tailwindcss/typography | ^0.5.20 |
 
 ## 后端
 | 技术 | 版本 |
 |---|---|
 | Express | ^5.2.1 |
-| tsx | ^4.22.4 |
-| OpenAI SDK | ^6.44.0 |
+| tsx | ^4.23.12 |
+| OpenAI SDK | ^7.4.0 |
 | dotenv | ^17.4.2 |
 
 ## AI/数学库
 | 技术 | 版本 |
 |---|---|
-| @google/genai | ^2.8.0 |
-| KaTeX | ^0.17.0 |
+| @google/genai | ^2.17.1 |
+| KaTeX | ^0.18.4 |
 
 ## Markdown 渲染管线
 | 技术 | 版本 |
@@ -30,7 +30,7 @@
 | remark-math | ^6.0.0 |
 | remark-gfm | ^4.0.1 |
 | remark-breaks | ^4.0.0 |
-| remark-cjk-friendly | ^2.2.0 |
+| remark-cjk-friendly | ^2.3.1 |
 | remark-squeeze-paragraphs | ^6.0.0 |
 | rehype-katex | ^7.0.1 |
 | rehype-raw | ^7.0.0 |
@@ -41,8 +41,8 @@
 ## 其他依赖
 | 技术 | 版本 |
 |---|---|
-| lucide-react | ^1.21.0 |
-| motion | ^12.40.0 |
+| lucide-react | ^1.31.0 |
+| motion | ^13.1.0 |
 | clsx | ^2.1.1 |
 | tailwind-merge | ^3.6.0 |
 | uuid | ^14.0.1 |
@@ -62,7 +62,7 @@
 | 工具 | 用途 |
 |---|---|
 | Bun | 依赖管理、脚本运行、构建 |
-| TypeScript (`tsc --noEmit`) | 类型检查 (`bun run lint`) |
+| TypeScript (`tsc --noEmit`) | 类型检查 |
 | Vite HMR | 热模块替换 |
 
 ## 构建命令
@@ -73,7 +73,7 @@ bun run build         # Vite 生产构建
 bun run preview       # 预览生产构建
 bun run build:bundle    # 打包服务端代码为单个 bundle
 bun run build:compile  # 使用 Bun 编译为可执行文件
-bun run lint          # TypeScript 类型检查
+bun run check         # TypeScript 类型检查
 bun run clean         # 清除 dist、dist-server、dist-compile、release 目录
 ```
 
