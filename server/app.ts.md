@@ -9,7 +9,7 @@ import { createChatRouter } from './routes/chat';
 import { createModelsRouter } from './routes/models';
 import { createTemplatesRouter } from './routes/templates';
 import { initLogger } from './services/logger';
-import { loadSettings, saveSettings } from './lib/settings-helper';
+import { loadSettings, saveSettings, sortModels } from './lib/settings-helper';
 
 interface RemoteModelDef {
   id: string;
@@ -101,6 +101,14 @@ async function syncRemoteModels(settingsFile: string) {
       }
     }
 
+    // Ensure all models are sorted on startup
+    const sorted = sortModels(settings.models, settings.providers);
+    const orderChanged = JSON.stringify(settings.models.map((m: any) => m.id)) !== JSON.stringify(sorted.map((m: any) => m.id));
+    if (orderChanged) {
+      settings.models = sorted;
+      modified = true;
+    }
+
     if (modified) {
       await saveSettings(settingsFile, settings);
       console.log(`[Sync] Settings saved to ${settingsFile}`);
@@ -160,5 +168,4 @@ export async function startApp() {
     });
   });
 }
-
 ```

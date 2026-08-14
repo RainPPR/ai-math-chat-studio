@@ -2,6 +2,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
+import { sortProviders, sortModels } from '../../shared/sorting';
+
+export { sortProviders, sortModels };
 
 export interface UserSettings {
   activeModelId?: string;
@@ -167,8 +170,14 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
 
   const settingsCopy = JSON.parse(JSON.stringify(settings));
 
-  const incomingProviders = settingsCopy.providers;
-  const incomingModels = settingsCopy.models;
+  let incomingProviders = settingsCopy.providers;
+  if (incomingProviders && Array.isArray(incomingProviders)) {
+    incomingProviders = sortProviders(incomingProviders);
+  }
+  let incomingModels = settingsCopy.models;
+  if (incomingModels && Array.isArray(incomingModels)) {
+    incomingModels = sortModels(incomingModels, incomingProviders || []);
+  }
   const incomingCharacters = settingsCopy.characters;
 
   delete settingsCopy.providers;
@@ -258,5 +267,4 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
     throw err;
   }
 }
-
 ```
