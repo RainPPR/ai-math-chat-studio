@@ -151,7 +151,6 @@ export interface GenerationProvider {
 export interface GenerationTask {
   sessionId: string;
   status: 'running' | 'done' | 'error' | 'stopped';
-  type?: 'send' | 'retry' | 'continue' | 'regenerate';
   content: string;
   subscribers: Set<(event: string, data: any) => void>;
   abortController: AbortController;
@@ -346,7 +345,7 @@ export class GenerationManager {
     await this.debouncedWrite(session, 0); // Immediate write for first message
 
     // Start generation immediately (fire-and-forget, errors handled internally)
-    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, 'send').catch(() => {});
+    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
   }
 
   async retryMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
@@ -367,7 +366,7 @@ export class GenerationManager {
     try {
       await this.writeSession(session);
       // Start generation (fire-and-forget, errors handled internally)
-      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, 'retry').catch(() => {});
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
     } catch (err) {
       session.messages = originalMessages;
       await this.writeSession(session);
@@ -386,7 +385,7 @@ export class GenerationManager {
     }
 
     // Start generation (fire-and-forget, errors handled internally)
-    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, 'continue').catch(() => {});
+    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
   }
 
   async regenerateMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
@@ -420,7 +419,7 @@ export class GenerationManager {
     try {
       await this.writeSession(session);
       // Start generation (fire-and-forget, errors handled internally)
-      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, 'regenerate').catch(() => {});
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
     } catch (err) {
       session.messages = originalMessages;
       await this.writeSession(session);
@@ -428,7 +427,7 @@ export class GenerationManager {
     }
   }
 
-  private async startGeneration(session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, taskType?: 'send' | 'retry' | 'continue' | 'regenerate'): Promise<void> {
+  private async startGeneration(session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
     const existing = this.tasks.get(session.id);
     if (existing?.status === 'running') {
       // Abort existing task
@@ -446,7 +445,6 @@ export class GenerationManager {
     const task: GenerationTask = {
       sessionId: session.id,
       status: 'running',
-      type: taskType,
       content: '',
       subscribers: new Set(),
       abortController,
@@ -501,18 +499,6 @@ export class GenerationManager {
       role: m.role === 'model' ? 'assistant' : m.role,
       content: m.content,
     }));
-
-    if (isContinuation && model.providerType === 'google' && task.type === 'continue') {
-      reqMessages.push({
-        role: 'user',
-        content: `The previous generation was interrupted. Please continue generating the response from where it left off, ensuring a seamless and complete output.
-
-Requirements:
-1. Do not start from the very beginning if you were already in the middle of the final response; simply pick up exactly where the text cut off and complete it.
-2. If the interruption occurred inside the thinking/reasoning phase, please simply complete your remaining reasoning/thinking, and then continue with the final answer/response.
-3. Do not apologize, explain, or mention that the generation was interrupted, timed out, or restarted. Do not write any meta-dialogue like "Continuing from..." or "Here is the rest of...". Just output the continuing content directly.`,
-      });
-    }
 
     // Throttled notification to prevent overwhelming clients
     const notifySubscribers = (event: string, data: any, immediate = false) => {
