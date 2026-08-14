@@ -1,5 +1,83 @@
 [
   {
+    "id": "8857da95-1ab9-4ec0-8b33-5298939e45ab",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "DeepSeek-V4-Flash",
+    "displayName": "DeepSeek V4 Flash 0731 (AMD)",
+    "reasoningEffort": "high"
+  },
+  {
+    "id": "f4a17dec-ee5e-4557-924a-8c02dcb6b1a5",
+    "providerId": "73766d3b-b243-4dcf-a64b-f7f9956f4df7",
+    "providerType": "openai-compatible",
+    "modelId": "gemma-4-31b",
+    "displayName": "Gemma 4 31b (Cerebras)",
+    "reasoningEffort": "high",
+    "maxTokens": 32768,
+    "extraBody": {
+      "reasoning_format": "parsed"
+    }
+  },
+  {
+    "id": "b9425e46-a961-49c8-9b5f-7da094f48532",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3-flash-preview",
+    "displayName": "Gemini 3 Flash (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "090f132d-1796-47d5-b6fa-32244e602e13",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3.5-flash",
+    "enableTools": true,
+    "disabledTools": [],
+    "displayName": "Gemini 3.5 Flash (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "0a4df899-3617-4a54-ae03-b8f5377f45d1",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3.5-flash-lite",
+    "displayName": "Gemini 3.5 Flash Lite (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "3d4c0dbb-fafc-4877-9405-2b8ff8bfa7ff",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3.6-flash",
+    "displayName": "Gemini 3.6 Flash (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "f63d2321-12be-42e0-a957-e1fd0ae30475",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3.7-flash",
+    "displayName": "Gemini 3.7 Flash (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "d3d587d2-59df-4dc8-b3ca-e19c63a6cd53",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-robotics-er-2-preview",
+    "displayName": "Gemini Robotics ER 2 (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "f557ecf3-eabb-44b8-a76b-ed8310805820",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemma-4-26b-a4b-it",
+    "displayName": "Gemma 4 26B A4B IT (Google)",
+    "thinkingLevel": "high"
+  },
+  {
     "id": "a7cf2ab2-4cc2-4e54-a4ee-84ccbe1c4f76",
     "providerId": "p-google-fc62",
     "providerType": "google",
@@ -8,6 +86,178 @@
     "enableTools": true,
     "disabledTools": [],
     "thinkingLevel": "high"
+  },
+  {
+    "id": "e2c6d1c5-44b3-5bcd-aa30-790edccdc2ed",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "cohere/north-mini-code:free",
+    "displayName": "Cohere: North Mini Code (Kilo)"
+  },
+  {
+    "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "kilo-auto/free",
+    "displayName": "Auto Free (Kilo)"
+  },
+  {
+    "id": "12012cba-e7fa-55b8-afee-2434e2a2e1ab",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "liquid/lfm-2.5-2.6b:free",
+    "displayName": "LiquidAI: LFM2.5-2.6B (Kilo)"
+  },
+  {
+    "id": "cfcdca0f-3efd-5c17-9003-8d05a905ce00",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "displayName": "NVIDIA: Nemotron 3 Nano Omni (Kilo)"
+  },
+  {
+    "id": "d63a257a-6bab-5b88-9418-46fad53210e1",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "nvidia/nemotron-3-super-120b-a12b:free",
+    "displayName": "NVIDIA: Nemotron 3 Super (Kilo)",
+    "reasoningEffort": "medium"
+  },
+  {
+    "id": "2ef64470-af2c-5d73-ad83-9f3947ba9003",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "displayName": "NVIDIA: Nemotron 3 Ultra (Kilo)",
+    "reasoningEffort": "high"
+  },
+  {
+    "id": "417ad047-ad35-5d82-a4c1-c0cb371a2da8",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "nvidia/nemotron-3.5-content-safety:free",
+    "displayName": "NVIDIA: Nemotron 3.5 Content Safety (Kilo)"
+  },
+  {
+    "id": "b73bcb80-f456-54cb-9512-0abee644a874",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "nvidia/nemotron-3.5-lightning:free",
+    "displayName": "NVIDIA: Nemotron 3.5 Lightning (Kilo)"
+  },
+  {
+    "id": "14949368-d0cb-5c39-a1bd-8e78a0ef89fa",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "openrouter/free",
+    "displayName": "OpenRouter Free Models Router (Kilo)"
+  },
+  {
+    "id": "8ca867d4-19c8-53b3-ae7c-38a3f7c37d12",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "poolside/laguna-s-2.1:free",
+    "displayName": "Poolside: Laguna S 2.1 (Kilo)"
+  },
+  {
+    "id": "a1600296-046e-5465-b8ff-9bd743cbb72c",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "poolside/laguna-xs-2.1:free",
+    "displayName": "Poolside: Laguna XS 2.1 (Kilo)"
+  },
+  {
+    "id": "c93e0a30-0931-543b-bb9b-d7c020d6b0b3",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "stepfun/step-3.7-flash:free",
+    "displayName": "StepFun: Step 3.7 Flash (Kilo)",
+    "reasoningEffort": "high"
+  },
+  {
+    "id": "04560a4e-43f1-5a34-ada1-8019b1d4dda6",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "tencent/hy3:free",
+    "displayName": "Tencent: Hy3 (Kilo)",
+    "reasoningEffort": "high"
+  },
+  {
+    "id": "5ab7cacf-75df-5490-8295-8edd9c1d374b",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4-flash",
+    "displayName": "DeepSeek V4 Flash (LogFare)"
+  },
+  {
+    "id": "cda1b042-7087-5159-8362-b734d8e5845e",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4-flash-0731",
+    "displayName": "DeepSeek v4 Flash 0731 (LogFare)"
+  },
+  {
+    "id": "248c1cbe-0ff5-5ed2-b6cc-0f5d89abccae",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4-pro",
+    "displayName": "DeepSeek V4 Pro (LogFare)"
+  },
+  {
+    "id": "c7995cd3-216c-5394-ad7c-c6458a16de51",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5.2",
+    "displayName": "GLM 5.2 (LogFare)"
+  },
+  {
+    "id": "ad77b720-8b36-5c4f-ad92-00ccc885f50d",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "grape-2-pro",
+    "displayName": "GRaPE 2 Pro (LogFare)"
+  },
+  {
+    "id": "d4cb5d70-7982-59d7-bd72-4337d101bf05",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kimi-k2.7-code",
+    "displayName": "Kimi K2.7 Code (LogFare)"
+  },
+  {
+    "id": "581eadd1-f00a-55ce-bbdf-1bc0f905583b",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kimi-k3",
+    "displayName": "Kimi K3 (LogFare)"
+  },
+  {
+    "id": "cd2e2f5e-12a8-5000-acf6-7be3dcab4f48",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kiro-auto",
+    "displayName": "Kiro Auto (LogFare)"
+  },
+  {
+    "id": "4ed31846-fff0-5772-a6c5-e111ea731e0c",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "minimax-m3",
+    "displayName": "MiniMax M3 (LogFare)"
+  },
+  {
+    "id": "4d346ae1-ffb9-52b9-ac68-f39dc08385f6",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "qwen-3.6-35b-a3b",
+    "displayName": "Qwen 3.6 35B A3B (LogFare)"
+  },
+  {
+    "id": "ca94f797-5465-53ae-a827-8052a0597516",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "qwen-3.8-max",
+    "displayName": "Qwen 3.8 Max (LogFare)"
   },
   {
     "id": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89",
@@ -26,42 +276,28 @@
     "maxTokens": 16384
   },
   {
-    "id": "e3567ha8-910c-4d11-a12b-e345gfk47896",
+    "id": "fbfbd4f2-c04f-43b3-bf7c-01a44059afcc",
     "providerId": "p-nvidia-9a1b",
     "providerType": "nvidia",
-    "modelId": "moonshotai/kimi-k2.6",
-    "displayName": "Kimi K2.6 (Nvidia)",
+    "modelId": "google/diffusiongemma-26b-a4b-it",
     "enableTools": true,
     "disabledTools": [],
-    "reasoningEffort": "high",
-    "injectThinkingTemplate": true,
-    "maxTokens": 65536
-  },
-  {
-    "id": "090f132d-1796-47d5-b6fa-32244e602e13",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-3.5-flash",
-    "enableTools": true,
-    "disabledTools": [],
-    "displayName": "Gemini 3.5 Flash (Google)",
-    "thinkingLevel": "high"
-  },
-  {
-    "id": "c4c7ff71-4399-4081-976a-9aa29b282c16",
-    "providerId": "p-nvidia-9a1b",
-    "providerType": "nvidia",
-    "modelId": "z-ai/glm-5.2",
-    "enableTools": true,
-    "disabledTools": [],
-    "displayName": "GLM 5.2 (Nvidia)",
+    "displayName": "DiffusionGemma-26b-a4b-it (Nvidia)",
+    "maxTokens": 32768,
+    "injectThinkingTemplate": false,
     "extraBody": {
       "chat_template_kwargs": {
-        "enable_thinking": true,
-        "clear_thinking": false
+        "enable_thinking": true
       }
-    },
-    "maxTokens": 32768
+    }
+  },
+  {
+    "id": "5682d9a8-7c24-4f0d-ba99-8d4e3819b5d6",
+    "providerId": "p-nvidia-9a1b",
+    "providerType": "nvidia",
+    "modelId": "meta/muse-glimmer-30b",
+    "displayName": "Muse Glimmer 30B (Nvidia)",
+    "maxTokens": 16353
   },
   {
     "id": "96bf625a-9e90-4d72-95bc-680eb477025d",
@@ -80,20 +316,16 @@
     }
   },
   {
-    "id": "fbfbd4f2-c04f-43b3-bf7c-01a44059afcc",
+    "id": "e3567ha8-910c-4d11-a12b-e345gfk47896",
     "providerId": "p-nvidia-9a1b",
     "providerType": "nvidia",
-    "modelId": "google/diffusiongemma-26b-a4b-it",
+    "modelId": "moonshotai/kimi-k2.6",
+    "displayName": "Kimi K2.6 (Nvidia)",
     "enableTools": true,
     "disabledTools": [],
-    "displayName": "DiffusionGemma-26b-a4b-it (Nvidia)",
-    "maxTokens": 32768,
-    "injectThinkingTemplate": false,
-    "extraBody": {
-      "chat_template_kwargs": {
-        "enable_thinking": true
-      }
-    }
+    "reasoningEffort": "high",
+    "injectThinkingTemplate": true,
+    "maxTokens": 65536
   },
   {
     "id": "a0c2e1eb-26cd-464a-93b5-da6e4fd148ac",
@@ -105,242 +337,20 @@
     "injectThinkingTemplate": false
   },
   {
-    "id": "f4a17dec-ee5e-4557-924a-8c02dcb6b1a5",
-    "providerId": "73766d3b-b243-4dcf-a64b-f7f9956f4df7",
-    "providerType": "openai-compatible",
-    "modelId": "gemma-4-31b",
-    "displayName": "Gemma 4 31b (Cerebras)",
-    "reasoningEffort": "high",
-    "maxTokens": 32768,
-    "extraBody": {
-      "reasoning_format": "parsed"
-    }
-  },
-  {
-    "id": "3d4c0dbb-fafc-4877-9405-2b8ff8bfa7ff",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-3.6-flash",
-    "displayName": "Gemini 3.6 Flash (Google)",
-    "thinkingLevel": "high"
-  },
-  {
-    "id": "0a4df899-3617-4a54-ae03-b8f5377f45d1",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-3.5-flash-lite",
-    "displayName": "Gemini 3.5 Flash Lite (Google)",
-    "thinkingLevel": "high"
-  },
-  {
-    "id": "d3d587d2-59df-4dc8-b3ca-e19c63a6cd53",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-robotics-er-2-preview",
-    "displayName": "Gemini Robotics ER 2 (Google)",
-    "thinkingLevel": "high"
-  },
-  {
-    "id": "8857da95-1ab9-4ec0-8b33-5298939e45ab",
-    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
-    "providerType": "openai-compatible",
-    "modelId": "DeepSeek-V4-Flash",
-    "displayName": "DeepSeek V4 Flash 0731 (AMD)",
-    "reasoningEffort": "high"
-  },
-  {
-    "id": "5682d9a8-7c24-4f0d-ba99-8d4e3819b5d6",
+    "id": "c4c7ff71-4399-4081-976a-9aa29b282c16",
     "providerId": "p-nvidia-9a1b",
     "providerType": "nvidia",
-    "modelId": "meta/muse-glimmer-30b",
-    "displayName": "Muse Glimmer 30B (Nvidia)",
-    "maxTokens": 16353
-  },
-  {
-    "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
-    "providerId": "p-poe-8d3e",
-    "providerType": "openai-compatible",
-    "modelId": "gemma-4-31b",
-    "displayName": "Gemma-4-31B (Poe)"
-  },
-  {
-    "id": "77fc9549-28c8-5e64-994a-b20990ea22e0",
-    "providerId": "p-poe-8d3e",
-    "providerType": "openai-compatible",
-    "modelId": "gemma-4-31b-t",
-    "displayName": "Gemma-4-31B-T (Poe)"
-  },
-  {
-    "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "kilo-auto/free",
-    "displayName": "Auto Free (Kilo)"
-  },
-  {
-    "id": "c93e0a30-0931-543b-bb9b-d7c020d6b0b3",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "stepfun/step-3.7-flash:free",
-    "displayName": "StepFun: Step 3.7 Flash (Kilo)",
-    "reasoningEffort": "high"
-  },
-  {
-    "id": "8ca867d4-19c8-53b3-ae7c-38a3f7c37d12",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "poolside/laguna-s-2.1:free",
-    "displayName": "Poolside: Laguna S 2.1 (Kilo)"
-  },
-  {
-    "id": "04560a4e-43f1-5a34-ada1-8019b1d4dda6",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "tencent/hy3:free",
-    "displayName": "Tencent: Hy3 (Kilo)",
-    "reasoningEffort": "high"
-  },
-  {
-    "id": "12012cba-e7fa-55b8-afee-2434e2a2e1ab",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "liquid/lfm-2.5-2.6b:free",
-    "displayName": "LiquidAI: LFM2.5-2.6B (Kilo)"
-  },
-  {
-    "id": "b73bcb80-f456-54cb-9512-0abee644a874",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "nvidia/nemotron-3.5-lightning:free",
-    "displayName": "NVIDIA: Nemotron 3.5 Lightning (Kilo)"
-  },
-  {
-    "id": "a1600296-046e-5465-b8ff-9bd743cbb72c",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "poolside/laguna-xs-2.1:free",
-    "displayName": "Poolside: Laguna XS 2.1 (Kilo)"
-  },
-  {
-    "id": "e2c6d1c5-44b3-5bcd-aa30-790edccdc2ed",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "cohere/north-mini-code:free",
-    "displayName": "Cohere: North Mini Code (Kilo)"
-  },
-  {
-    "id": "417ad047-ad35-5d82-a4c1-c0cb371a2da8",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "nvidia/nemotron-3.5-content-safety:free",
-    "displayName": "NVIDIA: Nemotron 3.5 Content Safety (Kilo)"
-  },
-  {
-    "id": "2ef64470-af2c-5d73-ad83-9f3947ba9003",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "displayName": "NVIDIA: Nemotron 3 Ultra (Kilo)",
-    "reasoningEffort": "high"
-  },
-  {
-    "id": "cfcdca0f-3efd-5c17-9003-8d05a905ce00",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
-    "displayName": "NVIDIA: Nemotron 3 Nano Omni (Kilo)"
-  },
-  {
-    "id": "d63a257a-6bab-5b88-9418-46fad53210e1",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "nvidia/nemotron-3-super-120b-a12b:free",
-    "displayName": "NVIDIA: Nemotron 3 Super (Kilo)",
-    "reasoningEffort": "medium"
-  },
-  {
-    "id": "14949368-d0cb-5c39-a1bd-8e78a0ef89fa",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "openrouter/free",
-    "displayName": "OpenRouter Free Models Router (Kilo)"
-  },
-  {
-    "id": "cd2e2f5e-12a8-5000-acf6-7be3dcab4f48",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kiro-auto",
-    "displayName": "Kiro Auto (LogFare)"
-  },
-  {
-    "id": "4ed31846-fff0-5772-a6c5-e111ea731e0c",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "minimax-m3",
-    "displayName": "MiniMax M3 (LogFare)"
-  },
-  {
-    "id": "248c1cbe-0ff5-5ed2-b6cc-0f5d89abccae",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-pro",
-    "displayName": "DeepSeek V4 Pro (LogFare)"
-  },
-  {
-    "id": "d4cb5d70-7982-59d7-bd72-4337d101bf05",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kimi-k2.7-code",
-    "displayName": "Kimi K2.7 Code (LogFare)"
-  },
-  {
-    "id": "5ab7cacf-75df-5490-8295-8edd9c1d374b",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-flash",
-    "displayName": "DeepSeek V4 Flash (LogFare)"
-  },
-  {
-    "id": "c7995cd3-216c-5394-ad7c-c6458a16de51",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "glm-5.2",
-    "displayName": "GLM 5.2 (LogFare)"
-  },
-  {
-    "id": "581eadd1-f00a-55ce-bbdf-1bc0f905583b",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kimi-k3",
-    "displayName": "Kimi K3 (LogFare)"
-  },
-  {
-    "id": "ca94f797-5465-53ae-a827-8052a0597516",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "qwen-3.8-max",
-    "displayName": "Qwen 3.8 Max (LogFare)"
-  },
-  {
-    "id": "4d346ae1-ffb9-52b9-ac68-f39dc08385f6",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "qwen-3.6-35b-a3b",
-    "displayName": "Qwen 3.6 35B A3B (LogFare)"
-  },
-  {
-    "id": "cda1b042-7087-5159-8362-b734d8e5845e",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-flash-0731",
-    "displayName": "DeepSeek v4 Flash 0731 (LogFare)"
-  },
-  {
-    "id": "ad77b720-8b36-5c4f-ad92-00ccc885f50d",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "grape-2-pro",
-    "displayName": "GRaPE 2 Pro (LogFare)"
+    "modelId": "z-ai/glm-5.2",
+    "enableTools": true,
+    "disabledTools": [],
+    "displayName": "GLM 5.2 (Nvidia)",
+    "extraBody": {
+      "chat_template_kwargs": {
+        "enable_thinking": true,
+        "clear_thinking": false
+      }
+    },
+    "maxTokens": 32768
   },
   {
     "id": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
@@ -351,19 +361,27 @@
     "reasoningEffort": "max"
   },
   {
-    "id": "1a49d398-0224-583f-973a-a0bb2af90ee2",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "mimo-v2.5-free",
-    "displayName": "MiMo V2.5 Free (OpenCode)"
-  },
-  {
     "id": "ac977b66-c8d1-5da3-a80f-9d44eceaed61",
     "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
     "providerType": "openai-compatible",
     "modelId": "hy3-free",
     "displayName": "Hy3 Free (OpenCode)",
     "reasoningEffort": "high"
+  },
+  {
+    "id": "32d253e2-5a78-5c6b-9663-105cb03eb4e4",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "laguna-s-2.1-free",
+    "displayName": "Laguna S 2.1 Free (OpenCode)",
+    "reasoningEffort": "high"
+  },
+  {
+    "id": "1a49d398-0224-583f-973a-a0bb2af90ee2",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "mimo-v2.5-free",
+    "displayName": "MiMo V2.5 Free (OpenCode)"
   },
   {
     "id": "14f57ded-622b-5af6-8331-a14e299bdd14",
@@ -380,35 +398,17 @@
     "displayName": "Nemotron 3.5 Lightning Free (OpenCode)"
   },
   {
-    "id": "32d253e2-5a78-5c6b-9663-105cb03eb4e4",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
+    "providerId": "p-poe-8d3e",
     "providerType": "openai-compatible",
-    "modelId": "laguna-s-2.1-free",
-    "displayName": "Laguna S 2.1 Free (OpenCode)",
-    "reasoningEffort": "high"
+    "modelId": "gemma-4-31b",
+    "displayName": "Gemma-4-31B (Poe)"
   },
   {
-    "id": "f63d2321-12be-42e0-a957-e1fd0ae30475",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-3.7-flash",
-    "displayName": "Gemini 3.7 Flash (Google)",
-    "thinkingLevel": "high"
-  },
-  {
-    "id": "b9425e46-a961-49c8-9b5f-7da094f48532",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-3-flash-preview",
-    "displayName": "Gemini 3 Flash (Google)",
-    "thinkingLevel": "high"
-  },
-  {
-    "id": "f557ecf3-eabb-44b8-a76b-ed8310805820",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemma-4-26b-a4b-it",
-    "displayName": "Gemma 4 26B A4B IT (Google)",
-    "thinkingLevel": "high"
+    "id": "77fc9549-28c8-5e64-994a-b20990ea22e0",
+    "providerId": "p-poe-8d3e",
+    "providerType": "openai-compatible",
+    "modelId": "gemma-4-31b-t",
+    "displayName": "Gemma-4-31B-T (Poe)"
   }
 ]

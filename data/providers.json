@@ -1,23 +1,25 @@
 [
   {
-    "id": "p-poe-8d3e",
+    "id": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "type": "openai-compatible",
-    "name": "Poe",
-    "baseURL": "https://api.poe.com/v1",
-    "envKey": "POE_API_KEY",
-    "modelSource": "https://raw.githubusercontent.com/RainPPR/poe-free-models/refs/heads/main/free_models_ai_math.json"
+    "name": "AMD Token Factory",
+    "apiKey": "",
+    "envKey": "AMD_API_KEY",
+    "baseURL": "https://developer.amd.com.cn/radeon/api/v1"
+  },
+  {
+    "id": "73766d3b-b243-4dcf-a64b-f7f9956f4df7",
+    "type": "openai-compatible",
+    "name": "Cerebras",
+    "apiKey": "",
+    "envKey": "CEREBRAS_API_KEY",
+    "baseURL": "https://api.cerebras.ai/v1"
   },
   {
     "id": "p-google-fc62",
     "type": "google",
     "name": "Google Gemini",
     "envKey": "GEMINI_API_KEY"
-  },
-  {
-    "id": "p-nvidia-9a1b",
-    "type": "nvidia",
-    "name": "Nvidia NIM",
-    "envKey": "NVIDIA_API_KEY"
   },
   {
     "id": "p-kilo-gw",
@@ -36,6 +38,12 @@
     "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/logfare-ai-math.json"
   },
   {
+    "id": "p-nvidia-9a1b",
+    "type": "nvidia",
+    "name": "Nvidia NIM",
+    "envKey": "NVIDIA_API_KEY"
+  },
+  {
     "id": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
     "type": "openai-compatible",
     "name": "OpenCode Public",
@@ -45,19 +53,11 @@
     "baseURL": "https://opencode.ai/zen/v1"
   },
   {
-    "id": "73766d3b-b243-4dcf-a64b-f7f9956f4df7",
+    "id": "p-poe-8d3e",
     "type": "openai-compatible",
-    "name": "Cerebras",
-    "apiKey": "",
-    "envKey": "CEREBRAS_API_KEY",
-    "baseURL": "https://api.cerebras.ai/v1"
-  },
-  {
-    "id": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
-    "type": "openai-compatible",
-    "name": "AMD Token Factory",
-    "apiKey": "",
-    "envKey": "AMD_API_KEY",
-    "baseURL": "https://developer.amd.com.cn/radeon/api/v1"
+    "name": "Poe",
+    "baseURL": "https://api.poe.com/v1",
+    "envKey": "POE_API_KEY",
+    "modelSource": "https://raw.githubusercontent.com/RainPPR/poe-free-models/refs/heads/main/free_models_ai_math.json"
   }
 ]
