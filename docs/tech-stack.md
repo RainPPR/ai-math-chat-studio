@@ -4,7 +4,7 @@
 | 技术 | 版本 |
 |---|---|
 | React | ^19.2.7 |
-| TypeScript | ~6.0.3 |
+| TypeScript | ^7.0.2 |
 | Vite | ^8.0.16 |
 | Tailwind CSS | ^4.3.1 |
 | @tailwindcss/typography | ^0.5.20 |
@@ -62,7 +62,7 @@
 | 工具 | 用途 |
 |---|---|
 | Bun | 依赖管理、脚本运行、构建 |
-| TypeScript (`tsc --noEmit`) | 类型检查 (`bun run lint`) |
+| TypeScript (`tsc --noEmit`) | 类型检查 |
 | Vite HMR | 热模块替换 |
 
 ## 构建命令
@@ -73,7 +73,7 @@ bun run build         # Vite 生产构建
 bun run preview       # 预览生产构建
 bun run build:bundle    # 打包服务端代码为单个 bundle
 bun run build:compile  # 使用 Bun 编译为可执行文件
-bun run lint          # TypeScript 类型检查
+bun run check         # TypeScript 类型检查
 bun run clean         # 清除 dist、dist-server、dist-compile、release 目录
 ```
 
@@ -91,5 +91,5 @@ bun run clean         # 清除 dist、dist-server、dist-compile、release 目�
 
 ### 字体实现细节
 1. **源字体与 WOFF2 转换**: 字体文件存放于 `src/fonts/` 下，转换使用标准的 `woff2_compress` 压缩技术将 OTF/TTF 转换为体积更小的 WOFF2 格式。
-2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义在 `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
+2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义 in `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
 3. **CJK/中文优雅回退**: 避免定制数学字体对数学公式内的中文（如 `\text{中文}` 或 `.cjk_fallback`）造成非预期的强制覆盖，系统在 `src/index.css` 增加了高优先级的非冲突 CJK 回退处理器，强制使 `.cjk_fallback` 及它的子元素回退并使用网页正文字体 (`system-ui, sans-serif`)。

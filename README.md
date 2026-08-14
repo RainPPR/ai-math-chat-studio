@@ -70,7 +70,7 @@
 | 技术                    | 版本    |
 | ----------------------- | ------- |
 | React                   | ^19.2.7 |
-| TypeScript              | ~6.0.3  |
+| TypeScript              | ^7.0.2  |
 | Vite                    | ^8.0.16 |
 | Tailwind CSS            | ^4.3.1  |
 | @tailwindcss/typography | ^0.5.20 |
@@ -115,7 +115,7 @@ bun run dev
 - [data-models.md](docs/data-models.md) - 数据模型
 - [tech-stack.md](docs/tech-stack.md) - 技术栈详情
 - [file-structure.md](docs/file-structure.md) - 文件结构
-- [linting-and-quality.md](docs/linting-and-quality.md) - 质量指南
+- [linting-and-quality.md](docs/linting-and-quality.md) - 代码质量指南
 
 ## 许可证
 

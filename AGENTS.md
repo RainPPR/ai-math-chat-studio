@@ -18,7 +18,7 @@
 
 ## 项目概述
 
-**AI Math & Chat Studio** 是一个多会话 AI 聊天应用，内置 3 种提供商类型（Google Gemini、Nvidia NIM、OpenAI Compatible），支持提供商和模型的分离配置，以及 KaTeX 数学公式和 mhchem 化学公式渲染。数据以 JSON 文件形式存储在本地 `/data` 目录。
+**AI Math & Chat Studio** 是一个多会话 AI 聊天应用，内置 3 种提供商类型（Google Gemini、Nvidia NIM、OpenAI Compatible），支持提供商 and 模型的分离配置，以及 KaTeX 数学公式和 mhchem 化学公式渲染。数据以 JSON 文件形式存储在本地 `/data` 目录。
 
 **文档入口**：`docs/` 目录包含完整的架构、技术栈、组件、数据模型等文档。
 
@@ -32,7 +32,7 @@
 | 数据模型和存储 | `docs/data-models.md` |
 | 组件结构和职责 | `docs/components.md` |
 | 数学公式渲染 | `docs/tech-stack.md` |
-| 代码质量与 Lint 规范 | `docs/linting-and-quality.md` |
+| 代码质量规范 | `docs/linting-and-quality.md` |
 | 文件结构 | `docs/file-structure.md` |
 
 ## 开发规范
@@ -162,4 +162,4 @@
 
 ### 代码质量
 - **禁止使用三元表达式**：必须使用标准的 `if/else` 块。
-- **配置一致性**：不得为了绕过错误而修改 `tsconfig.json` 或 `.eslintrc.json`。
+- **配置一致性**：不得为了绕过错误而修改 `tsconfig.json`。
