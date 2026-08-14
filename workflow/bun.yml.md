@@ -20,7 +20,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  check-lint:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -35,8 +35,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bun-
       - run: bun install
-      - run: bun --max-warnings=0 run lint
-        if: always()
       - run: bun --max-warnings=0 run check
         if: always()
       - run: bun --max-warnings=0 run pretty

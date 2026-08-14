@@ -415,21 +415,6 @@ export class GenerationManager {
 
     // Truncate messages after this one
     session.messages = session.messages.slice(0, idx + 1);
-
-    // Add regenerate instruction
-    const regenerateMsg: ServerChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: `Based on the thinking process preserved in the \`<think>\` block above, please directly output the final, complete, and well-structured response.
-
-Requirements:
-1. Do not re-evaluate, critique, or apologize for your previous reasoning or previous responses. Do not mention that you are repeating, revising, or analyzing past thinking.
-2. Under no circumstances should you generate any meta-commentary, conversational filler, or introductory phrases like "Based on my previous thinking..." or "I see an error in my previous reasoning...".
-3. Jump straight into the final response or solution cleanly, starting directly with the substantive content.`,
-      createdAt: new Date().toISOString(),
-    };
-
-    session.messages.push(regenerateMsg);
     session.updatedAt = new Date().toISOString();
 
     try {
@@ -515,18 +500,6 @@ Requirements:
       role: m.role === 'model' ? 'assistant' : m.role,
       content: m.content,
     }));
-
-    if (isContinuation && model.providerType === 'google') {
-      reqMessages.push({
-        role: 'user',
-        content: `The previous generation was interrupted. Please continue generating the response from where it left off, ensuring a seamless and complete output.
-
-Requirements:
-1. Do not start from the very beginning if you were already in the middle of the final response; simply pick up exactly where the text cut off and complete it.
-2. If the interruption occurred inside the thinking/reasoning phase, please simply complete your remaining reasoning/thinking, and then continue with the final answer/response.
-3. Do not apologize, explain, or mention that the generation was interrupted, timed out, or restarted. Do not write any meta-dialogue like "Continuing from..." or "Here is the rest of...". Just output the continuing content directly.`,
-      });
-    }
 
     // Throttled notification to prevent overwhelming clients
     const notifySubscribers = (event: string, data: any, immediate = false) => {

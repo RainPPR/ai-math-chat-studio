@@ -1,34 +1,32 @@
-### 代码质量与 Lint 规范
+### 代码质量与格式规范
 
 ```text
-本项目执行严格的代码质量检查。所有代码必须通过 ESLint、Prettier 和 TypeScript 的严格模式检查。
+本项目执行严格的代码质量和格式检查。所有代码必须通过 Prettier 和 TypeScript 的严格模式检查。
 ```
 
-### 代码质量与 Lint 规范 / 检查工具
+### 代码质量与格式规范 / 检查工具
 
 ```text
-- **Lint**: `bun run lint` (eslint)
 - **Formatting**: `bun run pretty` (prettier --check)
 - **Type Check**: `bun run check` (tsc --noEmit --strict)
 ```
 
-### 代码质量与 Lint 规范 / 修复工具
+### 代码质量与格式规范 / 修复工具
 
 ```text
-- **自动修复 Lint**: `bun run lint:fix`
 - **自动修复格式**: `bun run pretty:fix`
 ```
 
-### 代码质量与 Lint 规范 / 严格修复规则
+### 代码质量与格式规范 / 严格修复规则
 
 ```text
-1. **禁止未使用变量**: 所有的 `unused-vars` 必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
+1. **禁止未使用变量**: 所有的未使用变量必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
 2. **禁止未使用的表达式**: 严禁将三元运算符或逻辑表达式作为独立语句使用。应使用标准的 `if/else` 语句。
 3. **严格类型检查**: TypeScript 必须处于 `--strict` 模式。严禁无故使用 `@ts-ignore` 或 `@ts-expect-error`。如果第三方库缺少类型或存在上游 Bug，必须在注释中说明原因。
 4. **文档同步**: 任何逻辑变更必须同步更新 `AGENTS.md` 和 `docs/` 目录下的相关文档。
 ```
 
-### 代码质量与 Lint 规范 / 最佳实践 (TypeScript)
+### 代码质量与格式规范 / 最佳实践 (TypeScript)
 
 ```text
 - **Make Illegal States Unrepresentable**: 使用辨析联合类型 (Discriminated Unions) 确保状态合法。
@@ -62,7 +60,6 @@ ai-math-chat-studio/
 ├── index.html                # SPA 入口 HTML
 ├── package.json              # 项目依赖和脚本
 ├── bun.lock                  # Bun 依赖锁定文件
-├── eslint.config.mjs         # ESLint 配置
 ├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
 ├── server/                   # 后端模块
 │   ├── app.ts                # Express 5 应用组装，挂载所有路由
@@ -135,10 +132,10 @@ ai-math-chat-studio/
 ```text
 | 技术 | 版本 |
 |---|---|
-| React | ^19.2.7 |
-| TypeScript | ~6.0.3 |
-| Vite | ^8.0.16 |
-| Tailwind CSS | ^4.3.1 |
+| React | ^19.2.8 |
+| TypeScript | ^7.0.2 |
+| Vite | ^8.2.1 |
+| Tailwind CSS | ^4.3.3 |
 | @tailwindcss/typography | ^0.5.20 |
 ```
 
@@ -148,8 +145,8 @@ ai-math-chat-studio/
 | 技术 | 版本 |
 |---|---|
 | Express | ^5.2.1 |
-| tsx | ^4.22.4 |
-| OpenAI SDK | ^6.44.0 |
+| tsx | ^4.23.12 |
+| OpenAI SDK | ^7.4.0 |
 | dotenv | ^17.4.2 |
 ```
 
@@ -158,8 +155,8 @@ ai-math-chat-studio/
 ```text
 | 技术 | 版本 |
 |---|---|
-| @google/genai | ^2.8.0 |
-| KaTeX | ^0.17.0 |
+| @google/genai | ^2.17.1 |
+| KaTeX | ^0.18.4 |
 ```
 
 ### 技术栈详情 / Markdown 渲染管线
@@ -171,7 +168,7 @@ ai-math-chat-studio/
 | remark-math | ^6.0.0 |
 | remark-gfm | ^4.0.1 |
 | remark-breaks | ^4.0.0 |
-| remark-cjk-friendly | ^2.2.0 |
+| remark-cjk-friendly | ^2.3.1 |
 | remark-squeeze-paragraphs | ^6.0.0 |
 | rehype-katex | ^7.0.1 |
 | rehype-raw | ^7.0.0 |
@@ -185,8 +182,8 @@ ai-math-chat-studio/
 ```text
 | 技术 | 版本 |
 |---|---|
-| lucide-react | ^1.21.0 |
-| motion | ^12.40.0 |
+| lucide-react | ^1.31.0 |
+| motion | ^13.1.0 |
 | clsx | ^2.1.1 |
 | tailwind-merge | ^3.6.0 |
 | uuid | ^14.0.1 |
@@ -211,7 +208,7 @@ ai-math-chat-studio/
 | 工具 | 用途 |
 |---|---|
 | Bun | 依赖管理、脚本运行、构建 |
-| TypeScript (`tsc --noEmit`) | 类型检查 (`bun run lint`) |
+| TypeScript (`tsc --noEmit`) | 类型检查 |
 | Vite HMR | 热模块替换 |
 ```
 
@@ -223,7 +220,7 @@ bun run build         # Vite 生产构建
 bun run preview       # 预览生产构建
 bun run build:bundle    # 打包服务端代码为单个 bundle
 bun run build:compile  # 使用 Bun 编译为可执行文件
-bun run lint          # TypeScript 类型检查
+bun run check         # TypeScript 类型检查
 bun run clean         # 清除 dist、dist-server、dist-compile、release 目录
 ```
 
@@ -821,8 +818,8 @@ graph TD
 - **实现逻辑**: `GenerationManager.regenerateMessage()` 执行以下操作：
   1. 清洗当前消息：保留 `<details><summary>Thinking Process</summary>` 包裹的思考过程，删除正文输出部分
   2. 截断该消息之后的所有消息
-  3. 添加 user 指令提示 AI 基于原有思考进行批判性检查并延伸分析，然后生成完整输出
-- **适用场景**: AI 的思考过程有价值，但正文输出不完善或需要修正，希望在保留思考基础上深化分析
+  3. 直接对包含已有思考过程的助理消息进行流式生成（类似 Continue），不注入额外的提示词或用户指令
+- **适用场景**: AI 的思考过程有价值，但正文输出不完善或需要修正，希望在保留思考基础上直接继续输出
 ```
 
 ### 项目架构概览 / 消息操作机制 / 3. Continue（继续）
