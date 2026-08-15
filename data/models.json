@@ -28,6 +28,22 @@
     "thinkingLevel": "high"
   },
   {
+    "id": "3a0f18d9-0017-47be-bf78-8025bb4ca575",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3.1-flash-lite",
+    "displayName": "Gemini 3.1 Flash Lite (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "548471a6-ee9a-464f-84b1-9487f232c829",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3.1-flash-lite-preview",
+    "displayName": "Gemini 3.1 Flash Lite Preview (Google)",
+    "thinkingLevel": "high"
+  },
+  {
     "id": "090f132d-1796-47d5-b6fa-32244e602e13",
     "providerId": "p-google-fc62",
     "providerType": "google",
@@ -59,6 +75,14 @@
     "providerType": "google",
     "modelId": "gemini-3.7-flash",
     "displayName": "Gemini 3.7 Flash (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "e6d2feef-f207-442c-988f-5d4ea61eb946",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3.7-flash-video-understanding-eap",
+    "displayName": "Gemini 3.7 Flash Video Understanding EAP (Google)",
     "thinkingLevel": "high"
   },
   {
