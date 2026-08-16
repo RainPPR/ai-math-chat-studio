@@ -3,7 +3,7 @@
   "renderThinkingAsMarkdown": false,
   "autoScroll": false,
   "collapseThinkingFinished": true,
-  "gemmaTrimThinkingSpaces": true,
+  "trimThinkingSpaces": true,
   "starredSessions": {
     "f6697785-4f1e-452e-a371-73a14c20783a": "yellow",
     "b638cf2f-773c-4192-a083-4cd0074a2eb2": "rose"

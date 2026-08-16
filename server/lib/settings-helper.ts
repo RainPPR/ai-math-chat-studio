@@ -15,7 +15,7 @@ export interface UserSettings {
   renderThinkingAsMarkdown: boolean;
   autoScroll: boolean;
   collapseThinkingFinished: boolean;
-  gemmaTrimThinkingSpaces: boolean;
+  trimThinkingSpaces: boolean;
   starredSessions?: Record<string, string>;
   claudeChunks?: string[];
   claudeChunkRemarks?: Record<string, string>;
