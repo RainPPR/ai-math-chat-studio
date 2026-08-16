@@ -107,21 +107,6 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
   const hasModelsInSettings = settings.models && Array.isArray(settings.models);
   const hasCharactersInSettings = settings.characters && Array.isArray(settings.characters);
 
-  // Migrate legacy gemmaTrimThinkingSpaces key if present
-  if (settings.gemmaTrimThinkingSpaces !== undefined) {
-    if (settings.trimThinkingSpaces === undefined) {
-      settings.trimThinkingSpaces = settings.gemmaTrimThinkingSpaces;
-    }
-    delete settings.gemmaTrimThinkingSpaces;
-    if (settingsExist) {
-      try {
-        await writeIfChanged(settingsFile, JSON.stringify(settings, null, 2));
-      } catch (err: any) {
-        console.warn(`[Settings Migration] Failed to persist migrated trimThinkingSpaces: ${err.message}`);
-      }
-    }
-  }
-
   if (hasProvidersInSettings || hasModelsInSettings || hasCharactersInSettings) {
     let needWriteProviders = false;
     let needWriteModels = false;
