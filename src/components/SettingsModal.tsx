@@ -785,13 +785,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
   const saveTempModel = () => {
     if (!editingTempModel?.baseURL || !editingTempModel.apiKey || !editingTempModel.modelId) return;
+
+    const sanitizedTempModel = { ...editingTempModel };
+    if (sanitizedTempModel.temperature !== undefined) {
+      if (isNaN(sanitizedTempModel.temperature) || sanitizedTempModel.temperature < 0 || sanitizedTempModel.temperature > 2) {
+        sanitizedTempModel.temperature = undefined;
+      }
+    }
+    if (sanitizedTempModel.maxTokens !== undefined) {
+      if (isNaN(sanitizedTempModel.maxTokens) || sanitizedTempModel.maxTokens < 1 || sanitizedTempModel.maxTokens > 1000000) {
+        sanitizedTempModel.maxTokens = undefined;
+      }
+    }
+
     setLocal(s => {
       const list = [...(s.tempModels || [])];
-      const idx = list.findIndex(m => m.id === editingTempModel.id);
+      const idx = list.findIndex(m => m.id === sanitizedTempModel.id);
       if (idx >= 0) {
-        list[idx] = editingTempModel;
+        list[idx] = sanitizedTempModel;
       } else {
-        list.push(editingTempModel);
+        list.push(sanitizedTempModel);
       }
       return { ...s, tempModels: list };
     });
@@ -1059,7 +1072,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         <div className="flex border-b border-gray-800 shrink-0">
           {(['general', 'providers', 'models', 'tempModels', 'characters', 'templates'] as Tab[]).map(t => (
             <button key={t} onClick={() => { setTab(t); }} className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === t ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>
-              {t === 'general' ? 'General' : t === 'providers' ? 'Providers' : t === 'models' ? 'Models' : t === 'tempModels' ? 'Temp Models' : t === 'characters' ? 'Characters' : 'Templates'}
+              {({ general: 'General', providers: 'Providers', models: 'Models', tempModels: 'Temp Models', characters: 'Characters', templates: 'Templates' } as Record<Tab, string>)[t]}
             </button>
           ))}
         </div>

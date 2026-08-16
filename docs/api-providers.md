@@ -10,7 +10,7 @@
 | Nvidia NIM | `nvidia` | integrate.api.nvidia.com/v1 | `NVIDIA_API_KEY` |
 | OpenAI Compatible | `openai-compatible` | 用户配置 | `OPENAI_API_KEY` |
 
-> 用户可自行添加任意数量的 `openai-compatible` 提供商实例。
+> 用户可自行添加任意数量的 `openai-compatible` 提供商实例，也可以在 Settings 中独立配置不依赖 Provider 实体、只支持 OpenAI 兼容 API 的“临时模型 (Temp Models)”。
 
 ## 架构
 
@@ -22,6 +22,9 @@
 - **`server/providers/config.ts`** — 提供商配置解析
   - `resolveApiKey()` — 解析 API Key（优先配置项，其次环境变量，最后 `OPENAI_API_KEY` 回退）
   - `resolveBaseURL()` — 解析 Base URL（优先配置项，其次内置默认值）
+
+- **`server/routes/chat.ts`** — 模型/提供商解析
+  - `resolveActiveModel()` — 根据 `activeModelId` 解析要使用的模型与提供商；如命中临时模型（TempModel），自动合成 `openai-compatible` 类型提供商 payload（采用显式 Base URL 与 API Key）
 
 - **`server/providers/stream.ts`** — 流式 API 调用
   - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数

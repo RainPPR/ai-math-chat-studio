@@ -58,8 +58,8 @@ function resolveActiveModel(settings: SettingsData) {
     }
   }
 
-  // 3. Fallback to first TempModel if models is empty
-  if (settings.tempModels?.length) {
+  // 3. Fallback to first TempModel ONLY if regular models are completely empty
+  if (!settings.models?.length && settings.tempModels?.length) {
     const tempModel = settings.tempModels[0];
     const model = {
       id: tempModel.id,
@@ -110,7 +110,8 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     const session = await gm.readSession(sessionId);
     const characterId = session ? session.characterId : settings.activeCharacterId;
 
-    await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate, characterId);
+    const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
+    await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate, characterId);
     res.status(202).json({ ok: true });
   });
 
@@ -202,7 +203,8 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     const characterId = session?.characterId;
 
     try {
-      await gm.retryMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate);
+      const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
+      await gm.retryMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -219,7 +221,8 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     const characterId = session?.characterId;
 
     try {
-      await gm.continueGeneration(sessionId, result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate);
+      const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
+      await gm.continueGeneration(sessionId, result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -239,7 +242,8 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     const characterId = session?.characterId;
 
     try {
-      await gm.regenerateMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), settings.injectThinkingTemplate);
+      const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
+      await gm.regenerateMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
