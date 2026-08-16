@@ -39,6 +39,23 @@ interface ModelInstance {
 }
 ```
 
+### TempModel（临时模型实例）
+
+```typescript
+interface TempModel {
+  id: string;                       // UUID
+  name?: string;                    // 临时模型显示名称（可选）
+  baseURL: string;                  // 显式 Base URL
+  apiKey: string;                   // 显式 API Key
+  modelId: string;                  // 模型 ID（如 Qwen/Qwen3.8-27B）
+  temperature?: number;             // 温度参数
+  maxTokens?: number;               // 最大 token 数
+  reasoningEffort?: string;         // 推理努力程度
+  extraBody?: Record<string, any>;  // 额外请求体
+  injectThinkingTemplate?: boolean; // 是否注入 thinking 参数
+}
+```
+
 ### Character（角色）
 
 ```typescript
@@ -67,10 +84,11 @@ interface Template {
 
 ```typescript
 interface UserSettings {
-  activeModelId?: string;           // 当前活跃模型的 ModelInstance.id
+  activeModelId?: string;           // 当前活跃模型的 ModelInstance.id 或 TempModel.id
   activeCharacterId?: string;       // 当前活跃角色的 Character.id
   providers: ProviderInstance[];    // 提供商实例列表
   models: ModelInstance[];          // 模型实例列表
+  tempModels?: TempModel[];         // 临时模型实例列表
   characters: Character[];          // 角色列表
   systemPrompt: string;             // 全局回退系统提示词（向后兼容）
   renderThinkingAsMarkdown: boolean;
