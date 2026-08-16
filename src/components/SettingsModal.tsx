@@ -297,7 +297,7 @@ const TempModelEditor: React.FC<{
           <input
             type="number"
             min="1"
-            max="100000"
+            max="1000000"
             value={entry.maxTokens ?? ''}
             onChange={e => { onChange({ ...entry, maxTokens: e.target.value === '' ? undefined : parseInt(e.target.value) }); }}
             placeholder="Unset"
@@ -1853,7 +1853,7 @@ const ModelEditor: React.FC<{
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-300">Max Tokens</label>
-          <input type="number" min="1" max="100000" value={entry.maxTokens ?? ''} onChange={e => { onChange({ ...entry, maxTokens: e.target.value === '' ? undefined : parseInt(e.target.value) }); }} placeholder="Unset" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500" />
+          <input type="number" min="1" max="1000000" value={entry.maxTokens ?? ''} onChange={e => { onChange({ ...entry, maxTokens: e.target.value === '' ? undefined : parseInt(e.target.value) }); }} placeholder="Unset" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500" />
         </div>
       </div>
 

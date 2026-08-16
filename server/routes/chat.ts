@@ -19,6 +19,28 @@ interface SettingsData {
   [key: string]: any;
 }
 
+function buildTempModelPayload(tempModel: any) {
+  const model = {
+    id: tempModel.id,
+    providerId: `temp-${tempModel.id}`,
+    providerType: 'openai-compatible',
+    modelId: tempModel.modelId,
+    displayName: tempModel.name || tempModel.modelId,
+    temperature: tempModel.temperature,
+    maxTokens: tempModel.maxTokens,
+    reasoningEffort: tempModel.reasoningEffort,
+    extraBody: tempModel.extraBody,
+    injectThinkingTemplate: tempModel.injectThinkingTemplate,
+  };
+  const provider = {
+    type: 'openai-compatible',
+    name: tempModel.name || 'Temporary Model',
+    baseURL: tempModel.baseURL,
+    apiKey: tempModel.apiKey,
+  };
+  return { model, provider };
+}
+
 function resolveActiveModel(settings: SettingsData) {
   const activeModelId = settings.activeModelId;
 
@@ -26,25 +48,7 @@ function resolveActiveModel(settings: SettingsData) {
   if (activeModelId && settings.tempModels?.length) {
     const tempModel = settings.tempModels.find((tm: any) => tm.id === activeModelId);
     if (tempModel) {
-      const model = {
-        id: tempModel.id,
-        providerId: `temp-${tempModel.id}`,
-        providerType: 'openai-compatible',
-        modelId: tempModel.modelId,
-        displayName: tempModel.name || tempModel.modelId,
-        temperature: tempModel.temperature,
-        maxTokens: tempModel.maxTokens,
-        reasoningEffort: tempModel.reasoningEffort,
-        extraBody: tempModel.extraBody,
-        injectThinkingTemplate: tempModel.injectThinkingTemplate,
-      };
-      const provider = {
-        type: 'openai-compatible',
-        name: tempModel.name || 'Temporary Model',
-        baseURL: tempModel.baseURL,
-        apiKey: tempModel.apiKey,
-      };
-      return { model, provider };
+      return buildTempModelPayload(tempModel);
     }
   }
 
@@ -60,26 +64,7 @@ function resolveActiveModel(settings: SettingsData) {
 
   // 3. Fallback to first TempModel ONLY if regular models are completely empty
   if (!settings.models?.length && settings.tempModels?.length) {
-    const tempModel = settings.tempModels[0];
-    const model = {
-      id: tempModel.id,
-      providerId: `temp-${tempModel.id}`,
-      providerType: 'openai-compatible',
-      modelId: tempModel.modelId,
-      displayName: tempModel.name || tempModel.modelId,
-      temperature: tempModel.temperature,
-      maxTokens: tempModel.maxTokens,
-      reasoningEffort: tempModel.reasoningEffort,
-      extraBody: tempModel.extraBody,
-      injectThinkingTemplate: tempModel.injectThinkingTemplate,
-    };
-    const provider = {
-      type: 'openai-compatible',
-      name: tempModel.name || 'Temporary Model',
-      baseURL: tempModel.baseURL,
-      apiKey: tempModel.apiKey,
-    };
-    return { model, provider };
+    return buildTempModelPayload(settings.tempModels[0]);
   }
 
   return null;
