@@ -50,7 +50,7 @@ export interface UserSettings {
   renderThinkingAsMarkdown: boolean;
   autoScroll: boolean;
   collapseThinkingFinished: boolean;
-  gemmaTrimThinkingSpaces: boolean;
+  trimThinkingSpaces: boolean;
   starredSessions?: Record<string, StarColor>;
   claudeChunks?: string[];
   claudeChunkRemarks?: Record<string, string>;
@@ -68,7 +68,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   renderThinkingAsMarkdown: false,
   autoScroll: true,
   collapseThinkingFinished: true,
-  gemmaTrimThinkingSpaces: false,
+  trimThinkingSpaces: false,
   starredSessions: {},
   claudeChunks: [],
   claudeChunkRemarks: {},

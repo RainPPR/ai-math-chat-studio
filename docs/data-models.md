@@ -76,7 +76,7 @@ interface UserSettings {
   renderThinkingAsMarkdown: boolean;
   autoScroll: boolean;
   collapseThinkingFinished: boolean;
-  gemmaTrimThinkingSpaces: boolean;
+  trimThinkingSpaces: boolean;
   starredSessions?: Record<string, string>; // 加星会话映射（会话 ID => 星星颜色 ID）
 }
 ```
@@ -176,7 +176,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   renderThinkingAsMarkdown: false,
   autoScroll: true,
   collapseThinkingFinished: true,
-  gemmaTrimThinkingSpaces: false,
+  trimThinkingSpaces: false,
   starredSessions: {},
 };
 ```
