@@ -119,6 +119,13 @@
     "displayName": "Cohere: North Mini Code (Kilo)"
   },
   {
+    "id": "0637ab32-20fe-5999-8fec-1aff621f4c6d",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "dots-studio/dots-3-note-preview:free",
+    "displayName": "Dots Studio: Dots3-Note Preview (Kilo)"
+  },
+  {
     "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -207,13 +214,6 @@
     "reasoningEffort": "high"
   },
   {
-    "id": "5ab7cacf-75df-5490-8295-8edd9c1d374b",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-flash",
-    "displayName": "DeepSeek V4 Flash (LogFare)"
-  },
-  {
     "id": "cda1b042-7087-5159-8362-b734d8e5845e",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -242,13 +242,6 @@
     "displayName": "GRaPE 2 Pro (LogFare)"
   },
   {
-    "id": "d4cb5d70-7982-59d7-bd72-4337d101bf05",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kimi-k2.7-code",
-    "displayName": "Kimi K2.7 Code (LogFare)"
-  },
-  {
     "id": "581eadd1-f00a-55ce-bbdf-1bc0f905583b",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -270,18 +263,11 @@
     "displayName": "MiniMax M3 (LogFare)"
   },
   {
-    "id": "4d346ae1-ffb9-52b9-ac68-f39dc08385f6",
+    "id": "e193beee-0f6c-59e6-830f-ddf4d6e9aed8",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
-    "modelId": "qwen-3.6-35b-a3b",
-    "displayName": "Qwen 3.6 35B A3B (LogFare)"
-  },
-  {
-    "id": "ca94f797-5465-53ae-a827-8052a0597516",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "qwen-3.8-max",
-    "displayName": "Qwen 3.8 Max (LogFare)"
+    "modelId": "qwen-3.8-27b",
+    "displayName": "Qwen 3.8 27b (LogFare)"
   },
   {
     "id": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89",
