@@ -122,7 +122,7 @@ export function parseMessageContent(
     for (const m of content.matchAll(thoughtRegex)) {
       if (m[1]) {
         let thoughtContent = m[1].trim();
-        if (settings.gemmaTrimThinkingSpaces) {
+        if (settings.trimThinkingSpaces) {
           thoughtContent = thoughtContent.split('\n').map((l: string) => l.trimStart()).join('\n');
         }
         thoughts.push(thoughtContent);
@@ -347,7 +347,7 @@ const parseMessagesToBlocks = (messages: ChatMessage[], settings: UserSettings):
           });
         }
         let thought = match[1].trim();
-        if (settings.gemmaTrimThinkingSpaces) {
+        if (settings.trimThinkingSpaces) {
           thought = thought.split('\n').map((l: string) => l.trimStart()).join('\n');
         }
         if (thought) {

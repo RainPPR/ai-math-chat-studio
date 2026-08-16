@@ -905,7 +905,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   { key: 'autoScroll', label: 'Auto-scroll to bottom on new messages' },
                   { key: 'collapseThinkingFinished', label: 'Auto-collapse thinking process when finished' },
                   { key: 'renderThinkingAsMarkdown', label: 'Render thinking process as Markdown' },
-                  { key: 'gemmaTrimThinkingSpaces', label: 'Remove leading spaces from thinking (Gemma)' },
+                  { key: 'trimThinkingSpaces', label: 'Remove leading spaces from thinking' },
                 ].map(({ key, label }) => (
                   <label key={key} className="flex items-center space-x-3 cursor-pointer">
                     <input type="checkbox" checked={(local as any)[key] ?? false} onChange={e => { setLocal(s => ({ ...s, [key]: e.target.checked })); }} className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900" />
