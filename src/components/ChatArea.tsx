@@ -120,14 +120,16 @@ export function parseMessageContent(
     const thoughtRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/g;
     for (const m of content.matchAll(thoughtRegex)) {
       if (m[1]) {
-        let thoughtContent = m[1].trim();
-        if (settings.trimThinkingSpaces) {
-          thoughtContent = thoughtContent.split('\n').map((l: string) => l.trimStart()).join('\n');
-        }
-        thoughts.push(thoughtContent);
+        thoughts.push(m[1].trim());
       }
     }
     mainContent = mainContent.replace(thoughtRegex, '').trim();
+  }
+
+  if (settings.trimThinkingSpaces) {
+    thoughts = thoughts.map(thought =>
+      thought.split('\n').map((l: string) => l.trimStart()).join('\n')
+    );
   }
 
   return { thoughts, mainContent };
@@ -306,7 +308,7 @@ const clearDraft = (sessionId: string) => {
   } catch { /* ignore storage errors */ }
 };
 
-const parseMessagesToBlocks = (messages: ChatMessage[], settings: UserSettings): EditBlock[] => {
+const parseMessagesToBlocks = (messages: ChatMessage[]): EditBlock[] => {
   const blocks: EditBlock[] = [];
   messages.forEach(msg => {
     if (msg.role === 'user') {
@@ -346,9 +348,6 @@ const parseMessagesToBlocks = (messages: ChatMessage[], settings: UserSettings):
           });
         }
         let thought = match[1].trim();
-        if (settings.trimThinkingSpaces) {
-          thought = thought.split('\n').map((l: string) => l.trimStart()).join('\n');
-        }
         if (thought) {
           blocks.push({
             id: crypto.randomUUID(),
@@ -937,7 +936,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
-              setEditBlocks(parseMessagesToBlocks(session.messages, settings));
+              setEditBlocks(parseMessagesToBlocks(session.messages));
               setEditModalError(null);
               setIsEditModalOpen(true);
             }}
