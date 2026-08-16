@@ -1030,7 +1030,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
               <span className="max-w-[120px] truncate">
                 {(() => {
                   const m = settings.models.find(x => x.id === settings.activeModelId);
-                  return m?.displayName || m?.modelId || 'Model';
+                  if (m) return m.displayName || m.modelId;
+                  const tm = (settings.tempModels || []).find(x => x.id === settings.activeModelId);
+                  if (tm) return tm.name || tm.modelId;
+                  return 'Model';
                 })()}
               </span>
               <ChevronDown size={12} className={`transition-transform ${modelDropdownOpen ? 'rotate-180' : ''}`} />
@@ -1040,6 +1043,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                 const match = isModelMatch(m.displayName || '', m.modelId || '', modelSearchQuery);
                 return match;
               });
+
+              const allFilteredTempModels = (settings.tempModels || []).filter(tm => {
+                const match = isModelMatch(tm.name || '', tm.modelId || '', modelSearchQuery);
+                return match;
+              });
+
+              const hasAnyMatches = allFilteredModels.length > 0 || allFilteredTempModels.length > 0;
 
               return (
                 <div className="absolute bottom-full mb-1 left-0 z-50 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-72 overflow-auto flex flex-col">
@@ -1062,6 +1072,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                             onSelectModel?.(firstModel.id);
                             setModelDropdownOpen(false);
                             modelToggleBtnRef.current?.focus();
+                          } else if (allFilteredTempModels.length > 0) {
+                            const firstTemp = allFilteredTempModels[0];
+                            onSelectModel?.(firstTemp.id);
+                            setModelDropdownOpen(false);
+                            modelToggleBtnRef.current?.focus();
                           }
                         }
                       }}
@@ -1072,7 +1087,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
 
                   {/* Scrollable list content */}
                   <div className="flex-1 overflow-y-auto">
-                    {allFilteredModels.length === 0 && (
+                    {!hasAnyMatches && (
                       <div className="px-3 py-4 text-center text-xs text-gray-500">
                         No matching models
                       </div>
@@ -1111,6 +1126,34 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                         </div>
                       );
                     })}
+
+                    {allFilteredTempModels.length > 0 && (
+                      <div className="border-b border-gray-700/50 last:border-b-0">
+                        <div className="px-2.5 py-1.5 bg-gray-800/80 sticky top-0 z-10 flex items-center justify-between">
+                          <span className="text-[10px] font-medium text-purple-400">临时模型</span>
+                        </div>
+                        {allFilteredTempModels.map(tm => {
+                          const isActive = tm.id === settings.activeModelId;
+                          let buttonClass = 'w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ';
+                          if (isActive) {
+                            buttonClass += 'text-purple-300 bg-purple-600/10';
+                          } else {
+                            buttonClass += 'text-gray-300';
+                          }
+
+                          return (
+                            <button
+                              key={tm.id}
+                              ref={isActive ? activeModelRef : undefined}
+                              onClick={() => { onSelectModel?.(tm.id); setModelDropdownOpen(false); }}
+                              className={buttonClass}
+                            >
+                              {tm.name || tm.modelId}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               );

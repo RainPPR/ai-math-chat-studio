@@ -20,11 +20,69 @@ interface SettingsData {
 }
 
 function resolveActiveModel(settings: SettingsData) {
-  if (!settings.models?.length) return null;
-  const modelId = settings.activeModelId || settings.models[0].id;
-  const model = settings.models.find((m: any) => m.id === modelId) || settings.models[0];
-  const provider = settings.providers?.find((p: any) => p.id === model.providerId);
-  return { model, provider };
+  const activeModelId = settings.activeModelId;
+
+  // 1. Check if activeModelId corresponds to a TempModel
+  if (activeModelId && settings.tempModels?.length) {
+    const tempModel = settings.tempModels.find((tm: any) => tm.id === activeModelId);
+    if (tempModel) {
+      const model = {
+        id: tempModel.id,
+        providerId: `temp-${tempModel.id}`,
+        providerType: 'openai-compatible',
+        modelId: tempModel.modelId,
+        displayName: tempModel.name || tempModel.modelId,
+        temperature: tempModel.temperature,
+        maxTokens: tempModel.maxTokens,
+        reasoningEffort: tempModel.reasoningEffort,
+        extraBody: tempModel.extraBody,
+        injectThinkingTemplate: tempModel.injectThinkingTemplate,
+      };
+      const provider = {
+        type: 'openai-compatible',
+        name: tempModel.name || 'Temporary Model',
+        baseURL: tempModel.baseURL,
+        apiKey: tempModel.apiKey,
+      };
+      return { model, provider };
+    }
+  }
+
+  // 2. Check regular models
+  if (settings.models?.length) {
+    const modelId = activeModelId || settings.models[0].id;
+    const model = settings.models.find((m: any) => m.id === modelId) || settings.models[0];
+    const provider = settings.providers?.find((p: any) => p.id === model.providerId);
+    if (model && provider) {
+      return { model, provider };
+    }
+  }
+
+  // 3. Fallback to first TempModel if models is empty
+  if (settings.tempModels?.length) {
+    const tempModel = settings.tempModels[0];
+    const model = {
+      id: tempModel.id,
+      providerId: `temp-${tempModel.id}`,
+      providerType: 'openai-compatible',
+      modelId: tempModel.modelId,
+      displayName: tempModel.name || tempModel.modelId,
+      temperature: tempModel.temperature,
+      maxTokens: tempModel.maxTokens,
+      reasoningEffort: tempModel.reasoningEffort,
+      extraBody: tempModel.extraBody,
+      injectThinkingTemplate: tempModel.injectThinkingTemplate,
+    };
+    const provider = {
+      type: 'openai-compatible',
+      name: tempModel.name || 'Temporary Model',
+      baseURL: tempModel.baseURL,
+      apiKey: tempModel.apiKey,
+    };
+    return { model, provider };
+  }
+
+  return null;
 }
 
 function resolveSystemPrompt(settings: SettingsData, characterId?: string): string {
