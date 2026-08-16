@@ -445,6 +445,23 @@ interface ModelInstance {
 }
 ```
 
+### 数据模型与存储 / TypeScript 类型定义 / TempModel（临时模型实例）
+
+```text
+interface TempModel {
+  id: string;                       // UUID
+  name?: string;                    // 临时模型显示名称（可选）
+  baseURL: string;                  // 显式 Base URL
+  apiKey: string;                   // 显式 API Key
+  modelId: string;                  // 模型 ID（如 Qwen/Qwen3.8-27B）
+  temperature?: number;             // 温度参数
+  maxTokens?: number;               // 最大 token 数
+  reasoningEffort?: string;         // 推理努力程度
+  extraBody?: Record<string, any>;  // 额外请求体
+  injectThinkingTemplate?: boolean; // 是否注入 thinking 参数
+}
+```
+
 ### 数据模型与存储 / TypeScript 类型定义 / Character（角色）
 
 ```text
@@ -473,10 +490,11 @@ interface Template {
 
 ```text
 interface UserSettings {
-  activeModelId?: string;           // 当前活跃模型的 ModelInstance.id
+  activeModelId?: string;           // 当前活跃模型的 ModelInstance.id 或 TempModel.id
   activeCharacterId?: string;       // 当前活跃角色的 Character.id
   providers: ProviderInstance[];    // 提供商实例列表
   models: ModelInstance[];          // 模型实例列表
+  tempModels?: TempModel[];         // 临时模型实例列表
   characters: Character[];          // 角色列表
   systemPrompt: string;             // 全局回退系统提示词（向后兼容）
   renderThinkingAsMarkdown: boolean;
@@ -857,7 +875,7 @@ graph TD
 | Nvidia NIM | `nvidia` | integrate.api.nvidia.com/v1 | `NVIDIA_API_KEY` |
 | OpenAI Compatible | `openai-compatible` | 用户配置 | `OPENAI_API_KEY` |
 
-> 用户可自行添加任意数量的 `openai-compatible` 提供商实例。
+> 用户可自行添加任意数量的 `openai-compatible` 提供商实例，也可以在 Settings 中独立配置不依赖 Provider 实体、只支持 OpenAI 兼容 API 的“临时模型 (Temp Models)”。
 ```
 
 ### AI 供应商集成文档 / 架构
@@ -875,6 +893,9 @@ graph TD
 - **`server/providers/config.ts`** — 提供商配置解析
   - `resolveApiKey()` — 解析 API Key（优先配置项，其次环境变量，最后 `OPENAI_API_KEY` 回退）
   - `resolveBaseURL()` — 解析 Base URL（优先配置项，其次内置默认值）
+
+- **`server/routes/chat.ts`** — 模型/提供商解析
+  - `resolveActiveModel()` — 根据 `activeModelId` 解析要使用的模型与提供商；如命中临时模型（TempModel），自动合成 `openai-compatible` 类型提供商 payload（采用显式 Base URL 与 API Key）
 
 - **`server/providers/stream.ts`** — 流式 API 调用
   - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
