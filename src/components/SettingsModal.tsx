@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import React, { useState, useEffect, useRef } from 'react';
-import { UserSettings, ProviderInstance, ModelInstance, Character, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
+import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
 import { sortProviders, sortModels } from '../../shared/sorting';
@@ -23,13 +23,14 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type Tab = 'general' | 'providers' | 'models' | 'characters' | 'templates';
+type Tab = 'general' | 'providers' | 'models' | 'tempModels' | 'characters' | 'templates';
 
 // ===== Active Model Dropdown Component =====
 
 interface ActiveModelDropdownProps {
   models: ModelInstance[];
   providers: ProviderInstance[];
+  tempModels?: TempModel[];
   activeModelId?: string;
   onChange: (id: string) => void;
 }
@@ -37,6 +38,7 @@ interface ActiveModelDropdownProps {
 const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
   models,
   providers,
+  tempModels = [],
   activeModelId,
   onChange,
 }) => {
@@ -70,6 +72,7 @@ const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
   });
 
   const activeModel = models.find(m => m.id === activeModelId);
+  const activeTempModel = !activeModel ? tempModels.find(m => m.id === activeModelId) : undefined;
   const activeProvider = activeModel && providers.find(p => p.id === activeModel.providerId);
 
   return (
@@ -85,6 +88,13 @@ const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
             <span className="truncate">{activeModel.displayName || activeModel.modelId}</span>
             <span className="text-xs text-gray-500 ml-2 shrink-0">
               {activeProvider?.name}
+            </span>
+          </div>
+        ) : activeTempModel ? (
+          <div className="flex items-center justify-between w-full min-w-0">
+            <span className="truncate">{activeTempModel.name || activeTempModel.modelId}</span>
+            <span className="text-xs text-purple-400 ml-2 shrink-0">
+              临时模型
             </span>
           </div>
         ) : (
@@ -144,6 +154,41 @@ const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
             );
           })}
 
+          {/* Grouped Temp Models */}
+          {tempModels.length > 0 && (
+            <div className="border-b border-gray-700/50 last:border-b-0">
+              <div className="px-3 py-2 bg-gray-800/80 sticky top-0 flex items-center justify-between">
+                <span className="text-xs font-medium text-purple-400">临时模型</span>
+                <span className="text-xs text-gray-600">{tempModels.length} models</span>
+              </div>
+              <div>
+                {tempModels.map(m => {
+                  const isSelected = m.id === activeModelId;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        onChange(m.id);
+                        setIsOpen(false);
+                      }}
+                      className={`w-full px-3 py-2.5 flex items-center justify-between hover:bg-gray-700/50 transition-colors text-left ${
+                        isSelected ? 'bg-purple-600/20 hover:bg-purple-600/30' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        {isSelected && <Check size={14} className="text-purple-400 shrink-0" />}
+                        <span className={`text-sm truncate ${isSelected ? 'text-purple-300' : 'text-gray-300'}`}>
+                          {m.name || m.modelId}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Models without provider (orphaned) */}
           {modelsWithoutProvider.length > 0 && (
             <div className="border-b border-gray-700/50 last:border-b-0">
@@ -178,6 +223,128 @@ const ActiveModelDropdown: React.FC<ActiveModelDropdownProps> = ({
           )}
         </div>
       )}
+    </div>
+  );
+};
+
+// ===== Temp Model Editor =====
+
+const TempModelEditor: React.FC<{
+  entry: TempModel;
+  onChange: (e: TempModel) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}> = ({ entry, onChange, onSave, onCancel }) => {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-300">Name / Display Name (optional)</label>
+        <input
+          value={entry.name || ''}
+          onChange={e => { onChange({ ...entry, name: e.target.value || undefined }); }}
+          placeholder="e.g. My Temp DeepSeek"
+          className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-300">Base URL</label>
+        <input
+          value={entry.baseURL}
+          onChange={e => { onChange({ ...entry, baseURL: e.target.value }); }}
+          placeholder="https://api.openai.com/v1"
+          className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-300">API Key (Explicit)</label>
+        <input
+          type="password"
+          value={entry.apiKey}
+          onChange={e => { onChange({ ...entry, apiKey: e.target.value }); }}
+          placeholder="sk-..."
+          className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-300">Model ID</label>
+        <input
+          value={entry.modelId}
+          onChange={e => { onChange({ ...entry, modelId: e.target.value }); }}
+          placeholder="e.g. gpt-4o, deepseek-reasoner"
+          className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Temperature</label>
+          <input
+            type="number"
+            min="0"
+            max="2"
+            step="0.1"
+            value={entry.temperature ?? ''}
+            onChange={e => { onChange({ ...entry, temperature: e.target.value === '' ? undefined : parseFloat(e.target.value) }); }}
+            placeholder="Unset"
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Max Tokens</label>
+          <input
+            type="number"
+            min="1"
+            max="1000000"
+            value={entry.maxTokens ?? ''}
+            onChange={e => { onChange({ ...entry, maxTokens: e.target.value === '' ? undefined : parseInt(e.target.value) }); }}
+            placeholder="Unset"
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-300">Reasoning Effort</label>
+        <select
+          value={entry.reasoningEffort || ''}
+          onChange={e => { onChange({ ...entry, reasoningEffort: e.target.value || undefined }); }}
+          className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
+        >
+          <option value="">Unset</option>
+          <option value="max">Max</option>
+          <option value="xhigh">Xhigh</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+          <option value="minimal">Minimal</option>
+          <option value="none">None</option>
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium text-gray-300">Extra Body (JSON)</label>
+        </div>
+        <ExtraBodyTextarea
+          value={entry.extraBody}
+          onChange={v => { onChange({ ...entry, extraBody: v }); }}
+          placeholder='{"chat_template_kwargs":{"thinking":true}}'
+        />
+      </div>
+
+      <div className="flex justify-end gap-3 pt-4">
+        <button onClick={onCancel} className="px-4 py-2 text-gray-300 hover:text-white transition-colors">Cancel</button>
+        <button
+          onClick={onSave}
+          disabled={!entry.baseURL.trim() || !entry.apiKey.trim() || !entry.modelId.trim()}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg transition-colors flex items-center gap-2"
+        >
+          <Save size={14} /> Save Temp Model
+        </button>
+      </div>
     </div>
   );
 };
@@ -258,6 +425,14 @@ const makeEmptyModel = (): ModelInstance => ({
   modelId: '',
 });
 
+const makeEmptyTempModel = (): TempModel => ({
+  id: crypto.randomUUID(),
+  name: '',
+  baseURL: '',
+  apiKey: '',
+  modelId: '',
+});
+
 const makeEmptyCharacter = (): Character => ({
   id: crypto.randomUUID(),
   name: '',
@@ -293,6 +468,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const [editingTempModel, setEditingTempModel] = useState<TempModel | null>(null);
 
   const [cleaning, setCleaning] = useState(false);
   const [cleanResult, setCleanResult] = useState<{ cleaned: number; total: number } | null>(null);
@@ -601,6 +778,54 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     });
   };
 
+  // ----- Temp Model CRUD -----
+  const addTempModel = () => {
+    setEditingTempModel(makeEmptyTempModel());
+  };
+
+  const saveTempModel = () => {
+    if (!editingTempModel?.baseURL || !editingTempModel.apiKey || !editingTempModel.modelId) return;
+
+    const sanitizedTempModel = { ...editingTempModel };
+    if (sanitizedTempModel.temperature !== undefined) {
+      if (isNaN(sanitizedTempModel.temperature) || sanitizedTempModel.temperature < 0 || sanitizedTempModel.temperature > 2) {
+        sanitizedTempModel.temperature = undefined;
+      }
+    }
+    if (sanitizedTempModel.maxTokens !== undefined) {
+      if (isNaN(sanitizedTempModel.maxTokens) || sanitizedTempModel.maxTokens < 1 || sanitizedTempModel.maxTokens > 1000000) {
+        sanitizedTempModel.maxTokens = undefined;
+      }
+    }
+
+    setLocal(s => {
+      const list = [...(s.tempModels || [])];
+      const idx = list.findIndex(m => m.id === sanitizedTempModel.id);
+      if (idx >= 0) {
+        list[idx] = sanitizedTempModel;
+      } else {
+        list.push(sanitizedTempModel);
+      }
+      return { ...s, tempModels: list };
+    });
+    setEditingTempModel(null);
+  };
+
+  const deleteTempModelEntry = (id: string) => {
+    setLocal(s => {
+      const filtered = (s.tempModels || []).filter(m => m.id !== id);
+      let nextActiveModelId = s.activeModelId;
+      if (s.activeModelId === id) {
+        nextActiveModelId = undefined;
+      }
+      return {
+        ...s,
+        tempModels: filtered,
+        activeModelId: nextActiveModelId,
+      };
+    });
+  };
+
   // ----- Model CRUD -----
   const addModel = () => {
     setEditingModel(makeEmptyModel());
@@ -845,9 +1070,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         </div>
 
         <div className="flex border-b border-gray-800 shrink-0">
-          {(['general', 'providers', 'models', 'characters', 'templates'] as Tab[]).map(t => (
+          {(['general', 'providers', 'models', 'tempModels', 'characters', 'templates'] as Tab[]).map(t => (
             <button key={t} onClick={() => { setTab(t); }} className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === t ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>
-              {t === 'general' ? 'General' : t === 'providers' ? 'Providers' : t === 'models' ? 'Models' : t === 'characters' ? 'Characters' : 'Templates'}
+              {({ general: 'General', providers: 'Providers', models: 'Models', tempModels: 'Temp Models', characters: 'Characters', templates: 'Templates' } as Record<Tab, string>)[t]}
             </button>
           ))}
         </div>
@@ -861,10 +1086,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                 <ActiveModelDropdown
                   models={local.models}
                   providers={local.providers}
+                  tempModels={local.tempModels}
                   activeModelId={local.activeModelId}
                   onChange={id => { setLocal(s => ({ ...s, activeModelId: id || undefined })); }}
                 />
-                {local.models.length === 0 && <p className="text-xs text-gray-500">Add models in the Models tab first.</p>}
+                {local.models.length === 0 && (!local.tempModels || local.tempModels.length === 0) && <p className="text-xs text-gray-500">Add models in the Models or Temp Models tab first.</p>}
               </div>
 
               <div className="space-y-2">
@@ -1144,6 +1370,56 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <Plus size={18} /> Add Provider
                   </button>
                 </>
+              )}
+            </>
+          )}
+
+          {/* Temp Models Tab */}
+          {tab === 'tempModels' && (
+            <>
+              {editingTempModel ? (
+                <TempModelEditor
+                  entry={editingTempModel}
+                  onChange={setEditingTempModel}
+                  onSave={saveTempModel}
+                  onCancel={() => setEditingTempModel(null)}
+                />
+              ) : (
+                <div className="space-y-4">
+                  {(!local.tempModels || local.tempModels.length === 0) && (
+                    <p className="text-xs text-gray-500">No temporary models configured.</p>
+                  )}
+                  {local.tempModels && local.tempModels.length > 0 && (
+                    <div className="bg-gray-800/50 rounded-lg border border-gray-700/50 overflow-hidden">
+                      <div className="bg-gray-800 px-3 py-2 border-b border-gray-700/50 flex items-center justify-between">
+                        <div className="text-xs font-medium text-purple-400">临时模型 (OpenAI Compatible)</div>
+                        <div className="text-xs text-gray-500">{local.tempModels.length} models</div>
+                      </div>
+                      <div className="divide-y divide-gray-700/30">
+                        {local.tempModels.map(m => (
+                          <div key={m.id} className="px-3 py-2 flex items-center justify-between hover:bg-gray-700/30 transition-colors">
+                            <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                              <div className="col-span-6 text-xs text-white truncate">{m.name || m.modelId}</div>
+                              <div className="col-span-3 text-xs text-gray-500 text-center">
+                                {m.temperature !== undefined ? `T=${m.temperature}` : '-'}
+                              </div>
+                              <div className="col-span-3 text-xs text-gray-500 text-center">
+                                {m.maxTokens !== undefined ? `M=${m.maxTokens}` : '-'}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 ml-2 shrink-0">
+                              <button onClick={() => { setEditingTempModel({ ...m }); }} className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><Pencil size={14} /></button>
+                              <button onClick={() => { deleteTempModelEntry(m.id); }} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <button onClick={addTempModel} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-3 text-sm transition-colors">
+                    <Plus size={16} /> Add Temp Model
+                  </button>
+                </div>
               )}
             </>
           )}
@@ -1577,7 +1853,7 @@ const ModelEditor: React.FC<{
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-300">Max Tokens</label>
-          <input type="number" min="1" max="100000" value={entry.maxTokens ?? ''} onChange={e => { onChange({ ...entry, maxTokens: e.target.value === '' ? undefined : parseInt(e.target.value) }); }} placeholder="Unset" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500" />
+          <input type="number" min="1" max="1000000" value={entry.maxTokens ?? ''} onChange={e => { onChange({ ...entry, maxTokens: e.target.value === '' ? undefined : parseInt(e.target.value) }); }} placeholder="Unset" className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500" />
         </div>
       </div>
 

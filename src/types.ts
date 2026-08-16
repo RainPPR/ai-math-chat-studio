@@ -28,6 +28,20 @@ export interface ModelInstance {
   injectThinkingTemplate?: boolean;
 }
 
+// 临时模型实例 (不依赖 provider，仅支持 openai 兼容型 api，显式 baseURL/apiKey)
+export interface TempModel {
+  id: string;
+  name?: string;
+  baseURL: string;
+  apiKey: string;
+  modelId: string;
+  temperature?: number;
+  maxTokens?: number;
+  reasoningEffort?: string;
+  extraBody?: Record<string, any>;
+  injectThinkingTemplate?: boolean;
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -45,6 +59,7 @@ export interface UserSettings {
   activeCharacterId?: string;
   providers: ProviderInstance[];
   models: ModelInstance[];
+  tempModels?: TempModel[];
   characters: Character[];
   systemPrompt: string;
   renderThinkingAsMarkdown: boolean;
@@ -63,6 +78,7 @@ export type StarColor = 'yellow' | 'rose' | 'blue' | 'green' | 'orange';
 export const DEFAULT_SETTINGS: UserSettings = {
   providers: [],
   models: [],
+  tempModels: [],
   characters: [],
   systemPrompt: '',
   renderThinkingAsMarkdown: false,

@@ -88,8 +88,8 @@ async function syncRemoteModels(settingsFile: string) {
 
         settings.models.push(...newModels);
 
-        // Clear activeModelId if it was removed
-        if (settings.activeModelId && !settings.models.find((m: any) => m.id === settings.activeModelId)) {
+        // Clear activeModelId if it was removed (checking both models and tempModels)
+        if (settings.activeModelId && !settings.models.find((m: any) => m.id === settings.activeModelId) && !settings.tempModels?.find((m: any) => m.id === settings.activeModelId)) {
           settings.activeModelId = undefined;
         }
 
