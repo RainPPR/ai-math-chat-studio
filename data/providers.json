@@ -22,6 +22,14 @@
     "envKey": "GEMINI_API_KEY"
   },
   {
+    "id": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
+    "type": "openai-compatible",
+    "name": "Kilo BYOK",
+    "apiKey": "",
+    "envKey": "KILO_API_KEY",
+    "baseURL": "https://api.kilo.ai/api/gateway"
+  },
+  {
     "id": "p-kilo-gw",
     "type": "openai-compatible",
     "name": "Kilo Gateway",
