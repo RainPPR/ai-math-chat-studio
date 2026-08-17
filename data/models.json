@@ -5,7 +5,7 @@
     "providerType": "openai-compatible",
     "modelId": "DeepSeek-V4-Flash",
     "displayName": "DeepSeek V4 Flash 0731 (AMD)",
-    "reasoningEffort": "high"
+    "reasoningEffort": "max"
   },
   {
     "id": "f4a17dec-ee5e-4557-924a-8c02dcb6b1a5",
@@ -75,14 +75,6 @@
     "providerType": "google",
     "modelId": "gemini-3.7-flash",
     "displayName": "Gemini 3.7 Flash (Google)",
-    "thinkingLevel": "high"
-  },
-  {
-    "id": "e6d2feef-f207-442c-988f-5d4ea61eb946",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-3.7-flash-video-understanding-eap",
-    "displayName": "Gemini 3.7 Flash Video Understanding EAP (Google)",
     "thinkingLevel": "high"
   },
   {
@@ -214,6 +206,14 @@
     "reasoningEffort": "high"
   },
   {
+    "id": "772a9e6b-0c0e-5a88-a5ca-3441e594d481",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "z-ai/glm-5.2:free",
+    "displayName": "Z.ai: GLM 5.2 (Kilo)",
+    "reasoningEffort": "high"
+  },
+  {
     "id": "cda1b042-7087-5159-8362-b734d8e5845e",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -226,6 +226,13 @@
     "providerType": "openai-compatible",
     "modelId": "deepseek-v4-pro",
     "displayName": "DeepSeek V4 Pro (LogFare)"
+  },
+  {
+    "id": "9f64c1cc-d048-559b-9077-364db12d0a60",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "flux-2-pro",
+    "displayName": "Flux 2 Pro (LogFare)"
   },
   {
     "id": "c7995cd3-216c-5394-ad7c-c6458a16de51",

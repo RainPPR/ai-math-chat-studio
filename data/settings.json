@@ -11,13 +11,14 @@
     }
   ],
   "systemPrompt": "",
-  "renderThinkingAsMarkdown": false,
+  "renderThinkingAsMarkdown": true,
   "autoScroll": false,
   "collapseThinkingFinished": true,
   "trimThinkingSpaces": true,
   "starredSessions": {
     "f6697785-4f1e-452e-a371-73a14c20783a": "yellow",
-    "b638cf2f-773c-4192-a083-4cd0074a2eb2": "rose"
+    "b638cf2f-773c-4192-a083-4cd0074a2eb2": "rose",
+    "b9e634b1-909f-47b1-929b-fab40db6e9eb": "rose"
   },
   "claudeChunks": [
     "2026-07-19T08:53:15.252Z",
@@ -31,5 +32,5 @@
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
   "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
-  "activeModelId": "3d4c0dbb-fafc-4877-9405-2b8ff8bfa7ff"
+  "activeModelId": "090f132d-1796-47d5-b6fa-32244e602e13"
 }
