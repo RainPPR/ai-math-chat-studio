@@ -223,14 +223,6 @@
     "reasoningEffort": "high"
   },
   {
-    "id": "772a9e6b-0c0e-5a88-a5ca-3441e594d481",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "z-ai/glm-5.2:free",
-    "displayName": "Z.ai: GLM 5.2 (Kilo)",
-    "reasoningEffort": "high"
-  },
-  {
     "id": "745ddfbe-2c5a-5db5-87b0-837065032f99",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
