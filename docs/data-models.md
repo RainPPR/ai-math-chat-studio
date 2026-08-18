@@ -159,6 +159,10 @@ interface GenerationProvider {
 ```
 /data/
   settings.json           # UserSettings（单文件）
+  providers.json          # ProviderInstance[]（提供商列表）
+  models.json             # ModelInstance[]（模型列表）
+  temp-models.json        # TempModel[]（临时模型列表，包含 API Key，已 Git 忽略）
+  characters.json         # Character[]（角色列表）
   templates.json          # Template[]（聊天自动填入模板单文件）
   sessions/{sessionId}.json  # ChatSession（每会话一个文件）
   log/                    # 日志文件（YYYY-MM-DD.log）
