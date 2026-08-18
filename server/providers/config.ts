@@ -35,7 +35,7 @@ export function resolveBaseURL(provider: ProviderInstance): string | undefined {
   return BUILT_IN_PROVIDERS[provider.type]?.defaultBaseURL;
 }
 
-export const MATH_INSTRUCTIONS = `
+export const FORMAT_INSTRUCTIONS = `
 When outputting math equations, ALWAYS use KaTeX formatting:
 - For inline math, use single dollar signs: $x^2$.
 - For block math, use double dollar signs: $$x^2$$.

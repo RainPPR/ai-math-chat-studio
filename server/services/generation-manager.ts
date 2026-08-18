@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import sanitize from 'sanitize-filename';
 import { streamChat } from '../providers/stream';
-import { MATH_INSTRUCTIONS } from '../providers/config';
+import { FORMAT_INSTRUCTIONS } from '../providers/config';
 import * as unicodeit from 'unicodeit';
 import { markdownToTxt } from 'markdown-to-txt';
 
@@ -492,7 +492,8 @@ export class GenerationManager {
     let firstTokenReceived = false;
 
     const buildSystemPrompt = () => {
-      return systemPrompt + '\n\n' + MATH_INSTRUCTIONS;
+      const basePrompt = (systemPrompt || '').trim();
+      return basePrompt ? `${basePrompt}\n\n${FORMAT_INSTRUCTIONS}` : FORMAT_INSTRUCTIONS;
     };
 
     const reqMessages = messages.map((m: any) => ({
