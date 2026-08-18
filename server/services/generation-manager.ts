@@ -493,7 +493,11 @@ export class GenerationManager {
 
     const buildSystemPrompt = () => {
       const basePrompt = (systemPrompt || '').trim();
-      return basePrompt ? `${basePrompt}\n\n${FORMAT_INSTRUCTIONS}` : FORMAT_INSTRUCTIONS;
+      if (basePrompt) {
+        return `${basePrompt}\n\n${FORMAT_INSTRUCTIONS}`;
+      } else {
+        return FORMAT_INSTRUCTIONS;
+      }
     };
 
     const reqMessages = messages.map((m: any) => ({
