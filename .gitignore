@@ -12,5 +12,6 @@ dist-server/
 dist-compile/
 cache/
 data/log/
+data/temp-models.json*
 context7-dist/
 ai-math-chat-studio.exe
