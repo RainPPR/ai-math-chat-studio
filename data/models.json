@@ -104,6 +104,22 @@
     "thinkingLevel": "high"
   },
   {
+    "id": "282ea676-9104-4eff-8a27-e9c4d52217a6",
+    "providerId": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
+    "providerType": "openai-compatible",
+    "modelId": "google/gemini-3.5-flash",
+    "displayName": "Gemini 3.5 Flash (Kilo BYOK)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "3723ecdf-a953-4411-b9f8-5089413e5d73",
+    "providerId": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
+    "providerType": "openai-compatible",
+    "modelId": "google/gemini-3.6-flash",
+    "displayName": "Gemini 3.6 Flash (Kilo BYOK)",
+    "reasoningEffort": "max"
+  },
+  {
     "id": "e2fea419-c9ee-498c-b504-6a102775bf11",
     "providerId": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
     "providerType": "openai-compatible",
@@ -131,13 +147,6 @@
     "providerType": "openai-compatible",
     "modelId": "kilo-auto/free",
     "displayName": "Auto Free (Kilo)"
-  },
-  {
-    "id": "12012cba-e7fa-55b8-afee-2434e2a2e1ab",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "liquid/lfm-2.5-2.6b:free",
-    "displayName": "LiquidAI: LFM2.5-2.6B (Kilo)"
   },
   {
     "id": "cfcdca0f-3efd-5c17-9003-8d05a905ce00",
@@ -222,6 +231,13 @@
     "reasoningEffort": "high"
   },
   {
+    "id": "745ddfbe-2c5a-5db5-87b0-837065032f99",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "aura-2-en",
+    "displayName": "Deepgram Aura 2 (LogFare)"
+  },
+  {
     "id": "cda1b042-7087-5159-8362-b734d8e5845e",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -236,11 +252,25 @@
     "displayName": "DeepSeek V4 Pro (LogFare)"
   },
   {
+    "id": "166f55ed-513c-5fdd-90fa-776669c59e6e",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4-pro-0813",
+    "displayName": "DeepSeek V4 Pro 0813 (LogFare)"
+  },
+  {
     "id": "9f64c1cc-d048-559b-9077-364db12d0a60",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
     "modelId": "flux-2-pro",
     "displayName": "Flux 2 Pro (LogFare)"
+  },
+  {
+    "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gemma-4-26b",
+    "displayName": "Gemma 4 26B (LogFare)"
   },
   {
     "id": "c7995cd3-216c-5394-ad7c-c6458a16de51",
@@ -271,6 +301,13 @@
     "displayName": "Kiro Auto (LogFare)"
   },
   {
+    "id": "f5740362-dd36-56bf-bf95-991e1ba5ef0f",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "lucid-origin",
+    "displayName": "Leonardo Lucid Origin (LogFare)"
+  },
+  {
     "id": "4ed31846-fff0-5772-a6c5-e111ea731e0c",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -278,11 +315,53 @@
     "displayName": "MiniMax M3 (LogFare)"
   },
   {
+    "id": "3be55c22-3d55-55fc-9c02-8c7825c928f6",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "moondream3.1",
+    "displayName": "Moondream 3.1 9B (LogFare)"
+  },
+  {
+    "id": "a835bd9f-0e1b-5097-a665-c4052ba72c56",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "nova-3",
+    "displayName": "Deepgram Nova 3 (LogFare)"
+  },
+  {
+    "id": "0ced4097-3a4f-516a-8329-a2fb4ee8dcb7",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "phoenix-1.0",
+    "displayName": "Leonardo Phoenix (LogFare)"
+  },
+  {
     "id": "e193beee-0f6c-59e6-830f-ddf4d6e9aed8",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
     "modelId": "qwen-3.8-27b",
     "displayName": "Qwen 3.8 27b (LogFare)"
+  },
+  {
+    "id": "84227a1d-54c7-5c48-9c58-d3177eb0e263",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "qwen3-embedding-8b",
+    "displayName": "Qwen3 Embedding 8B (LogFare)"
+  },
+  {
+    "id": "95f8b2d5-15aa-5032-a200-90fcaf2d43fc",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "text-embedding-3-small",
+    "displayName": "Text Embedding 3 Small (LogFare)"
+  },
+  {
+    "id": "dd443695-2465-5f54-979b-907d30d2eb1a",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "whisper-large-v3-turbo",
+    "displayName": "Whisper Large v3 Turbo (LogFare)"
   },
   {
     "id": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89",
