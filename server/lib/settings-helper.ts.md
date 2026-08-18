@@ -11,6 +11,7 @@ export interface UserSettings {
   activeCharacterId?: string;
   providers: any[];
   models: any[];
+  tempModels?: any[];
   characters: any[];
   systemPrompt: string;
   renderThinkingAsMarkdown: boolean;
@@ -49,6 +50,7 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
   const dataDir = path.dirname(settingsFile);
   const providersFile = path.join(dataDir, 'providers.json');
   const modelsFile = path.join(dataDir, 'models.json');
+  const tempModelsFile = path.join(dataDir, 'temp-models.json');
   const charactersFile = path.join(dataDir, 'characters.json');
 
   let settings: any = {};
@@ -89,6 +91,20 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
     // ignore
   }
 
+  // Load tempModels from split file with Array.isArray guard
+  let tempModels: any[] = [];
+  let tempModelsLoaded = false;
+  try {
+    const content = await fs.readFile(tempModelsFile, 'utf-8');
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) {
+      tempModels = parsed;
+      tempModelsLoaded = true;
+    }
+  } catch {
+    // ignore
+  }
+
   // Load characters from split file with Array.isArray guard
   let characters: any[] = [];
   let charactersLoaded = false;
@@ -106,11 +122,13 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
   // On-the-fly migration check
   const hasProvidersInSettings = settings.providers && Array.isArray(settings.providers);
   const hasModelsInSettings = settings.models && Array.isArray(settings.models);
+  const hasTempModelsInSettings = settings.tempModels && Array.isArray(settings.tempModels);
   const hasCharactersInSettings = settings.characters && Array.isArray(settings.characters);
 
-  if (hasProvidersInSettings || hasModelsInSettings || hasCharactersInSettings) {
+  if (hasProvidersInSettings || hasModelsInSettings || hasTempModelsInSettings || hasCharactersInSettings) {
     let needWriteProviders = false;
     let needWriteModels = false;
+    let needWriteTempModels = false;
     let needWriteCharacters = false;
 
     if (hasProvidersInSettings) {
@@ -126,6 +144,13 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
         needWriteModels = true;
       }
       delete settings.models;
+    }
+    if (hasTempModelsInSettings) {
+      if (!tempModelsLoaded) {
+        tempModels = settings.tempModels;
+        needWriteTempModels = true;
+      }
+      delete settings.tempModels;
     }
     if (hasCharactersInSettings) {
       if (!charactersLoaded) {
@@ -143,6 +168,9 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
       if (needWriteModels) {
         await writeIfChanged(modelsFile, JSON.stringify(models, null, 2));
       }
+      if (needWriteTempModels) {
+        await writeIfChanged(tempModelsFile, JSON.stringify(tempModels, null, 2));
+      }
       if (needWriteCharacters) {
         await writeIfChanged(charactersFile, JSON.stringify(characters, null, 2));
       }
@@ -158,6 +186,7 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
     ...settings,
     providers,
     models,
+    tempModels,
     characters,
   };
 }
@@ -166,6 +195,7 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
   const dataDir = path.dirname(settingsFile);
   const providersFile = path.join(dataDir, 'providers.json');
   const modelsFile = path.join(dataDir, 'models.json');
+  const tempModelsFile = path.join(dataDir, 'temp-models.json');
   const charactersFile = path.join(dataDir, 'characters.json');
 
   const settingsCopy = JSON.parse(JSON.stringify(settings));
@@ -178,10 +208,12 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
   if (incomingModels && Array.isArray(incomingModels)) {
     incomingModels = sortModels(incomingModels, incomingProviders || []);
   }
+  const incomingTempModels = settingsCopy.tempModels;
   const incomingCharacters = settingsCopy.characters;
 
   delete settingsCopy.providers;
   delete settingsCopy.models;
+  delete settingsCopy.tempModels;
   delete settingsCopy.characters;
 
   await fs.mkdir(dataDir, { recursive: true });
@@ -207,6 +239,9 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
   }
   if (incomingModels && Array.isArray(incomingModels)) {
     await addIfChanged(modelsFile, JSON.stringify(incomingModels, null, 2));
+  }
+  if (incomingTempModels && Array.isArray(incomingTempModels)) {
+    await addIfChanged(tempModelsFile, JSON.stringify(incomingTempModels, null, 2));
   }
   if (incomingCharacters && Array.isArray(incomingCharacters)) {
     await addIfChanged(charactersFile, JSON.stringify(incomingCharacters, null, 2));
