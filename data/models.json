@@ -8,16 +8,11 @@
     "reasoningEffort": "max"
   },
   {
-    "id": "f4a17dec-ee5e-4557-924a-8c02dcb6b1a5",
-    "providerId": "73766d3b-b243-4dcf-a64b-f7f9956f4df7",
+    "id": "cf8a95c9-e395-4f3b-9e07-b87d09b5571b",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
-    "modelId": "gemma-4-31b",
-    "displayName": "Gemma 4 31b (Cerebras)",
-    "reasoningEffort": "high",
-    "maxTokens": 32768,
-    "extraBody": {
-      "reasoning_format": "parsed"
-    }
+    "modelId": "MinerU2.5-Pro",
+    "displayName": "MinerU2.5 Pro (AMD)"
   },
   {
     "id": "b9425e46-a961-49c8-9b5f-7da094f48532",

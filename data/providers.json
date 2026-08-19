@@ -8,14 +8,6 @@
     "baseURL": "https://developer.amd.com.cn/radeon/api/v1"
   },
   {
-    "id": "73766d3b-b243-4dcf-a64b-f7f9956f4df7",
-    "type": "openai-compatible",
-    "name": "Cerebras",
-    "apiKey": "",
-    "envKey": "CEREBRAS_API_KEY",
-    "baseURL": "https://api.cerebras.ai/v1"
-  },
-  {
     "id": "p-google-fc62",
     "type": "google",
     "name": "Google Gemini",
