@@ -3,7 +3,7 @@
   "renderThinkingAsMarkdown": true,
   "autoScroll": false,
   "collapseThinkingFinished": true,
-  "trimThinkingSpaces": true,
+  "trimThinkingSpaces": false,
   "starredSessions": {},
   "claudeChunks": [
     "2026-07-19T08:53:15.252Z",
