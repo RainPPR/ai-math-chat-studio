@@ -4,16 +4,7 @@
   "autoScroll": false,
   "collapseThinkingFinished": true,
   "trimThinkingSpaces": true,
-  "starredSessions": {
-    "f6697785-4f1e-452e-a371-73a14c20783a": "yellow",
-    "b638cf2f-773c-4192-a083-4cd0074a2eb2": "rose",
-    "b9e634b1-909f-47b1-929b-fab40db6e9eb": "rose",
-    "4e444517-c79e-4bf7-af5f-e72292ba9b1a": "blue",
-    "fffd1b3f-70bb-4b6c-9bea-2b8f5af87588": "blue",
-    "9d42d447-8e12-483a-824a-05a4cad984d2": "blue",
-    "04701fa6-b688-4de9-808a-65037cfa1f7c": "blue",
-    "19ba8a10-0943-4aa7-b2b1-af1c82bb26aa": "blue"
-  },
+  "starredSessions": {},
   "claudeChunks": [
     "2026-07-19T08:53:15.252Z",
     "2026-07-30T05:14:11.684Z",
@@ -26,5 +17,5 @@
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
   "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
-  "activeModelId": "090f132d-1796-47d5-b6fa-32244e602e13"
+  "activeModelId": "166f55ed-513c-5fdd-90fa-776669c59e6e"
 }
