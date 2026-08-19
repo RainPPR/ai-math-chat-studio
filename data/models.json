@@ -149,6 +149,13 @@
     "displayName": "Auto Free (Kilo)"
   },
   {
+    "id": "12012cba-e7fa-55b8-afee-2434e2a2e1ab",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "liquid/lfm-2.5-2.6b:free",
+    "displayName": "LiquidAI: LFM2.5-2.6B (Kilo)"
+  },
+  {
     "id": "cfcdca0f-3efd-5c17-9003-8d05a905ce00",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -386,6 +393,15 @@
         "enable_thinking": true
       }
     }
+  },
+  {
+    "id": "dc8e27f3-6b00-46a2-a548-9c4d5541bb0e",
+    "providerId": "p-nvidia-9a1b",
+    "providerType": "nvidia",
+    "modelId": "google/gemma-4-31b-it",
+    "displayName": "Gemma 4 31B IT (Nvidia)",
+    "injectThinkingTemplate": true,
+    "maxTokens": 32768
   },
   {
     "id": "5682d9a8-7c24-4f0d-ba99-8d4e3819b5d6",

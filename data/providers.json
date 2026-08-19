@@ -66,6 +66,6 @@
     "name": "Poe",
     "baseURL": "https://api.poe.com/v1",
     "envKey": "POE_API_KEY",
-    "modelSource": "https://raw.githubusercontent.com/RainPPR/poe-free-models/refs/heads/main/free_models_ai_math.json"
+    "modelSource": "https://raw.githubusercontent.com/RainPPR/poe-free-models/refs/heads/main/poe_ai_math.json"
   }
 ]
