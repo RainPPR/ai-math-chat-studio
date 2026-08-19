@@ -142,7 +142,8 @@ export async function startApp() {
 
   const gm = new GenerationManager(SESSIONS_DIR);
 
-  app.use(express.json());
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
   app.use(createSettingsRouter(SETTINGS_FILE));
   app.use(createSessionRouter(gm));
   app.use(createChatRouter(gm, SETTINGS_FILE));
