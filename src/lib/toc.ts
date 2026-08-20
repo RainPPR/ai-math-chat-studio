@@ -70,7 +70,7 @@ export function stripNonContentForTOC(content: string): string {
 
 /**
  * Fast heading extractor for a message's content supporting ATX (#) and Setext (=== / ---) headings,
- * including leading indentation up to 3 spaces per Markdown standard.
+ * including leading space indentation up to 3 spaces per Markdown standard.
  */
 export function extractHeadingsFromContent(messageId: string, content: string): TOCHeading[] {
   const cleanContent = stripNonContentForTOC(content);
@@ -83,7 +83,7 @@ export function extractHeadingsFromContent(messageId: string, content: string): 
     const line = lines[i];
 
     // Check ATX headings: # Heading (up to 3 leading spaces)
-    const atxMatch = /^[ \t]{0,3}(#{1,6})\s+(.+)$/.exec(line);
+    const atxMatch = /^ {0,3}(#{1,6})\s+(.+)$/.exec(line);
     if (atxMatch) {
       const level = atxMatch[1].length;
       const text = cleanHeadingText(atxMatch[2]);
@@ -103,7 +103,7 @@ export function extractHeadingsFromContent(messageId: string, content: string): 
     // Check Setext headings: Line followed by === or --- (up to 3 leading spaces)
     if (i + 1 < lines.length && line.trim().length > 0) {
       const nextLine = lines[i + 1];
-      if (/^[ \t]{0,3}=+\s*$/.test(nextLine)) {
+      if (/^ {0,3}=+\s*$/.test(nextLine)) {
         const text = cleanHeadingText(line);
         if (text) {
           headings.push({
@@ -117,7 +117,7 @@ export function extractHeadingsFromContent(messageId: string, content: string): 
         }
         i++; // skip underline line
         continue;
-      } else if (/^[ \t]{0,3}-+\s*$/.test(nextLine) && !/^[ \t]{0,3}[-*+]\s+/.test(line)) {
+      } else if (/^ {0,3}-+\s*$/.test(nextLine) && !/^\s*[-*+]\s+/.test(line)) {
         const text = cleanHeadingText(line);
         if (text) {
           headings.push({
