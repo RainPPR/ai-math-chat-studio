@@ -23,8 +23,8 @@ export function cleanHeadingText(rawText: string): string {
   // Strip trailing hashes e.g. ## Title ##
   cleaned = cleaned.replace(/\s+#+\s*$/, '');
 
-  // Strip HTML tags
-  cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, '');
+  // Strip HTML tags requiring valid tag name boundary
+  cleaned = cleaned.replace(/<\/?[A-Za-z][A-Za-z0-9-]*(?:\s+[^>]*)?\s*\/?>/g, '');
 
   // Strip LaTeX formatting directives like \displaystyle, \scriptstyle
   cleaned = cleaned.replace(/\\(display|script)style/g, '');
@@ -53,7 +53,8 @@ export function cleanHeadingText(rawText: string): string {
 /**
  * Remove code blocks and <think> blocks from markdown before extracting headings
  * to avoid false positives (e.g. comments in code blocks or headers in thinking).
- * Matches line-anchored code fences properly with matching opening and closing fence boundaries.
+ * Matches line-anchored code fences properly with matching opening and closing fence boundaries
+ * or true end-of-file fallback.
  */
 export function stripNonContentForTOC(content: string): string {
   let text = content;
@@ -62,13 +63,14 @@ export function stripNonContentForTOC(content: string): string {
   text = text.replace(/<think>(?:[\s\S]*?)(?:<\/think>|$)/gi, '');
 
   // Remove line-anchored code blocks ```...``` or ~~~...~~~
-  text = text.replace(/^[ \t]*(```|~~~)[^\n]*\n[\s\S]*?(?:\n[ \t]*\1[ \t]*$|$)/gm, '');
+  text = text.replace(/^[ \t]*(```|~~~)[^\n]*\n[\s\S]*?(?:\n[ \t]*\1[ \t]*\r?$|$(?![\s\S]))/gm, '');
 
   return text;
 }
 
 /**
- * Fast heading extractor for a message's content supporting ATX (#) and Setext (=== / ---) headings.
+ * Fast heading extractor for a message's content supporting ATX (#) and Setext (=== / ---) headings,
+ * including leading indentation up to 3 spaces per Markdown standard.
  */
 export function extractHeadingsFromContent(messageId: string, content: string): TOCHeading[] {
   const cleanContent = stripNonContentForTOC(content);
@@ -80,8 +82,8 @@ export function extractHeadingsFromContent(messageId: string, content: string): 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Check ATX headings: # Heading
-    const atxMatch = /^(#{1,6})\s+(.+)$/.exec(line);
+    // Check ATX headings: # Heading (up to 3 leading spaces)
+    const atxMatch = /^[ \t]{0,3}(#{1,6})\s+(.+)$/.exec(line);
     if (atxMatch) {
       const level = atxMatch[1].length;
       const text = cleanHeadingText(atxMatch[2]);
@@ -98,10 +100,10 @@ export function extractHeadingsFromContent(messageId: string, content: string): 
       continue;
     }
 
-    // Check Setext headings: Line followed by === or ---
+    // Check Setext headings: Line followed by === or --- (up to 3 leading spaces)
     if (i + 1 < lines.length && line.trim().length > 0) {
       const nextLine = lines[i + 1];
-      if (/^=+\s*$/.test(nextLine)) {
+      if (/^[ \t]{0,3}=+\s*$/.test(nextLine)) {
         const text = cleanHeadingText(line);
         if (text) {
           headings.push({
@@ -115,7 +117,7 @@ export function extractHeadingsFromContent(messageId: string, content: string): 
         }
         i++; // skip underline line
         continue;
-      } else if (/^-+\s*$/.test(nextLine) && !/^\s*[-*+]\s+/.test(line)) {
+      } else if (/^[ \t]{0,3}-+\s*$/.test(nextLine) && !/^[ \t]{0,3}[-*+]\s+/.test(line)) {
         const text = cleanHeadingText(line);
         if (text) {
           headings.push({
