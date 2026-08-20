@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useRef } from 'react';
+import React, { memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
@@ -14,12 +14,32 @@ import rehypeSanitize from 'rehype-sanitize';
 import 'katex/dist/katex-swap.min.css';
 
 import 'katex';
-// Import the ESM version of mhchem to ensure it registers on the same katex instance
 import "katex/dist/contrib/mhchem.mjs";
 
 interface MarkdownRendererProps {
   content: string;
   messageId?: string;
+}
+
+/**
+ * Custom rehype plugin to assign deterministic IDs to headings in AST document order.
+ * Operates during the rehype AST pass, making ID assignment static and immune to React StrictMode re-renders.
+ */
+function rehypeTocHeadingIds(messageId: string) {
+  return (tree: any) => {
+    let index = 0;
+    const visit = (node: any) => {
+      if (!node) return;
+      if (node.type === 'element' && ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(node.tagName)) {
+        node.properties = node.properties || {};
+        node.properties.id = `toc-msg-${messageId}-h-${index++}`;
+      }
+      if (node.children && Array.isArray(node.children)) {
+        node.children.forEach(visit);
+      }
+    };
+    visit(tree);
+  };
 }
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content, messageId }) => {
@@ -31,30 +51,20 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content
   // Replace \( ... \) with $ ... $
   processedContent = processedContent.replace(/\\\(([\s\S]*?)\\\)/g, (match, p1) => `$${p1}$`);
 
-  // Ref to track heading index during render pass
-  const headingIndexRef = useRef(0);
-  headingIndexRef.current = 0;
+  const rehypePluginsList: any[] = [
+    rehypeRaw,
+    rehypeSanitize,
+    [rehypeKatex, {
+      strict: false,
+      throwOnError: false,
+      macros: { '\\tag': '\\qquad (#1)' }
+    }],
+    [rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }]
+  ];
 
-  // Build heading components that inject deterministic IDs matching TOC extraction
-  const customComponents = useMemo(() => {
-    if (!messageId) return undefined;
-
-    const createHeadingComponent = (Tag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') => {
-      return ({ children, ...props }: any) => {
-        const id = `toc-msg-${messageId}-h-${headingIndexRef.current++}`;
-        return <Tag id={id} {...props}>{children}</Tag>;
-      };
-    };
-
-    return {
-      h1: createHeadingComponent('h1'),
-      h2: createHeadingComponent('h2'),
-      h3: createHeadingComponent('h3'),
-      h4: createHeadingComponent('h4'),
-      h5: createHeadingComponent('h5'),
-      h6: createHeadingComponent('h6'),
-    };
-  }, [messageId]);
+  if (messageId) {
+    rehypePluginsList.push(() => rehypeTocHeadingIds(messageId));
+  }
 
   return (
     <div className="prose prose-invert max-w-none">
@@ -66,17 +76,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content
           remarkSqueezeParagraphs, 
           remarkCjkFriendly
         ]}
-        rehypePlugins={[
-          rehypeRaw, 
-          rehypeSanitize, 
-          [rehypeKatex, {
-            strict: false,
-            throwOnError: false,
-            macros: { '\\tag': '\\qquad (#1)' }
-          }],
-          [rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }]
-        ]}
-        components={customComponents}
+        rehypePlugins={rehypePluginsList}
       >
         {processedContent}
       </ReactMarkdown>

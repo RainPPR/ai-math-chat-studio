@@ -396,61 +396,63 @@ export default function App() {
   }
   const currentFontClass = `katex-font-${fontName}`;
 
+  const commonSidebarProps = {
+    sessions,
+    characters: settings.characters,
+    currentSessionId,
+    onNewChat: handleNewChat,
+    onDeleteChat: handleDeleteChat,
+    onDuplicateChat: handleDuplicateChat,
+    starredSessions: settings.starredSessions,
+    onToggleStarSession: handleToggleStarSession,
+  };
+
+  let sidebarElement = null;
+  if (isMobile) {
+    if (isMobileSidebarOpen) {
+      sidebarElement = (
+        <div className="fixed inset-0 z-50 flex">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
+          <div className="relative z-10 h-full flex">
+            <Sidebar
+              {...commonSidebarProps}
+              onSelectSession={(id) => {
+                setCurrentSessionId(id);
+                setIsMobileSidebarOpen(false);
+              }}
+              onOpenSettings={() => {
+                setIsSettingsOpen(true);
+                setIsMobileSidebarOpen(false);
+              }}
+              width={280}
+            />
+          </div>
+        </div>
+      );
+    }
+  } else {
+    sidebarElement = (
+      <>
+        <Sidebar
+          {...commonSidebarProps}
+          onSelectSession={setCurrentSessionId}
+          onOpenSettings={() => { setIsSettingsOpen(true); }}
+          width={sidebarWidth}
+        />
+        <div
+          className="w-[2px] hover:bg-blue-500 bg-gray-800/80 cursor-col-resize transition-colors h-full shrink-0 z-20"
+          onMouseDown={handleMouseDown}
+        />
+      </>
+    );
+  }
+
   return (
     <div className={`flex h-screen bg-gray-900 text-gray-100 overflow-hidden font-sans relative ${currentFontClass}`}>
-      {/* Sidebar: Mobile overlay vs Desktop inline */}
-      {isMobile ? (
-        isMobileSidebarOpen && (
-          <div className="fixed inset-0 z-50 flex">
-            <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setIsMobileSidebarOpen(false)}
-            />
-            <div className="relative z-10 h-full flex">
-              <Sidebar
-                sessions={sessions}
-                characters={settings.characters}
-                currentSessionId={currentSessionId}
-                onSelectSession={(id) => {
-                  setCurrentSessionId(id);
-                  setIsMobileSidebarOpen(false);
-                }}
-                onNewChat={handleNewChat}
-                onDeleteChat={handleDeleteChat}
-                onDuplicateChat={handleDuplicateChat}
-                onOpenSettings={() => {
-                  setIsSettingsOpen(true);
-                  setIsMobileSidebarOpen(false);
-                }}
-                width={280}
-                starredSessions={settings.starredSessions}
-                onToggleStarSession={handleToggleStarSession}
-              />
-            </div>
-          </div>
-        )
-      ) : (
-        <>
-          <Sidebar
-            sessions={sessions}
-            characters={settings.characters}
-            currentSessionId={currentSessionId}
-            onSelectSession={setCurrentSessionId}
-            onNewChat={handleNewChat}
-            onDeleteChat={handleDeleteChat}
-            onDuplicateChat={handleDuplicateChat}
-            onOpenSettings={() => { setIsSettingsOpen(true); }}
-            width={sidebarWidth}
-            starredSessions={settings.starredSessions}
-            onToggleStarSession={handleToggleStarSession}
-          />
-
-          <div
-            className="w-[2px] hover:bg-blue-500 bg-gray-800/80 cursor-col-resize transition-colors h-full shrink-0 z-20"
-            onMouseDown={handleMouseDown}
-          />
-        </>
-      )}
+      {sidebarElement}
 
       <main className="flex-1 flex flex-col min-w-0">
         <ChatArea

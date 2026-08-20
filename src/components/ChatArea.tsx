@@ -40,15 +40,9 @@ interface EditBlock {
   originalCreatedAt?: string;
 }
 
-/**
- * Detect and convert non-standard thinking format to standard format for display.
- * Non-standard: Thinking...\n> line1\n> line2\n...\ncontent
- * Standard: <think>\nline1\nline2\n...\n</think>\n\ncontent
- */
 function convertNonStandardThinkingForDisplay(content: string): { thoughts: string[]; mainContent: string } {
   const lines = content.split(/\r?\n/);
 
-  // Check if first line is exactly "Thinking..."
   if (lines[0]?.trim() !== 'Thinking...') {
     return { thoughts: [], mainContent: content };
   }
@@ -56,7 +50,6 @@ function convertNonStandardThinkingForDisplay(content: string): { thoughts: stri
   const thinkingLines: string[] = [];
   let mainContentStartIndex = -1;
 
-  // Start from index 1 (after "Thinking...")
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     if (line.trim() === '') {
@@ -76,9 +69,10 @@ function convertNonStandardThinkingForDisplay(content: string): { thoughts: stri
     return { thoughts: [], mainContent: content };
   }
 
-  const mainContent = mainContentStartIndex >= 0
-    ? lines.slice(mainContentStartIndex).join('\n').trimStart()
-    : '';
+  let mainContent = '';
+  if (mainContentStartIndex >= 0) {
+    mainContent = lines.slice(mainContentStartIndex).join('\n').trimStart();
+  }
 
   return { thoughts: [thinkingLines.join('\n')], mainContent };
 }
@@ -130,11 +124,11 @@ export function parseMessageContent(
   return { thoughts, mainContent };
 }
 
-const MessageItem = React.memo(({ msg, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue, onRegenerate, onView }: {
-  msg: any; isLast: boolean; isGenerating: boolean; settings: UserSettings;
+const MessageItem = React.memo(({ msg, msgIdx, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue, onRegenerate, onView }: {
+  msg: any; msgIdx: number; isLast: boolean; isGenerating: boolean; settings: UserSettings;
   onCopy: (id: string, content: string, htmlContent?: string) => void; copiedId: string | null;
   onRetry?: (msgId: string) => void; onContinue?: () => void; onRegenerate?: (msgId: string) => void;
-  onView: () => void;
+  onView: (msg: any, idx: number) => void;
 }) => {
   const isUser = msg.role === 'user';
 
@@ -169,18 +163,27 @@ const MessageItem = React.memo(({ msg, isLast, isGenerating, settings, onCopy, c
     }
   }, [mainContent, isGenerating, isLast, settings.collapseThinkingFinished]);
 
-  const alignClass = isUser ? 'justify-end' : 'justify-start';
-  const itemsAlignClass = isUser ? 'items-end' : 'items-start';
-  const copyIcon = copiedId === msg.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />;
-
+  let alignClass = 'justify-start';
+  let itemsAlignClass = 'items-start';
   let sideOffset = 'sm:left-auto sm:-right-10';
+
   if (isUser) {
+    alignClass = 'justify-end';
+    itemsAlignClass = 'items-end';
     sideOffset = 'sm:right-auto sm:-left-10';
+  }
+
+  let copyIcon = <Copy size={16} />;
+  if (copiedId === msg.id) {
+    copyIcon = <Check size={16} className="text-green-400" />;
   }
 
   const actionPositionClass = `absolute top-2 right-2 ${sideOffset} flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10`;
 
-  const backgroundClass = isUser ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-100 border border-gray-700';
+  let backgroundClass = 'bg-gray-800 text-gray-100 border border-gray-700';
+  if (isUser) {
+    backgroundClass = 'bg-blue-600 text-white';
+  }
 
   const isCurrentlyStreaming = isGenerating && isLast;
 
@@ -198,7 +201,7 @@ const MessageItem = React.memo(({ msg, isLast, isGenerating, settings, onCopy, c
             </button>
             {isThoughtOpen && (
               <div className="px-4 py-3 border-t border-gray-700/30 text-gray-300 text-sm">
-                {settings.renderThinkingAsMarkdown ? <MarkdownRenderer content={thought} messageId={`${msg.id}-thought-${i}`} /> : <pre className="whitespace-pre-wrap font-sans text-sm opacity-80">{thought}</pre>}
+                {settings.renderThinkingAsMarkdown ? <MarkdownRenderer content={thought} /> : <pre className="whitespace-pre-wrap font-sans text-sm opacity-80">{thought}</pre>}
               </div>
             )}
           </div>
@@ -208,7 +211,7 @@ const MessageItem = React.memo(({ msg, isLast, isGenerating, settings, onCopy, c
             <div className={actionPositionClass}>
               {!isCurrentlyStreaming && (
                 <button
-                  onClick={onView}
+                  onClick={() => onView(msg, msgIdx)}
                   className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
                   title="查看"
                   aria-label="查看"
@@ -465,6 +468,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const [tocMaxLevel, setTocMaxLevel] = useState(3);
   const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
 
+  // Reconcile isTOCOpen on mobile breakpoint changes
+  useEffect(() => {
+    if (isMobile && isTOCOpen) {
+      setIsTOCOpen(false);
+    }
+  }, [isMobile]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<string>('');
@@ -488,12 +498,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     }
   }, [modelDropdownOpen]);
 
-  // Clear streaming content on session change
   useEffect(() => {
     setStreamingContent('');
   }, [session?.id]);
 
-  // Load draft on session change
   useEffect(() => {
     if (session) {
       const draft = loadDraft(session.id);
@@ -551,7 +559,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     return unsubscribe;
   }, [session?.id, isGenerating]);
 
-  // Throttled scroll to reduce layout calculations during rapid streaming
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!settings.autoScroll) return;
@@ -571,7 +578,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     };
   }, [session?.messages.length, streamingContent?.length, isGenerating, settings.autoScroll]);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (modelDropdownRef.current && !modelDropdownRef.current.contains(e.target as Node)) {
@@ -780,7 +786,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     }, 0);
   };
 
-  const handleCopy = (id: string, content: string, htmlContent?: string) => {
+  const handleCopy = useCallback((id: string, content: string, htmlContent?: string) => {
     if (htmlContent && typeof ClipboardItem !== 'undefined' && navigator.clipboard && navigator.clipboard.write) {
       const textBlob = new Blob([content], { type: 'text/plain' });
       const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
@@ -809,7 +815,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         })
         .catch(() => {});
     }
-  };
+  }, []);
 
   const [isPrintingAll, setIsPrintingAll] = useState(false);
 
@@ -861,7 +867,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   };
 
-  // Compute display messages list
   const displayMessages = useMemo(() => {
     if (!session) return [];
     const list = [...session.messages];
@@ -885,7 +890,27 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     return list;
   }, [session?.messages, isGenerating, streamingContent]);
 
-  // Setup IntersectionObserver for active TOC heading highlighting
+  const handleView = useCallback((msg: any, idx: number) => {
+    const mainContent = parseMessageContent(msg.content, msg.role === 'user', settingsRef.current).mainContent;
+    if (msg.role === 'model') {
+      let nearestUserMsg = null;
+      for (let i = idx - 1; i >= 0; i--) {
+        if (displayMessages[i]?.role === 'user') {
+          nearestUserMsg = displayMessages[i];
+          break;
+        }
+      }
+      if (nearestUserMsg) {
+        const userContent = parseMessageContent(nearestUserMsg.content, true, settingsRef.current).mainContent;
+        setViewingContent({ userContent, modelContent: mainContent });
+      } else {
+        setViewingContent({ modelContent: mainContent });
+      }
+    } else {
+      setViewingContent({ modelContent: mainContent });
+    }
+  }, [displayMessages]);
+
   useEffect(() => {
     if (!isTOCOpen) return;
     const container = document.getElementById('chat-scroll-container');
@@ -927,7 +952,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           {isMobile && onOpenMobileSidebar && (
             <button
               onClick={onOpenMobileSidebar}
-              className="mb-4 inline-flex items-center gap-2 px-3 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 text-sm font-medium"
+              className="mb-4 inline-flex items-center gap-2 px-3 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 text-sm font-medium cursor-pointer"
             >
               <Menu size={18} />
               <span>打开会话列表</span>
@@ -942,12 +967,16 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     );
   }
 
+  let tocToggleClass = 'text-gray-400 hover:text-white hover:bg-gray-800';
+  if (isTOCOpen) {
+    tocToggleClass = 'bg-blue-600/20 text-blue-300 border border-blue-500/30';
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full relative bg-gray-900 overflow-hidden">
       {/* Top Header */}
       <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-800 bg-gray-900/95 backdrop-blur z-10 gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          {/* Mobile Sidebar Toggle Button */}
           {isMobile && onOpenMobileSidebar && (
             <button
               onClick={onOpenMobileSidebar}
@@ -967,7 +996,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               >
                 {(() => {
                   const c = settings.characters.find(x => x.id === session.characterId);
-                  return c ? `(${c.name})` : '(No Character)';
+                  if (c) return `(${c.name})`;
+                  return '(No Character)';
                 })()}
                 <ChevronDown size={10} className={`transition-transform ${headerCharacterDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -994,7 +1024,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons & TOC Toggle Button */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           <button
             onClick={() => {
@@ -1026,14 +1055,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             <span className="hidden sm:inline">Export</span>
           </button>
 
-          {/* TOC Sidebar Toggle Button */}
           <button
             onClick={() => setIsTOCOpen(!isTOCOpen)}
-            className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors cursor-pointer ${
-              isTOCOpen
-                ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
-            }`}
+            className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors cursor-pointer ${tocToggleClass}`}
             title="切换 TOC 目录"
           >
             <ListTree size={16} />
@@ -1042,7 +1066,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         </div>
       </div>
 
-      {/* Main Container: Chat scroll area + TOC Sidebar */}
       <div className="flex-1 flex min-h-0 relative overflow-hidden">
         <div id="chat-scroll-container" className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 space-y-4">
           {error && (
@@ -1065,6 +1088,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             <MessageItem
               key={msg.id || idx}
               msg={msg}
+              msgIdx={idx}
               isLast={idx === displayMessages.length - 1}
               isGenerating={isGenerating && !isStopping && idx === displayMessages.length - 1}
               settings={settings}
@@ -1073,26 +1097,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               onRetry={onRetry}
               onContinue={onContinue}
               onRegenerate={onRegenerate}
-              onView={() => {
-                const mainContent = parseMessageContent(msg.content, msg.role === 'user', settings).mainContent;
-                if (msg.role === 'model') {
-                  let nearestUserMsg = null;
-                  for (let i = idx - 1; i >= 0; i--) {
-                    if (displayMessages[i].role === 'user') {
-                      nearestUserMsg = displayMessages[i];
-                      break;
-                    }
-                  }
-                  if (nearestUserMsg) {
-                    const userContent = parseMessageContent(nearestUserMsg.content, true, settings).mainContent;
-                    setViewingContent({ userContent, modelContent: mainContent });
-                  } else {
-                    setViewingContent({ modelContent: mainContent });
-                  }
-                } else {
-                  setViewingContent({ modelContent: mainContent });
-                }
-              }}
+              onView={handleView}
             />
           ))}
 
@@ -1107,7 +1112,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
-        {/* Right TOC Sidebar */}
         <TOCSidebar
           messages={displayMessages}
           maxLevel={tocMaxLevel}
@@ -1121,10 +1125,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         />
       </div>
 
-      {/* Input Area */}
       <div className="p-3 sm:p-4 bg-gray-900 border-t border-gray-800 shrink-0">
         <div className="max-w-4xl mx-auto mb-2 flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          {/* Model Selector */}
           <div ref={modelDropdownRef} className="relative">
             <button
               ref={modelToggleBtnRef}
@@ -1247,7 +1249,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             })()}
           </div>
 
-          {/* Character Selector */}
           <div ref={characterDropdownRef} className="relative">
             <button
               onClick={() => { setModelDropdownOpen(false); setCharacterDropdownOpen(!characterDropdownOpen); }}
@@ -1280,7 +1281,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             )}
           </div>
 
-          {/* Template Selector */}
           <div ref={templateDropdownRef} className="relative">
             <button
               onClick={() => { setModelDropdownOpen(false); setCharacterDropdownOpen(false); setTemplateDropdownOpen(!templateDropdownOpen); }}
@@ -1342,7 +1342,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         </div>
       </div>
 
-      {/* Viewing Modal */}
       {viewingContent && (
         <div
           className="fixed inset-0 z-50 bg-gray-950 overflow-y-auto flex flex-col p-4 sm:p-12"
@@ -1394,7 +1393,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         </div>
       )}
 
-      {/* Edit Session Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
           <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] sm:h-[85vh] flex flex-col overflow-hidden">
@@ -1423,28 +1421,24 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 <div className="text-center py-12 text-gray-500">暂无内容，请添加块</div>
               ) : (
                 editBlocks.map((block, index) => {
-                  const getBlockContainerClass = (type: 'input' | 'thinking' | 'output') => {
-                    if (type === 'input') return 'bg-blue-950/20 border-blue-900/40';
-                    if (type === 'thinking') return 'bg-amber-950/10 border-amber-900/30';
-                    return 'bg-gray-800/40 border-gray-700/50';
-                  };
+                  let blockClass = 'bg-gray-800/40 border-gray-700/50';
+                  let selectClass = 'bg-green-600/20 text-green-300';
+                  let placeholder = '输入模型输出内容...';
 
-                  const getSelectClass = (type: 'input' | 'thinking' | 'output') => {
-                    if (type === 'input') return 'bg-blue-600/20 text-blue-300';
-                    if (type === 'thinking') return 'bg-amber-600/20 text-amber-300';
-                    return 'bg-green-600/20 text-green-300';
-                  };
-
-                  const getTextareaPlaceholder = (type: 'input' | 'thinking' | 'output') => {
-                    if (type === 'input') return '输入用户输入内容...';
-                    if (type === 'thinking') return '输入思考过程内容...';
-                    return '输入模型输出内容...';
-                  };
+                  if (block.type === 'input') {
+                    blockClass = 'bg-blue-950/20 border-blue-900/40';
+                    selectClass = 'bg-blue-600/20 text-blue-300';
+                    placeholder = '输入用户输入内容...';
+                  } else if (block.type === 'thinking') {
+                    blockClass = 'bg-amber-950/10 border-amber-900/30';
+                    selectClass = 'bg-amber-600/20 text-amber-300';
+                    placeholder = '输入思考过程内容...';
+                  }
 
                   return (
                     <div
                       key={block.id}
-                      className={`p-3 sm:p-4 rounded-lg border flex flex-col gap-3 transition-colors ${getBlockContainerClass(block.type)}`}
+                      className={`p-3 sm:p-4 rounded-lg border flex flex-col gap-3 transition-colors ${blockClass}`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -1456,7 +1450,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                                 prev.map(b => (b.id === block.id ? { ...b, type: newType, originalMessageId: undefined, originalCreatedAt: undefined } : b))
                               );
                             }}
-                            className={`px-2 py-1 rounded text-xs font-semibold focus:outline-none cursor-pointer ${getSelectClass(block.type)}`}
+                            className={`px-2 py-1 rounded text-xs font-semibold focus:outline-none cursor-pointer ${selectClass}`}
                           >
                             <option value="input" className="bg-gray-900 text-gray-100">输入</option>
                             <option value="thinking" className="bg-gray-900 text-gray-100">思考</option>
@@ -1520,7 +1514,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                             prev.map(b => (b.id === block.id ? { ...b, content: newContent } : b))
                           );
                         }}
-                        placeholder={getTextareaPlaceholder(block.type)}
+                        placeholder={placeholder}
                         className="w-full bg-gray-950/60 border border-gray-800 focus:border-gray-700 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none resize-y min-h-[160px]"
                         rows={6}
                       />
@@ -1608,14 +1602,17 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         </div>
       )}
 
-      {/* Hidden container for printing all messages */}
       {isPrintingAll && session && (
         <div id="print-all-session-content" className="hidden">
           <div className="prose prose-invert prose-lg md:prose-xl max-w-none space-y-8">
             {displayMessages.map((msg, idx) => {
               const isUser = msg.role === 'user';
-              const titleText = isUser ? '问题 (Question)' : '回答 (Answer)';
-              const titleColorClass = isUser ? 'text-blue-400' : 'text-green-400';
+              let titleText = '回答 (Answer)';
+              let titleColorClass = 'text-green-400';
+              if (isUser) {
+                titleText = '问题 (Question)';
+                titleColorClass = 'text-blue-400';
+              }
               const parsed = parseMessageContent(msg.content, isUser, settings);
 
               return (
