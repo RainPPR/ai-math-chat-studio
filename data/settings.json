@@ -4,11 +4,14 @@
   "autoScroll": false,
   "collapseThinkingFinished": true,
   "trimThinkingSpaces": false,
-  "starredSessions": {},
+  "starredSessions": {
+    "a0266bbc-d40a-4f46-a389-a865e020c86f": "rose"
+  },
   "claudeChunks": [
     "2026-07-19T08:53:15.252Z",
     "2026-07-30T05:14:11.684Z",
-    "2026-08-15T04:37:46.743Z"
+    "2026-08-15T04:37:46.743Z",
+    "2026-08-20T06:56:52.213Z"
   ],
   "claudeChunkRemarks": {
     "2026-08-15T04:37:46.743Z": "截止到这里所有已经导出完毕"
@@ -16,6 +19,6 @@
   "stickyNotes": [],
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e",
+  "activeCharacterId": "95460bbd-f1d7-4d51-a7ea-fa039d1c81fc",
   "activeModelId": "166f55ed-513c-5fdd-90fa-776669c59e6e"
 }
