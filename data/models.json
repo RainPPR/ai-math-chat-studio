@@ -225,13 +225,6 @@
     "reasoningEffort": "high"
   },
   {
-    "id": "745ddfbe-2c5a-5db5-87b0-837065032f99",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "aura-2-en",
-    "displayName": "Deepgram Aura 2 (LogFare)"
-  },
-  {
     "id": "cda1b042-7087-5159-8362-b734d8e5845e",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -251,13 +244,6 @@
     "providerType": "openai-compatible",
     "modelId": "deepseek-v4-pro-0813",
     "displayName": "DeepSeek V4 Pro 0813 (LogFare)"
-  },
-  {
-    "id": "9f64c1cc-d048-559b-9077-364db12d0a60",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "flux-2-pro",
-    "displayName": "Flux 2 Pro (LogFare)"
   },
   {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
@@ -295,13 +281,6 @@
     "displayName": "Kiro Auto (LogFare)"
   },
   {
-    "id": "f5740362-dd36-56bf-bf95-991e1ba5ef0f",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "lucid-origin",
-    "displayName": "Leonardo Lucid Origin (LogFare)"
-  },
-  {
     "id": "4ed31846-fff0-5772-a6c5-e111ea731e0c",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -316,53 +295,11 @@
     "displayName": "Moondream 3.1 9B (LogFare)"
   },
   {
-    "id": "a835bd9f-0e1b-5097-a665-c4052ba72c56",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "nova-3",
-    "displayName": "Deepgram Nova 3 (LogFare)"
-  },
-  {
-    "id": "0ced4097-3a4f-516a-8329-a2fb4ee8dcb7",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "phoenix-1.0",
-    "displayName": "Leonardo Phoenix (LogFare)"
-  },
-  {
     "id": "e193beee-0f6c-59e6-830f-ddf4d6e9aed8",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
     "modelId": "qwen-3.8-27b",
     "displayName": "Qwen 3.8 27b (LogFare)"
-  },
-  {
-    "id": "84227a1d-54c7-5c48-9c58-d3177eb0e263",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "qwen3-embedding-8b",
-    "displayName": "Qwen3 Embedding 8B (LogFare)"
-  },
-  {
-    "id": "e38655fb-c8a0-5149-90de-7bc19a3cb651",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "sdxl-lightning",
-    "displayName": "Stable Diffusion XL Lightning (LogFare)"
-  },
-  {
-    "id": "95f8b2d5-15aa-5032-a200-90fcaf2d43fc",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "text-embedding-3-small",
-    "displayName": "Text Embedding 3 Small (LogFare)"
-  },
-  {
-    "id": "dd443695-2465-5f54-979b-907d30d2eb1a",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "whisper-large-v3-turbo",
-    "displayName": "Whisper Large v3 Turbo (LogFare)"
   },
   {
     "id": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89",
@@ -503,7 +440,7 @@
     "providerType": "openai-compatible",
     "modelId": "muse-spark-1.2-contributor-free",
     "displayName": "Muse Spark 1.2 Free (OpenCode)",
-    "reasoningEffort": "high"
+    "reasoningEffort": "xhigh"
   },
   {
     "id": "14f57ded-622b-5af6-8331-a14e299bdd14",
