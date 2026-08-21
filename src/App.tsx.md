@@ -9,6 +9,18 @@ import { Loader2 } from 'lucide-react';
 
 let settingsSaveQueue = Promise.resolve();
 
+function useWindowWidth() {
+  const [width, setWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1024));
+
+  useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return width;
+}
+
 export default function App() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -20,6 +32,10 @@ export default function App() {
   const [generatingSessions, setGeneratingSessions] = useState<Set<string>>(new Set());
   const [stoppingSessions, setStoppingSessions] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const windowWidth = useWindowWidth();
+  const isMobile = windowWidth < 768;
 
   const clearError = useCallback(() => { setError(null); }, []);
 
@@ -36,7 +52,6 @@ export default function App() {
       setTemplates(loadedTemplates);
       if (loadedSettings) {
         const merged = { ...DEFAULT_SETTINGS, ...loadedSettings };
-        // Detect old format (modelPool instead of providers/models)
         if ((merged as any).modelPool && !merged.providers) {
           merged.providers = [];
           merged.models = [];
@@ -74,6 +89,9 @@ export default function App() {
     };
     setSessions(prev => [session, ...prev]);
     setCurrentSessionId(id);
+    if (isMobile) {
+      setIsMobileSidebarOpen(false);
+    }
   };
 
   const handleDeleteChat = async (id: string) => {
@@ -83,7 +101,6 @@ export default function App() {
     }
     await api.sessions.delete(id);
 
-    // Clean up star state from settings
     if (settings.starredSessions && settings.starredSessions[id]) {
       const previousSettings = { ...settings };
       const updatedStarred = { ...settings.starredSessions };
@@ -112,7 +129,6 @@ export default function App() {
     }
   };
 
-  // Debounce mechanism for rapid new chat + send operations
   const pendingSendsRef = React.useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   const handleSendMessage = async (content: string) => {
@@ -121,7 +137,6 @@ export default function App() {
     let sessionId = currentSessionId;
     let isNewSession = false;
 
-    // Create new session if needed
     if (!sessionId) {
       isNewSession = true;
       sessionId = crypto.randomUUID();
@@ -144,13 +159,11 @@ export default function App() {
       createdAt: new Date().toISOString(),
     };
 
-    // Optimistic UI update
     setSessions(prev => prev.map(s => s.id === sessionId
       ? { ...s, messages: [...s.messages, userMsg], updatedAt: new Date().toISOString() }
       : s
     ));
 
-    // Debounce API call for new sessions to prevent race conditions
     if (isNewSession) {
       const existingTimeout = pendingSendsRef.current.get(sessionId);
       if (existingTimeout) {
@@ -165,11 +178,10 @@ export default function App() {
         } catch (e: any) {
           setError(e.message || 'Failed to send message');
         }
-      }, 100); // Small delay to ensure session state is settled
+      }, 100);
 
       pendingSendsRef.current.set(sessionId, timeout);
     } else {
-      // Existing session - send immediately
       try {
         await api.chat.send(sessionId, content);
         markGenerating(sessionId, true);
@@ -179,7 +191,6 @@ export default function App() {
     }
   };
 
-  // Cleanup pending sends on unmount
   useEffect(() => {
     return () => {
       pendingSendsRef.current.forEach(timeout => { clearTimeout(timeout); });
@@ -187,9 +198,7 @@ export default function App() {
   }, []);
 
   const handleStop = async () => {
-    if (!currentSessionId) {
-      return;
-    }
+    if (!currentSessionId) return;
     setStoppingSessions(prev => {
       const next = new Set(prev);
       next.add(currentSessionId);
@@ -336,7 +345,7 @@ export default function App() {
     try {
       await handleUpdateSession(currentSessionId, { characterId });
     } catch {
-      // Swallowed/handled since handleUpdateSession already set the global error state
+      // Handled in handleUpdateSession
     }
   };
 
@@ -388,26 +397,63 @@ export default function App() {
   }
   const currentFontClass = `katex-font-${fontName}`;
 
+  const commonSidebarProps = {
+    sessions,
+    characters: settings.characters,
+    currentSessionId,
+    onNewChat: handleNewChat,
+    onDeleteChat: handleDeleteChat,
+    onDuplicateChat: handleDuplicateChat,
+    starredSessions: settings.starredSessions,
+    onToggleStarSession: handleToggleStarSession,
+  };
+
+  let sidebarElement = null;
+  if (isMobile) {
+    if (isMobileSidebarOpen) {
+      sidebarElement = (
+        <div className="fixed inset-0 z-50 flex">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
+          <div className="relative z-10 h-full flex">
+            <Sidebar
+              {...commonSidebarProps}
+              onSelectSession={(id) => {
+                setCurrentSessionId(id);
+                setIsMobileSidebarOpen(false);
+              }}
+              onOpenSettings={() => {
+                setIsSettingsOpen(true);
+                setIsMobileSidebarOpen(false);
+              }}
+              width={280}
+            />
+          </div>
+        </div>
+      );
+    }
+  } else {
+    sidebarElement = (
+      <>
+        <Sidebar
+          {...commonSidebarProps}
+          onSelectSession={setCurrentSessionId}
+          onOpenSettings={() => { setIsSettingsOpen(true); }}
+          width={sidebarWidth}
+        />
+        <div
+          className="w-[2px] hover:bg-blue-500 bg-gray-800/80 cursor-col-resize transition-colors h-full shrink-0 z-20"
+          onMouseDown={handleMouseDown}
+        />
+      </>
+    );
+  }
+
   return (
     <div className={`flex h-screen bg-gray-900 text-gray-100 overflow-hidden font-sans relative ${currentFontClass}`}>
-      <Sidebar
-        sessions={sessions}
-        characters={settings.characters}
-        currentSessionId={currentSessionId}
-        onSelectSession={setCurrentSessionId}
-        onNewChat={handleNewChat}
-        onDeleteChat={handleDeleteChat}
-        onDuplicateChat={handleDuplicateChat}
-        onOpenSettings={() => { setIsSettingsOpen(true); }}
-        width={sidebarWidth}
-        starredSessions={settings.starredSessions}
-        onToggleStarSession={handleToggleStarSession}
-      />
-
-      <div
-        className="w-[2px] hover:bg-blue-500 bg-gray-800/80 cursor-col-resize transition-colors h-full shrink-0 z-20"
-        onMouseDown={handleMouseDown}
-      />
+      {sidebarElement}
 
       <main className="flex-1 flex flex-col min-w-0">
         <ChatArea
@@ -428,8 +474,9 @@ export default function App() {
           error={error}
           onClearError={clearError}
           onError={setError}
+          isMobile={isMobile}
+          onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
           onGenerationEnd={async (id) => {
-            // Do not clear error here as it might have just been set by onError
             try {
               await refreshSession(id);
             } catch (e) {

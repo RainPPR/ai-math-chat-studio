@@ -1,9 +1,14 @@
 ```typescript
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChatSession, ChatMessage, UserSettings, Template } from '../types';
 import { api } from '../lib/api';
-import { Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal, AlertCircle, X, ChevronDown, Bot, Sparkles, FileText, Eye, Printer, Edit, Trash2, ArrowUp, ArrowDown, Plus } from 'lucide-react';
+import {
+  Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal,
+  AlertCircle, X, ChevronDown, Bot, Sparkles, FileText, Eye, Printer, Edit,
+  Trash2, ArrowUp, ArrowDown, Plus, ListTree, Menu
+} from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { TOCSidebar } from './TOCSidebar';
 
 interface ChatAreaProps {
   session?: ChatSession;
@@ -24,6 +29,8 @@ interface ChatAreaProps {
   error?: string | null;
   onClearError?: () => void;
   onError?: (message: string) => void;
+  isMobile?: boolean;
+  onOpenMobileSidebar?: () => void;
 }
 
 interface EditBlock {
@@ -34,15 +41,9 @@ interface EditBlock {
   originalCreatedAt?: string;
 }
 
-/**
- * Detect and convert non-standard thinking format to standard format for display.
- * Non-standard: Thinking...\n> line1\n> line2\n...\ncontent
- * Standard: <think>\nline1\nline2\n...\n</think>\n\ncontent
- */
 function convertNonStandardThinkingForDisplay(content: string): { thoughts: string[]; mainContent: string } {
   const lines = content.split(/\r?\n/);
 
-  // Check if first line is exactly "Thinking..."
   if (lines[0]?.trim() !== 'Thinking...') {
     return { thoughts: [], mainContent: content };
   }
@@ -50,10 +51,8 @@ function convertNonStandardThinkingForDisplay(content: string): { thoughts: stri
   const thinkingLines: string[] = [];
   let mainContentStartIndex = -1;
 
-  // Start from index 1 (after "Thinking...")
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
-    // Skip empty lines in thinking section (they're part of thinking)
     if (line.trim() === '') {
       thinkingLines.push('');
       continue;
@@ -67,14 +66,14 @@ function convertNonStandardThinkingForDisplay(content: string): { thoughts: stri
     }
   }
 
-  // If no thinking lines found, return as-is
   if (thinkingLines.length === 0) {
     return { thoughts: [], mainContent: content };
   }
 
-  const mainContent = mainContentStartIndex >= 0
-    ? lines.slice(mainContentStartIndex).join('\n').trimStart()
-    : '';
+  let mainContent = '';
+  if (mainContentStartIndex >= 0) {
+    mainContent = lines.slice(mainContentStartIndex).join('\n').trimStart();
+  }
 
   return { thoughts: [thinkingLines.join('\n')], mainContent };
 }
@@ -84,19 +83,11 @@ function normalizeSearchString(str: string): string {
 }
 
 function isModelMatch(modelName: string, modelId: string, query: string): boolean {
-  if (!query) {
-    return true;
-  }
+  if (!query) return true;
   const normalizedQuery = normalizeSearchString(query);
   const normalizedName = normalizeSearchString(modelName);
   const normalizedId = normalizeSearchString(modelId);
-  if (normalizedName.includes(normalizedQuery)) {
-    return true;
-  }
-  if (normalizedId.includes(normalizedQuery)) {
-    return true;
-  }
-  return false;
+  return normalizedName.includes(normalizedQuery) || normalizedId.includes(normalizedQuery);
 }
 
 export function parseMessageContent(
@@ -111,13 +102,11 @@ export function parseMessageContent(
     return { thoughts, mainContent };
   }
 
-  // First, try to detect non-standard thinking format and convert for display
   const converted = convertNonStandardThinkingForDisplay(content);
   if (converted.thoughts.length > 0) {
     thoughts = converted.thoughts;
     mainContent = converted.mainContent;
   } else {
-    // Standard format: parse existing <think> blocks
     const thoughtRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/g;
     for (const m of content.matchAll(thoughtRegex)) {
       if (m[1]) {
@@ -136,11 +125,11 @@ export function parseMessageContent(
   return { thoughts, mainContent };
 }
 
-const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue, onRegenerate, onView }: {
-  msg: any; isLast: boolean; isGenerating: boolean; settings: UserSettings;
+const MessageItem = React.memo(({ msg, msgIdx, isLast, isGenerating, settings, onCopy, copiedId, onRetry, onContinue, onRegenerate, onView }: {
+  msg: any; msgIdx: number; isLast: boolean; isGenerating: boolean; settings: UserSettings;
   onCopy: (id: string, content: string, htmlContent?: string) => void; copiedId: string | null;
   onRetry?: (msgId: string) => void; onContinue?: () => void; onRegenerate?: (msgId: string) => void;
-  onView: () => void;
+  onView: (msg: any, idx: number) => void;
 }) => {
   const isUser = msg.role === 'user';
 
@@ -164,37 +153,44 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
     if (hasAutoCollapsed.current) return;
 
     if (isLast && isGenerating) {
-      // 对于正在生成的最后一条消息，只在 mainContent 首次出现时自动折叠一次
       if (mainContent) {
         hasAutoCollapsed.current = true;
         setIsThoughtOpen(false);
       }
     } else {
-      // 对于其他消息，保持原始行为
       if (mainContent || (!isGenerating && !isLast)) {
         setIsThoughtOpen(false);
       }
     }
   }, [mainContent, isGenerating, isLast, settings.collapseThinkingFinished]);
 
-  const alignClass = isUser ? 'justify-end' : 'justify-start';
-  const itemsAlignClass = isUser ? 'items-end' : 'items-start';
-  const copyIcon = copiedId === msg.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />;
-
+  let alignClass = 'justify-start';
+  let itemsAlignClass = 'items-start';
   let sideOffset = 'sm:left-auto sm:-right-10';
+
   if (isUser) {
+    alignClass = 'justify-end';
+    itemsAlignClass = 'items-end';
     sideOffset = 'sm:right-auto sm:-left-10';
+  }
+
+  let copyIcon = <Copy size={16} />;
+  if (copiedId === msg.id) {
+    copyIcon = <Check size={16} className="text-green-400" />;
   }
 
   const actionPositionClass = `absolute top-2 right-2 ${sideOffset} flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10`;
 
-  const backgroundClass = isUser ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-100 border border-gray-700';
+  let backgroundClass = 'bg-gray-800 text-gray-100 border border-gray-700';
+  if (isUser) {
+    backgroundClass = 'bg-blue-600 text-white';
+  }
 
   const isCurrentlyStreaming = isGenerating && isLast;
 
   return (
     <div className={`flex ${alignClass} group`}>
-      <div className={`max-w-[85%] md:max-w-[75%] flex flex-col gap-2 ${itemsAlignClass} w-full`}>
+      <div className={`max-w-[92%] sm:max-w-[85%] md:max-w-[75%] flex flex-col gap-2 ${itemsAlignClass} w-full`}>
         {thoughts.map((thought, i) => (
           <div key={`thought-${i}`} className="rounded-xl shadow-sm relative w-full bg-gray-800/40 border border-gray-700/50 overflow-hidden">
             <button onClick={() => { setIsThoughtOpen(!isThoughtOpen); }} className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800/60 hover:bg-gray-800/80 transition-colors text-xs font-semibold uppercase tracking-wider text-gray-400">
@@ -212,11 +208,11 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
           </div>
         ))}
         {mainContent && (
-          <div className={`rounded-2xl px-6 py-4 shadow-sm relative w-full ${backgroundClass}`}>
+          <div className={`rounded-2xl px-4 sm:px-6 py-4 shadow-sm relative w-full ${backgroundClass}`}>
             <div className={actionPositionClass}>
               {!isCurrentlyStreaming && (
                 <button
-                  onClick={onView}
+                  onClick={() => onView(msg, msgIdx)}
                   className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
                   title="查看"
                   aria-label="查看"
@@ -239,7 +235,7 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
               </button>
             </div>
             <div ref={contentRef}>
-              <MarkdownRenderer content={mainContent} />
+              <MarkdownRenderer content={mainContent} messageId={msg.id} />
             </div>
           </div>
         )}
@@ -264,7 +260,9 @@ const MessageItem = ({ msg, isLast, isGenerating, settings, onCopy, copiedId, on
       </div>
     </div>
   );
-};
+});
+
+MessageItem.displayName = 'MessageItem';
 
 const estimateTokens = (text: string) => {
   if (!text) return 0;
@@ -293,7 +291,6 @@ const loadDraft = (sessionId: string): string => {
   try {
     const drafts = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || '{}');
     const draft = drafts[sessionId];
-    // Draft expires after 7 days
     if (draft && Date.now() - draft.timestamp < 7 * 24 * 60 * 60 * 1000) {
       return draft.content || '';
     }
@@ -408,9 +405,6 @@ const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
       }
     });
 
-    // Resolve model message's id and createdAt:
-    // If we have blocks with originalMessageId/originalCreatedAt, preserve them,
-    // as long as the ID hasn't been consumed yet in this save session.
     const originalBlockWithMetadata = currentModelBlocks.find(b => b.originalMessageId && !usedIds.has(b.originalMessageId));
     const id = originalBlockWithMetadata?.originalMessageId || crypto.randomUUID();
     usedIds.add(id);
@@ -450,7 +444,12 @@ const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
   return messages;
 };
 
-export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGenerating, isStopping, settings, templates, onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel, onSelectCharacter, onUpdateSessionCharacter, onUpdateSession, error, onClearError, onError }) => {
+export const ChatArea: React.FC<ChatAreaProps> = ({
+  session, onSendMessage, isGenerating, isStopping, settings, templates,
+  onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel,
+  onSelectCharacter, onUpdateSessionCharacter, onUpdateSession, error,
+  onClearError, onError, isMobile = false, onOpenMobileSidebar
+}) => {
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
@@ -459,6 +458,24 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
   const [editBlocks, setEditBlocks] = useState<EditBlock[]>([]);
   const [editModalError, setEditModalError] = useState<string | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  // TOC State
+  const [isTOCOpen, setIsTOCOpen] = useState(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1280) {
+      return true;
+    }
+    return false;
+  });
+  const [tocMaxLevel, setTocMaxLevel] = useState(3);
+  const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
+
+  // Reconcile isTOCOpen on mobile breakpoint changes
+  useEffect(() => {
+    if (isMobile && isTOCOpen) {
+      setIsTOCOpen(false);
+    }
+  }, [isMobile]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<string>('');
@@ -478,25 +495,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     if (!modelDropdownOpen) {
       setModelSearchQuery('');
     } else {
-      // const timer = setTimeout(() => {
       activeModelRef.current?.scrollIntoView({ block: 'nearest' });
-      // }, 50);
-      // return () => clearTimeout(timer);
     }
   }, [modelDropdownOpen]);
 
-  // Clear streaming content on session change
   useEffect(() => {
     setStreamingContent('');
   }, [session?.id]);
 
-  // Load draft on session change
   useEffect(() => {
     if (session) {
       const draft = loadDraft(session.id);
       setInput(draft);
       lastInputRef.current = draft;
-      // Reset textarea height
       const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
       if (textarea) {
         textarea.style.height = 'auto';
@@ -505,7 +516,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     }
   }, [session?.id]);
 
-  // Auto-save draft with debounce (500ms) - only save when composition is finished
   const handleInputChange = (value: string) => {
     setInput(value);
 
@@ -521,7 +531,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     }, 500);
   };
 
-  // Clean up timeout on unmount
   useEffect(() => {
     return () => {
       if (draftTimeoutRef.current) {
@@ -551,21 +560,18 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     return unsubscribe;
   }, [session?.id, isGenerating]);
 
-  // Throttled scroll to reduce layout calculations during rapid streaming
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!settings.autoScroll) return;
-    
-    // Clear existing timeout
+
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
-    
-    // Throttle scroll to max 10 times per second
+
     scrollTimeoutRef.current = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
-    
+
     return () => {
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
@@ -573,7 +579,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     };
   }, [session?.messages.length, streamingContent?.length, isGenerating, settings.autoScroll]);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (modelDropdownRef.current && !modelDropdownRef.current.contains(e.target as Node)) {
@@ -772,7 +777,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     handleInputChange(newInput);
     setTemplateDropdownOpen(false);
 
-    // Adjust textarea height
     setTimeout(() => {
       const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
       if (textarea) {
@@ -783,7 +787,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     }, 0);
   };
 
-  const handleCopy = (id: string, content: string, htmlContent?: string) => {
+  const handleCopy = useCallback((id: string, content: string, htmlContent?: string) => {
     if (htmlContent && typeof ClipboardItem !== 'undefined' && navigator.clipboard && navigator.clipboard.write) {
       const textBlob = new Blob([content], { type: 'text/plain' });
       const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
@@ -812,11 +816,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
         })
         .catch(() => {});
     }
-  };
+  }, []);
 
   const [isPrintingAll, setIsPrintingAll] = useState(false);
 
-  // Keep references to the latest mutable states to treat effect triggers as snapshots
   const sessionRef = useRef(session);
   const settingsRef = useRef(settings);
 
@@ -865,76 +868,164 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   };
 
+  const displayMessages = useMemo(() => {
+    if (!session) return [];
+    const list = [...session.messages];
+    const lastMsg = list.length > 0 ? list[list.length - 1] : null;
+
+    if (isGenerating && streamingContent) {
+      if (lastMsg?.role === 'model') {
+        list[list.length - 1] = {
+          ...lastMsg,
+          content: streamingContent,
+        };
+      } else {
+        list.push({
+          id: '__streaming__',
+          role: 'model',
+          content: streamingContent,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    }
+    return list;
+  }, [session?.messages, isGenerating, streamingContent]);
+
+  const handleView = useCallback((msg: any, idx: number) => {
+    const mainContent = parseMessageContent(msg.content, msg.role === 'user', settingsRef.current).mainContent;
+    if (msg.role === 'model') {
+      let nearestUserMsg = null;
+      for (let i = idx - 1; i >= 0; i--) {
+        if (displayMessages[i]?.role === 'user') {
+          nearestUserMsg = displayMessages[i];
+          break;
+        }
+      }
+      if (nearestUserMsg) {
+        const userContent = parseMessageContent(nearestUserMsg.content, true, settingsRef.current).mainContent;
+        setViewingContent({ userContent, modelContent: mainContent });
+      } else {
+        setViewingContent({ modelContent: mainContent });
+      }
+    } else {
+      setViewingContent({ modelContent: mainContent });
+    }
+  }, [displayMessages]);
+
+  useEffect(() => {
+    if (!isTOCOpen) return;
+    const container = document.getElementById('chat-scroll-container');
+    if (!container) return;
+
+    const headingElements = container.querySelectorAll('[id^="toc-msg-"]');
+    if (headingElements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.find(e => e.isIntersecting);
+        if (visible) {
+          setActiveHeadingId(visible.target.id);
+        }
+      },
+      {
+        root: container,
+        rootMargin: '0px 0px -75% 0px',
+        threshold: 0.1,
+      }
+    );
+
+    headingElements.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, [displayMessages, isTOCOpen]);
+
+  const handleSelectHeading = useCallback((headingId: string) => {
+    const el = document.getElementById(headingId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveHeadingId(headingId);
+    }
+  }, []);
+
   if (!session) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-900">
+      <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-900 p-4">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4"><Send size={24} className="text-gray-600" /></div>
+          {isMobile && onOpenMobileSidebar && (
+            <button
+              onClick={onOpenMobileSidebar}
+              className="mb-4 inline-flex items-center gap-2 px-3 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 text-sm font-medium cursor-pointer"
+            >
+              <Menu size={18} />
+              <span>打开会话列表</span>
+            </button>
+          )}
+          <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Send size={24} className="text-gray-600" />
+          </div>
           <p className="text-lg font-medium text-gray-400">Select a chat or start a new one</p>
         </div>
       </div>
     );
   }
 
-  const displayMessages = [...session.messages];
-  const lastMsg = session.messages.length > 0 ? session.messages[session.messages.length - 1] : null;
-
-  if (isGenerating && streamingContent) {
-    if (lastMsg?.role === 'model') {
-      // Continuation mode: update the last message in-place
-      displayMessages[displayMessages.length - 1] = {
-        ...lastMsg,
-        content: streamingContent,
-      };
-    } else {
-      // Normal mode: push a new streaming message
-      displayMessages.push({
-        id: '__streaming__',
-        role: 'model',
-        content: streamingContent,
-        createdAt: new Date().toISOString(),
-      });
-    }
+  let tocToggleClass = 'text-gray-400 hover:text-white hover:bg-gray-800';
+  if (isTOCOpen) {
+    tocToggleClass = 'bg-blue-600/20 text-blue-300 border border-blue-500/30';
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full relative bg-gray-900">
-        <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900/95 backdrop-blur z-10">
-        <div className="flex flex-col min-w-0">
-          <h2 className="text-lg font-medium text-gray-200 truncate">{session.title}</h2>
-          <div ref={headerCharacterDropdownRef} className="relative">
+    <div className="flex-1 flex flex-col h-full relative bg-gray-900 overflow-hidden">
+      {/* Top Header */}
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-800 bg-gray-900/95 backdrop-blur z-10 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          {isMobile && onOpenMobileSidebar && (
             <button
-              onClick={() => setHeaderCharacterDropdownOpen(!headerCharacterDropdownOpen)}
-              className="flex items-center gap-1 px-1.5 py-0.5 hover:bg-gray-800 rounded transition-colors text-xs text-gray-500"
+              onClick={onOpenMobileSidebar}
+              className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors cursor-pointer shrink-0"
+              title="打开侧边栏"
             >
-              {(() => {
-                const c = settings.characters.find(x => x.id === session.characterId);
-                return c ? `(${c.name})` : '(No Character)';
-              })()}
-              <ChevronDown size={10} className={`transition-transform ${headerCharacterDropdownOpen ? 'rotate-180' : ''}`} />
+              <Menu size={20} />
             </button>
-            {headerCharacterDropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 z-50 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
-                <button
-                  onClick={() => { onUpdateSessionCharacter?.(''); setHeaderCharacterDropdownOpen(false); }}
-                  className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${!session.characterId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
-                >
-                  None
-                </button>
-                {settings.characters.map(c => (
+          )}
+
+          <div className="flex flex-col min-w-0">
+            <h2 className="text-base sm:text-lg font-medium text-gray-200 truncate">{session.title}</h2>
+            <div ref={headerCharacterDropdownRef} className="relative">
+              <button
+                onClick={() => setHeaderCharacterDropdownOpen(!headerCharacterDropdownOpen)}
+                className="flex items-center gap-1 px-1.5 py-0.5 hover:bg-gray-800 rounded transition-colors text-xs text-gray-500"
+              >
+                {(() => {
+                  const c = settings.characters.find(x => x.id === session.characterId);
+                  if (c) return `(${c.name})`;
+                  return '(No Character)';
+                })()}
+                <ChevronDown size={10} className={`transition-transform ${headerCharacterDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {headerCharacterDropdownOpen && (
+                <div className="absolute top-full left-0 mt-1 z-50 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
                   <button
-                    key={c.id}
-                    onClick={() => { onUpdateSessionCharacter?.(c.id); setHeaderCharacterDropdownOpen(false); }}
-                    className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${c.id === session.characterId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
+                    onClick={() => { onUpdateSessionCharacter?.(''); setHeaderCharacterDropdownOpen(false); }}
+                    className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${!session.characterId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
                   >
-                    {c.name}
+                    None
                   </button>
-                ))}
-              </div>
-            )}
+                  {settings.characters.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => { onUpdateSessionCharacter?.(c.id); setHeaderCharacterDropdownOpen(false); }}
+                      className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${c.id === session.characterId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           <button
             onClick={() => {
               setEditBlocks(parseMessagesToBlocks(session.messages));
@@ -942,92 +1033,109 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
               setIsEditModalOpen(true);
             }}
             disabled={isGenerating || isStopping}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed rounded-md transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed rounded-md transition-colors cursor-pointer"
+            title="编辑"
           >
-            <Edit size={16} /><span>Edit</span>
+            <Edit size={16} />
+            <span className="hidden sm:inline">Edit</span>
           </button>
-          <button onClick={handlePrintAll} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer">
-            <Printer size={16} /><span>Print</span>
+          <button
+            onClick={handlePrintAll}
+            className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer"
+            title="打印"
+          >
+            <Printer size={16} />
+            <span className="hidden sm:inline">Print</span>
           </button>
-          <button onClick={handleExport} className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer">
-            <Download size={16} /><span>Export</span>
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors cursor-pointer"
+            title="导出"
+          >
+            <Download size={16} />
+            <span className="hidden sm:inline">Export</span>
+          </button>
+
+          <button
+            onClick={() => setIsTOCOpen(!isTOCOpen)}
+            className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors cursor-pointer ${tocToggleClass}`}
+            title="切换 TOC 目录"
+          >
+            <ListTree size={16} />
+            <span className="hidden md:inline">TOC</span>
           </button>
         </div>
       </div>
 
-      <div id="chat-scroll-container" className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
-        {error && (
-          <div className="max-w-4xl mx-auto">
-            <div className="rounded-xl px-4 py-3 bg-red-900/30 border border-red-700/50 flex items-start gap-3">
-              <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-red-200">{error}</p>
+      <div className="flex-1 flex min-h-0 relative overflow-hidden">
+        <div id="chat-scroll-container" className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 space-y-4">
+          {error && (
+            <div className="max-w-4xl mx-auto">
+              <div className="rounded-xl px-4 py-3 bg-red-900/30 border border-red-700/50 flex items-start gap-3">
+                <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-red-200">{error}</p>
+                </div>
+                {onClearError && (
+                  <button onClick={onClearError} className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/50 rounded shrink-0">
+                    <X size={16} />
+                  </button>
+                )}
               </div>
-              {onClearError && (
-                <button onClick={onClearError} className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/50 rounded shrink-0">
-                  <X size={16} />
-                </button>
-              )}
             </div>
-          </div>
-        )}
-        {displayMessages.map((msg, idx) => (
-          <MessageItem
-            key={msg.id || idx}
-            msg={msg}
-            isLast={idx === displayMessages.length - 1}
-            isGenerating={isGenerating && !isStopping && idx === displayMessages.length - 1}
-            settings={settings}
-            onCopy={handleCopy}
-            copiedId={copiedId}
-            onRetry={onRetry}
-            onContinue={onContinue}
-            onRegenerate={onRegenerate}
-            onView={() => {
-              const mainContent = parseMessageContent(msg.content, msg.role === 'user', settings).mainContent;
-              if (msg.role === 'model') {
-                let nearestUserMsg = null;
-                for (let i = idx - 1; i >= 0; i--) {
-                  if (displayMessages[i].role === 'user') {
-                    nearestUserMsg = displayMessages[i];
-                    break;
-                  }
-                }
-                if (nearestUserMsg) {
-                  const userContent = parseMessageContent(nearestUserMsg.content, true, settings).mainContent;
-                  setViewingContent({ userContent, modelContent: mainContent });
-                } else {
-                  setViewingContent({ modelContent: mainContent });
-                }
-              } else {
-                setViewingContent({ modelContent: mainContent });
-              }
-            }}
-          />
-        ))}
-        {isGenerating && !isStopping && !streamingContent && (
-          <div className="flex justify-start">
-            <div className="max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 bg-gray-800 text-gray-100 border border-gray-700 flex items-center gap-3">
-              <Loader2 size={18} className="animate-spin text-blue-400" />
-              <span className="text-gray-400 text-sm font-medium">Waiting...</span>
+          )}
+
+          {displayMessages.map((msg, idx) => (
+            <MessageItem
+              key={msg.id || idx}
+              msg={msg}
+              msgIdx={idx}
+              isLast={idx === displayMessages.length - 1}
+              isGenerating={isGenerating && !isStopping && idx === displayMessages.length - 1}
+              settings={settings}
+              onCopy={handleCopy}
+              copiedId={copiedId}
+              onRetry={onRetry}
+              onContinue={onContinue}
+              onRegenerate={onRegenerate}
+              onView={handleView}
+            />
+          ))}
+
+          {isGenerating && !isStopping && !streamingContent && (
+            <div className="flex justify-start">
+              <div className="max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 bg-gray-800 text-gray-100 border border-gray-700 flex items-center gap-3">
+                <Loader2 size={18} className="animate-spin text-blue-400" />
+                <span className="text-gray-400 text-sm font-medium">Waiting...</span>
+              </div>
             </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} className="h-4" />
+          )}
+          <div ref={messagesEndRef} className="h-4" />
+        </div>
+
+        <TOCSidebar
+          messages={displayMessages}
+          maxLevel={tocMaxLevel}
+          onMaxLevelChange={setTocMaxLevel}
+          activeHeadingId={activeHeadingId}
+          isOpen={isTOCOpen}
+          onClose={() => setIsTOCOpen(false)}
+          onSelectHeading={handleSelectHeading}
+          isGenerating={isGenerating}
+          isMobile={isMobile}
+        />
       </div>
 
-      <div className="p-4 bg-gray-900 border-t border-gray-800">
-        {/* Floating model & character selector bar */}
-        <div className="max-w-4xl mx-auto mb-2 flex items-center gap-2">
-          {/* Model Selector */}
+      <div className="p-3 sm:p-4 bg-gray-900 border-t border-gray-800 shrink-0">
+        <div className="max-w-4xl mx-auto mb-2 flex items-center gap-1.5 sm:gap-2 flex-wrap">
           <div ref={modelDropdownRef} className="relative">
             <button
               ref={modelToggleBtnRef}
               onClick={() => { setCharacterDropdownOpen(false); setModelDropdownOpen(!modelDropdownOpen); }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
+              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
             >
-              <Sparkles size={12} className="text-blue-400" />
-              <span className="max-w-[120px] truncate">
+              <Sparkles size={12} className="text-blue-400 shrink-0" />
+              <span className="max-w-[100px] sm:max-w-[120px] truncate">
                 {(() => {
                   const m = settings.models.find(x => x.id === settings.activeModelId);
                   if (m) return m.displayName || m.modelId;
@@ -1036,24 +1144,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                   return 'Model';
                 })()}
               </span>
-              <ChevronDown size={12} className={`transition-transform ${modelDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={12} className={`transition-transform shrink-0 ${modelDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             {modelDropdownOpen && (() => {
-              const allFilteredModels = settings.models.filter(m => {
-                const match = isModelMatch(m.displayName || '', m.modelId || '', modelSearchQuery);
-                return match;
-              });
-
-              const allFilteredTempModels = (settings.tempModels || []).filter(tm => {
-                const match = isModelMatch(tm.name || '', tm.modelId || '', modelSearchQuery);
-                return match;
-              });
-
+              const allFilteredModels = settings.models.filter(m =>
+                isModelMatch(m.displayName || '', m.modelId || '', modelSearchQuery)
+              );
+              const allFilteredTempModels = (settings.tempModels || []).filter(tm =>
+                isModelMatch(tm.name || '', tm.modelId || '', modelSearchQuery)
+              );
               const hasAnyMatches = allFilteredModels.length > 0 || allFilteredTempModels.length > 0;
 
               return (
                 <div className="absolute bottom-full mb-1 left-0 z-50 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-72 overflow-auto flex flex-col">
-                  {/* Sticky Search Bar */}
                   <div className="p-2 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
                     <input
                       type="text"
@@ -1068,13 +1171,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                         } else if (e.key === 'Enter') {
                           e.preventDefault();
                           if (allFilteredModels.length > 0) {
-                            const firstModel = allFilteredModels[0];
-                            onSelectModel?.(firstModel.id);
+                            onSelectModel?.(allFilteredModels[0].id);
                             setModelDropdownOpen(false);
                             modelToggleBtnRef.current?.focus();
                           } else if (allFilteredTempModels.length > 0) {
-                            const firstTemp = allFilteredTempModels[0];
-                            onSelectModel?.(firstTemp.id);
+                            onSelectModel?.(allFilteredTempModels[0].id);
                             setModelDropdownOpen(false);
                             modelToggleBtnRef.current?.focus();
                           }
@@ -1085,7 +1186,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                     />
                   </div>
 
-                  {/* Scrollable list content */}
                   <div className="flex-1 overflow-y-auto">
                     {!hasAnyMatches && (
                       <div className="px-3 py-4 text-center text-xs text-gray-500">
@@ -1095,9 +1195,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
 
                     {allFilteredModels.length > 0 && settings.providers.map(provider => {
                       const providerModels = allFilteredModels.filter(m => m.providerId === provider.id);
-                      if (providerModels.length === 0) {
-                        return null;
-                      }
+                      if (providerModels.length === 0) return null;
                       return (
                         <div key={provider.id} className="border-b border-gray-700/50 last:border-b-0">
                           <div className="px-2.5 py-1.5 bg-gray-800/80 sticky top-0 z-10">
@@ -1106,11 +1204,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                           {providerModels.map(m => {
                             const isActive = m.id === settings.activeModelId;
                             let buttonClass = 'w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ';
-                            if (isActive) {
-                              buttonClass += 'text-blue-300 bg-blue-600/10';
-                            } else {
-                              buttonClass += 'text-gray-300';
-                            }
+                            buttonClass += isActive ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300';
 
                             return (
                               <button
@@ -1135,11 +1229,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                         {allFilteredTempModels.map(tm => {
                           const isActive = tm.id === settings.activeModelId;
                           let buttonClass = 'w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ';
-                          if (isActive) {
-                            buttonClass += 'text-purple-300 bg-purple-600/10';
-                          } else {
-                            buttonClass += 'text-gray-300';
-                          }
+                          buttonClass += isActive ? 'text-purple-300 bg-purple-600/10' : 'text-gray-300';
 
                           return (
                             <button
@@ -1160,20 +1250,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             })()}
           </div>
 
-          {/* Character Selector */}
           <div ref={characterDropdownRef} className="relative">
             <button
               onClick={() => { setModelDropdownOpen(false); setCharacterDropdownOpen(!characterDropdownOpen); }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
+              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
             >
-              <Bot size={12} className="text-green-400" />
-              <span className="max-w-[120px] truncate">
+              <Bot size={12} className="text-green-400 shrink-0" />
+              <span className="max-w-[100px] sm:max-w-[120px] truncate">
                 {(() => {
                   const c = settings.characters.find(x => x.id === settings.activeCharacterId);
                   return c?.name || 'Character';
                 })()}
               </span>
-              <ChevronDown size={12} className={`transition-transform ${characterDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={12} className={`transition-transform shrink-0 ${characterDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             {characterDropdownOpen && (
               <div className="absolute bottom-full mb-1 left-0 z-50 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
@@ -1193,15 +1282,14 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             )}
           </div>
 
-          {/* Template Selector */}
           <div ref={templateDropdownRef} className="relative">
             <button
               onClick={() => { setModelDropdownOpen(false); setCharacterDropdownOpen(false); setTemplateDropdownOpen(!templateDropdownOpen); }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
+              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
             >
-              <FileText size={12} className="text-orange-400" />
-              <span className="max-w-[120px] truncate">Templates</span>
-              <ChevronDown size={12} className={`transition-transform ${templateDropdownOpen ? 'rotate-180' : ''}`} />
+              <FileText size={12} className="text-orange-400 shrink-0" />
+              <span className="max-w-[100px] sm:max-w-[120px] truncate">Templates</span>
+              <ChevronDown size={12} className={`transition-transform shrink-0 ${templateDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             {templateDropdownOpen && (
               <div className="absolute bottom-full mb-1 left-0 z-50 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
@@ -1222,13 +1310,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto relative flex items-end gap-3 bg-gray-800 rounded-xl border border-gray-700 focus-within:border-gray-500 transition-colors p-2 shadow-lg">
+        <div className="max-w-4xl mx-auto relative flex items-end gap-2 sm:gap-3 bg-gray-800 rounded-xl border border-gray-700 focus-within:border-gray-500 transition-colors p-2 shadow-lg">
           <textarea
             id="chat-input"
             value={input}
             onChange={(e) => { handleInputChange(e.target.value); }}
             placeholder="Type a message... (Ctrl+Enter to send, Enter/Shift+Enter for newline)"
-            className="flex-1 bg-transparent text-white resize-none max-h-64 min-h-[44px] p-3 focus:outline-none placeholder-gray-500"
+            className="flex-1 bg-transparent text-white resize-none max-h-64 min-h-[44px] p-2.5 sm:p-3 focus:outline-none placeholder-gray-500 text-sm"
             rows={1}
             style={{ height: 'auto' }}
             onInput={(e) => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = `${Math.min(t.scrollHeight, 256)}px`; }}
@@ -1240,34 +1328,34 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             }}
           />
           {isGenerating && !isStopping ? (
-            <button onClick={onStop} className="p-3.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm">
-              <SquareTerminal size={20} />
+            <button onClick={onStop} className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm cursor-pointer">
+              <SquareTerminal size={18} />
             </button>
           ) : (
-            <button onClick={handleSend} disabled={!input.trim() || isStopping} className="p-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm">
-              <Send size={20} />
+            <button onClick={handleSend} disabled={!input.trim() || isStopping} className="p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm cursor-pointer">
+              <Send size={18} />
             </button>
           )}
         </div>
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 mt-2 px-1 text-center sm:text-left">
-          <span className="text-xs text-gray-500">AI can make mistakes. Verify important information.</span>
-          {input.length > 0 && <span className="text-xs text-gray-500 font-mono">Est. Tokens: <span className="text-blue-400 font-medium">{estimateTokens(input)}</span> (~{input.length} chars)</span>}
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 mt-2 px-1 text-center sm:text-left">
+          <span className="text-[11px] sm:text-xs text-gray-500">AI can make mistakes. Verify important information.</span>
+          {input.length > 0 && <span className="text-[11px] sm:text-xs text-gray-500 font-mono">Est. Tokens: <span className="text-blue-400 font-medium">{estimateTokens(input)}</span> (~{input.length} chars)</span>}
         </div>
       </div>
 
       {viewingContent && (
         <div
-          className="fixed inset-0 z-50 bg-gray-950 overflow-y-auto flex flex-col p-6 sm:p-12"
+          className="fixed inset-0 z-50 bg-gray-950 overflow-y-auto flex flex-col p-4 sm:p-12"
           role="dialog"
           aria-modal="true"
           aria-labelledby="viewing-content-title"
         >
-          <div className="max-w-[90%] 2xl:max-w-7xl mx-auto w-full flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
-            <h3 id="viewing-content-title" className="text-lg font-semibold text-gray-300">Markdown 渲染结果</h3>
-            <div className="flex items-center gap-3">
+          <div className="max-w-[95%] 2xl:max-w-7xl mx-auto w-full flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
+            <h3 id="viewing-content-title" className="text-base sm:text-lg font-semibold text-gray-300">Markdown 渲染结果</h3>
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={handlePrint}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg transition-colors text-sm font-medium cursor-pointer"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg transition-colors text-xs sm:text-sm font-medium cursor-pointer"
                 title="打印 (Ctrl+P)"
                 aria-label="打印渲染结果"
               >
@@ -1277,7 +1365,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
               <button
                 id="viewing-close-btn"
                 onClick={() => setViewingContent(null)}
-                className="flex items-center gap-2 px-4 py-2 bg-red-950/40 hover:bg-red-900/40 text-red-200 border border-red-900/30 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-lg transition-colors text-sm font-medium cursor-pointer"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-red-950/40 hover:bg-red-900/40 text-red-200 border border-red-900/30 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-lg transition-colors text-xs sm:text-sm font-medium cursor-pointer"
                 title="关闭"
                 aria-label="关闭预览"
               >
@@ -1287,8 +1375,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             </div>
           </div>
 
-          <div id="print-content" className="max-w-[90%] 2xl:max-w-7xl mx-auto w-full flex-1 bg-gray-900 text-gray-100 rounded-xl shadow-xl p-8 sm:p-12 border border-gray-800 mb-8 overflow-x-auto">
-            <div id="print-content-render" className="prose prose-invert prose-lg md:prose-xl max-w-none space-y-8">
+          <div id="print-content" className="max-w-[95%] 2xl:max-w-7xl mx-auto w-full flex-1 bg-gray-900 text-gray-100 rounded-xl shadow-xl p-4 sm:p-12 border border-gray-800 mb-8 overflow-x-auto">
+            <div id="print-content-render" className="prose prose-invert prose-base sm:prose-lg md:prose-xl max-w-none space-y-8">
               {viewingContent.userContent && (
                 <div className="border-b border-gray-800/80 pb-8">
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-400 mb-4 select-none">问题 (Question)</h4>
@@ -1307,10 +1395,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
       )}
 
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] sm:h-[85vh] flex flex-col overflow-hidden">
             <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-200 flex items-center gap-2">
+              <h3 className="text-base sm:text-lg font-medium text-gray-200 flex items-center gap-2">
                 <Edit size={18} className="text-blue-400" />
                 <span>编辑对话</span>
               </h3>
@@ -1323,56 +1411,35 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
             </div>
 
             {editModalError && (
-              <div className="mx-6 mt-4 p-3 bg-red-900/30 border border-red-700/50 rounded-lg flex items-center gap-3">
+              <div className="mx-4 sm:mx-6 mt-4 p-3 bg-red-900/30 border border-red-700/50 rounded-lg flex items-center gap-3">
                 <AlertCircle size={18} className="text-red-400 shrink-0" />
                 <span className="text-sm text-red-200">{editModalError}</span>
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               {editBlocks.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">暂无内容，请添加块</div>
               ) : (
                 editBlocks.map((block, index) => {
-                  // Helper function to resolve block container class names
-                  const getBlockContainerClass = (type: 'input' | 'thinking' | 'output') => {
-                    if (type === 'input') {
-                      return 'bg-blue-950/20 border-blue-900/40';
-                    }
-                    if (type === 'thinking') {
-                      return 'bg-amber-950/10 border-amber-900/30';
-                    }
-                    return 'bg-gray-800/40 border-gray-700/50';
-                  };
+                  let blockClass = 'bg-gray-800/40 border-gray-700/50';
+                  let selectClass = 'bg-green-600/20 text-green-300';
+                  let placeholder = '输入模型输出内容...';
 
-                  // Helper function to resolve select element class names
-                  const getSelectClass = (type: 'input' | 'thinking' | 'output') => {
-                    if (type === 'input') {
-                      return 'bg-blue-600/20 text-blue-300';
-                    }
-                    if (type === 'thinking') {
-                      return 'bg-amber-600/20 text-amber-300';
-                    }
-                    return 'bg-green-600/20 text-green-300';
-                  };
-
-                  // Helper function to resolve textarea placeholder
-                  const getTextareaPlaceholder = (type: 'input' | 'thinking' | 'output') => {
-                    if (type === 'input') {
-                      return '输入用户输入内容...';
-                    }
-                    if (type === 'thinking') {
-                      return '输入思考过程内容...';
-                    }
-                    return '输入模型输出内容...';
-                  };
+                  if (block.type === 'input') {
+                    blockClass = 'bg-blue-950/20 border-blue-900/40';
+                    selectClass = 'bg-blue-600/20 text-blue-300';
+                    placeholder = '输入用户输入内容...';
+                  } else if (block.type === 'thinking') {
+                    blockClass = 'bg-amber-950/10 border-amber-900/30';
+                    selectClass = 'bg-amber-600/20 text-amber-300';
+                    placeholder = '输入思考过程内容...';
+                  }
 
                   return (
                     <div
                       key={block.id}
-                      className={`p-4 rounded-lg border flex flex-col gap-3 transition-colors ${getBlockContainerClass(
-                        block.type
-                      )}`}
+                      className={`p-3 sm:p-4 rounded-lg border flex flex-col gap-3 transition-colors ${blockClass}`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -1381,12 +1448,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                             onChange={(e) => {
                               const newType = e.target.value as 'input' | 'thinking' | 'output';
                               setEditBlocks(prev =>
-                              prev.map(b => (b.id === block.id ? { ...b, type: newType, originalMessageId: undefined, originalCreatedAt: undefined } : b))
+                                prev.map(b => (b.id === block.id ? { ...b, type: newType, originalMessageId: undefined, originalCreatedAt: undefined } : b))
                               );
                             }}
-                            className={`px-2 py-1 rounded text-xs font-semibold focus:outline-none cursor-pointer ${getSelectClass(
-                              block.type
-                            )}`}
+                            className={`px-2 py-1 rounded text-xs font-semibold focus:outline-none cursor-pointer ${selectClass}`}
                           >
                             <option value="input" className="bg-gray-900 text-gray-100">输入</option>
                             <option value="thinking" className="bg-gray-900 text-gray-100">思考</option>
@@ -1450,7 +1515,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                             prev.map(b => (b.id === block.id ? { ...b, content: newContent } : b))
                           );
                         }}
-                        placeholder={getTextareaPlaceholder(block.type)}
+                        placeholder={placeholder}
                         className="w-full bg-gray-950/60 border border-gray-800 focus:border-gray-700 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none resize-y min-h-[160px]"
                         rows={6}
                       />
@@ -1538,14 +1603,17 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
         </div>
       )}
 
-      {/* Hidden container for printing all messages of the session */}
       {isPrintingAll && session && (
         <div id="print-all-session-content" className="hidden">
           <div className="prose prose-invert prose-lg md:prose-xl max-w-none space-y-8">
             {displayMessages.map((msg, idx) => {
               const isUser = msg.role === 'user';
-              const titleText = isUser ? '问题 (Question)' : '回答 (Answer)';
-              const titleColorClass = isUser ? 'text-blue-400' : 'text-green-400';
+              let titleText = '回答 (Answer)';
+              let titleColorClass = 'text-green-400';
+              if (isUser) {
+                titleText = '问题 (Question)';
+                titleColorClass = 'text-blue-400';
+              }
               const parsed = parseMessageContent(msg.content, isUser, settings);
 
               return (
@@ -1553,7 +1621,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ session, onSendMessage, isGe
                   <h4 className={`text-xs font-semibold uppercase tracking-wider ${titleColorClass} mb-4 select-none`}>
                     {titleText}
                   </h4>
-                  <MarkdownRenderer content={parsed.mainContent} />
+                  <MarkdownRenderer content={parsed.mainContent} messageId={msg.id} />
                 </div>
               );
             })}
