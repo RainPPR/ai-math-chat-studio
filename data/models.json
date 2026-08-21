@@ -274,11 +274,11 @@
     "displayName": "GLM 5.2 (LogFare)"
   },
   {
-    "id": "ad77b720-8b36-5c4f-ad92-00ccc885f50d",
+    "id": "4ae19449-ab07-532a-b408-f5820f189b62",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
-    "modelId": "grape-2-pro",
-    "displayName": "GRaPE 2 Pro (LogFare)"
+    "modelId": "gpt-5.6-luna",
+    "displayName": "GPT 5.6 Luna (LogFare)"
   },
   {
     "id": "581eadd1-f00a-55ce-bbdf-1bc0f905583b",
@@ -342,6 +342,13 @@
     "providerType": "openai-compatible",
     "modelId": "qwen3-embedding-8b",
     "displayName": "Qwen3 Embedding 8B (LogFare)"
+  },
+  {
+    "id": "e38655fb-c8a0-5149-90de-7bc19a3cb651",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "sdxl-lightning",
+    "displayName": "Stable Diffusion XL Lightning (LogFare)"
   },
   {
     "id": "95f8b2d5-15aa-5032-a200-90fcaf2d43fc",
@@ -491,6 +498,14 @@
     "displayName": "MiMo V2.5 Free (OpenCode)"
   },
   {
+    "id": "2d2b234b-3550-5b46-8e55-fb2a1c38eafb",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "muse-spark-1.2-contributor-free",
+    "displayName": "Muse Spark 1.2 Free (OpenCode)",
+    "reasoningEffort": "high"
+  },
+  {
     "id": "14f57ded-622b-5af6-8331-a14e299bdd14",
     "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
     "providerType": "openai-compatible",
@@ -503,6 +518,14 @@
     "providerType": "openai-compatible",
     "modelId": "nemotron-3.5-lightning-free",
     "displayName": "Nemotron 3.5 Lightning Free (OpenCode)"
+  },
+  {
+    "id": "b5ffb32d-7e68-5929-81c6-263fdc612a54",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "x-preview-f-free",
+    "displayName": "Ox Alpha Free (OpenCode)",
+    "reasoningEffort": "max"
   },
   {
     "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
