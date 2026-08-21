@@ -461,7 +461,7 @@
     "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
     "providerType": "openai-compatible",
     "modelId": "x-preview-f-free",
-    "displayName": "Ox Alpha Free (OpenCode)",
+    "displayName": "Ox Alpha Free (Unlimited) (OpenCode)",
     "reasoningEffort": "max"
   },
   {
