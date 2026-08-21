@@ -667,7 +667,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           color-scheme: light !important;
         }
         body {
-          font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, system-ui, -apple-system, BlinkMacSystemFont;
+          font-family: var(--font-main);
           padding: 20px;
           margin: 0;
         }
