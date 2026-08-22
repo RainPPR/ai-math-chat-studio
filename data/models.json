@@ -291,13 +291,6 @@
     "displayName": "GLM 5.2 (LogFare)"
   },
   {
-    "id": "4ae19449-ab07-532a-b408-f5820f189b62",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "gpt-5.6-luna",
-    "displayName": "GPT 5.6 Luna (LogFare)"
-  },
-  {
     "id": "581eadd1-f00a-55ce-bbdf-1bc0f905583b",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -324,6 +317,13 @@
     "providerType": "openai-compatible",
     "modelId": "moondream3.1",
     "displayName": "Moondream 3.1 9B (LogFare)"
+  },
+  {
+    "id": "f522aa96-3b50-569c-b6f5-739b4d6321fb",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "qwen-3.8-2.4t-a95b",
+    "displayName": "Qwen 3.8 2.4t (a95b) (LogFare)"
   },
   {
     "id": "e193beee-0f6c-59e6-830f-ddf4d6e9aed8",
