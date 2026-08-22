@@ -57,7 +57,12 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content
     [rehypeKatex, {
       strict: false,
       throwOnError: false,
-      macros: { '\\tag': '\\qquad (#1)' }
+      macros: {
+        '\\tag': '\\qquad (#1)',
+        '\\male': '\\text{♂}',
+        '\\female': '\\text{♀}',
+        '\\vec': '\\bm{#1}'
+      }
     }],
     [rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }]
   ];
