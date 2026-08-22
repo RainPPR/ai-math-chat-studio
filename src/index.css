@@ -29,7 +29,7 @@
 
 @font-face {
   font-family: 'FullWidthQuotes';
-  src: url('./fonts/Noto Serif SC-Variable-subset.woff2') format('woff2');
+  src: url('./fonts/Noto Sans SC-Variable-subset.woff2') format('woff2');
   font-weight: 200 900;
   font-style: normal;
   unicode-range: U+2018, U+2019, U+201C, U+201D;

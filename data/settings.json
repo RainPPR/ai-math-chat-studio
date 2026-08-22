@@ -5,7 +5,8 @@
   "collapseThinkingFinished": true,
   "trimThinkingSpaces": false,
   "starredSessions": {
-    "a0266bbc-d40a-4f46-a389-a865e020c86f": "rose"
+    "a0266bbc-d40a-4f46-a389-a865e020c86f": "rose",
+    "0ce63c2b-26a0-4427-9b12-d7ff2b2bab6a": "blue"
   },
   "claudeChunks": [
     "2026-07-19T08:53:15.252Z",
@@ -19,6 +20,6 @@
   "stickyNotes": [],
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e",
   "activeModelId": "166f55ed-513c-5fdd-90fa-776669c59e6e"
 }
