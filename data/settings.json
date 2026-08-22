@@ -4,10 +4,7 @@
   "autoScroll": false,
   "collapseThinkingFinished": true,
   "trimThinkingSpaces": false,
-  "starredSessions": {
-    "a99cb2dd-2885-446c-89cd-a78a0b8a36d5": "green",
-    "448b48bc-8248-4479-b7d1-45260a9801e4": "green"
-  },
+  "starredSessions": {},
   "claudeChunks": [
     "2026-07-19T08:53:15.252Z",
     "2026-07-30T05:14:11.684Z",
@@ -20,6 +17,6 @@
   "stickyNotes": [],
   "katexFont": "euler",
   "activeBatchId": "33e0bb91-8733-4c6a-8530-3fc48cd56f19",
-  "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e",
-  "activeModelId": "38cae9a5-8a17-5744-a713-3161c3da71f2"
+  "activeCharacterId": "d8aecab7-14b5-4982-b285-1b875b783644",
+  "activeModelId": "282ea676-9104-4eff-8a27-e9c4d52217a6"
 }
