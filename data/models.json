@@ -151,6 +151,13 @@
     "displayName": "LiquidAI: LFM2.5-2.6B (Kilo)"
   },
   {
+    "id": "6044feba-2e11-5d27-9d6a-7d9338c9187e",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "meituan/longcat-2.0-free",
+    "displayName": "Meituan: LongCat 2.0 (Kilo)"
+  },
+  {
     "id": "cfcdca0f-3efd-5c17-9003-8d05a905ce00",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -209,6 +216,14 @@
     "displayName": "Poolside: Laguna XS 2.1 (Kilo)"
   },
   {
+    "id": "d5860d12-a583-5315-a857-7936650e7082",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "stealth/ox-alpha",
+    "displayName": "Ox Alpha (Kilo)",
+    "reasoningEffort": "max"
+  },
+  {
     "id": "c93e0a30-0931-543b-bb9b-d7c020d6b0b3",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -223,6 +238,22 @@
     "modelId": "tencent/hy3:free",
     "displayName": "Tencent: Hy3 (Kilo)",
     "reasoningEffort": "high"
+  },
+  {
+    "id": "6d6f127e-92a5-5f2f-8930-22c9fef57e82",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "thinkingmachines/inkling-small:free",
+    "displayName": "Thinking Machines: Inkling Small (Kilo)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "ab13e3a6-9a49-5bff-b113-c938de15974e",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "thinkingmachines/inkling:free",
+    "displayName": "Thinking Machines: Inkling (Kilo)",
+    "reasoningEffort": "max"
   },
   {
     "id": "cda1b042-7087-5159-8362-b734d8e5845e",
