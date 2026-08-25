@@ -272,10 +272,21 @@ export default function App() {
       try {
         await api.settings.save(newSettings);
         const updatedSessions = await api.sessions.list();
+        const validCharIds = new Set((newSettings.characters || []).map(c => c.id));
+
         setSessions(prev => {
-          const updatedIds = new Set(updatedSessions.map(session => session.id));
-          const localOnly = prev.filter(session => !updatedIds.has(session.id));
-          return [...updatedSessions, ...localOnly];
+          const updatedIds = new Set(updatedSessions.map(s => s.id));
+          const localDrafts = prev
+            .filter(s => !updatedIds.has(s.id) && s.messages.length === 0)
+            .map(s => {
+              let charId = s.characterId;
+              if (charId && !validCharIds.has(charId)) {
+                charId = newSettings.activeCharacterId;
+              }
+              return { ...s, characterId: charId };
+            });
+
+          return [...localDrafts, ...updatedSessions];
         });
       } catch (e: any) {
         setSettings(previousSettings);

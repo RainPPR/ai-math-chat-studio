@@ -1002,13 +1002,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         for (const [fromId, toId] of Object.entries(characterReassignments)) {
           const sessionsToUpdate = allSessions.filter(s => s.characterId === fromId);
           for (const session of sessionsToUpdate) {
-            await api.sessions.update(session.id, { characterId: toId || '' });
+            try {
+              await api.sessions.update(session.id, { characterId: toId || '' });
+            } catch (err: any) {
+              console.warn(`Failed to update characterId for session ${session.id}:`, err);
+            }
           }
         }
       } catch (err: any) {
-        console.error('Failed to reassign character sessions:', err);
-        alert('Failed to reassign character sessions: ' + (err.message || 'Unknown error'));
-        return;
+        console.warn('Failed to list sessions for character reassignment:', err);
       }
     }
 
