@@ -42,6 +42,11 @@ export interface TempModel {
   injectThinkingTemplate?: boolean;
 }
 
+import { Skill, DEFAULT_SKILLS } from '../shared/skills';
+
+export type { Skill };
+export { DEFAULT_SKILLS };
+
 export interface Character {
   id: string;
   name: string;
@@ -57,10 +62,12 @@ export interface Template {
 export interface UserSettings {
   activeModelId?: string;
   activeCharacterId?: string;
+  activeSkillIds?: string[];
   providers: ProviderInstance[];
   models: ModelInstance[];
   tempModels?: TempModel[];
   characters: Character[];
+  skills?: Skill[];
   systemPrompt: string;
   renderThinkingAsMarkdown: boolean;
   autoScroll: boolean;
@@ -80,6 +87,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   models: [],
   tempModels: [],
   characters: [],
+  skills: DEFAULT_SKILLS,
+  activeSkillIds: [],
   systemPrompt: '',
   renderThinkingAsMarkdown: false,
   autoScroll: true,
@@ -126,6 +135,7 @@ export interface ChatSession {
   title: string;
   messages: ChatMessage[];
   characterId?: string;  // 创建时使用的角色 ID（仅记录首次）
+  skillIds?: string[];    // 选择的技能 ID 列表
   createdAt: string;
   updatedAt: string;
 }

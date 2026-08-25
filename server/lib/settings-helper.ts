@@ -2,16 +2,19 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { sortProviders, sortModels } from '../../shared/sorting';
+import { DEFAULT_SKILLS } from '../../shared/skills';
 
-export { sortProviders, sortModels };
+export { sortProviders, sortModels, DEFAULT_SKILLS };
 
 export interface UserSettings {
   activeModelId?: string;
   activeCharacterId?: string;
+  activeSkillIds?: string[];
   providers: any[];
   models: any[];
   tempModels?: any[];
   characters: any[];
+  skills?: any[];
   systemPrompt: string;
   renderThinkingAsMarkdown: boolean;
   autoScroll: boolean;
@@ -51,6 +54,7 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
   const modelsFile = path.join(dataDir, 'models.json');
   const tempModelsFile = path.join(dataDir, 'temp-models.json');
   const charactersFile = path.join(dataDir, 'characters.json');
+  const skillsFile = path.join(dataDir, 'skills.json');
 
   let settings: any = {};
   let settingsExist = false;
@@ -118,17 +122,33 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
     // ignore
   }
 
+  // Load skills from split file with Array.isArray guard
+  let skills: any[] = [];
+  let skillsLoaded = false;
+  try {
+    const content = await fs.readFile(skillsFile, 'utf-8');
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) {
+      skills = parsed;
+      skillsLoaded = true;
+    }
+  } catch {
+    // ignore
+  }
+
   // On-the-fly migration check
   const hasProvidersInSettings = settings.providers && Array.isArray(settings.providers);
   const hasModelsInSettings = settings.models && Array.isArray(settings.models);
   const hasTempModelsInSettings = settings.tempModels && Array.isArray(settings.tempModels);
   const hasCharactersInSettings = settings.characters && Array.isArray(settings.characters);
+  const hasSkillsInSettings = settings.skills && Array.isArray(settings.skills);
 
-  if (hasProvidersInSettings || hasModelsInSettings || hasTempModelsInSettings || hasCharactersInSettings) {
+  if (hasProvidersInSettings || hasModelsInSettings || hasTempModelsInSettings || hasCharactersInSettings || hasSkillsInSettings) {
     let needWriteProviders = false;
     let needWriteModels = false;
     let needWriteTempModels = false;
     let needWriteCharacters = false;
+    let needWriteSkills = false;
 
     if (hasProvidersInSettings) {
       if (!providersLoaded) {
@@ -158,6 +178,13 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
       }
       delete settings.characters;
     }
+    if (hasSkillsInSettings) {
+      if (!skillsLoaded) {
+        skills = settings.skills;
+        needWriteSkills = true;
+      }
+      delete settings.skills;
+    }
 
     try {
       await fs.mkdir(dataDir, { recursive: true });
@@ -173,6 +200,9 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
       if (needWriteCharacters) {
         await writeIfChanged(charactersFile, JSON.stringify(characters, null, 2));
       }
+      if (needWriteSkills) {
+        await writeIfChanged(skillsFile, JSON.stringify(skills, null, 2));
+      }
       if (settingsExist) {
         await writeIfChanged(settingsFile, JSON.stringify(settings, null, 2));
       }
@@ -181,12 +211,21 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
     }
   }
 
+  if (!skillsLoaded && skills.length === 0 && !hasSkillsInSettings) {
+    skills = DEFAULT_SKILLS;
+    try {
+      await fs.mkdir(dataDir, { recursive: true });
+      await writeIfChanged(skillsFile, JSON.stringify(skills, null, 2));
+    } catch {}
+  }
+
   return {
     ...settings,
     providers,
     models,
     tempModels,
     characters,
+    skills,
   };
 }
 
@@ -196,6 +235,7 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
   const modelsFile = path.join(dataDir, 'models.json');
   const tempModelsFile = path.join(dataDir, 'temp-models.json');
   const charactersFile = path.join(dataDir, 'characters.json');
+  const skillsFile = path.join(dataDir, 'skills.json');
 
   const settingsCopy = JSON.parse(JSON.stringify(settings));
 
@@ -209,11 +249,13 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
   }
   const incomingTempModels = settingsCopy.tempModels;
   const incomingCharacters = settingsCopy.characters;
+  const incomingSkills = settingsCopy.skills;
 
   delete settingsCopy.providers;
   delete settingsCopy.models;
   delete settingsCopy.tempModels;
   delete settingsCopy.characters;
+  delete settingsCopy.skills;
 
   await fs.mkdir(dataDir, { recursive: true });
 
@@ -244,6 +286,9 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
   }
   if (incomingCharacters && Array.isArray(incomingCharacters)) {
     await addIfChanged(charactersFile, JSON.stringify(incomingCharacters, null, 2));
+  }
+  if (incomingSkills && Array.isArray(incomingSkills)) {
+    await addIfChanged(skillsFile, JSON.stringify(incomingSkills, null, 2));
   }
 
   if (filesToWrite.length === 0) {

@@ -80,10 +80,11 @@ graph TD
 
 1.  **后端驱动生成**：所有 AI 生成任务由后端的 `GenerationManager` 服务管理。这意味着即使用户关闭浏览器或断开连接，生成任务也会在服务器上继续运行，直到完成。
 
-2.  **三级架构 (Provider + Model + Character)**：
+2.  **核心提示词与角色/技能架构 (Provider + Model + Character + Skills)**：
     *   **Provider (供应商)**: 定义了如何连接到一个 AI 服务（如 Google, Nvidia）。用户在 `Settings > Providers` 中配置 API Key 和 Base URL 等连接信息。
     *   **Model (模型)**: 定义了要使用的具体模型及其参数（如 `gemini-1.5-pro`, temperature）。每个模型都必须关联一个已配置的供应商实例。
     *   **Character (角色)**: 定义了系统提示词 (System Prompt)。用户可以在 `Settings > Characters` 中创建多个角色（如"代码专家"、"数学导师"），并在聊天时灵活切换。
+    *   **Skill (技能)**: 定义了独立的模块化技能提示词（如 "Assistant"）。用户可在 `Settings > Skills` 中定义，在 ChatArea 浮动栏中多选。后端按 `FORMAT_INSTRUCTIONS` -> Selected Skills -> Character System Prompt 的层级组合系统提示词。
 
 3.  **统一 API 客户端**：前端通过 `src/lib/api.ts` 与后端通信。这个模块封装了所有的 REST API 调用和 SSE (Server-Sent Events) 订阅逻辑，为上层组件提供了简洁的接口。
 
@@ -172,7 +173,7 @@ graph TD
 3.  **API 调用**: `api.ts` 中的 `sendMessage` 函数被调用，向后端 `POST /api/sessions/:id/messages` 发送请求。
 4.  **后端接收**: `server/routes/chat.ts` 中的路由处理器接收到请求。
 5.  **启动生成**: 后端将用户消息保存到对应的 `session.json` 文件中，然后调用 `GenerationManager` 来启动一个新的 AI 生成任务。
-    *   **角色注入**: `GenerationManager` 根据 `activeCharacterId` 获取对应的 `systemPrompt`，并将其作为 System Message 注入到 AI 请求的首位。
+    *   **提示词注入**: 后端根据 `activeCharacterId` 及选择的 `skillIds` 组合最终系统提示词：最头上注入 `FORMAT_INSTRUCTIONS` 格式约束，随后注入各 selected skill 块 (`# Skill: ${name}\n${prompt}`)，最后拼接角色提示词。
 6.  **SSE 连接**: 与此同时，前端的 `ChatArea` 组件通过 `useEffect` 自动订阅 `/api/sessions/:id/generation` 的 SSE 端点。
 7.  **流式响应**: `GenerationManager` 通过 `stream.ts` 调用相应的 AI Provider API。获取到的数据块被包装成 `delta` 事件，通过 SSE 连接实时发送回前端。
 8.  **前端渲染**: `ChatArea` 接收到 `delta` 事件，并将其内容追加到当前正在生成的回复中，用户看到平滑的打字机效果。

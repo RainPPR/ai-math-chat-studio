@@ -122,6 +122,7 @@ export interface ServerChatSession {
   title: string;
   messages: ServerChatMessage[];
   characterId?: string;
+  skillIds?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -270,7 +271,7 @@ export class GenerationManager {
       return null;
     }
 
-    const shouldUpdateTimestamp = Object.keys(updates).some(key => key !== 'characterId');
+    const shouldUpdateTimestamp = Object.keys(updates).some(key => key !== 'characterId' && key !== 'skillIds');
     const updated = {
       ...session,
       ...updates,
@@ -314,7 +315,7 @@ export class GenerationManager {
 
 
 
-  async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, characterId?: string): Promise<void> {
+  async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, characterId?: string, skillIds?: string[]): Promise<void> {
     let session = await this.readSession(sessionId);
     if (!session) {
       // Create session with temporary title immediately
@@ -323,6 +324,7 @@ export class GenerationManager {
         title: 'New Chat',
         messages: [],
         characterId,
+        skillIds,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -493,10 +495,11 @@ export class GenerationManager {
 
     const buildSystemPrompt = () => {
       const basePrompt = (systemPrompt || '').trim();
+      const formatText = FORMAT_INSTRUCTIONS.trim();
       if (basePrompt) {
-        return `${basePrompt}\n\n${FORMAT_INSTRUCTIONS}`;
+        return `${formatText}\n\n${basePrompt}`;
       } else {
-        return FORMAT_INSTRUCTIONS;
+        return formatText;
       }
     };
 
@@ -688,6 +691,7 @@ export class GenerationManager {
       title,
       messages,
       characterId: raw.characterId,
+      skillIds: raw.skillIds,
       createdAt: raw.createdAt ?? new Date().toISOString(),
       updatedAt: raw.updatedAt ?? new Date().toISOString(),
     };
