@@ -1,17 +1,12 @@
 import { Router } from 'express';
 import { GenerationManager } from '../services/generation-manager';
 import { loadSettings } from '../lib/settings-helper';
+import { Skill } from '../../shared/skills';
 
 interface Character {
   id: string;
   name: string;
   systemPrompt: string;
-}
-
-interface Skill {
-  id: string;
-  name: string;
-  prompt: string;
 }
 
 interface SettingsData {
@@ -78,19 +73,31 @@ function resolveActiveModel(settings: SettingsData) {
   return null;
 }
 
-function resolveSessionContext(settings: SettingsData, session: any) {
+function resolveSessionContext(settings: SettingsData, session: any, reqBody?: { characterId?: string; skillIds?: string[] }) {
   let characterId: string | undefined;
   let skillIds: string[];
 
-  if (session) {
+  if (reqBody?.characterId !== undefined) {
+    characterId = reqBody.characterId;
+  } else if (session) {
     characterId = session.characterId;
-    if (session.skillIds !== undefined) {
-      skillIds = session.skillIds;
-    } else {
-      skillIds = settings.activeSkillIds || [];
-    }
   } else {
     characterId = settings.activeCharacterId;
+  }
+
+  if (reqBody?.skillIds !== undefined) {
+    if (
+      Array.isArray(reqBody.skillIds) &&
+      reqBody.skillIds.every((id: any) => typeof id === 'string') &&
+      new Set(reqBody.skillIds).size === reqBody.skillIds.length
+    ) {
+      skillIds = reqBody.skillIds;
+    } else {
+      skillIds = session?.skillIds !== undefined ? session.skillIds : (settings.activeSkillIds || []);
+    }
+  } else if (session && session.skillIds !== undefined) {
+    skillIds = session.skillIds;
+  } else {
     skillIds = settings.activeSkillIds || [];
   }
 
@@ -123,7 +130,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
   const router = Router();
 
   router.post('/api/sessions/:id/messages', async (req, res) => {
-    const { content } = req.body;
+    const { content, characterId: reqCharacterId, skillIds: reqSkillIds } = req.body || {};
     if (!content?.trim()) return res.status(400).json({ error: 'Empty message' });
 
     const settings = await loadSettings(settingsFile);
@@ -132,7 +139,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    const { characterId, skillIds } = resolveSessionContext(settings, session);
+    const { characterId, skillIds } = resolveSessionContext(settings, session, { characterId: reqCharacterId, skillIds: reqSkillIds });
 
     const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
     await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings, characterId, skillIds), injectThinkingTemplate, characterId, skillIds);

@@ -323,11 +323,16 @@ export class GenerationManager {
         id: sessionId,
         title: 'New Chat',
         messages: [],
-        characterId,
-        skillIds,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+    }
+
+    if (characterId !== undefined) {
+      session.characterId = characterId || undefined;
+    }
+    if (skillIds !== undefined) {
+      session.skillIds = skillIds;
     }
 
     const userMsg: ServerChatMessage = {
