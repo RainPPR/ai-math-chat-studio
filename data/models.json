@@ -158,6 +158,20 @@
     "displayName": "Meituan: LongCat 2.0 (Kilo)"
   },
   {
+    "id": "8c18dc72-db71-5c63-9a93-a598860ff1a5",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "minimax/minimax-m2.7:free",
+    "displayName": "MiniMax: MiniMax M2.7 (Kilo)"
+  },
+  {
+    "id": "02cb4a12-de9a-591d-8380-59978ac07a49",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "minimax/minimax-m3:free",
+    "displayName": "MiniMax: MiniMax M3 (Kilo)"
+  },
+  {
     "id": "cfcdca0f-3efd-5c17-9003-8d05a905ce00",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
