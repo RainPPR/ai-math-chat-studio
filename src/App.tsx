@@ -271,6 +271,8 @@ export default function App() {
     settingsSaveQueue = settingsSaveQueue.then(async () => {
       try {
         await api.settings.save(newSettings);
+        const updatedSessions = await api.sessions.list();
+        setSessions(updatedSessions);
       } catch (e: any) {
         setSettings(previousSettings);
         setError(e.message || 'Failed to save settings');
