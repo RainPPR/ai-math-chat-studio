@@ -43,10 +43,10 @@ export const api = {
   },
 
   chat: {
-    send: (sessionId: string, content: string) => request<{ ok: true }>(`/api/sessions/${sessionId}/messages`, {
+    send: (sessionId: string, content: string, characterId?: string, skillIds?: string[]) => request<{ ok: true }>(`/api/sessions/${sessionId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, characterId, skillIds }),
     }),
     stop: (sessionId: string) => request<{ ok: true }>(`/api/sessions/${sessionId}/generation`, { method: 'DELETE' }),
     retry: (sessionId: string, messageId: string) => request<{ ok: true }>(`/api/sessions/${sessionId}/retry`, {

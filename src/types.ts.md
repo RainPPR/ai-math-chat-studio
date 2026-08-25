@@ -1,4 +1,9 @@
 ```typescript
+import { Skill, DEFAULT_SKILLS } from '../shared/skills';
+
+export type { Skill };
+export { DEFAULT_SKILLS };
+
 // 内置提供商类型
 export type BuiltInProviderType = 'google' | 'nvidia' | 'openai-compatible';
 
@@ -42,11 +47,6 @@ export interface TempModel {
   extraBody?: Record<string, any>;
   injectThinkingTemplate?: boolean;
 }
-
-import { Skill, DEFAULT_SKILLS } from '../shared/skills';
-
-export type { Skill };
-export { DEFAULT_SKILLS };
 
 export interface Character {
   id: string;

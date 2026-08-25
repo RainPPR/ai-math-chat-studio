@@ -1281,7 +1281,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               <Bot size={12} className="text-green-400 shrink-0" />
               <span className="max-w-[100px] sm:max-w-[120px] truncate">
                 {(() => {
-                  const c = settings.characters.find(x => x.id === settings.activeCharacterId);
+                  const activeCharId = session?.characterId ?? settings.activeCharacterId;
+                  const c = settings.characters.find(x => x.id === activeCharId);
                   return c?.name || 'Character';
                 })()}
               </span>
@@ -1292,15 +1293,22 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 {settings.characters.length === 0 && (
                   <div className="px-2.5 py-2 text-xs text-gray-500">No characters configured</div>
                 )}
-                {settings.characters.map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => { onSelectCharacter?.(c.id); setCharacterDropdownOpen(false); }}
-                    className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${c.id === settings.activeCharacterId ? 'text-green-300 bg-green-600/10' : 'text-gray-300'}`}
-                  >
-                    {c.name}
-                  </button>
-                ))}
+                {settings.characters.map(c => {
+                  const activeCharId = session?.characterId ?? settings.activeCharacterId;
+                  const isSelected = c.id === activeCharId;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => {
+                        onUpdateSessionCharacter?.(c.id);
+                        setCharacterDropdownOpen(false);
+                      }}
+                      className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${isSelected ? 'text-green-300 bg-green-600/10' : 'text-gray-300'}`}
+                    >
+                      {c.name}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
