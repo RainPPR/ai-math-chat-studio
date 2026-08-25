@@ -54,6 +54,11 @@ ai-math-chat-studio/
 │   └── file-structure.md     # 本文件
 ├── data/                     # 本地数据存储（不提交）
 │   ├── settings.json         # 用户设置
+│   ├── providers.json        # 提供商数据
+│   ├── models.json           # 模型数据
+│   ├── temp-models.json      # 临时模型数据
+│   ├── characters.json       # 角色数据
+│   ├── skills.json           # 技能数据
 │   ├── templates.json        # 聊天自动填入模板设置
 │   ├── sessions/             # 会话数据
 │   └── log/                  # 日志数据 (YYYY-MM-DD.log)
@@ -86,7 +91,7 @@ ai-math-chat-studio/
 │   ├── components/
 │   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
 │   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
-│   │   ├── SettingsModal.tsx # 设置弹窗（4 Tab：General / Providers / Models / Characters）
+│   │   ├── SettingsModal.tsx # 设置弹窗（General / Providers / Models / Temp Models / Characters / Skills / Templates）
 │   │   └── Sidebar.tsx       # 左侧栏（会话列表）
 │   └── lib/
 │       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
@@ -115,7 +120,7 @@ ai-math-chat-studio/
 | `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
 | `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
 | `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
-| `src/components/SettingsModal.tsx` | 4 Tab 设置（General / Providers / Models / Characters） |
+| `src/components/SettingsModal.tsx` | 设置弹窗（General / Providers / Models / Temp Models / Characters / Skills / Templates） |
 | `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
 | `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
 | `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
@@ -322,7 +327,7 @@ graph TD
 *   **SSE 订阅**: 这是处理实时响应的核心。它通过 `api.subscribeGeneration` 订阅后端 SSE 端点，并根据接收到的事件 (`delta`, `done`, `error`, `stopped`) 实时更新 `streamingContent` 状态。
 *   **输入处理**: 管理用户输入框，支持 `Ctrl+Enter` 发送和 `Shift+Enter` 换行。
 *   **交互操作**: 提供停止生成、导出聊天记录等功能。支持手动修改当前会话绑定的 Character（点击标题下方的角色名称）。
-*   **快捷选择栏**: 在输入框上方提供浮动栏，允许用户快速切换当前活跃模型和角色。切换后即时保存到 `settings.json`。此外，提供模板选择器按钮，可拉取并显示通过 `SettingsModal` 自定义的全部自动填入模板，点击任意模板可将其内容追加到当前输入框中。
+*   **快捷选择栏**: 在输入框上方提供浮动栏，允许用户快速切换当前活跃模型、角色以及勾选多选 Skills（支持不选、单选或多选）。切换后即时保存到当前会话与全局 `settings.json`。此外，提供模板选择器按钮，可拉取并显示通过 `SettingsModal` 自定义的全部自动填入模板，点击任意模板可将其内容追加到当前输入框中。
 ```
 
 ### 组件结构文档 / `ChatArea.tsx` — 聊天主区域 / `MessageItem` (子组件)
@@ -353,7 +358,7 @@ graph TD
 ### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗
 
 ```text
-**职责**: 提供一个集中的界面，让用户管理应用的所有配置。它被设计为一个包含四个选项卡的模态框。
+**职责**: 提供一个集中的界面，让用户管理应用的所有配置。它被设计为一个包含选项卡的模态框。
 ```
 
 ### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / General Tab
@@ -388,6 +393,12 @@ graph TD
 ```text
 *   **角色管理**: 允许用户添加、编辑、删除角色 (Character)。每个角色包含名称和系统提示词。
 *   **系统提示词迁移**: 原有 `systemPrompt` 字段被迁移为默认角色。后端生成时优先使用 `activeCharacterId` 对应的角色的 `systemPrompt`，若不存在则回退到 `systemPrompt` 字段。
+```
+
+### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Skills Tab
+
+```text
+*   **技能管理**: 允许用户添加、编辑、删除独立于角色的技能提示词 (Skill)。每个技能包含名称和提示词内容。默认包含 "Assistant" 技能。
 ```
 
 ### 组件结构文档 / `SettingsModal.tsx` — 设置弹窗 / Templates Tab
@@ -474,6 +485,18 @@ interface Character {
 > **设计意图**：角色是系统提示词的容器。用户可在设置中创建多个角色（如"数学导师"、"代码助手"），每个角色携带不同的 `systemPrompt`。发送消息时，后端根据 `activeCharacterId` 查找对应角色的 `systemPrompt` 注入请求。
 ```
 
+### 数据模型与存储 / TypeScript 类型定义 / Skill（技能）
+
+```text
+interface Skill {
+  id: string;            // UUID / 唯一标识符
+  name: string;          // 技能名称（如 "Assistant"）
+  prompt: string;        // 技能提示词内容
+}
+
+> **设计意图**：技能是独立于角色的可多选提示词模块。默认系统包含 "Assistant" 技能。选中的 Skills 在发送消息时会自动被包裹为 `# Skill: ${name}\n${prompt}` 注入至 Character 系统提示词上方，且整体排在 KaTeX/Markdown 格式指令之后。
+```
+
 ### 数据模型与存储 / TypeScript 类型定义 / Template（自动填入模板）
 
 ```text
@@ -492,10 +515,12 @@ interface Template {
 interface UserSettings {
   activeModelId?: string;           // 当前活跃模型的 ModelInstance.id 或 TempModel.id
   activeCharacterId?: string;       // 当前活跃角色的 Character.id
+  activeSkillIds?: string[];        // 默认激活的技能 ID 列表
   providers: ProviderInstance[];    // 提供商实例列表
   models: ModelInstance[];          // 模型实例列表
   tempModels?: TempModel[];         // 临时模型实例列表
   characters: Character[];          // 角色列表
+  skills?: Skill[];                 // 技能列表
   systemPrompt: string;             // 全局回退系统提示词（向后兼容）
   renderThinkingAsMarkdown: boolean;
   autoScroll: boolean;
@@ -524,6 +549,7 @@ interface ChatSession {
   title: string;            // 会话标题
   messages: ChatMessage[];  // 消息列表
   characterId?: string;    // 创建时使用的角色 ID（仅记录首次）
+  skillIds?: string[];      // 会话选择的技能 ID 列表
   createdAt: string;        // ISO 时间戳
   updatedAt: string;        // ISO 时间戳
 }
@@ -573,6 +599,7 @@ interface GenerationProvider {
   models.json             # ModelInstance[]（模型列表）
   temp-models.json        # TempModel[]（临时模型列表，包含 API Key，已 Git 忽略）
   characters.json         # Character[]（角色列表）
+  skills.json             # Skill[]（技能列表）
   templates.json          # Template[]（聊天自动填入模板单文件）
   sessions/{sessionId}.json  # ChatSession（每会话一个文件）
   log/                    # 日志文件（YYYY-MM-DD.log）
@@ -704,10 +731,11 @@ graph TD
 ```text
 1.  **后端驱动生成**：所有 AI 生成任务由后端的 `GenerationManager` 服务管理。这意味着即使用户关闭浏览器或断开连接，生成任务也会在服务器上继续运行，直到完成。
 
-2.  **三级架构 (Provider + Model + Character)**：
+2.  **核心提示词与角色/技能架构 (Provider + Model + Character + Skills)**：
     *   **Provider (供应商)**: 定义了如何连接到一个 AI 服务（如 Google, Nvidia）。用户在 `Settings > Providers` 中配置 API Key 和 Base URL 等连接信息。
     *   **Model (模型)**: 定义了要使用的具体模型及其参数（如 `gemini-1.5-pro`, temperature）。每个模型都必须关联一个已配置的供应商实例。
     *   **Character (角色)**: 定义了系统提示词 (System Prompt)。用户可以在 `Settings > Characters` 中创建多个角色（如"代码专家"、"数学导师"），并在聊天时灵活切换。
+    *   **Skill (技能)**: 定义了独立的模块化技能提示词（如 "Assistant"）。用户可在 `Settings > Skills` 中定义，在 ChatArea 浮动栏中多选。后端按 `FORMAT_INSTRUCTIONS` -> Selected Skills -> Character System Prompt 的层级组合系统提示词。
 
 3.  **统一 API 客户端**：前端通过 `src/lib/api.ts` 与后端通信。这个模块封装了所有的 REST API 调用和 SSE (Server-Sent Events) 订阅逻辑，为上层组件提供了简洁的接口。
 
@@ -812,7 +840,7 @@ graph TD
 3.  **API 调用**: `api.ts` 中的 `sendMessage` 函数被调用，向后端 `POST /api/sessions/:id/messages` 发送请求。
 4.  **后端接收**: `server/routes/chat.ts` 中的路由处理器接收到请求。
 5.  **启动生成**: 后端将用户消息保存到对应的 `session.json` 文件中，然后调用 `GenerationManager` 来启动一个新的 AI 生成任务。
-    *   **角色注入**: `GenerationManager` 根据 `activeCharacterId` 获取对应的 `systemPrompt`，并将其作为 System Message 注入到 AI 请求的首位。
+    *   **提示词注入**: 后端根据 `activeCharacterId` 及选择的 `skillIds` 组合最终系统提示词：最头上注入 `FORMAT_INSTRUCTIONS` 格式约束，随后注入各 selected skill 块 (`# Skill: ${name}\n${prompt}`)，最后拼接角色提示词。
 6.  **SSE 连接**: 与此同时，前端的 `ChatArea` 组件通过 `useEffect` 自动订阅 `/api/sessions/:id/generation` 的 SSE 端点。
 7.  **流式响应**: `GenerationManager` 通过 `stream.ts` 调用相应的 AI Provider API。获取到的数据块被包装成 `delta` 事件，通过 SSE 连接实时发送回前端。
 8.  **前端渲染**: `ChatArea` 接收到 `delta` 事件，并将其内容追加到当前正在生成的回复中，用户看到平滑的打字机效果。
