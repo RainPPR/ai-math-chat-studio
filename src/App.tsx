@@ -263,7 +263,7 @@ export default function App() {
     }
   };
 
-  const handleSaveSettings = async (newSettings: UserSettings) => {
+  const handleSaveSettings = async (newSettings: UserSettings, characterReassignments: Record<string, string> = {}) => {
     const previousSettings = { ...settings };
     setSettings(newSettings);
     setIsSettingsOpen(false);
@@ -276,17 +276,19 @@ export default function App() {
 
         setSessions(prev => {
           const updatedIds = new Set(updatedSessions.map(s => s.id));
-          const localDrafts = prev
-            .filter(s => !updatedIds.has(s.id) && s.messages.length === 0)
+          const localOnly = prev
+            .filter(s => !updatedIds.has(s.id))
             .map(s => {
               let charId = s.characterId;
-              if (charId && !validCharIds.has(charId)) {
+              if (charId && characterReassignments[charId] !== undefined) {
+                charId = characterReassignments[charId];
+              } else if (charId && !validCharIds.has(charId)) {
                 charId = newSettings.activeCharacterId;
               }
               return { ...s, characterId: charId };
             });
 
-          return [...localDrafts, ...updatedSessions];
+          return [...localOnly, ...updatedSessions];
         });
       } catch (e: any) {
         setSettings(previousSettings);

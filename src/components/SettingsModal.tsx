@@ -17,7 +17,7 @@ function formatClaudeDate(dateStr: string) {
 
 interface SettingsModalProps {
   settings: UserSettings;
-  onSave: (settings: UserSettings) => void;
+  onSave: (settings: UserSettings, characterReassignments?: Record<string, string>) => void;
   templates: Template[];
   onSaveTemplates: (templates: Template[]) => Promise<void>;
   onClose: () => void;
@@ -1002,15 +1002,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         for (const [fromId, toId] of Object.entries(characterReassignments)) {
           const sessionsToUpdate = allSessions.filter(s => s.characterId === fromId);
           for (const session of sessionsToUpdate) {
-            try {
-              await api.sessions.update(session.id, { characterId: toId || '' });
-            } catch (err: any) {
-              console.warn(`Failed to update characterId for session ${session.id}:`, err);
-            }
+            await api.sessions.update(session.id, { characterId: toId || '' });
           }
         }
       } catch (err: any) {
-        console.warn('Failed to list sessions for character reassignment:', err);
+        console.error('Failed to reassign character sessions:', err);
+        alert('Failed to reassign character sessions: ' + (err.message || 'Unknown error'));
+        return;
       }
     }
 
@@ -1021,7 +1019,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       setLocal(finalSettings);
       setEditingNoteId(null);
     }
-    onSave(finalSettings);
+    onSave(finalSettings, characterReassignments);
     await onSaveTemplates(localTemplates);
   };
 
