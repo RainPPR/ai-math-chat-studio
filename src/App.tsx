@@ -363,7 +363,16 @@ export default function App() {
     try {
       await handleUpdateSession(currentSessionId, { skillIds });
     } catch {
-      setSessions(previousSessions);
+      setSessions(currentSessions => currentSessions.map(session => {
+        if (session.id !== currentSessionId || session.skillIds !== skillIds) {
+          return session;
+        }
+        const previousSession = previousSessions.find(previous => previous.id === session.id);
+        if (!previousSession) {
+          return session;
+        }
+        return { ...session, skillIds: previousSession.skillIds };
+      }));
     }
   };
 
