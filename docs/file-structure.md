@@ -17,6 +17,11 @@ ai-math-chat-studio/
 │   └── file-structure.md     # 本文件
 ├── data/                     # 本地数据存储（不提交）
 │   ├── settings.json         # 用户设置
+│   ├── providers.json        # 提供商数据
+│   ├── models.json           # 模型数据
+│   ├── temp-models.json      # 临时模型数据
+│   ├── characters.json       # 角色数据
+│   ├── skills.json           # 技能数据
 │   ├── templates.json        # 聊天自动填入模板设置
 │   ├── sessions/             # 会话数据
 │   └── log/                  # 日志数据 (YYYY-MM-DD.log)
@@ -49,7 +54,7 @@ ai-math-chat-studio/
 │   ├── components/
 │   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
 │   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
-│   │   ├── SettingsModal.tsx # 设置弹窗（4 Tab：General / Providers / Models / Characters）
+│   │   ├── SettingsModal.tsx # 设置弹窗（General / Providers / Models / Temp Models / Characters / Skills / Templates）
 │   │   └── Sidebar.tsx       # 左侧栏（会话列表）
 │   └── lib/
 │       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
@@ -77,7 +82,7 @@ ai-math-chat-studio/
 | `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
 | `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
 | `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
-| `src/components/SettingsModal.tsx` | 4 Tab 设置（General / Providers / Models / Characters） |
+| `src/components/SettingsModal.tsx` | 设置弹窗（General / Providers / Models / Temp Models / Characters / Skills / Templates） |
 | `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
 | `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
 | `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |

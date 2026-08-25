@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import React, { useState, useEffect, useRef } from 'react';
-import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
+import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, Skill, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
 import { sortProviders, sortModels } from '../../shared/sorting';
@@ -17,13 +17,13 @@ function formatClaudeDate(dateStr: string) {
 
 interface SettingsModalProps {
   settings: UserSettings;
-  onSave: (settings: UserSettings) => void;
+  onSave: (settings: UserSettings, characterReassignments?: Record<string, string>) => void;
   templates: Template[];
   onSaveTemplates: (templates: Template[]) => Promise<void>;
   onClose: () => void;
 }
 
-type Tab = 'general' | 'providers' | 'models' | 'tempModels' | 'characters' | 'templates';
+type Tab = 'general' | 'providers' | 'models' | 'tempModels' | 'characters' | 'skills' | 'templates';
 
 // ===== Active Model Dropdown Component =====
 
@@ -439,6 +439,12 @@ const makeEmptyCharacter = (): Character => ({
   systemPrompt: '',
 });
 
+const makeEmptySkill = (): Skill => ({
+  id: crypto.randomUUID(),
+  name: '',
+  prompt: '',
+});
+
 const getDefaultEnvKey = (type: string): string => {
   switch (type) {
     case 'google': return 'GEMINI_API_KEY';
@@ -475,7 +481,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const [cleanResult, setCleanResult] = useState<{ cleaned: number; total: number } | null>(null);
 
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+
+  const [characterReassignments, setCharacterReassignments] = useState<Record<string, string>>({});
+  const [deleteCharacterModal, setDeleteCharacterModal] = useState<{
+    characterToDelete: Character;
+    remainingCharacters: Character[];
+  } | null>(null);
+  const [targetCharacterId, setTargetCharacterId] = useState<string>('');
 
   const [isChunkModalOpen, setIsChunkModalOpen] = useState(false);
   const [selectedChunk, setSelectedChunk] = useState<string>('all');
@@ -898,12 +912,75 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     setEditingCharacter(null);
   };
 
-  const deleteCharacterEntry = (id: string) => {
-    setLocal(s => ({
-      ...s,
-      characters: s.characters.filter(c => c.id !== id),
-      activeCharacterId: s.activeCharacterId === id ? undefined : s.activeCharacterId,
-    }));
+  const handleDeleteCharacterClick = (c: Character) => {
+    const remaining = local.characters.filter(char => char.id !== c.id);
+    setDeleteCharacterModal({
+      characterToDelete: c,
+      remainingCharacters: remaining,
+    });
+    setTargetCharacterId(remaining[0]?.id || '');
+  };
+
+  const confirmDeleteCharacter = () => {
+    if (!deleteCharacterModal) return;
+    const fromId = deleteCharacterModal.characterToDelete.id;
+    const toId = targetCharacterId;
+
+    const updatedReassignments = { ...characterReassignments };
+    for (const [key, val] of Object.entries(updatedReassignments)) {
+      if (val === fromId) {
+        updatedReassignments[key] = toId;
+      }
+    }
+    updatedReassignments[fromId] = toId;
+    setCharacterReassignments(updatedReassignments);
+
+    setLocal(s => {
+      let nextActiveCharacterId = s.activeCharacterId;
+      if (s.activeCharacterId === fromId) {
+        if (toId) {
+          nextActiveCharacterId = toId;
+        } else {
+          nextActiveCharacterId = undefined;
+        }
+      }
+
+      return {
+        ...s,
+        characters: s.characters.filter(c => c.id !== fromId),
+        activeCharacterId: nextActiveCharacterId,
+      };
+    });
+
+    setDeleteCharacterModal(null);
+  };
+
+  // ----- Skill CRUD -----
+  const addSkill = () => {
+    setEditingSkill(makeEmptySkill());
+  };
+
+  const saveSkill = () => {
+    if (!editingSkill?.name.trim()) return;
+    setLocal(s => {
+      const skills = [...(s.skills || [])];
+      const idx = skills.findIndex(sk => sk.id === editingSkill.id);
+      if (idx >= 0) {
+        skills[idx] = editingSkill;
+      } else {
+        skills.push(editingSkill);
+      }
+      return { ...s, skills };
+    });
+    setEditingSkill(null);
+  };
+
+  const deleteSkillEntry = (id: string) => {
+    setLocal(s => {
+      const skills = (s.skills || []).filter(sk => sk.id !== id);
+      const activeSkillIds = (s.activeSkillIds || []).filter(skId => skId !== id);
+      return { ...s, skills, activeSkillIds };
+    });
   };
 
   // ----- Template CRUD -----
@@ -954,6 +1031,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   };
 
   const handleSaveAll = async () => {
+    let failedCount = 0;
+    if (Object.keys(characterReassignments).length > 0) {
+      try {
+        const allSessions = await api.sessions.list();
+        for (const [fromId, toId] of Object.entries(characterReassignments)) {
+          const sessionsToUpdate = allSessions.filter(s => s.characterId === fromId);
+          for (const session of sessionsToUpdate) {
+            try {
+              await api.sessions.update(session.id, { characterId: toId || '' });
+            } catch (err: any) {
+              console.warn(`Failed to update characterId for session ${session.id}:`, err);
+              failedCount++;
+            }
+          }
+        }
+      } catch (err: any) {
+        console.warn('Failed to list sessions for character reassignment:', err);
+      }
+    }
+
+    if (failedCount > 0) {
+      alert(`Note: ${failedCount} session(s) failed to update during character reassignment, but your settings have been saved.`);
+    }
+
     const finalSettings = { ...local };
     if (editingNoteId) {
       const updatedNotes = applyActiveNoteEdit(local.stickyNotes || [], editingNoteId, editingNoteContent);
@@ -961,7 +1062,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       setLocal(finalSettings);
       setEditingNoteId(null);
     }
-    onSave(finalSettings);
+    onSave(finalSettings, characterReassignments);
     await onSaveTemplates(localTemplates);
   };
 
@@ -1070,9 +1171,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         </div>
 
         <div className="flex border-b border-gray-800 shrink-0">
-          {(['general', 'providers', 'models', 'tempModels', 'characters', 'templates'] as Tab[]).map(t => (
+          {(['general', 'providers', 'models', 'tempModels', 'characters', 'skills', 'templates'] as Tab[]).map(t => (
             <button key={t} onClick={() => { setTab(t); }} className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === t ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>
-              {({ general: 'General', providers: 'Providers', models: 'Models', tempModels: 'Temp Models', characters: 'Characters', templates: 'Templates' } as Record<Tab, string>)[t]}
+              {({ general: 'General', providers: 'Providers', models: 'Models', tempModels: 'Temp Models', characters: 'Characters', skills: 'Skills', templates: 'Templates' } as Record<Tab, string>)[t]}
             </button>
           ))}
         </div>
@@ -1374,6 +1475,57 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
             </>
           )}
 
+          {/* Skills Tab */}
+          {tab === 'skills' && (
+            <>
+              {editingSkill ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300">Skill Name</label>
+                    <input
+                      value={editingSkill.name}
+                      onChange={e => { setEditingSkill({ ...editingSkill, name: e.target.value }); }}
+                      placeholder="e.g. Assistant"
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300">Prompt</label>
+                    <textarea
+                      value={editingSkill.prompt}
+                      onChange={e => { setEditingSkill({ ...editingSkill, prompt: e.target.value }); }}
+                      placeholder="Enter skill prompt instructions..."
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 h-40 resize-none"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button onClick={() => { setEditingSkill(null); }} className="px-4 py-2 text-gray-300 hover:text-white transition-colors">Cancel</button>
+                    <button onClick={saveSkill} disabled={!editingSkill.name.trim()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg transition-colors flex items-center gap-2"><Save size={14} /> Save Skill</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {(!local.skills || local.skills.length === 0) && <p className="text-xs text-gray-500">No skills configured.</p>}
+                  {local.skills && local.skills.map(sk => (
+                    <div key={sk.id} className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-white truncate">{sk.name}</div>
+                        <div className="text-xs text-gray-400 line-clamp-2 mt-1">{sk.prompt?.slice(0, 120)}...</div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-3">
+                        <button onClick={() => { setEditingSkill({ ...sk }); }} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
+                        <button onClick={() => { deleteSkillEntry(sk.id); }} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={addSkill} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-4 transition-colors">
+                    <Plus size={18} /> Add Skill
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
           {/* Temp Models Tab */}
           {tab === 'tempModels' && (
             <>
@@ -1528,11 +1680,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <div key={c.id} className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex items-center justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium text-white truncate">{c.name}</div>
-                        <div className="text-xs text-gray-400 line-clamp-2 mt-1">{c.systemPrompt?.slice(0, 120)}...</div>
+                        <div className="text-xs text-gray-400 line-clamp-2 mt-1">{c.systemPrompt}</div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-3">
                         <button onClick={() => { setEditingCharacter({ ...c }); }} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
-                        <button onClick={() => { deleteCharacterEntry(c.id); }} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
+                        <button onClick={() => { handleDeleteCharacterClick(c); }} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
                       </div>
                     </div>
                   ))}
@@ -1542,6 +1694,64 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                 </div>
               )}
             </>
+          )}
+
+          {/* Delete Character Inheritance Modal */}
+          {deleteCharacterModal && (
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+              <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md p-6 shadow-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white">删除角色并过继会话</h3>
+                  <button onClick={() => setDeleteCharacterModal(null)} className="text-gray-400 hover:text-white transition-colors">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {deleteCharacterModal.remainingCharacters.length > 0 ? (
+                  <>
+                    <p className="text-sm text-gray-300 leading-relaxed">
+                      正在删除角色「<span className="font-semibold text-white">{deleteCharacterModal.characterToDelete.name}</span>」。请指定一个接收角色，原属于该角色的所有会话将过继给所选角色：
+                    </p>
+                    <div className="space-y-2 pt-1">
+                      <label className="block text-xs font-medium text-gray-400">接收角色</label>
+                      <select
+                        value={targetCharacterId}
+                        onChange={e => setTargetCharacterId(e.target.value)}
+                        className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg p-3 text-sm focus:outline-none focus:border-blue-500"
+                      >
+                        {deleteCharacterModal.remainingCharacters.map(char => (
+                          <option key={char.id} value={char.id}>
+                            {char.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    正在删除角色「<span className="font-semibold text-white">{deleteCharacterModal.characterToDelete.name}</span>」。当前没有其他角色可供过继，删除后原属于该角色的会话将取消角色标记。
+                  </p>
+                )}
+
+                <div className="flex justify-end gap-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteCharacterModal(null)}
+                    className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmDeleteCharacter}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                  >
+                    <Trash2 size={14} />
+                    确认删除
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Templates Tab */}
