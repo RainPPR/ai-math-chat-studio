@@ -996,20 +996,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   };
 
   const handleSaveAll = async () => {
+    let failedCount = 0;
     if (Object.keys(characterReassignments).length > 0) {
       try {
         const allSessions = await api.sessions.list();
         for (const [fromId, toId] of Object.entries(characterReassignments)) {
           const sessionsToUpdate = allSessions.filter(s => s.characterId === fromId);
           for (const session of sessionsToUpdate) {
-            await api.sessions.update(session.id, { characterId: toId || '' });
+            try {
+              await api.sessions.update(session.id, { characterId: toId || '' });
+            } catch (err: any) {
+              console.warn(`Failed to update characterId for session ${session.id}:`, err);
+              failedCount++;
+            }
           }
         }
       } catch (err: any) {
-        console.error('Failed to reassign character sessions:', err);
-        alert('Failed to reassign character sessions: ' + (err.message || 'Unknown error'));
-        return;
+        console.warn('Failed to list sessions for character reassignment:', err);
       }
+    }
+
+    if (failedCount > 0) {
+      alert(`Note: ${failedCount} session(s) failed to update during character reassignment, but your settings have been saved.`);
     }
 
     const finalSettings = { ...local };
