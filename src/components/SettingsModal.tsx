@@ -17,7 +17,7 @@ function formatClaudeDate(dateStr: string) {
 
 interface SettingsModalProps {
   settings: UserSettings;
-  onSave: (settings: UserSettings) => void;
+  onSave: (settings: UserSettings, characterReassignments?: Record<string, string>) => void;
   templates: Template[];
   onSaveTemplates: (templates: Template[]) => Promise<void>;
   onClose: () => void;
@@ -477,6 +477,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
 
+  const [characterReassignments, setCharacterReassignments] = useState<Record<string, string>>({});
+  const [deleteCharacterModal, setDeleteCharacterModal] = useState<{
+    characterToDelete: Character;
+    remainingCharacters: Character[];
+  } | null>(null);
+  const [targetCharacterId, setTargetCharacterId] = useState<string>('');
+
   const [isChunkModalOpen, setIsChunkModalOpen] = useState(false);
   const [selectedChunk, setSelectedChunk] = useState<string>('all');
   const [newCustomChunk, setNewCustomChunk] = useState<string>('');
@@ -898,12 +905,47 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     setEditingCharacter(null);
   };
 
-  const deleteCharacterEntry = (id: string) => {
-    setLocal(s => ({
-      ...s,
-      characters: s.characters.filter(c => c.id !== id),
-      activeCharacterId: s.activeCharacterId === id ? undefined : s.activeCharacterId,
-    }));
+  const handleDeleteCharacterClick = (c: Character) => {
+    const remaining = local.characters.filter(char => char.id !== c.id);
+    setDeleteCharacterModal({
+      characterToDelete: c,
+      remainingCharacters: remaining,
+    });
+    setTargetCharacterId(remaining[0]?.id || '');
+  };
+
+  const confirmDeleteCharacter = () => {
+    if (!deleteCharacterModal) return;
+    const fromId = deleteCharacterModal.characterToDelete.id;
+    const toId = targetCharacterId;
+
+    const updatedReassignments = { ...characterReassignments };
+    for (const [key, val] of Object.entries(updatedReassignments)) {
+      if (val === fromId) {
+        updatedReassignments[key] = toId;
+      }
+    }
+    updatedReassignments[fromId] = toId;
+    setCharacterReassignments(updatedReassignments);
+
+    setLocal(s => {
+      let nextActiveCharacterId = s.activeCharacterId;
+      if (s.activeCharacterId === fromId) {
+        if (toId) {
+          nextActiveCharacterId = toId;
+        } else {
+          nextActiveCharacterId = undefined;
+        }
+      }
+
+      return {
+        ...s,
+        characters: s.characters.filter(c => c.id !== fromId),
+        activeCharacterId: nextActiveCharacterId,
+      };
+    });
+
+    setDeleteCharacterModal(null);
   };
 
   // ----- Template CRUD -----
@@ -954,6 +996,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   };
 
   const handleSaveAll = async () => {
+    let failedCount = 0;
+    if (Object.keys(characterReassignments).length > 0) {
+      try {
+        const allSessions = await api.sessions.list();
+        for (const [fromId, toId] of Object.entries(characterReassignments)) {
+          const sessionsToUpdate = allSessions.filter(s => s.characterId === fromId);
+          for (const session of sessionsToUpdate) {
+            try {
+              await api.sessions.update(session.id, { characterId: toId || '' });
+            } catch (err: any) {
+              console.warn(`Failed to update characterId for session ${session.id}:`, err);
+              failedCount++;
+            }
+          }
+        }
+      } catch (err: any) {
+        console.warn('Failed to list sessions for character reassignment:', err);
+      }
+    }
+
+    if (failedCount > 0) {
+      alert(`Note: ${failedCount} session(s) failed to update during character reassignment, but your settings have been saved.`);
+    }
+
     const finalSettings = { ...local };
     if (editingNoteId) {
       const updatedNotes = applyActiveNoteEdit(local.stickyNotes || [], editingNoteId, editingNoteContent);
@@ -961,7 +1027,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       setLocal(finalSettings);
       setEditingNoteId(null);
     }
-    onSave(finalSettings);
+    onSave(finalSettings, characterReassignments);
     await onSaveTemplates(localTemplates);
   };
 
@@ -1532,7 +1598,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-3">
                         <button onClick={() => { setEditingCharacter({ ...c }); }} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
-                        <button onClick={() => { deleteCharacterEntry(c.id); }} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
+                        <button onClick={() => { handleDeleteCharacterClick(c); }} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
                       </div>
                     </div>
                   ))}
@@ -1542,6 +1608,64 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                 </div>
               )}
             </>
+          )}
+
+          {/* Delete Character Inheritance Modal */}
+          {deleteCharacterModal && (
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+              <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md p-6 shadow-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white">删除角色并过继会话</h3>
+                  <button onClick={() => setDeleteCharacterModal(null)} className="text-gray-400 hover:text-white transition-colors">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {deleteCharacterModal.remainingCharacters.length > 0 ? (
+                  <>
+                    <p className="text-sm text-gray-300 leading-relaxed">
+                      正在删除角色「<span className="font-semibold text-white">{deleteCharacterModal.characterToDelete.name}</span>」。请指定一个接收角色，原属于该角色的所有会话将过继给所选角色：
+                    </p>
+                    <div className="space-y-2 pt-1">
+                      <label className="block text-xs font-medium text-gray-400">接收角色</label>
+                      <select
+                        value={targetCharacterId}
+                        onChange={e => setTargetCharacterId(e.target.value)}
+                        className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg p-3 text-sm focus:outline-none focus:border-blue-500"
+                      >
+                        {deleteCharacterModal.remainingCharacters.map(char => (
+                          <option key={char.id} value={char.id}>
+                            {char.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    正在删除角色「<span className="font-semibold text-white">{deleteCharacterModal.characterToDelete.name}</span>」。当前没有其他角色可供过继，删除后原属于该角色的会话将取消角色标记。
+                  </p>
+                )}
+
+                <div className="flex justify-end gap-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteCharacterModal(null)}
+                    className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmDeleteCharacter}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                  >
+                    <Trash2 size={14} />
+                    确认删除
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Templates Tab */}

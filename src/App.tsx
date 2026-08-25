@@ -263,7 +263,7 @@ export default function App() {
     }
   };
 
-  const handleSaveSettings = async (newSettings: UserSettings) => {
+  const handleSaveSettings = async (newSettings: UserSettings, characterReassignments: Record<string, string> = {}) => {
     const previousSettings = { ...settings };
     setSettings(newSettings);
     setIsSettingsOpen(false);
@@ -271,6 +271,25 @@ export default function App() {
     settingsSaveQueue = settingsSaveQueue.then(async () => {
       try {
         await api.settings.save(newSettings);
+        const updatedSessions = await api.sessions.list();
+        const validCharIds = new Set((newSettings.characters || []).map(c => c.id));
+
+        setSessions(prev => {
+          const updatedIds = new Set(updatedSessions.map(s => s.id));
+          const localOnly = prev
+            .filter(s => !updatedIds.has(s.id))
+            .map(s => {
+              let charId = s.characterId;
+              if (charId && characterReassignments[charId] !== undefined) {
+                charId = characterReassignments[charId];
+              } else if (charId && !validCharIds.has(charId)) {
+                charId = newSettings.activeCharacterId;
+              }
+              return { ...s, characterId: charId };
+            });
+
+          return [...localOnly, ...updatedSessions];
+        });
       } catch (e: any) {
         setSettings(previousSettings);
         setError(e.message || 'Failed to save settings');
