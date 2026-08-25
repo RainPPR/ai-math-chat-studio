@@ -24,8 +24,6 @@ export default function App() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [unsavedSessionIds, setUnsavedSessionIds] = useState<Set<string>>(new Set());
-  const [inFlightSendSessionIds, setInFlightSendSessionIds] = useState<Set<string>>(new Set());
-  const [pendingDeleteSessionIds, setPendingDeleteSessionIds] = useState<Set<string>>(new Set());
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -108,29 +106,30 @@ export default function App() {
   };
 
   const handleDeleteChat = async (id: string) => {
+    const isUnsaved = unsavedSessionIds.has(id);
     setSessions(prev => prev.filter(s => s.id !== id));
     if (currentSessionId === id) {
       setCurrentSessionId(null);
     }
 
-    // Stop active generation streams for the deleted session
+    if (isUnsaved) {
+      setUnsavedSessionIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+
+    // Always stop active generation streams for the deleted session
     api.chat.stop(id).catch(() => {});
 
-    if (inFlightSendSessionIds.has(id)) {
-      setPendingDeleteSessionIds(prev => new Set(prev).add(id));
-      setUnsavedSessionIds(prev => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    } else if (unsavedSessionIds.has(id)) {
-      setUnsavedSessionIds(prev => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    } else {
-      await api.sessions.delete(id);
+    // Call server delete for non-unsaved sessions or to clean up any server-side state
+    if (!isUnsaved) {
+      try {
+        await api.sessions.delete(id);
+      } catch (e: any) {
+        setError(e.message || 'Failed to delete session on server');
+      }
     }
 
     if (settings.starredSessions && settings.starredSessions[id]) {
@@ -197,8 +196,6 @@ export default function App() {
       )
     );
 
-    setInFlightSendSessionIds(prev => new Set(prev).add(sessionId));
-
     try {
       await api.chat.send(sessionId, content, activeSession.characterId, activeSession.skillIds);
       if (unsavedSessionIds.has(sessionId)) {
@@ -211,22 +208,6 @@ export default function App() {
       markGenerating(sessionId, true);
     } catch (e: any) {
       setError(e.message || 'Failed to send message');
-    } finally {
-      setInFlightSendSessionIds(prev => {
-        const next = new Set(prev);
-        next.delete(sessionId);
-        return next;
-      });
-
-      setPendingDeleteSessionIds(prev => {
-        if (prev.has(sessionId)) {
-          const next = new Set(prev);
-          next.delete(sessionId);
-          api.sessions.delete(sessionId).catch(() => {});
-          return next;
-        }
-        return prev;
-      });
     }
   };
 
