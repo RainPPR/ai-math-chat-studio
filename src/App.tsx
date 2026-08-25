@@ -272,7 +272,11 @@ export default function App() {
       try {
         await api.settings.save(newSettings);
         const updatedSessions = await api.sessions.list();
-        setSessions(updatedSessions);
+        setSessions(prev => {
+          const updatedIds = new Set(updatedSessions.map(session => session.id));
+          const localOnly = prev.filter(session => !updatedIds.has(session.id));
+          return [...updatedSessions, ...localOnly];
+        });
       } catch (e: any) {
         setSettings(previousSettings);
         setError(e.message || 'Failed to save settings');

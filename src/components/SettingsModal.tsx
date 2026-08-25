@@ -928,11 +928,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     updatedReassignments[fromId] = toId;
     setCharacterReassignments(updatedReassignments);
 
-    setLocal(s => ({
-      ...s,
-      characters: s.characters.filter(c => c.id !== fromId),
-      activeCharacterId: s.activeCharacterId === fromId ? (toId || undefined) : s.activeCharacterId,
-    }));
+    setLocal(s => {
+      let nextActiveCharacterId = s.activeCharacterId;
+      if (s.activeCharacterId === fromId) {
+        if (toId) {
+          nextActiveCharacterId = toId;
+        } else {
+          nextActiveCharacterId = undefined;
+        }
+      }
+
+      return {
+        ...s,
+        characters: s.characters.filter(c => c.id !== fromId),
+        activeCharacterId: nextActiveCharacterId,
+      };
+    });
 
     setDeleteCharacterModal(null);
   };
@@ -994,8 +1005,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
             await api.sessions.update(session.id, { characterId: toId || '' });
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to reassign character sessions:', err);
+        alert('Failed to reassign character sessions: ' + (err.message || 'Unknown error'));
+        return;
       }
     }
 
