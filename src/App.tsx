@@ -79,6 +79,15 @@ export default function App() {
   }, []);
 
   const handleNewChat = async () => {
+    const existingEmpty = sessions.find(s => s.messages.length === 0);
+    if (existingEmpty) {
+      setCurrentSessionId(existingEmpty.id);
+      if (isMobile) {
+        setIsMobileSidebarOpen(false);
+      }
+      return;
+    }
+
     const id = crypto.randomUUID();
     const session: ChatSession = {
       id, title: 'New Chat',
@@ -95,11 +104,17 @@ export default function App() {
   };
 
   const handleDeleteChat = async (id: string) => {
+    const target = sessions.find(s => s.id === id);
     setSessions(prev => prev.filter(s => s.id !== id));
     if (currentSessionId === id) {
       setCurrentSessionId(null);
     }
-    await api.sessions.delete(id);
+
+    if (target && target.messages.length === 0) {
+      // Local unsaved session, skip server API delete call
+    } else {
+      await api.sessions.delete(id);
+    }
 
     if (settings.starredSessions && settings.starredSessions[id]) {
       const previousSettings = { ...settings };
@@ -129,18 +144,15 @@ export default function App() {
     }
   };
 
-  const pendingSendsRef = React.useRef<Map<string, NodeJS.Timeout>>(new Map());
-
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
 
     let sessionId = currentSessionId;
-    let isNewSession = false;
+    let activeSession = sessions.find(s => s.id === sessionId);
 
-    if (!sessionId) {
-      isNewSession = true;
+    if (!sessionId || !activeSession) {
       sessionId = crypto.randomUUID();
-      const session: ChatSession = {
+      activeSession = {
         id: sessionId,
         title: content.trim().slice(0, 50) + (content.length > 50 ? '...' : ''),
         messages: [],
@@ -149,7 +161,7 @@ export default function App() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      setSessions(prev => [session, ...prev]);
+      setSessions(prev => [activeSession!, ...prev]);
       setCurrentSessionId(sessionId);
     }
 
@@ -160,43 +172,21 @@ export default function App() {
       createdAt: new Date().toISOString(),
     };
 
-    setSessions(prev => prev.map(s => s.id === sessionId
-      ? { ...s, messages: [...s.messages, userMsg], updatedAt: new Date().toISOString() }
-      : s
-    ));
+    setSessions(prev =>
+      prev.map(s =>
+        s.id === sessionId
+          ? { ...s, messages: [...s.messages, userMsg], updatedAt: new Date().toISOString() }
+          : s
+      )
+    );
 
-    if (isNewSession) {
-      const existingTimeout = pendingSendsRef.current.get(sessionId);
-      if (existingTimeout) {
-        clearTimeout(existingTimeout);
-      }
-
-      const timeout = setTimeout(async () => {
-        pendingSendsRef.current.delete(sessionId);
-        try {
-          await api.chat.send(sessionId, content);
-          markGenerating(sessionId, true);
-        } catch (e: any) {
-          setError(e.message || 'Failed to send message');
-        }
-      }, 100);
-
-      pendingSendsRef.current.set(sessionId, timeout);
-    } else {
-      try {
-        await api.chat.send(sessionId, content);
-        markGenerating(sessionId, true);
-      } catch (e: any) {
-        setError(e.message || 'Failed to send message');
-      }
+    try {
+      await api.chat.send(sessionId, content, activeSession.characterId, activeSession.skillIds);
+      markGenerating(sessionId, true);
+    } catch (e: any) {
+      setError(e.message || 'Failed to send message');
     }
   };
-
-  useEffect(() => {
-    return () => {
-      pendingSendsRef.current.forEach(timeout => { clearTimeout(timeout); });
-    };
-  }, []);
 
   const handleStop = async () => {
     if (!currentSessionId) return;
@@ -311,9 +301,12 @@ export default function App() {
     }
   };
 
-  const handleSelectModel = async (modelId: string) => {
+  const updateGlobalSettings = async (
+    updater: (prev: UserSettings) => UserSettings,
+    errorMessage: string
+  ) => {
     const previousSettings = { ...settings };
-    const newSettings = { ...settings, activeModelId: modelId };
+    const newSettings = updater(settings);
     setSettings(newSettings);
 
     settingsSaveQueue = settingsSaveQueue.then(async () => {
@@ -321,34 +314,28 @@ export default function App() {
         await api.settings.save(newSettings);
       } catch (e: any) {
         setSettings(previousSettings);
-        setError(e.message || 'Failed to update selected model');
+        setError(e.message || errorMessage);
       }
     });
     await settingsSaveQueue;
   };
 
-  const handleToggleStarSession = async (sessionId: string, color: StarColor | '') => {
-    const previousSettings = { ...settings };
-    const currentStarred = settings.starredSessions || {};
-    const updatedStarred = { ...currentStarred };
-    if (!color) {
-      delete updatedStarred[sessionId];
-    } else {
-      updatedStarred[sessionId] = color;
-    }
-    const newSettings = { ...settings, starredSessions: updatedStarred };
-    setSettings(newSettings);
+  const handleSelectModel = (modelId: string) =>
+    updateGlobalSettings(
+      prev => ({ ...prev, activeModelId: modelId }),
+      'Failed to update selected model'
+    );
 
-    settingsSaveQueue = settingsSaveQueue.then(async () => {
-      try {
-        await api.settings.save(newSettings);
-      } catch (e: any) {
-        setSettings(previousSettings);
-        setError(e.message || 'Failed to update starred session');
+  const handleToggleStarSession = (sessionId: string, color: StarColor | '') =>
+    updateGlobalSettings(prev => {
+      const updatedStarred = { ...(prev.starredSessions || {}) };
+      if (!color) {
+        delete updatedStarred[sessionId];
+      } else {
+        updatedStarred[sessionId] = color;
       }
-    });
-    await settingsSaveQueue;
-  };
+      return { ...prev, starredSessions: updatedStarred };
+    }, 'Failed to update starred session');
 
   const handleUpdateSession = async (sessionId: string, updates: Partial<ChatSession>) => {
     try {
@@ -360,72 +347,51 @@ export default function App() {
     }
   };
 
-  const handleUpdateSessionCharacter = async (characterId: string) => {
+  const handleUpdateSessionProperty = async <K extends keyof ChatSession>(
+    key: K,
+    value: ChatSession[K]
+  ) => {
     if (!currentSessionId) return;
+    const targetSession = sessions.find(s => s.id === currentSessionId);
+    if (!targetSession) return;
+
+    const previousValue = targetSession[key];
+
+    setSessions(prev =>
+      prev.map(s => (s.id === currentSessionId ? { ...s, [key]: value } : s))
+    );
+
+    // Unsaved local session (0 messages): keep update purely local in React state
+    if (targetSession.messages.length === 0) {
+      return;
+    }
+
     try {
-      await handleUpdateSession(currentSessionId, { characterId });
+      await handleUpdateSession(currentSessionId, { [key]: value });
     } catch {
-      // Handled in handleUpdateSession
+      setSessions(prev =>
+        prev.map(s => (s.id === currentSessionId ? { ...s, [key]: previousValue } : s))
+      );
     }
   };
 
-  const handleUpdateSessionSkills = async (skillIds: string[]) => {
-    if (!currentSessionId) return;
-    const previousSessions = sessions;
-    setSessions(prev => prev.map(s => {
-      if (s.id === currentSessionId) {
-        return { ...s, skillIds };
-      }
-      return s;
-    }));
+  const handleUpdateSessionCharacter = (characterId: string) =>
+    handleUpdateSessionProperty('characterId', characterId);
 
-    try {
-      await handleUpdateSession(currentSessionId, { skillIds });
-    } catch {
-      setSessions(currentSessions => currentSessions.map(session => {
-        if (session.id !== currentSessionId || session.skillIds !== skillIds) {
-          return session;
-        }
-        const previousSession = previousSessions.find(previous => previous.id === session.id);
-        if (!previousSession) {
-          return session;
-        }
-        return { ...session, skillIds: previousSession.skillIds };
-      }));
-    }
-  };
+  const handleUpdateSessionSkills = (skillIds: string[]) =>
+    handleUpdateSessionProperty('skillIds', skillIds);
 
-  const handleSelectCharacter = async (characterId: string) => {
-    const previousSettings = { ...settings };
-    const newSettings = { ...settings, activeCharacterId: characterId };
-    setSettings(newSettings);
+  const handleSelectCharacter = (characterId: string) =>
+    updateGlobalSettings(
+      prev => ({ ...prev, activeCharacterId: characterId }),
+      'Failed to update selected character'
+    );
 
-    settingsSaveQueue = settingsSaveQueue.then(async () => {
-      try {
-        await api.settings.save(newSettings);
-      } catch (e: any) {
-        setSettings(previousSettings);
-        setError(e.message || 'Failed to update selected character');
-      }
-    });
-    await settingsSaveQueue;
-  };
-
-  const handleSelectSkills = async (skillIds: string[]) => {
-    const previousSettings = { ...settings };
-    const newSettings = { ...settings, activeSkillIds: skillIds };
-    setSettings(newSettings);
-
-    settingsSaveQueue = settingsSaveQueue.then(async () => {
-      try {
-        await api.settings.save(newSettings);
-      } catch (e: any) {
-        setSettings(previousSettings);
-        setError(e.message || 'Failed to update selected skills');
-      }
-    });
-    await settingsSaveQueue;
-  };
+  const handleSelectSkills = (skillIds: string[]) =>
+    updateGlobalSettings(
+      prev => ({ ...prev, activeSkillIds: skillIds }),
+      'Failed to update selected skills'
+    );
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

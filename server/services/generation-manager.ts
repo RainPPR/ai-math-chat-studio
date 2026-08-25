@@ -266,9 +266,16 @@ export class GenerationManager {
       try { await pending; } catch {}
     }
 
-    const session = await this.readSession(id);
+    let session = await this.readSession(id);
     if (!session) {
-      return null;
+      const now = new Date().toISOString();
+      session = {
+        id,
+        title: 'New Chat',
+        messages: [],
+        createdAt: now,
+        updatedAt: now,
+      };
     }
 
     const shouldUpdateTimestamp = Object.keys(updates).some(key => key !== 'characterId' && key !== 'skillIds');
