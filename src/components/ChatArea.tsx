@@ -1299,11 +1299,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                     <button
                       key={c.id}
                       onClick={() => {
-                        if (session) {
-                          onUpdateSessionCharacter?.(c.id);
-                        } else {
-                          onSelectCharacter?.(c.id);
-                        }
+                        onUpdateSessionCharacter?.(c.id);
                         setCharacterDropdownOpen(false);
                       }}
                       className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${isSelected ? 'text-green-300 bg-green-600/10' : 'text-gray-300'}`}

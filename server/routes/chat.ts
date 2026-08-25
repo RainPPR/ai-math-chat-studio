@@ -85,8 +85,16 @@ function resolveSessionContext(settings: SettingsData, session: any, reqBody?: {
     characterId = settings.activeCharacterId;
   }
 
-  if (reqBody?.skillIds !== undefined && Array.isArray(reqBody.skillIds)) {
-    skillIds = reqBody.skillIds;
+  if (reqBody?.skillIds !== undefined) {
+    if (
+      Array.isArray(reqBody.skillIds) &&
+      reqBody.skillIds.every((id: any) => typeof id === 'string') &&
+      new Set(reqBody.skillIds).size === reqBody.skillIds.length
+    ) {
+      skillIds = reqBody.skillIds;
+    } else {
+      skillIds = session?.skillIds !== undefined ? session.skillIds : (settings.activeSkillIds || []);
+    }
   } else if (session && session.skillIds !== undefined) {
     skillIds = session.skillIds;
   } else {

@@ -23,6 +23,7 @@ function useWindowWidth() {
 export default function App() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [unsavedSessionIds, setUnsavedSessionIds] = useState<Set<string>>(new Set());
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -79,9 +80,9 @@ export default function App() {
   }, []);
 
   const handleNewChat = async () => {
-    const existingEmpty = sessions.find(s => s.messages.length === 0);
-    if (existingEmpty) {
-      setCurrentSessionId(existingEmpty.id);
+    const existingUnsavedId = Array.from(unsavedSessionIds)[0];
+    if (existingUnsavedId && sessions.some(s => s.id === existingUnsavedId)) {
+      setCurrentSessionId(existingUnsavedId);
       if (isMobile) {
         setIsMobileSidebarOpen(false);
       }
@@ -97,6 +98,7 @@ export default function App() {
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
     setSessions(prev => [session, ...prev]);
+    setUnsavedSessionIds(prev => new Set(prev).add(id));
     setCurrentSessionId(id);
     if (isMobile) {
       setIsMobileSidebarOpen(false);
@@ -104,14 +106,17 @@ export default function App() {
   };
 
   const handleDeleteChat = async (id: string) => {
-    const target = sessions.find(s => s.id === id);
     setSessions(prev => prev.filter(s => s.id !== id));
     if (currentSessionId === id) {
       setCurrentSessionId(null);
     }
 
-    if (target && target.messages.length === 0) {
-      // Local unsaved session, skip server API delete call
+    if (unsavedSessionIds.has(id)) {
+      setUnsavedSessionIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     } else {
       await api.sessions.delete(id);
     }
@@ -182,6 +187,13 @@ export default function App() {
 
     try {
       await api.chat.send(sessionId, content, activeSession.characterId, activeSession.skillIds);
+      if (unsavedSessionIds.has(sessionId)) {
+        setUnsavedSessionIds(prev => {
+          const next = new Set(prev);
+          next.delete(sessionId);
+          return next;
+        });
+      }
       markGenerating(sessionId, true);
     } catch (e: any) {
       setError(e.message || 'Failed to send message');
@@ -361,8 +373,8 @@ export default function App() {
       prev.map(s => (s.id === currentSessionId ? { ...s, [key]: value } : s))
     );
 
-    // Unsaved local session (0 messages): keep update purely local in React state
-    if (targetSession.messages.length === 0) {
+    // Unsaved local session: keep update purely local in React state
+    if (unsavedSessionIds.has(currentSessionId)) {
       return;
     }
 
@@ -370,7 +382,7 @@ export default function App() {
       await handleUpdateSession(currentSessionId, { [key]: value });
     } catch {
       setSessions(prev =>
-        prev.map(s => (s.id === currentSessionId ? { ...s, [key]: previousValue } : s))
+        prev.map(s => (s.id === currentSessionId && s[key] === value ? { ...s, [key]: previousValue } : s))
       );
     }
   };
