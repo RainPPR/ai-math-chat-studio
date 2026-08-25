@@ -8,6 +8,14 @@
     "reasoningEffort": "max"
   },
   {
+    "id": "da5102b4-c633-4ac1-b75e-90eaf57ef64c",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "GLM-5.2",
+    "displayName": "GLM 5.2 (AMD)",
+    "reasoningEffort": "max"
+  },
+  {
     "id": "cf8a95c9-e395-4f3b-9e07-b87d09b5571b",
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
@@ -112,14 +120,6 @@
     "providerType": "openai-compatible",
     "modelId": "google/gemini-3.6-flash",
     "displayName": "Gemini 3.6 Flash (Kilo BYOK)",
-    "reasoningEffort": "max"
-  },
-  {
-    "id": "e2fea419-c9ee-498c-b504-6a102775bf11",
-    "providerId": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
-    "providerType": "openai-compatible",
-    "modelId": "nvidia-byok/thinkingmachines/inkling",
-    "displayName": "Inkling (Kilo Nvidia)",
     "reasoningEffort": "max"
   },
   {
