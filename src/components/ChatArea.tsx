@@ -1338,22 +1338,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                   const validSkillIds = selectedSkillIds.filter(id => (settings.skills || []).some(s => s.id === id));
 
                   const handleToggleSkill = (skillId: string) => {
-                    setSelectedSkillIds(prev => {
-                      let nextSkillIds: string[];
-                      if (prev.includes(skillId)) {
-                        nextSkillIds = prev.filter(id => id !== skillId);
-                      } else {
-                        nextSkillIds = [...prev, skillId];
-                      }
+                    let nextSkillIds: string[];
+                    if (selectedSkillIds.includes(skillId)) {
+                      nextSkillIds = selectedSkillIds.filter(id => id !== skillId);
+                    } else {
+                      nextSkillIds = [...selectedSkillIds, skillId];
+                    }
+                    setSelectedSkillIds(nextSkillIds);
 
-                      if (session) {
-                        onUpdateSessionSkills?.(nextSkillIds);
-                      } else {
-                        onSelectSkills?.(nextSkillIds);
-                      }
-
-                      return nextSkillIds;
-                    });
+                    if (session) {
+                      onUpdateSessionSkills?.(nextSkillIds);
+                    } else {
+                      onSelectSkills?.(nextSkillIds);
+                    }
                   };
 
                   const handleClearSkills = () => {
@@ -1368,7 +1365,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
                   return (
                     <div className="py-1">
-                      {validSkillIds.length > 0 && (
+                      {selectedSkillIds.length > 0 && (
                         <div className="px-2.5 py-1 border-b border-gray-700/50 flex justify-end">
                           <button
                             onClick={handleClearSkills}

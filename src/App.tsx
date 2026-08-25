@@ -352,6 +352,7 @@ export default function App() {
 
   const handleUpdateSessionSkills = async (skillIds: string[]) => {
     if (!currentSessionId) return;
+    const previousSessions = sessions;
     setSessions(prev => prev.map(s => {
       if (s.id === currentSessionId) {
         return { ...s, skillIds };
@@ -362,7 +363,7 @@ export default function App() {
     try {
       await handleUpdateSession(currentSessionId, { skillIds });
     } catch {
-      // Handled in handleUpdateSession
+      setSessions(previousSessions);
     }
   };
 

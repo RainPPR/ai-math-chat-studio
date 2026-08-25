@@ -25,7 +25,11 @@ export function createSessionRouter(gm: GenerationManager) {
       if (title !== undefined) updates.title = title;
       if (characterId !== undefined) updates.characterId = characterId;
       if (skillIds !== undefined) {
-        if (!Array.isArray(skillIds) || skillIds.some((id: any) => typeof id !== 'string')) {
+        if (
+          !Array.isArray(skillIds) ||
+          skillIds.some((id: any) => typeof id !== 'string') ||
+          new Set(skillIds).size !== skillIds.length
+        ) {
           return res.status(400).json({ error: 'Invalid skillIds' });
         }
         updates.skillIds = skillIds;
