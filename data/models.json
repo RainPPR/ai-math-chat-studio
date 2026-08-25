@@ -263,13 +263,6 @@
     "displayName": "DeepSeek v4 Flash 0731 (LogFare)"
   },
   {
-    "id": "248c1cbe-0ff5-5ed2-b6cc-0f5d89abccae",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-pro",
-    "displayName": "DeepSeek V4 Pro (LogFare)"
-  },
-  {
     "id": "166f55ed-513c-5fdd-90fa-776669c59e6e",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -289,6 +282,13 @@
     "providerType": "openai-compatible",
     "modelId": "glm-5.2",
     "displayName": "GLM 5.2 (LogFare)"
+  },
+  {
+    "id": "d4cb5d70-7982-59d7-bd72-4337d101bf05",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kimi-k2.7-code",
+    "displayName": "Kimi K2.7 Code (LogFare)"
   },
   {
     "id": "581eadd1-f00a-55ce-bbdf-1bc0f905583b",

@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import React, { useState, useEffect, useRef } from 'react';
-import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
+import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, Skill, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
 import { sortProviders, sortModels } from '../../shared/sorting';
@@ -23,7 +23,7 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type Tab = 'general' | 'providers' | 'models' | 'tempModels' | 'characters' | 'templates';
+type Tab = 'general' | 'providers' | 'models' | 'tempModels' | 'characters' | 'skills' | 'templates';
 
 // ===== Active Model Dropdown Component =====
 
@@ -439,6 +439,12 @@ const makeEmptyCharacter = (): Character => ({
   systemPrompt: '',
 });
 
+const makeEmptySkill = (): Skill => ({
+  id: crypto.randomUUID(),
+  name: '',
+  prompt: '',
+});
+
 const getDefaultEnvKey = (type: string): string => {
   switch (type) {
     case 'google': return 'GEMINI_API_KEY';
@@ -475,6 +481,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const [cleanResult, setCleanResult] = useState<{ cleaned: number; total: number } | null>(null);
 
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
 
   const [isChunkModalOpen, setIsChunkModalOpen] = useState(false);
@@ -906,6 +913,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     }));
   };
 
+  // ----- Skill CRUD -----
+  const addSkill = () => {
+    setEditingSkill(makeEmptySkill());
+  };
+
+  const saveSkill = () => {
+    if (!editingSkill?.name.trim()) return;
+    setLocal(s => {
+      const skills = [...(s.skills || [])];
+      const idx = skills.findIndex(sk => sk.id === editingSkill.id);
+      if (idx >= 0) {
+        skills[idx] = editingSkill;
+      } else {
+        skills.push(editingSkill);
+      }
+      return { ...s, skills };
+    });
+    setEditingSkill(null);
+  };
+
+  const deleteSkillEntry = (id: string) => {
+    setLocal(s => {
+      const skills = (s.skills || []).filter(sk => sk.id !== id);
+      const activeSkillIds = (s.activeSkillIds || []).filter(skId => skId !== id);
+      return { ...s, skills, activeSkillIds };
+    });
+  };
+
   // ----- Template CRUD -----
   const addTemplate = () => {
     setEditingTemplate({
@@ -1070,9 +1105,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         </div>
 
         <div className="flex border-b border-gray-800 shrink-0">
-          {(['general', 'providers', 'models', 'tempModels', 'characters', 'templates'] as Tab[]).map(t => (
+          {(['general', 'providers', 'models', 'tempModels', 'characters', 'skills', 'templates'] as Tab[]).map(t => (
             <button key={t} onClick={() => { setTab(t); }} className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === t ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>
-              {({ general: 'General', providers: 'Providers', models: 'Models', tempModels: 'Temp Models', characters: 'Characters', templates: 'Templates' } as Record<Tab, string>)[t]}
+              {({ general: 'General', providers: 'Providers', models: 'Models', tempModels: 'Temp Models', characters: 'Characters', skills: 'Skills', templates: 'Templates' } as Record<Tab, string>)[t]}
             </button>
           ))}
         </div>
@@ -1370,6 +1405,57 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <Plus size={18} /> Add Provider
                   </button>
                 </>
+              )}
+            </>
+          )}
+
+          {/* Skills Tab */}
+          {tab === 'skills' && (
+            <>
+              {editingSkill ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300">Skill Name</label>
+                    <input
+                      value={editingSkill.name}
+                      onChange={e => { setEditingSkill({ ...editingSkill, name: e.target.value }); }}
+                      placeholder="e.g. Assistant"
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300">Prompt</label>
+                    <textarea
+                      value={editingSkill.prompt}
+                      onChange={e => { setEditingSkill({ ...editingSkill, prompt: e.target.value }); }}
+                      placeholder="Enter skill prompt instructions..."
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 h-40 resize-none"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button onClick={() => { setEditingSkill(null); }} className="px-4 py-2 text-gray-300 hover:text-white transition-colors">Cancel</button>
+                    <button onClick={saveSkill} disabled={!editingSkill.name.trim()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg transition-colors flex items-center gap-2"><Save size={14} /> Save Skill</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {(!local.skills || local.skills.length === 0) && <p className="text-xs text-gray-500">No skills configured.</p>}
+                  {local.skills && local.skills.map(sk => (
+                    <div key={sk.id} className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-white truncate">{sk.name}</div>
+                        <div className="text-xs text-gray-400 line-clamp-2 mt-1">{sk.prompt?.slice(0, 120)}...</div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-3">
+                        <button onClick={() => { setEditingSkill({ ...sk }); }} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
+                        <button onClick={() => { deleteSkillEntry(sk.id); }} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={addSkill} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-4 transition-colors">
+                    <Plus size={18} /> Add Skill
+                  </button>
+                </div>
               )}
             </>
           )}

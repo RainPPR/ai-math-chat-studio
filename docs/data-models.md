@@ -68,6 +68,18 @@ interface Character {
 
 > **设计意图**：角色是系统提示词的容器。用户可在设置中创建多个角色（如"数学导师"、"代码助手"），每个角色携带不同的 `systemPrompt`。发送消息时，后端根据 `activeCharacterId` 查找对应角色的 `systemPrompt` 注入请求。
 
+### Skill（技能）
+
+```typescript
+interface Skill {
+  id: string;            // UUID / 唯一标识符
+  name: string;          // 技能名称（如 "Assistant"）
+  prompt: string;        // 技能提示词内容
+}
+```
+
+> **设计意图**：技能是独立于角色的可多选提示词模块。默认系统包含 "Assistant" 技能。选中的 Skills 在发送消息时会自动被包裹为 `# Skill: ${name}\n${prompt}` 注入至 Character 系统提示词上方，且整体排在 KaTeX/Markdown 格式指令之后。
+
 ### Template（自动填入模板）
 
 ```typescript
@@ -86,10 +98,12 @@ interface Template {
 interface UserSettings {
   activeModelId?: string;           // 当前活跃模型的 ModelInstance.id 或 TempModel.id
   activeCharacterId?: string;       // 当前活跃角色的 Character.id
+  activeSkillIds?: string[];        // 默认激活的技能 ID 列表
   providers: ProviderInstance[];    // 提供商实例列表
   models: ModelInstance[];          // 模型实例列表
   tempModels?: TempModel[];         // 临时模型实例列表
   characters: Character[];          // 角色列表
+  skills?: Skill[];                 // 技能列表
   systemPrompt: string;             // 全局回退系统提示词（向后兼容）
   renderThinkingAsMarkdown: boolean;
   autoScroll: boolean;
@@ -118,6 +132,7 @@ interface ChatSession {
   title: string;            // 会话标题
   messages: ChatMessage[];  // 消息列表
   characterId?: string;    // 创建时使用的角色 ID（仅记录首次）
+  skillIds?: string[];      // 会话选择的技能 ID 列表
   createdAt: string;        // ISO 时间戳
   updatedAt: string;        // ISO 时间戳
 }
@@ -163,6 +178,7 @@ interface GenerationProvider {
   models.json             # ModelInstance[]（模型列表）
   temp-models.json        # TempModel[]（临时模型列表，包含 API Key，已 Git 忽略）
   characters.json         # Character[]（角色列表）
+  skills.json             # Skill[]（技能列表）
   templates.json          # Template[]（聊天自动填入模板单文件）
   sessions/{sessionId}.json  # ChatSession（每会话一个文件）
   log/                    # 日志文件（YYYY-MM-DD.log）

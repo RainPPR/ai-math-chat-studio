@@ -8,12 +8,20 @@ interface Character {
   systemPrompt: string;
 }
 
+interface Skill {
+  id: string;
+  name: string;
+  prompt: string;
+}
+
 interface SettingsData {
   activeModelId?: string;
   activeCharacterId?: string;
+  activeSkillIds?: string[];
   providers?: any[];
   models?: any[];
   characters?: Character[];
+  skills?: Skill[];
   systemPrompt?: string;
   injectThinkingTemplate?: boolean;
   [key: string]: any;
@@ -70,14 +78,26 @@ function resolveActiveModel(settings: SettingsData) {
   return null;
 }
 
-function resolveSystemPrompt(settings: SettingsData, characterId?: string): string {
+function resolveSystemPrompt(settings: SettingsData, characterId?: string, skillIds?: string[]): string {
+  const parts: string[] = [];
+
+  if (skillIds && skillIds.length > 0 && settings.skills?.length) {
+    skillIds.forEach(id => {
+      const skill = settings.skills?.find((s: any) => s.id === id);
+      if (skill && skill.prompt && skill.prompt.trim()) {
+        parts.push(`# Skill: ${skill.name}\n${skill.prompt.trim()}`);
+      }
+    });
+  }
+
   if (characterId && settings.characters?.length) {
     const character = settings.characters.find((c: any) => c.id === characterId);
-    if (character?.systemPrompt) {
-      return character.systemPrompt;
+    if (character && character.systemPrompt && character.systemPrompt.trim()) {
+      parts.push(character.systemPrompt.trim());
     }
   }
-  return '';
+
+  return parts.join('\n\n');
 }
 
 export function createChatRouter(gm: GenerationManager, settingsFile: string) {
@@ -93,10 +113,20 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    const characterId = session ? session.characterId : settings.activeCharacterId;
+    let characterId = settings.activeCharacterId;
+    if (session && session.characterId !== undefined) {
+      characterId = session.characterId;
+    }
+    let skillIds = settings.activeSkillIds;
+    if (session && session.skillIds !== undefined) {
+      skillIds = session.skillIds;
+    }
+    if (!skillIds) {
+      skillIds = [];
+    }
 
     const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
-    await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate, characterId);
+    await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings, characterId, skillIds), injectThinkingTemplate, characterId, skillIds);
     res.status(202).json({ ok: true });
   });
 
@@ -185,11 +215,21 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    const characterId = session?.characterId;
+    let characterId = settings.activeCharacterId;
+    if (session && session.characterId !== undefined) {
+      characterId = session.characterId;
+    }
+    let skillIds = settings.activeSkillIds;
+    if (session && session.skillIds !== undefined) {
+      skillIds = session.skillIds;
+    }
+    if (!skillIds) {
+      skillIds = [];
+    }
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
-      await gm.retryMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate);
+      await gm.retryMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId, skillIds), injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -203,11 +243,21 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    const characterId = session?.characterId;
+    let characterId = settings.activeCharacterId;
+    if (session && session.characterId !== undefined) {
+      characterId = session.characterId;
+    }
+    let skillIds = settings.activeSkillIds;
+    if (session && session.skillIds !== undefined) {
+      skillIds = session.skillIds;
+    }
+    if (!skillIds) {
+      skillIds = [];
+    }
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
-      await gm.continueGeneration(sessionId, result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate);
+      await gm.continueGeneration(sessionId, result.model, result.provider, resolveSystemPrompt(settings, characterId, skillIds), injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -224,11 +274,21 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    const characterId = session?.characterId;
+    let characterId = settings.activeCharacterId;
+    if (session && session.characterId !== undefined) {
+      characterId = session.characterId;
+    }
+    let skillIds = settings.activeSkillIds;
+    if (session && session.skillIds !== undefined) {
+      skillIds = session.skillIds;
+    }
+    if (!skillIds) {
+      skillIds = [];
+    }
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
-      await gm.regenerateMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate);
+      await gm.regenerateMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId, skillIds), injectThinkingTemplate);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });

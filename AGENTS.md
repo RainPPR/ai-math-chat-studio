@@ -71,9 +71,9 @@
 
 ## 关键架构模式
 
-### 1. 三级架构 (Provider + Model + Character)
+### 1. 核心提示词与角色/技能架构 (Provider + Model + Character + Skills)
 
-用户在 Settings 中分三级配置：
+用户在 Settings 中分级配置：
 
 **Providers tab**：
 - 添加/管理提供商实例（Google / Nvidia / OpenAI Compatible）。
@@ -93,8 +93,12 @@
 - 创建/管理角色（名称 + 系统提示词）。
 - 角色对应不同的 AI 人格和系统级指令。
 
+**Skills tab**：
+- 创建/管理独立的技能提示词（名称 + 提示词）。默认包含 "Assistant" 技能。
+- 独立于角色，支持不选、单选或多选。选中的 Skills 提示词会在系统提示词中自动拼接到 Character 提示词上方（格式为 `# Skill: ${skill.name}\n${skill.prompt}`），且整体注入在 `FORMAT_INSTRUCTIONS` 格式约束提示词之下。
+
 **快捷切换（ChatArea 浮动栏）**：
-- 在聊天输入框上方提供浮动栏，可快速切换当前活跃模型和角色。
+- 在聊天输入框上方提供浮动栏，可快速切换当前活跃模型、角色以及勾选多选 Skills。
 
 ### 2. 思考过程格式统一
 

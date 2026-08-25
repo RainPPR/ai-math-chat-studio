@@ -84,6 +84,7 @@ export default function App() {
       id, title: 'New Chat',
       messages: [],
       characterId: settings.activeCharacterId,
+      skillIds: settings.activeSkillIds || [],
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
     setSessions(prev => [session, ...prev]);
@@ -144,6 +145,7 @@ export default function App() {
         title: content.trim().slice(0, 50) + (content.length > 50 ? '...' : ''),
         messages: [],
         characterId: settings.activeCharacterId,
+        skillIds: settings.activeSkillIds || [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -348,6 +350,15 @@ export default function App() {
     }
   };
 
+  const handleUpdateSessionSkills = async (skillIds: string[]) => {
+    if (!currentSessionId) return;
+    try {
+      await handleUpdateSession(currentSessionId, { skillIds });
+    } catch {
+      // Handled in handleUpdateSession
+    }
+  };
+
   const handleSelectCharacter = async (characterId: string) => {
     const previousSettings = { ...settings };
     const newSettings = { ...settings, activeCharacterId: characterId };
@@ -359,6 +370,22 @@ export default function App() {
       } catch (e: any) {
         setSettings(previousSettings);
         setError(e.message || 'Failed to update selected character');
+      }
+    });
+    await settingsSaveQueue;
+  };
+
+  const handleSelectSkills = async (skillIds: string[]) => {
+    const previousSettings = { ...settings };
+    const newSettings = { ...settings, activeSkillIds: skillIds };
+    setSettings(newSettings);
+
+    settingsSaveQueue = settingsSaveQueue.then(async () => {
+      try {
+        await api.settings.save(newSettings);
+      } catch (e: any) {
+        setSettings(previousSettings);
+        setError(e.message || 'Failed to update selected skills');
       }
     });
     await settingsSaveQueue;
@@ -468,7 +495,9 @@ export default function App() {
           onRegenerate={handleRegenerate}
           onSelectModel={handleSelectModel}
           onSelectCharacter={handleSelectCharacter}
+          onSelectSkills={handleSelectSkills}
           onUpdateSessionCharacter={handleUpdateSessionCharacter}
+          onUpdateSessionSkills={handleUpdateSessionSkills}
           onUpdateSession={handleUpdateSession}
           error={error}
           onClearError={clearError}

@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import {
   Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal,
   AlertCircle, X, ChevronDown, Bot, Sparkles, FileText, Eye, Printer, Edit,
-  Trash2, ArrowUp, ArrowDown, Plus, ListTree, Menu
+  Trash2, ArrowUp, ArrowDown, Plus, ListTree, Menu, Zap, CheckSquare, Square
 } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { TOCSidebar } from './TOCSidebar';
@@ -23,7 +23,9 @@ interface ChatAreaProps {
   onGenerationEnd?: (sessionId: string) => void;
   onSelectModel?: (modelId: string) => void;
   onSelectCharacter?: (characterId: string) => void;
+  onSelectSkills?: (skillIds: string[]) => void;
   onUpdateSessionCharacter?: (characterId: string) => void;
+  onUpdateSessionSkills?: (skillIds: string[]) => void;
   onUpdateSession?: (sessionId: string, updates: Partial<ChatSession>) => Promise<void>;
   error?: string | null;
   onClearError?: () => void;
@@ -446,7 +448,7 @@ const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
 export const ChatArea: React.FC<ChatAreaProps> = ({
   session, onSendMessage, isGenerating, isStopping, settings, templates,
   onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel,
-  onSelectCharacter, onUpdateSessionCharacter, onUpdateSession, error,
+  onSelectCharacter, onSelectSkills, onUpdateSessionCharacter, onUpdateSessionSkills, onUpdateSession, error,
   onClearError, onError, isMobile = false, onOpenMobileSidebar
 }) => {
   const [input, setInput] = useState('');
@@ -481,12 +483,14 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [modelSearchQuery, setModelSearchQuery] = useState('');
   const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false);
+  const [skillsDropdownOpen, setSkillsDropdownOpen] = useState(false);
   const [templateDropdownOpen, setTemplateDropdownOpen] = useState(false);
   const [headerCharacterDropdownOpen, setHeaderCharacterDropdownOpen] = useState(false);
   const headerCharacterDropdownRef = useRef<HTMLDivElement>(null);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
   const modelToggleBtnRef = useRef<HTMLButtonElement>(null);
   const characterDropdownRef = useRef<HTMLDivElement>(null);
+  const skillsDropdownRef = useRef<HTMLDivElement>(null);
   const templateDropdownRef = useRef<HTMLDivElement>(null);
   const activeModelRef = useRef<HTMLButtonElement>(null);
 
@@ -585,6 +589,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       }
       if (characterDropdownRef.current && !characterDropdownRef.current.contains(e.target as Node)) {
         setCharacterDropdownOpen(false);
+      }
+      if (skillsDropdownRef.current && !skillsDropdownRef.current.contains(e.target as Node)) {
+        setSkillsDropdownOpen(false);
       }
       if (templateDropdownRef.current && !templateDropdownRef.current.contains(e.target as Node)) {
         setTemplateDropdownOpen(false);
@@ -1130,7 +1137,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           <div ref={modelDropdownRef} className="relative">
             <button
               ref={modelToggleBtnRef}
-              onClick={() => { setCharacterDropdownOpen(false); setModelDropdownOpen(!modelDropdownOpen); }}
+              onClick={() => { setCharacterDropdownOpen(false); setSkillsDropdownOpen(false); setTemplateDropdownOpen(false); setModelDropdownOpen(!modelDropdownOpen); }}
               className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
             >
               <Sparkles size={12} className="text-blue-400 shrink-0" />
@@ -1251,7 +1258,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
           <div ref={characterDropdownRef} className="relative">
             <button
-              onClick={() => { setModelDropdownOpen(false); setCharacterDropdownOpen(!characterDropdownOpen); }}
+              onClick={() => { setModelDropdownOpen(false); setSkillsDropdownOpen(false); setTemplateDropdownOpen(false); setCharacterDropdownOpen(!characterDropdownOpen); }}
               className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
             >
               <Bot size={12} className="text-green-400 shrink-0" />
@@ -1281,9 +1288,109 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             )}
           </div>
 
+          <div ref={skillsDropdownRef} className="relative">
+            <button
+              onClick={() => { setModelDropdownOpen(false); setCharacterDropdownOpen(false); setTemplateDropdownOpen(false); setSkillsDropdownOpen(!skillsDropdownOpen); }}
+              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
+            >
+              <Zap size={12} className="text-amber-400 shrink-0" />
+              <span className="max-w-[100px] sm:max-w-[120px] truncate">
+                {(() => {
+                  let currentSkillIds: string[] = [];
+                  if (session && session.skillIds !== undefined) {
+                    currentSkillIds = session.skillIds;
+                  } else if (settings.activeSkillIds) {
+                    currentSkillIds = settings.activeSkillIds;
+                  }
+
+                  if (currentSkillIds.length === 0) {
+                    return 'Skills';
+                  } else if (currentSkillIds.length === 1) {
+                    const sk = (settings.skills || []).find(s => s.id === currentSkillIds[0]);
+                    if (sk) {
+                      return sk.name;
+                    } else {
+                      return 'Skills (1)';
+                    }
+                  } else {
+                    return `Skills (${currentSkillIds.length})`;
+                  }
+                })()}
+              </span>
+              <ChevronDown size={12} className={`transition-transform shrink-0 ${skillsDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {skillsDropdownOpen && (
+              <div className="absolute bottom-full mb-1 left-0 z-50 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
+                {(!settings.skills || settings.skills.length === 0) && (
+                  <div className="px-2.5 py-2 text-xs text-gray-500">No skills configured</div>
+                )}
+                {settings.skills && settings.skills.length > 0 && (() => {
+                  let currentSkillIds: string[] = [];
+                  if (session && session.skillIds !== undefined) {
+                    currentSkillIds = session.skillIds;
+                  } else if (settings.activeSkillIds) {
+                    currentSkillIds = settings.activeSkillIds;
+                  }
+
+                  const handleToggleSkill = (skillId: string) => {
+                    let nextSkillIds: string[];
+                    if (currentSkillIds.includes(skillId)) {
+                      nextSkillIds = currentSkillIds.filter(id => id !== skillId);
+                    } else {
+                      nextSkillIds = [...currentSkillIds, skillId];
+                    }
+                    onSelectSkills?.(nextSkillIds);
+                    if (session && onUpdateSessionSkills) {
+                      onUpdateSessionSkills(nextSkillIds);
+                    }
+                  };
+
+                  const handleClearSkills = () => {
+                    onSelectSkills?.([]);
+                    if (session && onUpdateSessionSkills) {
+                      onUpdateSessionSkills([]);
+                    }
+                  };
+
+                  return (
+                    <div className="py-1">
+                      {currentSkillIds.length > 0 && (
+                        <div className="px-2.5 py-1 border-b border-gray-700/50 flex justify-end">
+                          <button
+                            onClick={handleClearSkills}
+                            className="text-[10px] text-gray-400 hover:text-amber-300 transition-colors"
+                          >
+                            Deselect all
+                          </button>
+                        </div>
+                      )}
+                      {settings.skills.map(sk => {
+                        const isSelected = currentSkillIds.includes(sk.id);
+                        return (
+                          <button
+                            key={sk.id}
+                            onClick={() => handleToggleSkill(sk.id)}
+                            className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors flex items-center justify-between gap-2 ${isSelected ? 'text-amber-300 bg-amber-600/10' : 'text-gray-300'}`}
+                          >
+                            <span className="truncate flex-1">{sk.name}</span>
+                            {isSelected ? (
+                              <CheckSquare size={14} className="text-amber-400 shrink-0" />
+                            ) : (
+                              <Square size={14} className="text-gray-600 shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
           <div ref={templateDropdownRef} className="relative">
             <button
-              onClick={() => { setModelDropdownOpen(false); setCharacterDropdownOpen(false); setTemplateDropdownOpen(!templateDropdownOpen); }}
+              onClick={() => { setModelDropdownOpen(false); setCharacterDropdownOpen(false); setSkillsDropdownOpen(false); setTemplateDropdownOpen(!templateDropdownOpen); }}
               className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors"
             >
               <FileText size={12} className="text-orange-400 shrink-0" />
