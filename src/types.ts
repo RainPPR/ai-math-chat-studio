@@ -42,16 +42,15 @@ export interface TempModel {
   injectThinkingTemplate?: boolean;
 }
 
+import { Skill, DEFAULT_SKILLS } from '../shared/skills';
+
+export type { Skill };
+export { DEFAULT_SKILLS };
+
 export interface Character {
   id: string;
   name: string;
   systemPrompt: string;
-}
-
-export interface Skill {
-  id: string;
-  name: string;
-  prompt: string;
 }
 
 export interface Template {
@@ -82,14 +81,6 @@ export interface UserSettings {
 }
 
 export type StarColor = 'yellow' | 'rose' | 'blue' | 'green' | 'orange';
-
-export const DEFAULT_SKILLS: Skill[] = [
-  {
-    id: 'default-assistant',
-    name: 'Assistant',
-    prompt: '你是一个有用、专业、诚实且无害的人工智能助手。请以礼貌、清晰和准确的方式回答用户的每一个问题。',
-  },
-];
 
 export const DEFAULT_SETTINGS: UserSettings = {
   providers: [],

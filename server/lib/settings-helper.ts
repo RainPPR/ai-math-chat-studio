@@ -2,8 +2,9 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { sortProviders, sortModels } from '../../shared/sorting';
+import { DEFAULT_SKILLS } from '../../shared/skills';
 
-export { sortProviders, sortModels };
+export { sortProviders, sortModels, DEFAULT_SKILLS };
 
 export interface UserSettings {
   activeModelId?: string;
@@ -25,14 +26,6 @@ export interface UserSettings {
   stickyNotes?: any[];
   [key: string]: any;
 }
-
-const DEFAULT_SKILLS = [
-  {
-    id: 'default-assistant',
-    name: 'Assistant',
-    prompt: '你是一个有用、专业、诚实且无害的人工智能助手。请以礼貌、清晰和准确的方式回答用户的每一个问题。',
-  },
-];
 
 async function writeIfChanged(filepath: string, newJSON: string): Promise<void> {
   try {
@@ -218,7 +211,7 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
     }
   }
 
-  if (!skillsLoaded && skills.length === 0) {
+  if (!skillsLoaded && skills.length === 0 && !hasSkillsInSettings) {
     skills = DEFAULT_SKILLS;
     try {
       await fs.mkdir(dataDir, { recursive: true });

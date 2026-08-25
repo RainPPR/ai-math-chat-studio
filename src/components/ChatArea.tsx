@@ -484,6 +484,22 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const [modelSearchQuery, setModelSearchQuery] = useState('');
   const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false);
   const [skillsDropdownOpen, setSkillsDropdownOpen] = useState(false);
+
+  const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>(() => {
+    if (session && session.skillIds !== undefined) {
+      return session.skillIds;
+    }
+    return settings.activeSkillIds || [];
+  });
+
+  useEffect(() => {
+    if (session && session.skillIds !== undefined) {
+      setSelectedSkillIds(session.skillIds);
+    } else {
+      setSelectedSkillIds(settings.activeSkillIds || []);
+    }
+  }, [session?.id, session?.skillIds, settings.activeSkillIds]);
+
   const [templateDropdownOpen, setTemplateDropdownOpen] = useState(false);
   const [headerCharacterDropdownOpen, setHeaderCharacterDropdownOpen] = useState(false);
   const headerCharacterDropdownRef = useRef<HTMLDivElement>(null);
@@ -1296,24 +1312,18 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               <Zap size={12} className="text-amber-400 shrink-0" />
               <span className="max-w-[100px] sm:max-w-[120px] truncate">
                 {(() => {
-                  let currentSkillIds: string[] = [];
-                  if (session && session.skillIds !== undefined) {
-                    currentSkillIds = session.skillIds;
-                  } else if (settings.activeSkillIds) {
-                    currentSkillIds = settings.activeSkillIds;
-                  }
-
-                  if (currentSkillIds.length === 0) {
+                  const validSkillIds = selectedSkillIds.filter(id => (settings.skills || []).some(s => s.id === id));
+                  if (validSkillIds.length === 0) {
                     return 'Skills';
-                  } else if (currentSkillIds.length === 1) {
-                    const sk = (settings.skills || []).find(s => s.id === currentSkillIds[0]);
+                  } else if (validSkillIds.length === 1) {
+                    const sk = (settings.skills || []).find(s => s.id === validSkillIds[0]);
                     if (sk) {
                       return sk.name;
                     } else {
                       return 'Skills (1)';
                     }
                   } else {
-                    return `Skills (${currentSkillIds.length})`;
+                    return `Skills (${validSkillIds.length})`;
                   }
                 })()}
               </span>
@@ -1325,36 +1335,40 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                   <div className="px-2.5 py-2 text-xs text-gray-500">No skills configured</div>
                 )}
                 {settings.skills && settings.skills.length > 0 && (() => {
-                  let currentSkillIds: string[] = [];
-                  if (session && session.skillIds !== undefined) {
-                    currentSkillIds = session.skillIds;
-                  } else if (settings.activeSkillIds) {
-                    currentSkillIds = settings.activeSkillIds;
-                  }
+                  const validSkillIds = selectedSkillIds.filter(id => (settings.skills || []).some(s => s.id === id));
 
                   const handleToggleSkill = (skillId: string) => {
-                    let nextSkillIds: string[];
-                    if (currentSkillIds.includes(skillId)) {
-                      nextSkillIds = currentSkillIds.filter(id => id !== skillId);
-                    } else {
-                      nextSkillIds = [...currentSkillIds, skillId];
-                    }
-                    onSelectSkills?.(nextSkillIds);
-                    if (session && onUpdateSessionSkills) {
-                      onUpdateSessionSkills(nextSkillIds);
-                    }
+                    setSelectedSkillIds(prev => {
+                      let nextSkillIds: string[];
+                      if (prev.includes(skillId)) {
+                        nextSkillIds = prev.filter(id => id !== skillId);
+                      } else {
+                        nextSkillIds = [...prev, skillId];
+                      }
+
+                      if (session) {
+                        onUpdateSessionSkills?.(nextSkillIds);
+                      } else {
+                        onSelectSkills?.(nextSkillIds);
+                      }
+
+                      return nextSkillIds;
+                    });
                   };
 
                   const handleClearSkills = () => {
-                    onSelectSkills?.([]);
-                    if (session && onUpdateSessionSkills) {
-                      onUpdateSessionSkills([]);
+                    const nextSkillIds: string[] = [];
+                    setSelectedSkillIds(nextSkillIds);
+                    if (session) {
+                      onUpdateSessionSkills?.(nextSkillIds);
+                    } else {
+                      onSelectSkills?.(nextSkillIds);
                     }
                   };
 
                   return (
                     <div className="py-1">
-                      {currentSkillIds.length > 0 && (
+                      {validSkillIds.length > 0 && (
                         <div className="px-2.5 py-1 border-b border-gray-700/50 flex justify-end">
                           <button
                             onClick={handleClearSkills}
@@ -1365,7 +1379,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                         </div>
                       )}
                       {settings.skills.map(sk => {
-                        const isSelected = currentSkillIds.includes(sk.id);
+                        const isSelected = validSkillIds.includes(sk.id);
                         return (
                           <button
                             key={sk.id}

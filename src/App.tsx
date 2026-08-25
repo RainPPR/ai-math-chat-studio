@@ -352,6 +352,13 @@ export default function App() {
 
   const handleUpdateSessionSkills = async (skillIds: string[]) => {
     if (!currentSessionId) return;
+    setSessions(prev => prev.map(s => {
+      if (s.id === currentSessionId) {
+        return { ...s, skillIds };
+      }
+      return s;
+    }));
+
     try {
       await handleUpdateSession(currentSessionId, { skillIds });
     } catch {

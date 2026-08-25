@@ -78,6 +78,25 @@ function resolveActiveModel(settings: SettingsData) {
   return null;
 }
 
+function resolveSessionContext(settings: SettingsData, session: any) {
+  let characterId: string | undefined;
+  let skillIds: string[];
+
+  if (session) {
+    characterId = session.characterId;
+    if (session.skillIds !== undefined) {
+      skillIds = session.skillIds;
+    } else {
+      skillIds = settings.activeSkillIds || [];
+    }
+  } else {
+    characterId = settings.activeCharacterId;
+    skillIds = settings.activeSkillIds || [];
+  }
+
+  return { characterId, skillIds };
+}
+
 function resolveSystemPrompt(settings: SettingsData, characterId?: string, skillIds?: string[]): string {
   const parts: string[] = [];
 
@@ -113,17 +132,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    let characterId = settings.activeCharacterId;
-    if (session && session.characterId !== undefined) {
-      characterId = session.characterId;
-    }
-    let skillIds = settings.activeSkillIds;
-    if (session && session.skillIds !== undefined) {
-      skillIds = session.skillIds;
-    }
-    if (!skillIds) {
-      skillIds = [];
-    }
+    const { characterId, skillIds } = resolveSessionContext(settings, session);
 
     const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
     await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings, characterId, skillIds), injectThinkingTemplate, characterId, skillIds);
@@ -215,17 +224,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    let characterId = settings.activeCharacterId;
-    if (session && session.characterId !== undefined) {
-      characterId = session.characterId;
-    }
-    let skillIds = settings.activeSkillIds;
-    if (session && session.skillIds !== undefined) {
-      skillIds = session.skillIds;
-    }
-    if (!skillIds) {
-      skillIds = [];
-    }
+    const { characterId, skillIds } = resolveSessionContext(settings, session);
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
@@ -243,17 +242,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    let characterId = settings.activeCharacterId;
-    if (session && session.characterId !== undefined) {
-      characterId = session.characterId;
-    }
-    let skillIds = settings.activeSkillIds;
-    if (session && session.skillIds !== undefined) {
-      skillIds = session.skillIds;
-    }
-    if (!skillIds) {
-      skillIds = [];
-    }
+    const { characterId, skillIds } = resolveSessionContext(settings, session);
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
@@ -274,17 +263,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
 
     const sessionId = req.params.id;
     const session = await gm.readSession(sessionId);
-    let characterId = settings.activeCharacterId;
-    if (session && session.characterId !== undefined) {
-      characterId = session.characterId;
-    }
-    let skillIds = settings.activeSkillIds;
-    if (session && session.skillIds !== undefined) {
-      skillIds = session.skillIds;
-    }
-    if (!skillIds) {
-      skillIds = [];
-    }
+    const { characterId, skillIds } = resolveSessionContext(settings, session);
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;

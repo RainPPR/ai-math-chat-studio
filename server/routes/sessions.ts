@@ -20,10 +20,16 @@ export function createSessionRouter(gm: GenerationManager) {
 
   router.patch('/api/sessions/:id', async (req, res) => {
     try {
-      const { title, characterId, messages } = req.body || {};
+      const { title, characterId, skillIds, messages } = req.body || {};
       const updates: any = {};
       if (title !== undefined) updates.title = title;
       if (characterId !== undefined) updates.characterId = characterId;
+      if (skillIds !== undefined) {
+        if (!Array.isArray(skillIds) || skillIds.some((id: any) => typeof id !== 'string')) {
+          return res.status(400).json({ error: 'Invalid skillIds' });
+        }
+        updates.skillIds = skillIds;
+      }
       if (messages !== undefined) {
         if (!Array.isArray(messages) || messages.some((message: any) => (
           !message ||

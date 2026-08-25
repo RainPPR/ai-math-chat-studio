@@ -1614,7 +1614,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <div key={c.id} className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex items-center justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium text-white truncate">{c.name}</div>
-                        <div className="text-xs text-gray-400 line-clamp-2 mt-1">{c.systemPrompt?.slice(0, 120)}...</div>
+                        <div className="text-xs text-gray-400 line-clamp-2 mt-1">{c.systemPrompt}</div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-3">
                         <button onClick={() => { setEditingCharacter({ ...c }); }} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
