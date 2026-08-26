@@ -173,7 +173,6 @@ export default function App() {
         title: content.trim().slice(0, 50) + (content.length > 50 ? '...' : ''),
         messages: [],
         characterId: settings.activeCharacterId,
-        skillIds: settings.activeSkillIds || [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -197,7 +196,7 @@ export default function App() {
     );
 
     try {
-      await api.chat.send(sessionId, content, activeSession.characterId, activeSession.skillIds);
+      await api.chat.send(sessionId, content);
       if (unsavedSessionIds.has(sessionId)) {
         setUnsavedSessionIds(prev => {
           const next = new Set(prev);
@@ -398,15 +397,9 @@ export default function App() {
     }
   };
 
-  const handleUpdateSessionCharacter = (characterId: string) =>
-    handleUpdateSessionProperty('characterId', characterId);
-
-  const handleUpdateSessionSkills = (skillIds: string[]) =>
-    handleUpdateSessionProperty('skillIds', skillIds);
-
   const handleSelectCharacter = (characterId: string) =>
     updateGlobalSettings(
-      prev => ({ ...prev, activeCharacterId: characterId }),
+      prev => ({ ...prev, activeCharacterId: characterId || undefined }),
       'Failed to update selected character'
     );
 
@@ -415,6 +408,9 @@ export default function App() {
       prev => ({ ...prev, activeSkillIds: skillIds }),
       'Failed to update selected skills'
     );
+
+  const handleUpdateSessionCharacter = handleSelectCharacter;
+  const handleUpdateSessionSkills = handleSelectSkills;
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
