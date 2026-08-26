@@ -1,5 +1,7 @@
 {
-  "activeSkillIds": [],
+  "activeSkillIds": [
+    "f8513ca7-52fb-4748-8389-af1db9d071f7"
+  ],
   "systemPrompt": "",
   "renderThinkingAsMarkdown": true,
   "autoScroll": false,
