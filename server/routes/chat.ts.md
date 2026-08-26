@@ -74,34 +74,12 @@ function resolveActiveModel(settings: SettingsData) {
   return null;
 }
 
-function resolveSessionContext(settings: SettingsData, session: any, reqBody?: { characterId?: string; skillIds?: string[] }) {
-  let characterId: string | undefined;
-  let skillIds: string[];
-
-  if (reqBody?.characterId !== undefined) {
-    characterId = reqBody.characterId;
-  } else if (session) {
-    characterId = session.characterId;
-  } else {
-    characterId = settings.activeCharacterId;
+function resolveSessionContext(settings: SettingsData) {
+  const characterId = settings.activeCharacterId;
+  let skillIds: string[] = [];
+  if (Array.isArray(settings.activeSkillIds)) {
+    skillIds = settings.activeSkillIds;
   }
-
-  if (reqBody?.skillIds !== undefined) {
-    if (
-      Array.isArray(reqBody.skillIds) &&
-      reqBody.skillIds.every((id: any) => typeof id === 'string') &&
-      new Set(reqBody.skillIds).size === reqBody.skillIds.length
-    ) {
-      skillIds = reqBody.skillIds;
-    } else {
-      skillIds = session?.skillIds !== undefined ? session.skillIds : (settings.activeSkillIds || []);
-    }
-  } else if (session && session.skillIds !== undefined) {
-    skillIds = session.skillIds;
-  } else {
-    skillIds = settings.activeSkillIds || [];
-  }
-
   return { characterId, skillIds };
 }
 
@@ -131,7 +109,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
   const router = Router();
 
   router.post('/api/sessions/:id/messages', async (req, res) => {
-    const { content, characterId: reqCharacterId, skillIds: reqSkillIds } = req.body || {};
+    const { content } = req.body || {};
     if (!content?.trim()) return res.status(400).json({ error: 'Empty message' });
 
     const settings = await loadSettings(settingsFile);
@@ -139,8 +117,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
-    const session = await gm.readSession(sessionId);
-    const { characterId, skillIds } = resolveSessionContext(settings, session, { characterId: reqCharacterId, skillIds: reqSkillIds });
+    const { characterId, skillIds } = resolveSessionContext(settings);
 
     const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
     await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings, characterId, skillIds), injectThinkingTemplate, characterId, skillIds);
@@ -231,8 +208,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
-    const session = await gm.readSession(sessionId);
-    const { characterId, skillIds } = resolveSessionContext(settings, session);
+    const { characterId, skillIds } = resolveSessionContext(settings);
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
@@ -249,8 +225,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
-    const session = await gm.readSession(sessionId);
-    const { characterId, skillIds } = resolveSessionContext(settings, session);
+    const { characterId, skillIds } = resolveSessionContext(settings);
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
@@ -270,8 +245,7 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
-    const session = await gm.readSession(sessionId);
-    const { characterId, skillIds } = resolveSessionContext(settings, session);
+    const { characterId, skillIds } = resolveSessionContext(settings);
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
