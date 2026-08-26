@@ -75,7 +75,10 @@ function resolveActiveModel(settings: SettingsData) {
 
 function resolveSessionContext(settings: SettingsData) {
   const characterId = settings.activeCharacterId;
-  const skillIds = Array.isArray(settings.activeSkillIds) ? settings.activeSkillIds : [];
+  let skillIds: string[] = [];
+  if (Array.isArray(settings.activeSkillIds)) {
+    skillIds = settings.activeSkillIds;
+  }
   return { characterId, skillIds };
 }
 

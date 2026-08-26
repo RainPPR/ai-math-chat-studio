@@ -8,6 +8,16 @@ import { Loader2 } from 'lucide-react';
 
 let settingsSaveQueue = Promise.resolve();
 
+async function awaitSettledSettingsSave() {
+  while (true) {
+    const currentQueue = settingsSaveQueue;
+    await currentQueue;
+    if (currentQueue === settingsSaveQueue) {
+      break;
+    }
+  }
+}
+
 function useWindowWidth() {
   const [width, setWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1024));
 
@@ -196,7 +206,7 @@ export default function App() {
     );
 
     try {
-      await settingsSaveQueue;
+      await awaitSettledSettingsSave();
       await api.chat.send(sessionId, content);
       if (unsavedSessionIds.has(sessionId)) {
         setUnsavedSessionIds(prev => {
@@ -234,7 +244,7 @@ export default function App() {
     if (!currentSessionId) return;
     clearError();
     try {
-      await settingsSaveQueue;
+      await awaitSettledSettingsSave();
       await api.chat.retry(currentSessionId, msgId);
       try {
         await refreshSession(currentSessionId);
@@ -251,7 +261,7 @@ export default function App() {
     if (!currentSessionId) return;
     clearError();
     try {
-      await settingsSaveQueue;
+      await awaitSettledSettingsSave();
       await api.chat.continue(currentSessionId);
       try {
         await refreshSession(currentSessionId);
@@ -268,7 +278,7 @@ export default function App() {
     if (!currentSessionId) return;
     clearError();
     try {
-      await settingsSaveQueue;
+      await awaitSettledSettingsSave();
       await api.chat.regenerate(currentSessionId, msgId);
       try {
         await refreshSession(currentSessionId);
