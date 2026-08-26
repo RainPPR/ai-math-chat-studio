@@ -196,6 +196,7 @@ export default function App() {
     );
 
     try {
+      await settingsSaveQueue;
       await api.chat.send(sessionId, content);
       if (unsavedSessionIds.has(sessionId)) {
         setUnsavedSessionIds(prev => {
@@ -233,6 +234,7 @@ export default function App() {
     if (!currentSessionId) return;
     clearError();
     try {
+      await settingsSaveQueue;
       await api.chat.retry(currentSessionId, msgId);
       try {
         await refreshSession(currentSessionId);
@@ -249,6 +251,7 @@ export default function App() {
     if (!currentSessionId) return;
     clearError();
     try {
+      await settingsSaveQueue;
       await api.chat.continue(currentSessionId);
       try {
         await refreshSession(currentSessionId);
@@ -265,6 +268,7 @@ export default function App() {
     if (!currentSessionId) return;
     clearError();
     try {
+      await settingsSaveQueue;
       await api.chat.regenerate(currentSessionId, msgId);
       try {
         await refreshSession(currentSessionId);
