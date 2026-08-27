@@ -238,14 +238,6 @@
     "displayName": "Poolside: Laguna XS 2.1 (Kilo)"
   },
   {
-    "id": "d5860d12-a583-5315-a857-7936650e7082",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "stealth/ox-alpha",
-    "displayName": "Ox Alpha (Kilo)",
-    "reasoningEffort": "max"
-  },
-  {
     "id": "c93e0a30-0931-543b-bb9b-d7c020d6b0b3",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -339,13 +331,6 @@
     "providerType": "openai-compatible",
     "modelId": "moondream3.1",
     "displayName": "Moondream 3.1 9B (LogFare)"
-  },
-  {
-    "id": "f522aa96-3b50-569c-b6f5-739b4d6321fb",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "qwen-3.8-2.4t-a95b",
-    "displayName": "Qwen 3.8 2.4t (a95b) (LogFare)"
   },
   {
     "id": "e193beee-0f6c-59e6-830f-ddf4d6e9aed8",
@@ -508,14 +493,6 @@
     "providerType": "openai-compatible",
     "modelId": "nemotron-3.5-lightning-free",
     "displayName": "Nemotron 3.5 Lightning Free (OpenCode)"
-  },
-  {
-    "id": "b5ffb32d-7e68-5929-81c6-263fdc612a54",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "x-preview-f-free",
-    "displayName": "Ox Alpha Free (Unlimited) (OpenCode)",
-    "reasoningEffort": "max"
   },
   {
     "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",

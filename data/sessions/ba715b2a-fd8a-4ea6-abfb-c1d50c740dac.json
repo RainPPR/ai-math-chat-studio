@@ -15,10 +15,10 @@
       "createdAt": "2026-08-26T11:55:46.980Z"
     }
   ],
-  "createdAt": "2026-08-26T11:53:31.599Z",
-  "updatedAt": "2026-08-26T11:55:46.980Z",
   "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
   "skillIds": [
     "f8513ca7-52fb-4748-8389-af1db9d071f7"
-  ]
+  ],
+  "createdAt": "2026-08-26T11:53:31.599Z",
+  "updatedAt": "2026-08-26T11:55:46.980Z"
 }

@@ -1,13 +1,16 @@
 {
   "activeSkillIds": [
-    "f8513ca7-52fb-4748-8389-af1db9d071f7"
+    "8fe7ae7f-ebca-4db0-bc94-281e1b24ba9d"
   ],
   "systemPrompt": "",
   "renderThinkingAsMarkdown": true,
   "autoScroll": false,
   "collapseThinkingFinished": true,
   "trimThinkingSpaces": false,
-  "starredSessions": {},
+  "starredSessions": {
+    "06bab8c0-08c2-4629-8c32-b8b6bd85a09b": "rose",
+    "7d1a0874-418a-467d-96d0-f2531ac06865": "rose"
+  },
   "claudeChunks": [
     "2026-07-19T08:53:15.252Z",
     "2026-07-30T05:14:11.684Z",
@@ -19,6 +22,6 @@
   },
   "stickyNotes": [],
   "katexFont": "euler",
-  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
-  "activeModelId": "3723ecdf-a953-4411-b9f8-5089413e5d73"
+  "activeCharacterId": "0f4ce28b-5c40-4ba5-890d-e0980d3c4f8e",
+  "activeModelId": "b23f5489-6767-4413-ae5e-2489bbc01995"
 }
