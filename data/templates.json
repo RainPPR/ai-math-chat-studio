@@ -5,11 +5,6 @@
     "content": "在 $\\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，"
   },
   {
-    "id": "template-2",
-    "name": "锐角三角形",
-    "content": "在锐角 $\\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，"
-  },
-  {
     "id": "template-3",
     "name": "数列 a",
     "content": "已知数列 $\\{a_n\\}$ 的前 $n$ 项和为 $S_n$，"
@@ -18,5 +13,10 @@
     "id": "template-4",
     "name": "数列 a b",
     "content": "已知数列 $\\{a_n\\}$ 的前 $n$ 项和为 $S_n$，数列 $\\{b_n\\}$ 的前 $n$ 项和为 $T_n$，"
+  },
+  {
+    "id": "template-2",
+    "name": "锐角三角形",
+    "content": "在锐角 $\\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，"
   }
 ]

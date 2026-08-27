@@ -1,6 +1,7 @@
 {
   "activeSkillIds": [
-    "default-assistant"
+    "default-assistant",
+    "1ba8de64-9def-4ccf-b8ea-46c244caa98b"
   ],
   "systemPrompt": "",
   "renderThinkingAsMarkdown": true,
