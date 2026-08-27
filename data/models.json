@@ -298,6 +298,13 @@
     "displayName": "GLM 5.2 (LogFare)"
   },
   {
+    "id": "3b387ff4-2854-53f0-b973-b1153125e9ad",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5.3-flash",
+    "displayName": "GLM 5.3 Flash (LogFare)"
+  },
+  {
     "id": "d4cb5d70-7982-59d7-bd72-4337d101bf05",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -354,6 +361,20 @@
       }
     },
     "maxTokens": 16384
+  },
+  {
+    "id": "f5b239e6-3760-4639-8c83-806999123779",
+    "providerId": "p-nvidia-9a1b",
+    "providerType": "nvidia",
+    "modelId": "deepseek-ai/deepseek-v4-pro-0813",
+    "displayName": "DeepSeek V4 Pro 0813 (Nvidia)",
+    "maxTokens": 16384,
+    "extraBody": {
+      "chat_template_kwargs": {
+        "thinking": true,
+        "reasoning_effort": "max"
+      }
+    }
   },
   {
     "id": "fbfbd4f2-c04f-43b3-bf7c-01a44059afcc",

@@ -1,6 +1,6 @@
 {
   "activeSkillIds": [
-    "8fe7ae7f-ebca-4db0-bc94-281e1b24ba9d"
+    "default-assistant"
   ],
   "systemPrompt": "",
   "renderThinkingAsMarkdown": true,
@@ -22,6 +22,6 @@
   },
   "stickyNotes": [],
   "katexFont": "euler",
-  "activeCharacterId": "0f4ce28b-5c40-4ba5-890d-e0980d3c4f8e",
-  "activeModelId": "b23f5489-6767-4413-ae5e-2489bbc01995"
+  "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e",
+  "activeModelId": "0a4df899-3617-4a54-ae03-b8f5377f45d1"
 }
