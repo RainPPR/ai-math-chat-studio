@@ -1325,7 +1325,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               <ChevronDown size={12} className={`transition-transform shrink-0 ${skillsDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             {skillsDropdownOpen && (
-              <div className="absolute bottom-full mb-1 left-0 z-50 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
+              <div className="absolute bottom-full mb-1 left-0 z-50 w-80 sm:w-[26rem] min-w-[300px] max-w-[90vw] bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
                 {(!settings.skills || settings.skills.length === 0) && (
                   <div className="px-2.5 py-2 text-xs text-gray-500">No skills configured</div>
                 )}

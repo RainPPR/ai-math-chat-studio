@@ -23,7 +23,7 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type Tab = 'general' | 'providers' | 'models' | 'tempModels' | 'characters' | 'skills' | 'templates';
+type Tab = 'general' | 'providers' | 'models' | 'characters' | 'skills' | 'templates';
 
 // ===== Active Model Dropdown Component =====
 
@@ -1167,9 +1167,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         </div>
 
         <div className="flex border-b border-gray-800 shrink-0">
-          {(['general', 'providers', 'models', 'tempModels', 'characters', 'skills', 'templates'] as Tab[]).map(t => (
+          {(['general', 'providers', 'models', 'characters', 'skills', 'templates'] as Tab[]).map(t => (
             <button key={t} onClick={() => { setTab(t); }} className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === t ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-200'}`}>
-              {({ general: 'General', providers: 'Providers', models: 'Models', tempModels: 'Temp Models', characters: 'Characters', skills: 'Skills', templates: 'Templates' } as Record<Tab, string>)[t]}
+              {({ general: 'General', providers: 'Providers', models: 'Models', characters: 'Characters', skills: 'Skills', templates: 'Templates' } as Record<Tab, string>)[t]}
             </button>
           ))}
         </div>
@@ -1187,7 +1187,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   activeModelId={local.activeModelId}
                   onChange={id => { setLocal(s => ({ ...s, activeModelId: id || undefined })); }}
                 />
-                {local.models.length === 0 && (!local.tempModels || local.tempModels.length === 0) && <p className="text-xs text-gray-500">Add models in the Models or Temp Models tab first.</p>}
+                {local.models.length === 0 && (!local.tempModels || local.tempModels.length === 0) && <p className="text-xs text-gray-500">Add models in the Models tab first.</p>}
               </div>
 
               <div className="space-y-2">
@@ -1522,8 +1522,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
             </>
           )}
 
-          {/* Temp Models Tab */}
-          {tab === 'tempModels' && (
+          {/* Models Tab */}
+          {tab === 'models' && (
             <>
               {editingTempModel ? (
                 <TempModelEditor
@@ -1532,50 +1532,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   onSave={saveTempModel}
                   onCancel={() => setEditingTempModel(null)}
                 />
-              ) : (
-                <div className="space-y-4">
-                  {(!local.tempModels || local.tempModels.length === 0) && (
-                    <p className="text-xs text-gray-500">No temporary models configured.</p>
-                  )}
-                  {local.tempModels && local.tempModels.length > 0 && (
-                    <div className="bg-gray-800/50 rounded-lg border border-gray-700/50 overflow-hidden">
-                      <div className="bg-gray-800 px-3 py-2 border-b border-gray-700/50 flex items-center justify-between">
-                        <div className="text-xs font-medium text-purple-400">临时模型 (OpenAI Compatible)</div>
-                        <div className="text-xs text-gray-500">{local.tempModels.length} models</div>
-                      </div>
-                      <div className="divide-y divide-gray-700/30">
-                        {local.tempModels.map(m => (
-                          <div key={m.id} className="px-3 py-2 flex items-center justify-between hover:bg-gray-700/30 transition-colors">
-                            <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
-                              <div className="col-span-6 text-xs text-white truncate">{m.name || m.modelId}</div>
-                              <div className="col-span-3 text-xs text-gray-500 text-center">
-                                {m.temperature !== undefined ? `T=${m.temperature}` : '-'}
-                              </div>
-                              <div className="col-span-3 text-xs text-gray-500 text-center">
-                                {m.maxTokens !== undefined ? `M=${m.maxTokens}` : '-'}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1 ml-2 shrink-0">
-                              <button onClick={() => { setEditingTempModel({ ...m }); }} className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><Pencil size={14} /></button>
-                              <button onClick={() => { deleteTempModelEntry(m.id); }} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <button onClick={addTempModel} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-3 text-sm transition-colors">
-                    <Plus size={16} /> Add Temp Model
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Models Tab */}
-          {tab === 'models' && (
-            <>
-              {editingModel ? (
+              ) : editingModel ? (
                 <ModelEditor
                   entry={editingModel}
                   providers={local.providers}
@@ -1588,54 +1545,96 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   onCancel={() => { setEditingModel(null); setAvailableModels([]); }}
                 />
               ) : (
-                <div className="space-y-4">
-                  {local.models.length === 0 && <p className="text-xs text-gray-500">No models configured.</p>}
-                  {(() => {
-                    const modelsByProvider = new Map<string, typeof local.models>();
-                    local.models.forEach(m => {
-                      const list = modelsByProvider.get(m.providerId) || [];
-                      list.push(m);
-                      modelsByProvider.set(m.providerId, list);
-                    });
-
-                    return local.providers.map(provider => {
-                      const providerModels = modelsByProvider.get(provider.id) || [];
-                      if (providerModels.length === 0) return null;
-
-                      return (
-                        <div key={provider.id} className="bg-gray-800/50 rounded-lg border border-gray-700/50 overflow-hidden">
-                          <div className="bg-gray-800 px-3 py-2 border-b border-gray-700/50 flex items-center justify-between">
-                            <div className="text-xs font-medium text-gray-300">{provider.name}</div>
-                            <div className="text-xs text-gray-500">{providerModels.length} models</div>
-                          </div>
-                          <div className="divide-y divide-gray-700/30">
-                            {providerModels.map(m => {
-                              return (
-                                <div key={m.id} className="px-3 py-2 flex items-center justify-between hover:bg-gray-700/30 transition-colors">
-                                  <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
-                                    <div className="col-span-6 text-xs text-white truncate">{m.displayName || m.modelId}</div>
-                                    <div className="col-span-3 text-xs text-gray-500 text-center">
-                                      {m.temperature !== undefined ? `T=${m.temperature}` : '-'}
-                                    </div>
-                                    <div className="col-span-3 text-xs text-gray-500 text-center">
-                                      {m.maxTokens !== undefined ? `M=${m.maxTokens}` : '-'}
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-1 ml-2 shrink-0">
-                                    <button onClick={() => { setEditingModel({ ...m }); }} className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><Pencil size={14} /></button>
-                                    <button onClick={() => { deleteModelEntry(m.id); }} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                <div className="space-y-6">
+                  {/* Part 1: Temp Models Section */}
+                  <div className="space-y-3 pb-6 border-b border-gray-800">
+                    <h3 className="text-sm font-medium text-purple-400">临时模型 (Temp Models)</h3>
+                    {(!local.tempModels || local.tempModels.length === 0) && (
+                      <p className="text-xs text-gray-500">No temporary models configured.</p>
+                    )}
+                    {local.tempModels && local.tempModels.length > 0 && (
+                      <div className="bg-gray-800/50 rounded-lg border border-gray-700/50 overflow-hidden">
+                        <div className="bg-gray-800 px-3 py-2 border-b border-gray-700/50 flex items-center justify-between">
+                          <div className="text-xs font-medium text-purple-400">临时模型 (OpenAI Compatible)</div>
+                          <div className="text-xs text-gray-500">{local.tempModels.length} models</div>
                         </div>
-                      );
-                    });
-                  })()}
-                  <button onClick={addModel} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-3 text-sm transition-colors">
-                    <Plus size={16} /> Add Model
-                  </button>
+                        <div className="divide-y divide-gray-700/30">
+                          {local.tempModels.map(m => (
+                            <div key={m.id} className="px-3 py-2 flex items-center justify-between hover:bg-gray-700/30 transition-colors">
+                              <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                                <div className="col-span-6 text-xs text-white truncate">{m.name || m.modelId}</div>
+                                <div className="col-span-3 text-xs text-gray-500 text-center">
+                                  {m.temperature !== undefined ? `T=${m.temperature}` : '-'}
+                                </div>
+                                <div className="col-span-3 text-xs text-gray-500 text-center">
+                                  {m.maxTokens !== undefined ? `M=${m.maxTokens}` : '-'}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 ml-2 shrink-0">
+                                <button onClick={() => { setEditingTempModel({ ...m }); }} className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><Pencil size={14} /></button>
+                                <button onClick={() => { deleteTempModelEntry(m.id); }} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <button onClick={addTempModel} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-3 text-sm transition-colors">
+                      <Plus size={16} /> Add Temp Model
+                    </button>
+                  </div>
+
+                  {/* Part 2: Standard Models Section */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-gray-300">常规模型 (Standard Models)</h3>
+                    {local.models.length === 0 && <p className="text-xs text-gray-500">No models configured.</p>}
+                    {(() => {
+                      const modelsByProvider = new Map<string, typeof local.models>();
+                      local.models.forEach(m => {
+                        const list = modelsByProvider.get(m.providerId) || [];
+                        list.push(m);
+                        modelsByProvider.set(m.providerId, list);
+                      });
+
+                      return local.providers.map(provider => {
+                        const providerModels = modelsByProvider.get(provider.id) || [];
+                        if (providerModels.length === 0) return null;
+
+                        return (
+                          <div key={provider.id} className="bg-gray-800/50 rounded-lg border border-gray-700/50 overflow-hidden">
+                            <div className="bg-gray-800 px-3 py-2 border-b border-gray-700/50 flex items-center justify-between">
+                              <div className="text-xs font-medium text-gray-300">{provider.name}</div>
+                              <div className="text-xs text-gray-500">{providerModels.length} models</div>
+                            </div>
+                            <div className="divide-y divide-gray-700/30">
+                              {providerModels.map(m => {
+                                return (
+                                  <div key={m.id} className="px-3 py-2 flex items-center justify-between hover:bg-gray-700/30 transition-colors">
+                                    <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                                      <div className="col-span-6 text-xs text-white truncate">{m.displayName || m.modelId}</div>
+                                      <div className="col-span-3 text-xs text-gray-500 text-center">
+                                        {m.temperature !== undefined ? `T=${m.temperature}` : '-'}
+                                      </div>
+                                      <div className="col-span-3 text-xs text-gray-500 text-center">
+                                        {m.maxTokens !== undefined ? `M=${m.maxTokens}` : '-'}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1 ml-2 shrink-0">
+                                      <button onClick={() => { setEditingModel({ ...m }); }} className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><Pencil size={14} /></button>
+                                      <button onClick={() => { deleteModelEntry(m.id); }} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                    <button onClick={addModel} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-3 text-sm transition-colors">
+                      <Plus size={16} /> Add Model
+                    </button>
+                  </div>
                 </div>
               )}
             </>
