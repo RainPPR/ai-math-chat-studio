@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, Skill, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
-import { sortProviders, sortModels } from '../../shared/sorting';
+import { sortProviders, sortModels, sortTempModels, sortCharacters, sortSkills, sortTemplates } from '../../shared/sorting';
 
 
 function formatClaudeDate(dateStr: string) {
@@ -464,8 +464,16 @@ const getDefaultBaseURL = (type: string): string | undefined => {
 };
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, templates, onSaveTemplates, onClose }) => {
-  const [local, setLocal] = useState<UserSettings>({ ...DEFAULT_SETTINGS, ...settings });
-  const [localTemplates, setLocalTemplates] = useState<Template[]>(templates || []);
+  const [local, setLocal] = useState<UserSettings>(() => {
+    const base = { ...DEFAULT_SETTINGS, ...settings };
+    const providers = sortProviders(base.providers || []);
+    const models = sortModels(base.models || [], providers);
+    const tempModels = sortTempModels(base.tempModels || []);
+    const characters = sortCharacters(base.characters || []);
+    const skills = sortSkills(base.skills || []);
+    return { ...base, providers, models, tempModels, characters, skills };
+  });
+  const [localTemplates, setLocalTemplates] = useState<Template[]>(() => sortTemplates(templates || []));
   const [tab, setTab] = useState<Tab>('general');
   const [builtInTypes, setBuiltInTypes] = useState<{ id: string; name: string }[]>([]);
 
@@ -821,7 +829,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       } else {
         list.push(sanitizedTempModel);
       }
-      return { ...s, tempModels: list };
+      const sorted = sortTempModels(list);
+      return { ...s, tempModels: sorted };
     });
     setEditingTempModel(null);
   };
@@ -829,13 +838,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const deleteTempModelEntry = (id: string) => {
     setLocal(s => {
       const filtered = (s.tempModels || []).filter(m => m.id !== id);
+      const sorted = sortTempModels(filtered);
       let nextActiveModelId = s.activeModelId;
       if (s.activeModelId === id) {
         nextActiveModelId = undefined;
       }
       return {
         ...s,
-        tempModels: filtered,
+        tempModels: sorted,
         activeModelId: nextActiveModelId,
       };
     });
@@ -908,7 +918,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       const idx = characters.findIndex(c => c.id === editingCharacter.id);
       if (idx >= 0) characters[idx] = editingCharacter;
       else characters.push(editingCharacter);
-      return { ...s, characters };
+      const sorted = sortCharacters(characters);
+      return { ...s, characters: sorted };
     });
     setEditingCharacter(null);
   };
@@ -946,9 +957,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         }
       }
 
+      const filtered = s.characters.filter(c => c.id !== fromId);
+      const sorted = sortCharacters(filtered);
       return {
         ...s,
-        characters: s.characters.filter(c => c.id !== fromId),
+        characters: sorted,
         activeCharacterId: nextActiveCharacterId,
       };
     });
@@ -964,23 +977,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const saveSkill = () => {
     if (!editingSkill?.name.trim()) return;
     setLocal(s => {
-      const skills = [...(s.skills || [])];
-      const idx = skills.findIndex(sk => sk.id === editingSkill.id);
+      const skillsList = [...(s.skills || [])];
+      const idx = skillsList.findIndex(sk => sk.id === editingSkill.id);
       if (idx >= 0) {
-        skills[idx] = editingSkill;
+        skillsList[idx] = editingSkill;
       } else {
-        skills.push(editingSkill);
+        skillsList.push(editingSkill);
       }
-      return { ...s, skills };
+      const sorted = sortSkills(skillsList);
+      return { ...s, skills: sorted };
     });
     setEditingSkill(null);
   };
 
   const deleteSkillEntry = (id: string) => {
     setLocal(s => {
-      const skills = (s.skills || []).filter(sk => sk.id !== id);
+      const filtered = (s.skills || []).filter(sk => sk.id !== id);
+      const sorted = sortSkills(filtered);
       const activeSkillIds = (s.activeSkillIds || []).filter(skId => skId !== id);
-      return { ...s, skills, activeSkillIds };
+      return { ...s, skills: sorted, activeSkillIds };
     });
   };
 
@@ -1000,34 +1015,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       const idx = list.findIndex(t => t.id === editingTemplate.id);
       if (idx >= 0) list[idx] = editingTemplate;
       else list.push(editingTemplate);
-      return list;
+      return sortTemplates(list);
     });
     setEditingTemplate(null);
   };
 
   const deleteTemplate = (id: string) => {
-    setLocalTemplates(prev => prev.filter(t => t.id !== id));
-  };
-
-  const moveTemplateUp = (index: number) => {
-    if (index === 0) return;
     setLocalTemplates(prev => {
-      const next = [...prev];
-      const temp = next[index];
-      next[index] = next[index - 1];
-      next[index - 1] = temp;
-      return next;
-    });
-  };
-
-  const moveTemplateDown = (index: number) => {
-    if (index === localTemplates.length - 1) return;
-    setLocalTemplates(prev => {
-      const next = [...prev];
-      const temp = next[index];
-      next[index] = next[index + 1];
-      next[index + 1] = temp;
-      return next;
+      const filtered = prev.filter(t => t.id !== id);
+      return sortTemplates(filtered);
     });
   };
 
@@ -1786,29 +1782,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
               ) : (
                 <div className="space-y-4">
                   {localTemplates.length === 0 && <p className="text-xs text-gray-500">No templates configured.</p>}
-                  {localTemplates.map((t, idx) => (
+                  {localTemplates.map(t => (
                     <div key={t.id} className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex items-center justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium text-white truncate">{t.name}</div>
                         <div className="text-xs text-gray-400 line-clamp-2 mt-1 font-mono">{t.content}</div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-3">
-                        <button
-                          onClick={() => moveTemplateUp(idx)}
-                          disabled={idx === 0}
-                          className="p-1 text-gray-400 hover:text-white disabled:opacity-30 rounded transition-colors"
-                          title="Move Up"
-                        >
-                          <ArrowUp size={14} />
-                        </button>
-                        <button
-                          onClick={() => moveTemplateDown(idx)}
-                          disabled={idx === localTemplates.length - 1}
-                          className="p-1 text-gray-400 hover:text-white disabled:opacity-30 rounded transition-colors"
-                          title="Move Down"
-                        >
-                          <ArrowDown size={14} />
-                        </button>
                         <button onClick={() => { setEditingTemplate({ ...t }); }} className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1">Edit</button>
                         <button onClick={() => { deleteTemplate(t.id); }} className="text-xs text-red-400 hover:text-red-300 px-2 py-1"><Trash2 size={14} /></button>
                       </div>

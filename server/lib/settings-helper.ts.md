@@ -2,10 +2,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
-import { sortProviders, sortModels } from '../../shared/sorting';
+import { sortProviders, sortModels, sortTempModels, sortCharacters, sortSkills } from '../../shared/sorting';
 import { DEFAULT_SKILLS } from '../../shared/skills';
 
-export { sortProviders, sortModels, DEFAULT_SKILLS };
+export { sortProviders, sortModels, sortTempModels, sortCharacters, sortSkills, DEFAULT_SKILLS };
 
 export interface UserSettings {
   activeModelId?: string;
@@ -248,9 +248,18 @@ export async function saveSettings(settingsFile: string, settings: UserSettings)
   if (incomingModels && Array.isArray(incomingModels)) {
     incomingModels = sortModels(incomingModels, incomingProviders || []);
   }
-  const incomingTempModels = settingsCopy.tempModels;
-  const incomingCharacters = settingsCopy.characters;
-  const incomingSkills = settingsCopy.skills;
+  let incomingTempModels = settingsCopy.tempModels;
+  if (incomingTempModels && Array.isArray(incomingTempModels)) {
+    incomingTempModels = sortTempModels(incomingTempModels);
+  }
+  let incomingCharacters = settingsCopy.characters;
+  if (incomingCharacters && Array.isArray(incomingCharacters)) {
+    incomingCharacters = sortCharacters(incomingCharacters);
+  }
+  let incomingSkills = settingsCopy.skills;
+  if (incomingSkills && Array.isArray(incomingSkills)) {
+    incomingSkills = sortSkills(incomingSkills);
+  }
 
   delete settingsCopy.providers;
   delete settingsCopy.models;

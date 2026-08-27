@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
+import { sortTemplates } from '../../shared/sorting';
 
 export function createTemplatesRouter(templatesFile: string) {
   const router = Router();
@@ -52,8 +53,10 @@ export function createTemplatesRouter(templatesFile: string) {
         content: String(t.content || '')
       }));
 
-      await fs.writeFile(templatesFile, JSON.stringify(validated, null, 2), 'utf-8');
-      res.json({ ok: true, templates: validated });
+      const sorted = sortTemplates(validated);
+
+      await fs.writeFile(templatesFile, JSON.stringify(sorted, null, 2), 'utf-8');
+      res.json({ ok: true, templates: sorted });
     } catch (error: any) {
       res.status(500).json({ error: error.message || 'Failed to save templates' });
     }
