@@ -1,30 +1,49 @@
-export function sortProviders(providers: any[]): any[] {
-  if (!Array.isArray(providers)) return [];
-  return [...providers].sort((a, b) => {
+export function sortByName<T>(
+  items: T[],
+  getName: (item: T) => string = (item: any) => item?.name || "",
+): T[] {
+  if (!Array.isArray(items)) return [];
+  return [...items].sort((a, b) => {
     const isValA = a && typeof a === "object";
     const isValB = b && typeof b === "object";
     if (!isValA && !isValB) return 0;
     if (!isValA) return 1;
     if (!isValB) return -1;
 
-    const nameA = String(a.name || "").toLocaleLowerCase("en");
-    const nameB = String(b.name || "").toLocaleLowerCase("en");
+    const rawA = String(getName(a) || "");
+    const rawB = String(getName(b) || "");
+    const nameA = rawA.toLocaleLowerCase("en");
+    const nameB = rawB.toLocaleLowerCase("en");
     const nameCompare = nameA.localeCompare(nameB, "en");
     if (nameCompare !== 0) {
       return nameCompare;
     }
 
-    const origNameA = String(a.name || "");
-    const origNameB = String(b.name || "");
-    if (origNameA !== origNameB) {
-      if (origNameA < origNameB) {
-        return -1;
-      } else {
-        return 1;
-      }
+    if (rawA !== rawB) {
+      return rawA < rawB ? -1 : 1;
     }
     return 0;
   });
+}
+
+export function sortProviders(providers: any[]): any[] {
+  return sortByName(providers, (p) => p?.name);
+}
+
+export function sortCharacters(characters: any[]): any[] {
+  return sortByName(characters, (c) => c?.name);
+}
+
+export function sortSkills(skills: any[]): any[] {
+  return sortByName(skills, (s) => s?.name);
+}
+
+export function sortTemplates(templates: any[]): any[] {
+  return sortByName(templates, (t) => t?.name);
+}
+
+export function sortTempModels(tempModels: any[]): any[] {
+  return sortByName(tempModels, (m) => m?.name || m?.modelId);
 }
 
 export function sortModels(models: any[], providers: any[]): any[] {
