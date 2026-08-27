@@ -91,7 +91,7 @@ ai-math-chat-studio/
 │   ├── components/
 │   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
 │   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
-│   │   ├── SettingsModal.tsx # 设置弹窗（General / Providers / Models / Temp Models / Characters / Skills / Templates）
+│   │   ├── SettingsModal.tsx # 设置弹窗（General / Providers / Models / Characters / Skills / Templates）
 │   │   └── Sidebar.tsx       # 左侧栏（会话列表）
 │   └── lib/
 │       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
@@ -120,7 +120,7 @@ ai-math-chat-studio/
 | `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
 | `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
 | `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
-| `src/components/SettingsModal.tsx` | 设置弹窗（General / Providers / Models / Temp Models / Characters / Skills / Templates） |
+| `src/components/SettingsModal.tsx` | 设置弹窗（General / Providers / Models / Characters / Skills / Templates） |
 | `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
 | `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
 | `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
