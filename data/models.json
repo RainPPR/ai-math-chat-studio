@@ -23,6 +23,38 @@
     "displayName": "MinerU2.5 Pro (AMD)"
   },
   {
+    "id": "4cce3d2d-b094-4255-8027-b8e9819e7f69",
+    "providerId": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4-flash",
+    "displayName": "DeepSeek V4 Flash Max (Paid)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "56c32e3d-24fb-4182-9d0b-3963065057ba",
+    "providerId": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4-flash",
+    "displayName": "DeepSeek V4 Flash High (Paid)",
+    "reasoningEffort": "high"
+  },
+  {
+    "id": "0d616585-87e4-4d5e-a7d1-c2318e02e8f4",
+    "providerId": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4-pro",
+    "displayName": "DeepSeek V4 Pro Max (Paid)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "6b6ff3c0-6632-4711-9ac7-9d215d6bed90",
+    "providerId": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4-pro",
+    "displayName": "DeepSeek V4 Pro High (Paid)",
+    "reasoningEffort": "high"
+  },
+  {
     "id": "b9425e46-a961-49c8-9b5f-7da094f48532",
     "providerId": "p-google-fc62",
     "providerType": "google",
@@ -143,6 +175,13 @@
     "providerType": "openai-compatible",
     "modelId": "dots-studio/dots-3-note-preview:free",
     "displayName": "Dots Studio: Dots3-Note Preview (Kilo)"
+  },
+  {
+    "id": "334574dc-81a4-5981-86ce-b864a93b51d5",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "inclusionai/ling-3.0-flash-fin:free",
+    "displayName": "Ling 3.0 Flash Fin (Kilo)"
   },
   {
     "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
@@ -298,6 +337,13 @@
     "displayName": "GLM 5.2 (LogFare)"
   },
   {
+    "id": "3f357e03-54a5-51d0-992d-0f0bd0f318f9",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5.3",
+    "displayName": "GLM 5.3 (LogFare)"
+  },
+  {
     "id": "3b387ff4-2854-53f0-b973-b1153125e9ad",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -426,15 +472,27 @@
     }
   },
   {
-    "id": "e3567ha8-910c-4d11-a12b-e345gfk47896",
+    "id": "620ba9ba-817d-4155-9d34-995163e3b713",
     "providerId": "p-nvidia-9a1b",
     "providerType": "nvidia",
     "modelId": "moonshotai/kimi-k2.6",
     "displayName": "Kimi K2.6 (Nvidia)",
+    "maxTokens": 65536,
+    "extraBody": {
+      "reasoning_effort": "max"
+    }
+  },
+  {
+    "id": "c4c7ff71-4399-4081-976a-9aa29b282c16",
+    "providerId": "p-nvidia-9a1b",
+    "providerType": "nvidia",
+    "modelId": "moonshotai/kimi-k3",
     "enableTools": true,
     "disabledTools": [],
-    "reasoningEffort": "high",
-    "injectThinkingTemplate": true,
+    "displayName": "Kimi K3 (Nvidia)",
+    "extraBody": {
+      "reasoning_effort": "max"
+    },
     "maxTokens": 65536
   },
   {
@@ -445,22 +503,6 @@
     "displayName": "Inkling (Nvidia)",
     "maxTokens": 16353,
     "injectThinkingTemplate": false
-  },
-  {
-    "id": "c4c7ff71-4399-4081-976a-9aa29b282c16",
-    "providerId": "p-nvidia-9a1b",
-    "providerType": "nvidia",
-    "modelId": "z-ai/glm-5.2",
-    "enableTools": true,
-    "disabledTools": [],
-    "displayName": "GLM 5.2 (Nvidia)",
-    "extraBody": {
-      "chat_template_kwargs": {
-        "enable_thinking": true,
-        "clear_thinking": false
-      }
-    },
-    "maxTokens": 32768
   },
   {
     "id": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
@@ -485,6 +527,13 @@
     "modelId": "laguna-s-2.1-free",
     "displayName": "Laguna S 2.1 Free (OpenCode)",
     "reasoningEffort": "high"
+  },
+  {
+    "id": "1e6a0079-3d0c-5b51-89c5-250c0f8d7c42",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "ling-3.0-flash-fin-free",
+    "displayName": "Ling 3.0 Flash Fin Free (OpenCode)"
   },
   {
     "id": "1a49d398-0224-583f-973a-a0bb2af90ee2",

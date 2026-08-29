@@ -1,0 +1,24 @@
+{
+  "id": "13d57a89-ff49-447e-92be-23c2756accff",
+  "title": "对于 c > 0，若非零实数 a, b 满足 4a² − 2ab + 4b² − c = 0，且使 ...",
+  "messages": [
+    {
+      "id": "a01741f2-8db0-4d28-9c11-018ff6c0f346",
+      "role": "user",
+      "content": "对于 $c > 0$，若非零实数 $a, b$ 满足 $4a^2 - 2ab + 4b^2 - c = 0$，且使 $|2a+b|$ 最大，则 $\\frac{3}{a} - \\frac{4}{b} + \\frac{5}{c}$ 的最小值为$\\underline{\\qquad\\qquad}$。",
+      "createdAt": "2026-08-28T05:24:29.698Z"
+    },
+    {
+      "id": "b6a7740e-9e69-4953-8c78-d3f58fcbc99b",
+      "role": "model",
+      "content": "<think>\n**Analyzing the Problem**\n\nI've been analyzing the problem. I've broken down the steps, starting with feature mining, dissecting the constraints and the objective function. I'm focusing on the relationship between a, b, and c when |2a+b| is maximized. I'm leveraging the result showing the maximized value and the conditions when maximized.\n\n\n\n\n</think>\n\n这是一道典型的含参二次型约束极值问题，集成了椭圆方程、判别式法、消元思想与函数最值。下面我们将从深度特征挖掘、基准路径推导及元认知总结三个维度进行精细化剖析。\n\n---\n\n### 【常规解法】\n\n#### 1. 元解析与特征挖掘\n题目给出的方程 $4a^2 - 2ab + 4b^2 - c = 0$（其中 $c > 0$）在 $a-b$ 平面上表示一个中心在原点的椭圆（因为其二次型正定，判别式 $\\Delta = (-2)^2 - 4 \\times 4 \\times 4 = -60 < 0$）。\n我们需要在满足该椭圆约束的条件下，求线性代数式 $|2a+b|$ 的最大值，进而探求变量间的耦合关系，最终求解目标分式 $\\frac{3}{a} - \\frac{4}{b} + \\frac{5}{c}$ 的最小值。\n\n#### 2. 利用判别式法求 $|2a+b|$ 的最大值\n调用 **【判别式法（原书第18页）】** 与 **【消元法（原书第11页）】**：\n设 $u = 2a+b$，则 $b = u - 2a$。将其代入原方程 $4a^2 - 2ab + 4b^2 = c$ 中：\n\n$$\n4a^2 - 2a(u - 2a) + 4(u - 2a)^2 = c\n$$\n\n展开并整理关于 $a$ 的一元二次方程：\n\n$$\n4a^2 - 2au + 4a^2 + 4(u^2 - 4au + 4a^2) = c\n$$\n\n$$\n24a^2 - 18au + 4u^2 - c = 0\n$$\n\n由于 $a$ 为非零实数，关于 $a$ 的一元二次方程必须有实数根，故其判别式 $\\Delta \\ge 0$：\n\n$$\n\\Delta = (-18u)^2 - 4 \\times 24 \\times (4u^2 - c) \\ge 0\n$$\n\n$$\n324u^2 - 96(4u^2 - c) \\ge 0 \\implies -60u^2 + 96c \\ge 0\n$$\n\n化简可得：\n\n$$\nu^2 \\le \\frac{96}{60}c = \\frac{8}{5}c\n$$\n\n因此，$|2a+b|$ 的最大值为：\n\n$$\n(|2a+b|)_{\\max} = \\sqrt{\\frac{8}{5}c}\n$$\n\n#### 3. 探求最值点处的变量约束关系\n当 $|2a+b|$ 取得最大值时，方程的判别式 $\\Delta = 0$，此时对应的重根 $a$ 为：\n\n$$\na = \\frac{18u}{2 \\times 24} = \\frac{3}{8}u\n$$\n\n将其代入 $b = u - 2a$ 中，可得：\n\n$$\nb = u - 2\\left(\\frac{3}{8}u\\right) = \\frac{1}{4}u\n$$\n\n由此可得此时 $a$ 与 $b$ 的内在比例关系：\n\n$$\na = \\frac{3}{2}b\n$$\n\n将 $a = \\frac{3}{2}b$ 代入原椭圆方程 $4a^2 - 2ab + 4b^2 = c$ 中，消去 $a$：\n\n$$\n4\\left(\\frac{3}{2}b\\right)^2 - 2\\left(\\frac{3}{2}b\\right)b + 4b^2 = 9b^2 - 3b^2 + 4b^2 = 10b^2 = c\n$$\n\n即在最值点处满足：$c = 10b^2$ 且 $a = \\frac{3}{2}b$。\n\n#### 4. 转化目标式并求极值\n现在我们需要求 $\\frac{3}{a} - \\frac{4}{b} + \\frac{5}{c}$ 的最小值。将上述关系代入目标式中，实现单变量化：\n\n$$\n\\frac{3}{a} - \\frac{4}{b} + \\frac{5}{c} = \\frac{3}{\\frac{3}{2}b} - \\frac{4}{b} + \\frac{5}{10b^2}\n$$\n\n化简得：\n\n$$\n\\frac{2}{b} - \\frac{4}{b} + \\frac{1}{2b^2} = \\frac{1}{2b^2} - \\frac{2}{b}\n$$\n\n令 $t = \\frac{1}{b}$（其中 $t \\neq 0$），原式转化为关于 $t$ 的二次函数：\n\n$$\nf(t) = \\frac{1}{2}t^2 - 2t\n$$\n\n这是一个开口向上的抛物线，调用 **【配方法（原书第4页）】** 求其最小值：\n\n$$\nf(t) = \\frac{1}{2}(t - 2)^2 - 2\n$$\n\n当 $t = 2$（即 $b = \\frac{1}{2}$，$a = \\frac{3}{4}$，$c = \\frac{5}{2}$，经检验满足 $|2a+b| = 2 = \\sqrt{\\frac{8}{5}c}$ 且使之最大）时，函数取得最小值：\n\n$$\nf(t)_{\\min} = -2\n$$\n\n---\n\n### 【进阶解法/技巧】（几何直观与柯西不等式视角）\n\n除了代数判别式法外，本题亦可借助 **【柯西不等式（原书第131页）】** 或 **【三角换元法（原书第152页）】** 从几何角度秒杀：\n由于 $4a^2 - 2ab + 4b^2 = c$ 可以配方为：\n\n$$\n3(a^2 + b^2) + (a-b)^2 = c\n$$\n\n或将其视为二次型，利用矩阵正定性或极坐标三角参数化：设 $a = r\\cos\\theta$，利用椭圆的参数方程。但相比之下，上述由 **判别式 $\\Delta = 0$ 锁定切点条件** 的代数路径更为严密且具有普适性，能够直接无缝对接消元。\n\n---\n\n### 【总结与反思】\n\n1. **核心思想方法提炼**：\n   - **判别式法**：处理“二次约束下一次线性目标函数最值”的利器，通过 $\\Delta \\ge 0$ 确定边界。\n   - **消元与降维思想**：通过求最值时产生的临界等式（$\\Delta = 0$ 确定的主元比例），成功将三变量 $(a, b, c)$ 关联系统降为单变量函数。\n   - **二次函数最值模型**：通过换元 $t = \\frac{1}{b}$ 将分式最值转化为标准的二次函数最值。\n\n2. **易错警示**：\n   在处理分式与绝对值时，务必注意新元（如 $b$ 或 $t$）的符号与取值范围是否能够被极值点实际覆盖，确保逻辑闭环的完整性。\n\n$$\\mathbf{-2}$$",
+      "createdAt": "2026-08-28T05:36:22.501Z"
+    }
+  ],
+  "createdAt": "2026-08-28T05:24:29.698Z",
+  "updatedAt": "2026-08-28T05:36:22.501Z",
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "skillIds": [
+    "f8513ca7-52fb-4748-8389-af1db9d071f7"
+  ]
+}

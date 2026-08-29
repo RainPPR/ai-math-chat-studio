@@ -8,6 +8,14 @@
     "baseURL": "https://developer.amd.com.cn/radeon/api/v1"
   },
   {
+    "id": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
+    "type": "openai-compatible",
+    "name": "DeepSeek (Paid)",
+    "apiKey": "",
+    "envKey": "DEEPSEEK_API_KEY",
+    "baseURL": "https://api.deepseek.com"
+  },
+  {
     "id": "p-google-fc62",
     "type": "google",
     "name": "Google Gemini",
