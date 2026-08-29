@@ -28,7 +28,12 @@
     "providerType": "openai-compatible",
     "modelId": "deepseek-v4-flash",
     "displayName": "DeepSeek V4 Flash Max (Paid)",
-    "reasoningEffort": "max"
+    "reasoningEffort": "max",
+    "extraBody": {
+      "thinking": {
+        "type": "enabled"
+      }
+    }
   },
   {
     "id": "56c32e3d-24fb-4182-9d0b-3963065057ba",
@@ -36,7 +41,12 @@
     "providerType": "openai-compatible",
     "modelId": "deepseek-v4-flash",
     "displayName": "DeepSeek V4 Flash High (Paid)",
-    "reasoningEffort": "high"
+    "reasoningEffort": "high",
+    "extraBody": {
+      "thinking": {
+        "type": "enabled"
+      }
+    }
   },
   {
     "id": "0d616585-87e4-4d5e-a7d1-c2318e02e8f4",
@@ -44,7 +54,12 @@
     "providerType": "openai-compatible",
     "modelId": "deepseek-v4-pro",
     "displayName": "DeepSeek V4 Pro Max (Paid)",
-    "reasoningEffort": "max"
+    "reasoningEffort": "max",
+    "extraBody": {
+      "thinking": {
+        "type": "enabled"
+      }
+    }
   },
   {
     "id": "6b6ff3c0-6632-4711-9ac7-9d215d6bed90",
@@ -52,7 +67,12 @@
     "providerType": "openai-compatible",
     "modelId": "deepseek-v4-pro",
     "displayName": "DeepSeek V4 Pro High (Paid)",
-    "reasoningEffort": "high"
+    "reasoningEffort": "high",
+    "extraBody": {
+      "thinking": {
+        "type": "enabled"
+      }
+    }
   },
   {
     "id": "b9425e46-a961-49c8-9b5f-7da094f48532",
