@@ -14,6 +14,7 @@ interface TOCSidebarProps {
   onSelectHeading: (headingId: string) => void;
   isGenerating?: boolean;
   isMobile?: boolean;
+  width?: number;
 }
 
 export const TOCSidebar: React.FC<TOCSidebarProps> = ({
@@ -26,9 +27,12 @@ export const TOCSidebar: React.FC<TOCSidebarProps> = ({
   onSelectHeading,
   isGenerating = false,
   isMobile = false,
+  width = 288,
 }) => {
   const [collapsedMessageIds, setCollapsedMessageIds] = useState<Record<string, boolean>>({});
   const lastMessageIdRef = useRef<string | null>(null);
+  const lastActiveMessageIdRef = useRef<string | null>(null);
+  const headingRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const messageTOCs: MessageTOC[] = useMemo(() => {
     return messages
@@ -77,6 +81,42 @@ export const TOCSidebar: React.FC<TOCSidebarProps> = ({
     }
   }, [messages]);
 
+  // Auto expand active message's TOC card & scroll active item into view
+  useEffect(() => {
+    if (!activeHeadingId) return;
+
+    // Find which message contains this heading (matching level <= maxLevel)
+    let activeMessageId: string | null = null;
+    for (const toc of messageTOCs) {
+      if (toc.headings.some(h => h.id === activeHeadingId && h.level <= maxLevel)) {
+        activeMessageId = toc.messageId;
+        break;
+      }
+    }
+
+    if (activeMessageId) {
+      if (activeMessageId !== lastActiveMessageIdRef.current) {
+        lastActiveMessageIdRef.current = activeMessageId;
+        setCollapsedMessageIds(prev => {
+          const next: Record<string, boolean> = {};
+          messageTOCs.forEach(toc => {
+            next[toc.messageId] = toc.messageId !== activeMessageId;
+          });
+          return next;
+        });
+      }
+
+      const timer = setTimeout(() => {
+        const el = headingRefs.current[activeHeadingId];
+        if (el) {
+          el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }, 50);
+
+      return () => clearTimeout(timer);
+    }
+  }, [activeHeadingId, messageTOCs, maxLevel]);
+
   const filteredHeadingsCount = useMemo(() => {
     let count = 0;
     messageTOCs.forEach(toc => {
@@ -121,7 +161,7 @@ export const TOCSidebar: React.FC<TOCSidebarProps> = ({
 
   if (!isOpen) return null;
 
-  let containerClasses = 'w-72 bg-gray-900/90 border-l border-gray-800/80 flex flex-col h-full shrink-0 z-20 backdrop-blur select-none';
+  let containerClasses = 'bg-gray-900/90 border-l border-gray-800/80 flex flex-col h-full shrink-0 z-20 backdrop-blur select-none';
   if (isMobile) {
     containerClasses = 'fixed inset-y-0 right-0 z-50 w-80 bg-gray-900 border-l border-gray-800 shadow-2xl flex flex-col transition-transform duration-200 ease-in-out';
   }
@@ -129,6 +169,11 @@ export const TOCSidebar: React.FC<TOCSidebarProps> = ({
   let closeIcon = <PanelRightClose size={16} />;
   if (isMobile) {
     closeIcon = <X size={16} />;
+  }
+
+  let asideStyle: React.CSSProperties | undefined = undefined;
+  if (!isMobile) {
+    asideStyle = { width: `${width}px` };
   }
 
   return (
@@ -141,7 +186,11 @@ export const TOCSidebar: React.FC<TOCSidebarProps> = ({
         />
       )}
 
-      <aside className={containerClasses} aria-label="Table of Contents">
+      <aside
+        className={containerClasses}
+        style={asideStyle}
+        aria-label="Table of Contents"
+      >
         <div className="p-3.5 border-b border-gray-800 flex items-center justify-between gap-2 bg-gray-900/95">
           <div className="flex items-center gap-2 text-gray-200 font-medium text-sm min-w-0">
             <ListTree size={16} className="text-blue-400 shrink-0" />
@@ -279,6 +328,7 @@ export const TOCSidebar: React.FC<TOCSidebarProps> = ({
                         return (
                           <button
                             key={heading.id}
+                            ref={(el) => { headingRefs.current[heading.id] = el; }}
                             onClick={() => {
                               onSelectHeading(heading.id);
                               if (isMobile) {
