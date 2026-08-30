@@ -468,8 +468,29 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     }
     return false;
   });
-  const [tocMaxLevel, setTocMaxLevel] = useState(3);
+  const [tocMaxLevel, setTocMaxLevel] = useState(6);
+  const [tocWidth, setTocWidth] = useState(288);
   const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
+
+  const handleTocMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = tocWidth;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = startX - moveEvent.clientX;
+      const newWidth = Math.max(200, Math.min(600, startWidth + deltaX));
+      setTocWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [tocWidth]);
 
   // Reconcile isTOCOpen on mobile breakpoint changes
   useEffect(() => {
@@ -927,25 +948,48 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     const container = document.getElementById('chat-scroll-container');
     if (!container) return;
 
-    const headingElements = container.querySelectorAll('[id^="toc-msg-"]');
-    if (headingElements.length === 0) return;
+    const handleScroll = () => {
+      const headingElements = Array.from(container.querySelectorAll<HTMLElement>('[id^="toc-msg-"]'));
+      if (headingElements.length === 0) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.find(e => e.isIntersecting);
-        if (visible) {
-          setActiveHeadingId(visible.target.id);
+      const containerRect = container.getBoundingClientRect();
+      const offsetThreshold = 100;
+
+      let currentActiveId: string | null = null;
+      for (const el of headingElements) {
+        const top = el.getBoundingClientRect().top - containerRect.top;
+        if (top <= offsetThreshold) {
+          currentActiveId = el.id;
+        } else {
+          break;
         }
-      },
-      {
-        root: container,
-        rootMargin: '0px 0px -75% 0px',
-        threshold: 0.1,
       }
-    );
 
-    headingElements.forEach(el => observer.observe(el));
-    return () => observer.disconnect();
+      if (!currentActiveId && headingElements.length > 0) {
+        currentActiveId = headingElements[0].id;
+      }
+
+      if (currentActiveId) {
+        setActiveHeadingId(currentActiveId);
+      }
+    };
+
+    handleScroll();
+
+    let rAFId: number | null = null;
+    const onScroll = () => {
+      if (rAFId !== null) return;
+      rAFId = requestAnimationFrame(() => {
+        rAFId = null;
+        handleScroll();
+      });
+    };
+
+    container.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      container.removeEventListener('scroll', onScroll);
+      if (rAFId !== null) cancelAnimationFrame(rAFId);
+    };
   }, [displayMessages, isTOCOpen]);
 
   const handleSelectHeading = useCallback((headingId: string) => {
@@ -1123,6 +1167,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
+        {!isMobile && isTOCOpen && (
+          <div
+            className="w-[2px] hover:bg-blue-500 bg-gray-800/80 cursor-col-resize transition-colors h-full shrink-0 z-20"
+            onMouseDown={handleTocMouseDown}
+          />
+        )}
+
         <TOCSidebar
           messages={displayMessages}
           maxLevel={tocMaxLevel}
@@ -1133,6 +1184,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           onSelectHeading={handleSelectHeading}
           isGenerating={isGenerating}
           isMobile={isMobile}
+          width={tocWidth}
         />
       </div>
 
