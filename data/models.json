@@ -533,14 +533,6 @@
     "reasoningEffort": "max"
   },
   {
-    "id": "ac977b66-c8d1-5da3-a80f-9d44eceaed61",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "hy3-free",
-    "displayName": "Hy3 Free (OpenCode)",
-    "reasoningEffort": "high"
-  },
-  {
     "id": "32d253e2-5a78-5c6b-9663-105cb03eb4e4",
     "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
     "providerType": "openai-compatible",
