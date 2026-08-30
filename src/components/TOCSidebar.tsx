@@ -31,6 +31,7 @@ export const TOCSidebar: React.FC<TOCSidebarProps> = ({
 }) => {
   const [collapsedMessageIds, setCollapsedMessageIds] = useState<Record<string, boolean>>({});
   const lastMessageIdRef = useRef<string | null>(null);
+  const lastActiveMessageIdRef = useRef<string | null>(null);
   const headingRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const messageTOCs: MessageTOC[] = useMemo(() => {
@@ -84,33 +85,37 @@ export const TOCSidebar: React.FC<TOCSidebarProps> = ({
   useEffect(() => {
     if (!activeHeadingId) return;
 
-    // Find which message contains this heading
+    // Find which message contains this heading (matching level <= maxLevel)
     let activeMessageId: string | null = null;
     for (const toc of messageTOCs) {
-      if (toc.headings.some(h => h.id === activeHeadingId)) {
+      if (toc.headings.some(h => h.id === activeHeadingId && h.level <= maxLevel)) {
         activeMessageId = toc.messageId;
         break;
       }
     }
 
     if (activeMessageId) {
-      setCollapsedMessageIds(prev => {
-        // Expand active message and collapse all other messages
-        const next: Record<string, boolean> = {};
-        messageTOCs.forEach(toc => {
-          next[toc.messageId] = toc.messageId !== activeMessageId;
+      if (activeMessageId !== lastActiveMessageIdRef.current) {
+        lastActiveMessageIdRef.current = activeMessageId;
+        setCollapsedMessageIds(prev => {
+          const next: Record<string, boolean> = {};
+          messageTOCs.forEach(toc => {
+            next[toc.messageId] = toc.messageId !== activeMessageId;
+          });
+          return next;
         });
-        return next;
-      });
+      }
 
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         const el = headingRefs.current[activeHeadingId];
         if (el) {
           el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         }
       }, 50);
+
+      return () => clearTimeout(timer);
     }
-  }, [activeHeadingId, messageTOCs]);
+  }, [activeHeadingId, messageTOCs, maxLevel]);
 
   const filteredHeadingsCount = useMemo(() => {
     let count = 0;
@@ -166,6 +171,11 @@ export const TOCSidebar: React.FC<TOCSidebarProps> = ({
     closeIcon = <X size={16} />;
   }
 
+  let asideStyle: React.CSSProperties | undefined = undefined;
+  if (!isMobile) {
+    asideStyle = { width: `${width}px` };
+  }
+
   return (
     <>
       {isMobile && (
@@ -178,7 +188,7 @@ export const TOCSidebar: React.FC<TOCSidebarProps> = ({
 
       <aside
         className={containerClasses}
-        style={!isMobile ? { width: `${width}px` } : undefined}
+        style={asideStyle}
         aria-label="Table of Contents"
       >
         <div className="p-3.5 border-b border-gray-800 flex items-center justify-between gap-2 bg-gray-900/95">
