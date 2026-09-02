@@ -61,6 +61,14 @@
     "baseURL": "https://opencode.ai/zen/v1"
   },
   {
+    "id": "75871cff-67ba-4673-9c2e-1f84985396d3",
+    "type": "openai-compatible",
+    "name": "OpenRouter",
+    "apiKey": "",
+    "envKey": "OPENROUTER_API_KEY",
+    "baseURL": "https://openrouter.ai/api/v1"
+  },
+  {
     "id": "p-poe-8d3e",
     "type": "openai-compatible",
     "name": "Poe",
