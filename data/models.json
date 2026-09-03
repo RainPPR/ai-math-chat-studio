@@ -75,30 +75,6 @@
     }
   },
   {
-    "id": "b9425e46-a961-49c8-9b5f-7da094f48532",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-3-flash-preview",
-    "displayName": "Gemini 3 Flash (Google)",
-    "thinkingLevel": "high"
-  },
-  {
-    "id": "3a0f18d9-0017-47be-bf78-8025bb4ca575",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-3.1-flash-lite",
-    "displayName": "Gemini 3.1 Flash Lite (Google)",
-    "thinkingLevel": "high"
-  },
-  {
-    "id": "548471a6-ee9a-464f-84b1-9487f232c829",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-3.1-flash-lite-preview",
-    "displayName": "Gemini 3.1 Flash Lite Preview (Google)",
-    "thinkingLevel": "high"
-  },
-  {
     "id": "090f132d-1796-47d5-b6fa-32244e602e13",
     "providerId": "p-google-fc62",
     "providerType": "google",
@@ -133,6 +109,38 @@
     "thinkingLevel": "high"
   },
   {
+    "id": "c93a519b-d677-42db-9fc5-f14e4ab1ac59",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-3.8-flash",
+    "displayName": "Gemini 3.8 Flash (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "54725a4d-5a8f-40b1-8ca3-d25239a29faf",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-flash-latest",
+    "displayName": "Gemini Flash Latest (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "5dc7e824-7efb-454c-bf7a-0bfb4925fcd0",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-flash-latest-high-res-exp",
+    "displayName": "Gemini Flash Latest High Res Exp (Google)",
+    "thinkingLevel": "high"
+  },
+  {
+    "id": "b3906fe0-048b-4534-9d1c-72bf4025637e",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-flash-lite-latest",
+    "displayName": "Gemini Flash Lite Latest (Google)",
+    "thinkingLevel": "high"
+  },
+  {
     "id": "d3d587d2-59df-4dc8-b3ca-e19c63a6cd53",
     "providerId": "p-google-fc62",
     "providerType": "google",
@@ -157,30 +165,6 @@
     "enableTools": true,
     "disabledTools": [],
     "thinkingLevel": "high"
-  },
-  {
-    "id": "282ea676-9104-4eff-8a27-e9c4d52217a6",
-    "providerId": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
-    "providerType": "openai-compatible",
-    "modelId": "google/gemini-3.5-flash",
-    "displayName": "Gemini 3.5 Flash (Kilo BYOK)",
-    "reasoningEffort": "max"
-  },
-  {
-    "id": "3723ecdf-a953-4411-b9f8-5089413e5d73",
-    "providerId": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
-    "providerType": "openai-compatible",
-    "modelId": "google/gemini-3.6-flash",
-    "displayName": "Gemini 3.6 Flash (Kilo BYOK)",
-    "reasoningEffort": "max"
-  },
-  {
-    "id": "b23f5489-6767-4413-ae5e-2489bbc01995",
-    "providerId": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
-    "providerType": "openai-compatible",
-    "modelId": "google/gemini-3.7-flash",
-    "displayName": "Gemini 3.7 Flash (Kilo BYOK)",
-    "reasoningEffort": "max"
   },
   {
     "id": "e2c6d1c5-44b3-5bcd-aa30-790edccdc2ed",
@@ -216,13 +200,6 @@
     "providerType": "openai-compatible",
     "modelId": "liquid/lfm-2.5-2.6b:free",
     "displayName": "LiquidAI: LFM2.5-2.6B (Kilo)"
-  },
-  {
-    "id": "6044feba-2e11-5d27-9d6a-7d9338c9187e",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "meituan/longcat-2.0-free",
-    "displayName": "Meituan: LongCat 2.0 (Kilo)"
   },
   {
     "id": "8c18dc72-db71-5c63-9a93-a598860ff1a5",
@@ -356,13 +333,6 @@
     "displayName": "Gemma 4 26B (LogFare)"
   },
   {
-    "id": "c7995cd3-216c-5394-ad7c-c6458a16de51",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "glm-5.2",
-    "displayName": "GLM 5.2 (LogFare)"
-  },
-  {
     "id": "3f357e03-54a5-51d0-992d-0f0bd0f318f9",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -384,18 +354,11 @@
     "displayName": "GPT 5.6 Sol (LogFare)"
   },
   {
-    "id": "d4cb5d70-7982-59d7-bd72-4337d101bf05",
+    "id": "581eadd1-f00a-55ce-bbdf-1bc0f905583b",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
-    "modelId": "kimi-k2.7-code",
-    "displayName": "Kimi K2.7 Code (LogFare)"
-  },
-  {
-    "id": "cd2e2f5e-12a8-5000-acf6-7be3dcab4f48",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kiro-auto",
-    "displayName": "Kiro Auto (LogFare)"
+    "modelId": "kimi-k3",
+    "displayName": "Kimi K3 (LogFare)"
   },
   {
     "id": "4f8ed2e1-bf74-5b93-9568-215df207fa0d",
@@ -403,13 +366,6 @@
     "providerType": "openai-compatible",
     "modelId": "logfare/auto",
     "displayName": "Logfare Auto (LogFare)"
-  },
-  {
-    "id": "4ed31846-fff0-5772-a6c5-e111ea731e0c",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "minimax-m3",
-    "displayName": "MiniMax M3 (LogFare)"
   },
   {
     "id": "3be55c22-3d55-55fc-9c02-8c7825c928f6",
@@ -424,6 +380,13 @@
     "providerType": "openai-compatible",
     "modelId": "qwen-3.8-27b",
     "displayName": "Qwen 3.8 27b (LogFare)"
+  },
+  {
+    "id": "5a2d5cd6-f628-568d-97a0-afc98706e9cb",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "qwen-3.8-flash-next",
+    "displayName": "Qwen 3.8 Flash Next (LogFare)"
   },
   {
     "id": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89",
@@ -573,6 +536,14 @@
     "providerType": "openai-compatible",
     "modelId": "muse-spark-1.2-contributor-free",
     "displayName": "Muse Spark 1.2 Free (OpenCode)",
+    "reasoningEffort": "xhigh"
+  },
+  {
+    "id": "e6677191-9635-529a-9001-df7d4587be65",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "muse-spark-1.3-contributor-free",
+    "displayName": "Muse Spark 1.3 Free (OpenCode)",
     "reasoningEffort": "xhigh"
   },
   {
