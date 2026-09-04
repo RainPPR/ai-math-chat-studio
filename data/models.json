@@ -4,23 +4,24 @@
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
     "modelId": "DeepSeek-V4-Flash",
-    "displayName": "DeepSeek V4 Flash 0731 (AMD)",
-    "reasoningEffort": "max"
-  },
-  {
-    "id": "da5102b4-c633-4ac1-b75e-90eaf57ef64c",
-    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
-    "providerType": "openai-compatible",
-    "modelId": "GLM-5.2",
-    "displayName": "GLM 5.2 (AMD)",
+    "displayName": "DeepSeek V4 Flash (AMD)",
     "reasoningEffort": "max"
   },
   {
     "id": "cf8a95c9-e395-4f3b-9e07-b87d09b5571b",
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
-    "modelId": "MinerU2.5-Pro",
-    "displayName": "MinerU2.5 Pro (AMD)"
+    "modelId": "DeepSeek-V4-Flash-Vision-Exp",
+    "displayName": "DeepSeek V4 Flash Vision Exp (AMD)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "da5102b4-c633-4ac1-b75e-90eaf57ef64c",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "Qwen3.8-Flash-Next",
+    "displayName": "Qwen3.8 Flash Next (AMD)",
+    "reasoningEffort": "xhigh"
   },
   {
     "id": "4cce3d2d-b094-4255-8027-b8e9819e7f69",
@@ -165,6 +166,14 @@
     "enableTools": true,
     "disabledTools": [],
     "thinkingLevel": "high"
+  },
+  {
+    "id": "09ef0b20-79ba-434b-90c3-bf77fd56497e",
+    "providerId": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
+    "providerType": "openai-compatible",
+    "modelId": "google/gemini-3.8-flash",
+    "displayName": "Gemini 3.8 Flash (BYOK)",
+    "reasoningEffort": "max"
   },
   {
     "id": "e2c6d1c5-44b3-5bcd-aa30-790edccdc2ed",
