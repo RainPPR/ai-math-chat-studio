@@ -1785,16 +1785,24 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               setTimeout(() => setCopiedPrompt(false), 2000);
             }).catch(() => {});
           } else {
+            const textarea = document.createElement('textarea');
+            textarea.value = constructedPrompt;
+            document.body.appendChild(textarea);
+            textarea.select();
+            let copied = false;
             try {
-              const textarea = document.createElement('textarea');
-              textarea.value = constructedPrompt;
-              document.body.appendChild(textarea);
-              textarea.select();
-              document.execCommand('copy');
-              document.body.removeChild(textarea);
+              copied = document.execCommand('copy');
+            } catch {
+              copied = false;
+            } finally {
+              if (textarea.parentNode) {
+                document.body.removeChild(textarea);
+              }
+            }
+            if (copied) {
               setCopiedPrompt(true);
               setTimeout(() => setCopiedPrompt(false), 2000);
-            } catch {}
+            }
           }
         };
 
@@ -1816,7 +1824,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             }}
             tabIndex={-1}
             ref={(node) => {
-              if (node) node.focus();
+              if (node && !node.contains(document.activeElement)) node.focus();
             }}
           >
             <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
