@@ -1775,28 +1775,62 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           activeSkillIds: selectedSkillIds,
           characters: settings.characters,
           activeCharacterId: settings.activeCharacterId,
+          systemPrompt: settings.systemPrompt,
         });
 
         const handleCopyPrompt = () => {
-          navigator.clipboard.writeText(constructedPrompt).then(() => {
-            setCopiedPrompt(true);
-            setTimeout(() => setCopiedPrompt(false), 2000);
-          }).catch(() => {});
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(constructedPrompt).then(() => {
+              setCopiedPrompt(true);
+              setTimeout(() => setCopiedPrompt(false), 2000);
+            }).catch(() => {});
+          } else {
+            try {
+              const textarea = document.createElement('textarea');
+              textarea.value = constructedPrompt;
+              document.body.appendChild(textarea);
+              textarea.select();
+              document.execCommand('copy');
+              document.body.removeChild(textarea);
+              setCopiedPrompt(true);
+              setTimeout(() => setCopiedPrompt(false), 2000);
+            } catch {}
+          }
         };
 
         return (
-          <div className="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div
+            className="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="system-prompt-modal-title"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsSystemPromptModalOpen(false);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsSystemPromptModalOpen(false);
+              }
+            }}
+            tabIndex={-1}
+            ref={(node) => {
+              if (node) node.focus();
+            }}
+          >
             <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
               <div className="p-4 border-b border-gray-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Terminal size={18} className="text-emerald-400" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-200">
+                  <h3 id="system-prompt-modal-title" className="text-base sm:text-lg font-medium text-gray-200">
                     构建的 System Prompt
                   </h3>
                 </div>
                 <button
                   onClick={() => setIsSystemPromptModalOpen(false)}
                   className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors cursor-pointer"
+                  aria-label="关闭"
                 >
                   <X size={20} />
                 </button>

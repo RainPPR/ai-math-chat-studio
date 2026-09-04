@@ -89,6 +89,7 @@ function resolveSystemPrompt(settings: SettingsData, characterId?: string, skill
     activeSkillIds: skillIds,
     characters: settings.characters,
     activeCharacterId: characterId,
+    systemPrompt: settings.systemPrompt,
   });
 }
 

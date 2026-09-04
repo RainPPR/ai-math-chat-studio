@@ -26,11 +26,12 @@ export interface SystemPromptContext {
   activeSkillIds?: string[];
   characters?: Array<{ id: string; name: string; systemPrompt: string }>;
   activeCharacterId?: string;
+  systemPrompt?: string;
 }
 
 export function buildSystemPromptBase(context: SystemPromptContext): string {
   const parts: string[] = [];
-  const { skills, activeSkillIds, characters, activeCharacterId } = context;
+  const { skills, activeSkillIds, characters, activeCharacterId, systemPrompt } = context;
 
   if (activeSkillIds && activeSkillIds.length > 0 && skills?.length) {
     activeSkillIds.forEach(id => {
@@ -41,11 +42,17 @@ export function buildSystemPromptBase(context: SystemPromptContext): string {
     });
   }
 
+  let characterPromptAdded = false;
   if (activeCharacterId && characters?.length) {
     const character = characters.find(c => c.id === activeCharacterId);
     if (character && character.systemPrompt && character.systemPrompt.trim()) {
       parts.push(character.systemPrompt.trim());
+      characterPromptAdded = true;
     }
+  }
+
+  if (!characterPromptAdded && systemPrompt && systemPrompt.trim()) {
+    parts.push(systemPrompt.trim());
   }
 
   return parts.join('\n\n');
