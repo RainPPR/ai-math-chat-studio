@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { GenerationManager } from '../services/generation-manager';
 import { loadSettings } from '../lib/settings-helper';
 import { Skill } from '../../shared/skills';
+import { buildSystemPromptBase } from '../../shared/system-prompt';
 
 interface Character {
   id: string;
@@ -83,25 +84,13 @@ function resolveSessionContext(settings: SettingsData) {
 }
 
 function resolveSystemPrompt(settings: SettingsData, characterId?: string, skillIds?: string[]): string {
-  const parts: string[] = [];
-
-  if (skillIds && skillIds.length > 0 && settings.skills?.length) {
-    skillIds.forEach(id => {
-      const skill = settings.skills?.find((s: any) => s.id === id);
-      if (skill && skill.prompt && skill.prompt.trim()) {
-        parts.push(`# Skill: ${skill.name}\n${skill.prompt.trim()}`);
-      }
-    });
-  }
-
-  if (characterId && settings.characters?.length) {
-    const character = settings.characters.find((c: any) => c.id === characterId);
-    if (character && character.systemPrompt && character.systemPrompt.trim()) {
-      parts.push(character.systemPrompt.trim());
-    }
-  }
-
-  return parts.join('\n\n');
+  return buildSystemPromptBase({
+    skills: settings.skills,
+    activeSkillIds: skillIds,
+    characters: settings.characters,
+    activeCharacterId: characterId,
+    systemPrompt: settings.systemPrompt,
+  });
 }
 
 export function createChatRouter(gm: GenerationManager, settingsFile: string) {

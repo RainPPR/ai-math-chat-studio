@@ -4,9 +4,11 @@ import { api } from '../lib/api';
 import {
   Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal,
   AlertCircle, X, ChevronDown, Bot, Sparkles, FileText, Eye, Printer, Edit,
-  Trash2, ArrowUp, ArrowDown, Plus, ListTree, Menu, Zap, CheckSquare, Square
+  Trash2, ArrowUp, ArrowDown, Plus, ListTree, Menu, Zap, CheckSquare, Square,
+  Terminal
 } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { buildConstructedSystemPrompt } from '../../shared/system-prompt';
 import { TOCSidebar } from './TOCSidebar';
 
 interface ChatAreaProps {
@@ -459,6 +461,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const [editBlocks, setEditBlocks] = useState<EditBlock[]>([]);
   const [editModalError, setEditModalError] = useState<string | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const [isSystemPromptModalOpen, setIsSystemPromptModalOpen] = useState(false);
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
 
   // TOC State
   const [isTOCOpen, setIsTOCOpen] = useState(() => {
@@ -1351,6 +1356,15 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             )}
           </div>
 
+          <button
+            onClick={() => setIsSystemPromptModalOpen(true)}
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 rounded-lg text-xs text-gray-300 transition-colors cursor-pointer"
+            title="查看构建的 System Prompt"
+          >
+            <Terminal size={12} className="text-emerald-400 shrink-0" />
+            <span className="max-w-[100px] sm:max-w-[120px] truncate">System Prompt</span>
+          </button>
+
           <div ref={skillsDropdownRef} className="relative">
             <button
               onClick={() => { setModelDropdownOpen(false); setCharacterDropdownOpen(false); setTemplateDropdownOpen(false); setSkillsDropdownOpen(!skillsDropdownOpen); }}
@@ -1754,6 +1768,110 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
         </div>
       )}
+
+      {isSystemPromptModalOpen && (() => {
+        const constructedPrompt = buildConstructedSystemPrompt({
+          skills: settings.skills,
+          activeSkillIds: selectedSkillIds,
+          characters: settings.characters,
+          activeCharacterId: settings.activeCharacterId,
+          systemPrompt: settings.systemPrompt,
+        });
+
+        const handleCopyPrompt = () => {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(constructedPrompt).then(() => {
+              setCopiedPrompt(true);
+              setTimeout(() => setCopiedPrompt(false), 2000);
+            }).catch(() => {});
+          } else {
+            const textarea = document.createElement('textarea');
+            textarea.value = constructedPrompt;
+            document.body.appendChild(textarea);
+            textarea.select();
+            let copied = false;
+            try {
+              copied = document.execCommand('copy');
+            } catch {
+              copied = false;
+            } finally {
+              if (textarea.parentNode) {
+                document.body.removeChild(textarea);
+              }
+            }
+            if (copied) {
+              setCopiedPrompt(true);
+              setTimeout(() => setCopiedPrompt(false), 2000);
+            }
+          }
+        };
+
+        return (
+          <div
+            className="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="system-prompt-modal-title"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsSystemPromptModalOpen(false);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsSystemPromptModalOpen(false);
+              }
+            }}
+            tabIndex={-1}
+            ref={(node) => {
+              if (node && !node.contains(document.activeElement)) node.focus();
+            }}
+          >
+            <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+              <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Terminal size={18} className="text-emerald-400" />
+                  <h3 id="system-prompt-modal-title" className="text-base sm:text-lg font-medium text-gray-200">
+                    构建的 System Prompt
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setIsSystemPromptModalOpen(false)}
+                  className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors cursor-pointer"
+                  aria-label="关闭"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                <p className="text-xs text-gray-400 mb-3">
+                  如果当前发送消息，系统实际发送给 API 的完整 System Prompt 如下（不包含 user prompt）：
+                </p>
+                <div className="bg-gray-950 border border-gray-800 rounded-lg p-4 font-mono text-xs sm:text-sm text-gray-300 leading-relaxed whitespace-pre-wrap select-text">
+                  {constructedPrompt}
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-gray-800 bg-gray-900/50 flex items-center justify-end gap-3">
+                <button
+                  onClick={handleCopyPrompt}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                >
+                  {copiedPrompt ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+                  <span>{copiedPrompt ? '已复制' : '复制'}</span>
+                </button>
+                <button
+                  onClick={() => setIsSystemPromptModalOpen(false)}
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                >
+                  关闭
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {isPrintingAll && session && (
         <div id="print-all-session-content" className="hidden">
