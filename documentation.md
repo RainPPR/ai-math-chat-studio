@@ -1,258 +1,3 @@
-### 代码质量与格式规范
-
-```text
-本项目执行严格的代码质量和格式检查。所有代码必须通过 Prettier 和 TypeScript 的严格模式检查。
-```
-
-### 代码质量与格式规范 / 检查工具
-
-```text
-- **Formatting**: `bun run pretty` (prettier --check)
-- **Type Check**: `bun run check` (tsc --noEmit --strict)
-```
-
-### 代码质量与格式规范 / 修复工具
-
-```text
-- **自动修复格式**: `bun run pretty:fix`
-```
-
-### 代码质量与格式规范 / 严格修复规则
-
-```text
-1. **禁止未使用变量**: 所有的未使用变量必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
-2. **禁止未使用的表达式**: 严禁将三元运算符或逻辑表达式作为独立语句使用。应使用标准的 `if/else` 语句。
-3. **严格类型检查**: TypeScript 必须处于 `--strict` 模式。严禁无故使用 `@ts-ignore` 或 `@ts-expect-error`。如果第三方库缺少类型或存在上游 Bug，必须在注释中说明原因。
-4. **文档同步**: 任何逻辑变更必须同步更新 `AGENTS.md` 和 `docs/` 目录下的相关文档。
-```
-
-### 代码质量与格式规范 / 最佳实践 (TypeScript)
-
-```text
-- **Make Illegal States Unrepresentable**: 使用辨析联合类型 (Discriminated Unions) 确保状态合法。
-- **Runtime Validation**: 对外部数据（API 响应、本地存储）使用 Zod 等工具进行运行时验证。
-- **Branded Types**: 对 ID 等原始类型使用 Branded Types 以增强区分度。
-- **Exhaustive Checks**: 使用 `never` 类型确保 `switch` 语句处理了所有可能的情况。
-```
-
-### 文件结构
-
-```text
-ai-math-chat-studio/
-├── .env                      # 环境变量（不提交）
-├── .env.example              # 环境变量模板
-├── .gitignore
-├── .prettierignore           # Prettier 忽略文件
-├── AGENTS.md                 # AI 开发指导文件
-├── docs/                     # 项目文档
-│   ├── architecture.md       # 架构概览
-│   ├── api-providers.md      # AI 供应商集成
-│   ├── components.md         # 组件结构
-│   ├── data-models.md        # 数据模型
-│   ├── tech-stack.md         # 技术栈
-│   ├── linting-and-quality.md # 代码质量指南
-│   └── file-structure.md     # 本文件
-├── data/                     # 本地数据存储（不提交）
-│   ├── settings.json         # 用户设置
-│   ├── providers.json        # 提供商数据
-│   ├── models.json           # 模型数据
-│   ├── temp-models.json      # 临时模型数据
-│   ├── characters.json       # 角色数据
-│   ├── skills.json           # 技能数据
-│   ├── templates.json        # 聊天自动填入模板设置
-│   ├── sessions/             # 会话数据
-│   └── log/                  # 日志数据 (YYYY-MM-DD.log)
-├── index.html                # SPA 入口 HTML
-├── package.json              # 项目依赖和脚本
-├── bun.lock                  # Bun 依赖锁定文件
-├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
-├── server/                   # 后端模块
-│   ├── app.ts                # Express 5 应用组装，挂载所有路由
-│   ├── vite-helper.ts        # Vite 开发服务器辅助
-│   ├── providers/            # AI 供应商相关
-│   │   ├── built-in.ts       # 内置提供商类型定义
-│   │   ├── config.ts         # 提供商配置解析（apiKey、baseURL）
-│   │   └── stream.ts         # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
-│   ├── routes/               # API 路由
-│   │   ├── settings.ts       # /api/settings GET/PUT
-│   │   ├── templates.ts      # /api/templates GET/PUT
-│   │   ├── sessions.ts       # /api/sessions GET/GET/:id/DELETE
-│   │   ├── chat.ts           # /api/sessions/:id/messages, generation, retry, continue
-│   │   └── models.ts         # /api/providers, /api/providers/:type/models
-│   └── services/             # 核心服务
-│       ├── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
-│       └── logger.ts             # 日志服务：拦截 console 输出并持久化到 data/log/
-├── src/
-│   ├── App.tsx               # 主应用组件（状态管理）
-│   ├── main.tsx              # React 入口
-│   ├── index.css             # Tailwind 导入
-│   ├── types.ts              # TypeScript 类型定义
-│   ├── vite-env.d.ts         # Vite 类型声明
-│   ├── components/
-│   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
-│   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
-│   │   ├── SettingsModal.tsx # 设置弹窗（General / Providers / Models / Characters / Skills / Templates）
-│   │   └── Sidebar.tsx       # 左侧栏（会话列表）
-│   └── lib/
-│       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
-│       └── utils.ts          # cn() 样式合并工具
-├── tsconfig.json             # TypeScript 配置
-└── vite.config.ts            # Vite 构建配置
-```
-
-### 文件结构 / 关键文件说明
-
-```text
-| 文件 | 职责 |
-|------|------|
-| `server.ts` | 入口文件，`import 'dotenv/config'` + `startApp()` |
-| `server/app.ts` | Express 5 应用组装，挂载路由，创建 GenerationManager |
-| `server/providers/built-in.ts` | 内置 3 种提供商类型定义（google / nvidia / openai-compatible） |
-| `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
-| `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
-| `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、取消。 |
-| `server/services/logger.ts` | **日志服务**：拦截 console 输出并持久化到 `data/log/`。 |
-| `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
-| `server/routes/settings.ts` | `/api/settings` GET/PUT |
-| `server/routes/templates.ts` | `/api/templates` GET/PUT |
-| `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
-| `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
-| `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
-| `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
-| `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
-| `src/components/SettingsModal.tsx` | 设置弹窗（General / Providers / Models / Characters / Skills / Templates） |
-| `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
-| `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
-| `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
-```
-
-### 技术栈详情
-
-```text
-
-```
-
-### 技术栈详情 / 前端框架
-
-```text
-| 技术 | 版本 |
-|---|---|
-| React | ^19.2.8 |
-| TypeScript | ^7.0.2 |
-| Vite | ^8.2.1 |
-| Tailwind CSS | ^4.3.3 |
-| @tailwindcss/typography | ^0.5.20 |
-```
-
-### 技术栈详情 / 后端
-
-```text
-| 技术 | 版本 |
-|---|---|
-| Express | ^5.2.1 |
-| tsx | ^4.23.12 |
-| OpenAI SDK | ^7.4.0 |
-| dotenv | ^17.4.2 |
-```
-
-### 技术栈详情 / AI/数学库
-
-```text
-| 技术 | 版本 |
-|---|---|
-| @google/genai | ^2.17.1 |
-| KaTeX | ^0.18.4 |
-```
-
-### 技术栈详情 / Markdown 渲染管线
-
-```text
-| 技术 | 版本 |
-|---|---|
-| react-markdown | ^10.1.0 |
-| remark-math | ^6.0.0 |
-| remark-gfm | ^4.0.1 |
-| remark-breaks | ^4.0.0 |
-| remark-cjk-friendly | ^2.3.1 |
-| remark-squeeze-paragraphs | ^6.0.0 |
-| rehype-katex | ^7.0.1 |
-| rehype-raw | ^7.0.0 |
-| rehype-sanitize | ^6.0.0 |
-| rehype-external-links | ^3.0.0 |
-| katex/contrib/mhchem | (Bundled with KaTeX) |
-```
-
-### 技术栈详情 / 其他依赖
-
-```text
-| 技术 | 版本 |
-|---|---|
-| lucide-react | ^1.31.0 |
-| motion | ^13.1.0 |
-| clsx | ^2.1.1 |
-| tailwind-merge | ^3.6.0 |
-| uuid | ^14.0.1 |
-| unicodeit | ^0.7.5 |
-| markdown-to-txt | ^2.0.1 |
-```
-
-### 技术栈详情 / 其他依赖 / 标题生成
-
-```text
-标题生成使用纯 JavaScript 字符串操作，无需异步：
-
-- **unicodeit**: 将 LaTeX 数学公式转换为 Unicode 字符（如 `\alpha` → `α`)
-- **markdown-to-txt**: 清理 Markdown 语法（标题、粗体、链接等）
-- 处理流程：替换 `\dfrac` → `\frac` → 处理块级数学 `$$...$$` → 处理行内数学 `$...$` → Markdown 转文本 → 移除剩余 `$` 和 `\`
-- 只处理前200个字符，保证极快的处理速度
-```
-
-### 技术栈详情 / 开发工具
-
-```text
-| 工具 | 用途 |
-|---|---|
-| Bun | 依赖管理、脚本运行、构建 |
-| TypeScript (`tsc --noEmit`) | 类型检查 |
-| Vite HMR | 热模块替换 |
-```
-
-### 技术栈详情 / 构建命令
-
-```text
-bun run dev           # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
-bun run build         # Vite 生产构建
-bun run preview       # 预览生产构建
-bun run build:bundle    # 打包服务端代码为单个 bundle
-bun run build:compile  # 使用 Bun 编译为可执行文件
-bun run check         # TypeScript 类型检查
-bun run clean         # 清除 dist、dist-server、dist-compile、release 目录
-```
-
-### 技术栈详情 / 路径别名
-
-```text
-`@/*` 映射到项目根目录，配置在 `tsconfig.json` 和 `vite.config.ts` 中。
-```
-
-### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts)
-
-```text
-本应用支持动态 KaTeX 数学字体选择，允许用户在设置（SettingsModal.tsx）中切换不同的数学渲染字体：
-- **Default**: KaTeX 默认自带字体。
-- **Euler Math**: 典雅的 Euler 数学字体 (Euler-Math.woff2 / Euler-Math.otf)。
-- **Fira Math**: 现代的 Fira 数学无衬线字体 (FiraMath-Regular.woff2 / FiraMath-Regular.otf)。
-- **Cambria Math**: 经典的 Cambria 数学衬线字体 (Cambria Math.woff2 / Cambria Math.ttf)。
-```
-
-### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts) / 字体实现细节
-
-```text
-1. **源字体与 WOFF2 转换**: 字体文件存放于 `src/fonts/` 下，转换使用标准的 `woff2_compress` 压缩技术将 OTF/TTF 转换为体积更小的 WOFF2 格式。
-2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义在 `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
-3. **CJK/中文优雅回退**: 避免定制数学字体对数学公式内的中文（如 `\text{中文}` 或 `.cjk_fallback`）造成非预期的强制覆盖，系统在 `src/index.css` 增加了高优先级的非冲突 CJK 回退处理器，强制使 `.cjk_fallback` 及它的子元素回退并使用网页正文字体 (`system-ui, sans-serif`)。
-```
-
 ### 组件结构文档
 
 ```text
@@ -407,239 +152,132 @@ graph TD
 *   **模板管理**: 允许用户通过图形界面添加、编辑、删除、上下移动（Reorder）聊天自动填入模板（如三角形基础、锐角三角形等数学题目常用句式）。编辑内容支持多行文本。保存后会通过 `/api/templates` 持久化到服务器的 `data/templates.json` 中。
 ```
 
-### 数据模型与存储
+### 文件结构
 
 ```text
-
+ai-math-chat-studio/
+├── .env                      # 环境变量（不提交）
+├── .env.example              # 环境变量模板
+├── .gitignore
+├── .prettierignore           # Prettier 忽略文件
+├── AGENTS.md                 # AI 开发指导文件
+├── docs/                     # 项目文档
+│   ├── architecture.md       # 架构概览
+│   ├── api-providers.md      # AI 供应商集成
+│   ├── components.md         # 组件结构
+│   ├── data-models.md        # 数据模型
+│   ├── tech-stack.md         # 技术栈
+│   ├── linting-and-quality.md # 代码质量指南
+│   └── file-structure.md     # 本文件
+├── data/                     # 本地数据存储（不提交）
+│   ├── settings.json         # 用户设置
+│   ├── providers.json        # 提供商数据
+│   ├── models.json           # 模型数据
+│   ├── temp-models.json      # 临时模型数据
+│   ├── characters.json       # 角色数据
+│   ├── skills.json           # 技能数据
+│   ├── templates.json        # 聊天自动填入模板设置
+│   ├── sessions/             # 会话数据
+│   └── log/                  # 日志数据 (YYYY-MM-DD.log)
+├── index.html                # SPA 入口 HTML
+├── package.json              # 项目依赖和脚本
+├── bun.lock                  # Bun 依赖锁定文件
+├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
+├── server/                   # 后端模块
+│   ├── app.ts                # Express 5 应用组装，挂载所有路由
+│   ├── vite-helper.ts        # Vite 开发服务器辅助
+│   ├── providers/            # AI 供应商相关
+│   │   ├── built-in.ts       # 内置提供商类型定义
+│   │   ├── config.ts         # 提供商配置解析（apiKey、baseURL）
+│   │   └── stream.ts         # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
+│   ├── routes/               # API 路由
+│   │   ├── settings.ts       # /api/settings GET/PUT
+│   │   ├── templates.ts      # /api/templates GET/PUT
+│   │   ├── sessions.ts       # /api/sessions GET/GET/:id/DELETE
+│   │   ├── chat.ts           # /api/sessions/:id/messages, generation, retry, continue
+│   │   └── models.ts         # /api/providers, /api/providers/:type/models
+│   └── services/             # 核心服务
+│       ├── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
+│       └── logger.ts             # 日志服务：拦截 console 输出并持久化到 data/log/
+├── src/
+│   ├── App.tsx               # 主应用组件（状态管理）
+│   ├── main.tsx              # React 入口
+│   ├── index.css             # Tailwind 导入
+│   ├── types.ts              # TypeScript 类型定义
+│   ├── vite-env.d.ts         # Vite 类型声明
+│   ├── components/
+│   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
+│   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
+│   │   ├── SettingsModal.tsx # 设置弹窗（General / Providers / Models / Characters / Skills / Templates）
+│   │   └── Sidebar.tsx       # 左侧栏（会话列表）
+│   └── lib/
+│       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
+│       └── utils.ts          # cn() 样式合并工具
+├── tsconfig.json             # TypeScript 配置
+└── vite.config.ts            # Vite 构建配置
 ```
 
-### 数据模型与存储 / TypeScript 类型定义
+### 文件结构 / 关键文件说明
 
 ```text
-
+| 文件 | 职责 |
+|------|------|
+| `server.ts` | 入口文件，`import 'dotenv/config'` + `startApp()` |
+| `server/app.ts` | Express 5 应用组装，挂载路由，创建 GenerationManager |
+| `server/providers/built-in.ts` | 内置 3 种提供商类型定义（google / nvidia / openai-compatible） |
+| `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
+| `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
+| `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、取消。 |
+| `server/services/logger.ts` | **日志服务**：拦截 console 输出并持久化到 `data/log/`。 |
+| `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
+| `server/routes/settings.ts` | `/api/settings` GET/PUT |
+| `server/routes/templates.ts` | `/api/templates` GET/PUT |
+| `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
+| `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
+| `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
+| `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
+| `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
+| `src/components/SettingsModal.tsx` | 设置弹窗（General / Providers / Models / Characters / Skills / Templates） |
+| `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
+| `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
+| `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
 ```
 
-### 数据模型与存储 / TypeScript 类型定义 / ProviderInstance（提供商实例）
+### 代码质量与格式规范
 
 ```text
-interface ProviderInstance {
-  id: string;           // UUID
-  type: 'google' | 'nvidia' | 'openai-compatible';  // 内置类型
-  name: string;         // 显示名称
-  baseURL?: string;     // 自定义 Base URL（覆盖内置默认值）
-  apiKey?: string;      // 自定义 API Key（覆盖环境变量）
-  envKey?: string;      // 环境变量前缀（如 NVIDIA_API_KEY）
-  extra?: Record<string, any>;  // 额外配置（高拓展性）
-  modelSource?: string; // 远程模型列表 JSON URL（仅适用于 nvidia/openai-compatible，启动时自动同步）
-}
-
-> **特殊行为**：
-> - `nvidia` 类型的 `baseURL` 固定为 `https://integrate.api.nvidia.com/v1`，无法覆盖
-> - `google` 类型不支持 `modelSource`（模型列表通过 API 获取）
+本项目执行严格的代码质量和格式检查。所有代码必须通过 Prettier 和 TypeScript 的严格模式检查。
 ```
 
-### 数据模型与存储 / TypeScript 类型定义 / ModelInstance（模型实例）
+### 代码质量与格式规范 / 检查工具
 
 ```text
-interface ModelInstance {
-  id: string;                       // UUID
-  providerId: string;               // 关联的 ProviderInstance.id
-  providerType: 'google' | 'nvidia' | 'openai-compatible';  // 冗余字段，高效传递
-  modelId: string;                  // 模型 ID（如 gemini-3.5-flash）
-  displayName?: string;             // 显示名称（可选）
-  temperature?: number;             // 温度参数（Unset 时不传给 API）
-  maxTokens?: number;               // 最大 token 数（Unset 时不传给 API）
-  reasoningEffort?: string;         // 推理努力程度（max/xhigh/high/medium/low/minimal/none，OpenAI 兼容用）
-  thinkingLevel?: string;           // 思考级别（Gemini 专用）
-  extraBody?: Record<string, any>;  // 额外请求体（JSON 对象，合并到 API 请求中）
-  injectThinkingTemplate?: boolean; // 注入 chat_template_kwargs thinking（Nvidia 用）
-}
+- **Formatting**: `bun run pretty` (prettier --check)
+- **Type Check**: `bun run check` (tsc --noEmit --strict)
 ```
 
-### 数据模型与存储 / TypeScript 类型定义 / TempModel（临时模型实例）
+### 代码质量与格式规范 / 修复工具
 
 ```text
-interface TempModel {
-  id: string;                       // UUID
-  name?: string;                    // 临时模型显示名称（可选）
-  baseURL: string;                  // 显式 Base URL
-  apiKey: string;                   // 显式 API Key
-  modelId: string;                  // 模型 ID（如 Qwen/Qwen3.8-27B）
-  temperature?: number;             // 温度参数
-  maxTokens?: number;               // 最大 token 数
-  reasoningEffort?: string;         // 推理努力程度
-  extraBody?: Record<string, any>;  // 额外请求体
-  injectThinkingTemplate?: boolean; // 是否注入 thinking 参数
-}
+- **自动修复格式**: `bun run pretty:fix`
 ```
 
-### 数据模型与存储 / TypeScript 类型定义 / Character（角色）
+### 代码质量与格式规范 / 严格修复规则
 
 ```text
-interface Character {
-  id: string;            // UUID
-  name: string;          // 角色名称
-  systemPrompt: string;  // 系统提示词
-}
-
-> **设计意图**：角色是系统提示词的容器。用户可在设置中创建多个角色（如"数学导师"、"代码助手"），每个角色携带不同的 `systemPrompt`。发送消息时，后端根据 `activeCharacterId` 查找对应角色的 `systemPrompt` 注入请求。
+1. **禁止未使用变量**: 所有的未使用变量必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
+2. **禁止未使用的表达式**: 严禁将三元运算符或逻辑表达式作为独立语句使用。应使用标准的 `if/else` 语句。
+3. **严格类型检查**: TypeScript 必须处于 `--strict` 模式。严禁无故使用 `@ts-ignore` 或 `@ts-expect-error`。如果第三方库缺少类型或存在上游 Bug，必须在注释中说明原因。
+4. **文档同步**: 任何逻辑变更必须同步更新 `AGENTS.md` 和 `docs/` 目录下的相关文档。
 ```
 
-### 数据模型与存储 / TypeScript 类型定义 / Skill（技能）
+### 代码质量与格式规范 / 最佳实践 (TypeScript)
 
 ```text
-interface Skill {
-  id: string;            // UUID / 唯一标识符
-  name: string;          // 技能名称（如 "Assistant"）
-  prompt: string;        // 技能提示词内容
-}
-
-> **设计意图**：技能是独立于角色的可多选提示词模块。默认系统包含 "Assistant" 技能。选中的 Skills 在发送消息时会自动被包裹为 `# Skill: ${name}\n${prompt}` 注入至 Character 系统提示词上方，且整体排在 KaTeX/Markdown 格式指令之后。
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / Template（自动填入模板）
-
-```text
-interface Template {
-  id: string;            // UUID / 唯一标识符
-  name: string;          // 模板名称（显示在菜单中）
-  content: string;       // 模板具体内容（支持 LaTeX，可自动追加到输入框）
-}
-
-> **设计意图**：聊天自动填入模板是一个独立的数据模型。用户可以在设置中配置三角形、数列等高频填入的数学句式，并在聊天中一键快捷 append 到输入框中，避免重复输入。
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / UserSettings（用户设置）
-
-```text
-interface UserSettings {
-  activeModelId?: string;           // 当前活跃模型的 ModelInstance.id 或 TempModel.id
-  activeCharacterId?: string;       // 当前活跃角色的 Character.id
-  activeSkillIds?: string[];        // 默认激活的技能 ID 列表
-  providers: ProviderInstance[];    // 提供商实例列表
-  models: ModelInstance[];          // 模型实例列表
-  tempModels?: TempModel[];         // 临时模型实例列表
-  characters: Character[];          // 角色列表
-  skills?: Skill[];                 // 技能列表
-  systemPrompt: string;             // 全局回退系统提示词（向后兼容）
-  renderThinkingAsMarkdown: boolean;
-  autoScroll: boolean;
-  collapseThinkingFinished: boolean;
-  trimThinkingSpaces: boolean;
-  starredSessions?: Record<string, string>; // 加星会话映射（会话 ID => 星星颜色 ID）
-}
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / ChatMessage（聊天消息）
-
-```text
-interface ChatMessage {
-  id: string;                       // UUID
-  role: 'user' | 'model';          // 角色
-  content: string;                   // 消息内容（含 Markdown 和思考过程包装）
-  createdAt: string;                // ISO 时间戳
- }
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / ChatSession（聊天会话）
-
-```text
-interface ChatSession {
-  id: string;               // UUID
-  title: string;            // 会话标题
-  messages: ChatMessage[];  // 消息列表
-  characterId?: string;    // 创建时使用的角色 ID（仅记录首次）
-  skillIds?: string[];      // 会话选择的技能 ID 列表
-  createdAt: string;        // ISO 时间戳
-  updatedAt: string;        // ISO 时间戳
-}
-```
-
-### 数据模型与存储 / TypeScript 类型定义 / 服务端类型（GenerationManager 内部）
-
-```text
-interface GenerationModel {
-  id: string;
-  providerId: string;
-  providerType: string;
-  modelId: string;
-  displayName?: string;
-  temperature?: number;
-  maxTokens?: number;
-  reasoningEffort?: string;
-  extraBody?: Record<string, any>;
-  thinkingLevel?: string;
-}
-
-interface GenerationProvider {
-  baseURL?: string;
-  apiKey?: string;
-  envKey?: string;
-  type: string;
-  name: string;
-}
-```
-
-### 数据模型与存储 / 存储方案
-
-```text
-
-```
-
-### 数据模型与存储 / 存储方案 / 本地 JSON 文件存储
-
-```text
-数据通过 Express 服务端 REST API 读写本地 JSON 文件：
-
-**文件结构**：
-
-/data/
-  settings.json           # UserSettings（单文件）
-  providers.json          # ProviderInstance[]（提供商列表）
-  models.json             # ModelInstance[]（模型列表）
-  temp-models.json        # TempModel[]（临时模型列表，包含 API Key，已 Git 忽略）
-  characters.json         # Character[]（角色列表）
-  skills.json             # Skill[]（技能列表）
-  templates.json          # Template[]（聊天自动填入模板单文件）
-  sessions/{sessionId}.json  # ChatSession（每会话一个文件）
-  log/                    # 日志文件（YYYY-MM-DD.log）
-
-**API 端点**：
-
-- `GET /api/settings` — 读取设置
-- `PUT /api/settings` — 写入设置
-- `GET /api/templates` — 读取模板列表
-- `PUT /api/templates` — 保存/更新模板列表（带严格的结构和非空校验）
-- `GET /api/sessions` — 列出所有会话
-- `GET /api/sessions/:id` — 获取单个会话
-- `DELETE /api/sessions/:id` — 删除会话
-- `PATCH /api/sessions/:id` — 更新会话元数据或消息。接受 `title`、`characterId` 和 `messages`（数组类型，元素结构需符合 `ChatMessage` 规范，必须包含 `id`、`role`、`content`、`createdAt`）
-- `POST /api/sessions/:id/messages` — 发送消息并触发生成
-- `GET /api/sessions/:id/generation` — SSE 订阅生成进度
-- `DELETE /api/sessions/:id/generation` — 停止生成
-- `GET /api/generation-status` — 获取正在运行的会话 ID 列表（页面刷新后恢复状态用）
-- `POST /api/sessions/:id/retry` — 重试消息
-- `POST /api/sessions/:id/continue` — 继续生成
-- `GET /api/providers` — 获取内置提供商类型列表
-- `POST /api/providers/:type/models` — 获取指定类型的模型列表（POST 避免在 URL 中传递敏感信息）
-```
-
-### 数据模型与存储 / 默认设置
-
-```text
-const DEFAULT_SETTINGS: UserSettings = {
-  providers: [],
-  models: [],
-  characters: [],
-  systemPrompt: '',
-  renderThinkingAsMarkdown: false,
-  autoScroll: true,
-  collapseThinkingFinished: true,
-  trimThinkingSpaces: false,
-  starredSessions: {},
-};
-
-> **设计要点**：所有参数（temperature、maxTokens 等）为 "Unset" 时不传给 API，由供应商使用默认值。已删除 `topP` 参数。
+- **Make Illegal States Unrepresentable**: 使用辨析联合类型 (Discriminated Unions) 确保状态合法。
+- **Runtime Validation**: 对外部数据（API 响应、本地存储）使用 Zod 等工具进行运行时验证。
+- **Branded Types**: 对 ID 等原始类型使用 Branded Types 以增强区分度。
+- **Exhaustive Checks**: 使用 `never` 类型确保 `switch` 语句处理了所有可能的情况。
 ```
 
 ### 项目架构概览
@@ -888,6 +526,368 @@ graph TD
 -   **思考过程包装**: 为了在 UI 中统一展示不同模型的“思考过程”(reasoning)，所有此类信息在 `GenerationManager` 中被统一包装成一个可折叠的 `<details>` HTML 标签。
 -   **上下文窗口限制**: 为控制成本和 API 请求大小，每次生成只向 AI 模型发送最近的 40 条消息历史记录。
 -   **文档同步规则**: `AGENTS.md` 中明确规定，任何对代码、架构或数据模型的修改都必须同步更新相关的文档，以保持其准确性。
+```
+
+### 技术栈详情
+
+```text
+
+```
+
+### 技术栈详情 / 前端框架
+
+```text
+| 技术 | 版本 |
+|---|---|
+| React | ^19.2.8 |
+| TypeScript | ^7.0.2 |
+| Vite | ^8.2.1 |
+| Tailwind CSS | ^4.3.3 |
+| @tailwindcss/typography | ^0.5.20 |
+```
+
+### 技术栈详情 / 后端
+
+```text
+| 技术 | 版本 |
+|---|---|
+| Express | ^5.2.1 |
+| tsx | ^4.23.12 |
+| OpenAI SDK | ^7.4.0 |
+| dotenv | ^17.4.2 |
+```
+
+### 技术栈详情 / AI/数学库
+
+```text
+| 技术 | 版本 |
+|---|---|
+| @google/genai | ^2.17.1 |
+| KaTeX | ^0.18.4 |
+```
+
+### 技术栈详情 / Markdown 渲染管线
+
+```text
+| 技术 | 版本 |
+|---|---|
+| react-markdown | ^10.1.0 |
+| remark-math | ^6.0.0 |
+| remark-gfm | ^4.0.1 |
+| remark-breaks | ^4.0.0 |
+| remark-cjk-friendly | ^2.3.1 |
+| remark-squeeze-paragraphs | ^6.0.0 |
+| rehype-katex | ^7.0.1 |
+| rehype-raw | ^7.0.0 |
+| rehype-sanitize | ^6.0.0 |
+| rehype-external-links | ^3.0.0 |
+| katex/contrib/mhchem | (Bundled with KaTeX) |
+```
+
+### 技术栈详情 / 其他依赖
+
+```text
+| 技术 | 版本 |
+|---|---|
+| lucide-react | ^1.31.0 |
+| motion | ^13.1.0 |
+| clsx | ^2.1.1 |
+| tailwind-merge | ^3.6.0 |
+| uuid | ^14.0.1 |
+| unicodeit | ^0.7.5 |
+| markdown-to-txt | ^2.0.1 |
+```
+
+### 技术栈详情 / 其他依赖 / 标题生成
+
+```text
+标题生成使用纯 JavaScript 字符串操作，无需异步：
+
+- **unicodeit**: 将 LaTeX 数学公式转换为 Unicode 字符（如 `\alpha` → `α`)
+- **markdown-to-txt**: 清理 Markdown 语法（标题、粗体、链接等）
+- 处理流程：替换 `\dfrac` → `\frac` → 处理块级数学 `$$...$$` → 处理行内数学 `$...$` → Markdown 转文本 → 移除剩余 `$` 和 `\`
+- 只处理前200个字符，保证极快的处理速度
+```
+
+### 技术栈详情 / 开发工具
+
+```text
+| 工具 | 用途 |
+|---|---|
+| Bun | 依赖管理、脚本运行、构建 |
+| TypeScript (`tsc --noEmit`) | 类型检查 |
+| Vite HMR | 热模块替换 |
+```
+
+### 技术栈详情 / 构建命令
+
+```text
+bun run dev           # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
+bun run build         # Vite 生产构建
+bun run preview       # 预览生产构建
+bun run build:bundle    # 打包服务端代码为单个 bundle
+bun run build:compile  # 使用 Bun 编译为可执行文件
+bun run check         # TypeScript 类型检查
+bun run clean         # 清除 dist、dist-server、dist-compile、release 目录
+```
+
+### 技术栈详情 / 路径别名
+
+```text
+`@/*` 映射到项目根目录，配置在 `tsconfig.json` 和 `vite.config.ts` 中。
+```
+
+### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts)
+
+```text
+本应用支持动态 KaTeX 数学字体选择，允许用户在设置（SettingsModal.tsx）中切换不同的数学渲染字体：
+- **Default**: KaTeX 默认自带字体。
+- **Euler Math**: 典雅的 Euler 数学字体 (Euler-Math.woff2 / Euler-Math.otf)。
+- **Fira Math**: 现代的 Fira 数学无衬线字体 (FiraMath-Regular.woff2 / FiraMath-Regular.otf)。
+- **Cambria Math**: 经典的 Cambria 数学衬线字体 (Cambria Math.woff2 / Cambria Math.ttf)。
+```
+
+### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts) / 字体实现细节
+
+```text
+1. **源字体与 WOFF2 转换**: 字体文件存放于 `src/fonts/` 下，转换使用标准的 `woff2_compress` 压缩技术将 OTF/TTF 转换为体积更小的 WOFF2 格式。
+2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义在 `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
+3. **CJK/中文优雅回退**: 避免定制数学字体对数学公式内的中文（如 `\text{中文}` 或 `.cjk_fallback`）造成非预期的强制覆盖，系统在 `src/index.css` 增加了高优先级的非冲突 CJK 回退处理器，强制使 `.cjk_fallback` 及它的子元素回退并使用网页正文字体 (`system-ui, sans-serif`)。
+```
+
+### 数据模型与存储
+
+```text
+
+```
+
+### 数据模型与存储 / TypeScript 类型定义
+
+```text
+
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / ProviderInstance（提供商实例）
+
+```text
+interface ProviderInstance {
+  id: string;           // UUID
+  type: 'google' | 'nvidia' | 'openai-compatible';  // 内置类型
+  name: string;         // 显示名称
+  baseURL?: string;     // 自定义 Base URL（覆盖内置默认值）
+  apiKey?: string;      // 自定义 API Key（覆盖环境变量）
+  envKey?: string;      // 环境变量前缀（如 NVIDIA_API_KEY）
+  extra?: Record<string, any>;  // 额外配置（高拓展性）
+  modelSource?: string; // 远程模型列表 JSON URL（仅适用于 nvidia/openai-compatible，启动时自动同步）
+}
+
+> **特殊行为**：
+> - `nvidia` 类型的 `baseURL` 固定为 `https://integrate.api.nvidia.com/v1`，无法覆盖
+> - `google` 类型不支持 `modelSource`（模型列表通过 API 获取）
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / ModelInstance（模型实例）
+
+```text
+interface ModelInstance {
+  id: string;                       // UUID
+  providerId: string;               // 关联的 ProviderInstance.id
+  providerType: 'google' | 'nvidia' | 'openai-compatible';  // 冗余字段，高效传递
+  modelId: string;                  // 模型 ID（如 gemini-3.5-flash）
+  displayName?: string;             // 显示名称（可选）
+  temperature?: number;             // 温度参数（Unset 时不传给 API）
+  maxTokens?: number;               // 最大 token 数（Unset 时不传给 API）
+  reasoningEffort?: string;         // 推理努力程度（max/xhigh/high/medium/low/minimal/none，OpenAI 兼容用）
+  thinkingLevel?: string;           // 思考级别（Gemini 专用）
+  extraBody?: Record<string, any>;  // 额外请求体（JSON 对象，合并到 API 请求中）
+  injectThinkingTemplate?: boolean; // 注入 chat_template_kwargs thinking（Nvidia 用）
+}
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / TempModel（临时模型实例）
+
+```text
+interface TempModel {
+  id: string;                       // UUID
+  name?: string;                    // 临时模型显示名称（可选）
+  baseURL: string;                  // 显式 Base URL
+  apiKey: string;                   // 显式 API Key
+  modelId: string;                  // 模型 ID（如 Qwen/Qwen3.8-27B）
+  temperature?: number;             // 温度参数
+  maxTokens?: number;               // 最大 token 数
+  reasoningEffort?: string;         // 推理努力程度
+  extraBody?: Record<string, any>;  // 额外请求体
+  injectThinkingTemplate?: boolean; // 是否注入 thinking 参数
+}
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / Character（角色）
+
+```text
+interface Character {
+  id: string;            // UUID
+  name: string;          // 角色名称
+  systemPrompt: string;  // 系统提示词
+}
+
+> **设计意图**：角色是系统提示词的容器。用户可在设置中创建多个角色（如"数学导师"、"代码助手"），每个角色携带不同的 `systemPrompt`。发送消息时，后端根据 `activeCharacterId` 查找对应角色的 `systemPrompt` 注入请求。
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / Skill（技能）
+
+```text
+interface Skill {
+  id: string;            // UUID / 唯一标识符
+  name: string;          // 技能名称（如 "Assistant"）
+  prompt: string;        // 技能提示词内容
+}
+
+> **设计意图**：技能是独立于角色的可多选提示词模块。默认系统包含 "Assistant" 技能。选中的 Skills 在发送消息时会自动被包裹为 `# Skill: ${name}\n${prompt}` 注入至 Character 系统提示词上方，且整体排在 KaTeX/Markdown 格式指令之后。
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / Template（自动填入模板）
+
+```text
+interface Template {
+  id: string;            // UUID / 唯一标识符
+  name: string;          // 模板名称（显示在菜单中）
+  content: string;       // 模板具体内容（支持 LaTeX，可自动追加到输入框）
+}
+
+> **设计意图**：聊天自动填入模板是一个独立的数据模型。用户可以在设置中配置三角形、数列等高频填入的数学句式，并在聊天中一键快捷 append 到输入框中，避免重复输入。
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / UserSettings（用户设置）
+
+```text
+interface UserSettings {
+  activeModelId?: string;           // 当前活跃模型的 ModelInstance.id 或 TempModel.id
+  activeCharacterId?: string;       // 当前活跃角色的 Character.id
+  activeSkillIds?: string[];        // 默认激活的技能 ID 列表
+  providers: ProviderInstance[];    // 提供商实例列表
+  models: ModelInstance[];          // 模型实例列表
+  tempModels?: TempModel[];         // 临时模型实例列表
+  characters: Character[];          // 角色列表
+  skills?: Skill[];                 // 技能列表
+  systemPrompt: string;             // 全局回退系统提示词（向后兼容）
+  renderThinkingAsMarkdown: boolean;
+  autoScroll: boolean;
+  collapseThinkingFinished: boolean;
+  trimThinkingSpaces: boolean;
+  starredSessions?: Record<string, string>; // 加星会话映射（会话 ID => 星星颜色 ID）
+}
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / ChatMessage（聊天消息）
+
+```text
+interface ChatMessage {
+  id: string;                       // UUID
+  role: 'user' | 'model';          // 角色
+  content: string;                   // 消息内容（含 Markdown 和思考过程包装）
+  createdAt: string;                // ISO 时间戳
+ }
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / ChatSession（聊天会话）
+
+```text
+interface ChatSession {
+  id: string;               // UUID
+  title: string;            // 会话标题
+  messages: ChatMessage[];  // 消息列表
+  characterId?: string;    // 创建时使用的角色 ID（仅记录首次）
+  skillIds?: string[];      // 会话选择的技能 ID 列表
+  createdAt: string;        // ISO 时间戳
+  updatedAt: string;        // ISO 时间戳
+}
+```
+
+### 数据模型与存储 / TypeScript 类型定义 / 服务端类型（GenerationManager 内部）
+
+```text
+interface GenerationModel {
+  id: string;
+  providerId: string;
+  providerType: string;
+  modelId: string;
+  displayName?: string;
+  temperature?: number;
+  maxTokens?: number;
+  reasoningEffort?: string;
+  extraBody?: Record<string, any>;
+  thinkingLevel?: string;
+}
+
+interface GenerationProvider {
+  baseURL?: string;
+  apiKey?: string;
+  envKey?: string;
+  type: string;
+  name: string;
+}
+```
+
+### 数据模型与存储 / 存储方案
+
+```text
+
+```
+
+### 数据模型与存储 / 存储方案 / 本地 JSON 文件存储
+
+```text
+数据通过 Express 服务端 REST API 读写本地 JSON 文件：
+
+**文件结构**：
+
+/data/
+  settings.json           # UserSettings（单文件）
+  providers.json          # ProviderInstance[]（提供商列表）
+  models.json             # ModelInstance[]（模型列表）
+  temp-models.json        # TempModel[]（临时模型列表，包含 API Key，已 Git 忽略）
+  characters.json         # Character[]（角色列表）
+  skills.json             # Skill[]（技能列表）
+  templates.json          # Template[]（聊天自动填入模板单文件）
+  sessions/{sessionId}.json  # ChatSession（每会话一个文件）
+  log/                    # 日志文件（YYYY-MM-DD.log）
+
+**API 端点**：
+
+- `GET /api/settings` — 读取设置
+- `PUT /api/settings` — 写入设置
+- `GET /api/templates` — 读取模板列表
+- `PUT /api/templates` — 保存/更新模板列表（带严格的结构和非空校验）
+- `GET /api/sessions` — 列出所有会话
+- `GET /api/sessions/:id` — 获取单个会话
+- `DELETE /api/sessions/:id` — 删除会话
+- `PATCH /api/sessions/:id` — 更新会话元数据或消息。接受 `title`、`characterId` 和 `messages`（数组类型，元素结构需符合 `ChatMessage` 规范，必须包含 `id`、`role`、`content`、`createdAt`）
+- `POST /api/sessions/:id/messages` — 发送消息并触发生成
+- `GET /api/sessions/:id/generation` — SSE 订阅生成进度
+- `DELETE /api/sessions/:id/generation` — 停止生成
+- `GET /api/generation-status` — 获取正在运行的会话 ID 列表（页面刷新后恢复状态用）
+- `POST /api/sessions/:id/retry` — 重试消息
+- `POST /api/sessions/:id/continue` — 继续生成
+- `GET /api/providers` — 获取内置提供商类型列表
+- `POST /api/providers/:type/models` — 获取指定类型的模型列表（POST 避免在 URL 中传递敏感信息）
+```
+
+### 数据模型与存储 / 默认设置
+
+```text
+const DEFAULT_SETTINGS: UserSettings = {
+  providers: [],
+  models: [],
+  characters: [],
+  systemPrompt: '',
+  renderThinkingAsMarkdown: false,
+  autoScroll: true,
+  collapseThinkingFinished: true,
+  trimThinkingSpaces: false,
+  starredSessions: {},
+};
+
+> **设计要点**：所有参数（temperature、maxTokens 等）为 "Unset" 时不传给 API，由供应商使用默认值。已删除 `topP` 参数。
 ```
 
 ### AI 供应商集成文档
