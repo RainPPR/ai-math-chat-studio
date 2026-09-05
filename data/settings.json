@@ -1,7 +1,5 @@
 {
-  "activeSkillIds": [
-    "f8513ca7-52fb-4748-8389-af1db9d071f7"
-  ],
+  "activeSkillIds": [],
   "systemPrompt": "",
   "renderThinkingAsMarkdown": true,
   "autoScroll": false,
@@ -20,8 +18,14 @@
   "claudeChunkRemarks": {
     "2026-08-15T04:37:46.743Z": "截止到这里所有已经导出完毕"
   },
-  "stickyNotes": [],
+  "stickyNotes": [
+    {
+      "id": "22aa0235-61f5-4431-9524-1288e515c5b5",
+      "content": "颜色备注：绿色的代表做完了，暂时不看，需要定时清除；黄色的表示看完一半，需要看完了变成绿色或者取消颜色；红色、蓝色代表很重要，需要再看。",
+      "createdAt": "2026/9/5 13:14:19"
+    }
+  ],
   "katexFont": "euler",
-  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
-  "activeModelId": "cf8a95c9-e395-4f3b-9e07-b87d09b5571b"
+  "activeCharacterId": "de284d55-8398-4743-ada9-b620c94b2d2b",
+  "activeModelId": "8857da95-1ab9-4ec0-8b33-5298939e45ab"
 }

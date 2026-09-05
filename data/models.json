@@ -194,7 +194,14 @@
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
     "modelId": "inclusionai/ling-3.0-flash-fin:free",
-    "displayName": "Ling 3.0 Flash Fin (Kilo)"
+    "displayName": "inclusionAI: Ling 3.0 Flash Fin (Kilo)"
+  },
+  {
+    "id": "8a35fcb1-e29f-5176-8752-632cefb86721",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "inclusionai/ling-3.0-flash-sante:free",
+    "displayName": "inclusionAI: Ling 3.0 Flash Sante (Kilo)"
   },
   {
     "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
@@ -516,14 +523,6 @@
     "modelId": "deepseek-v4-flash-free",
     "displayName": "DeepSeek V4 Flash Free (OpenCode)",
     "reasoningEffort": "max"
-  },
-  {
-    "id": "32d253e2-5a78-5c6b-9663-105cb03eb4e4",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "laguna-s-2.1-free",
-    "displayName": "Laguna S 2.1 Free (OpenCode)",
-    "reasoningEffort": "high"
   },
   {
     "id": "1e6a0079-3d0c-5b51-89c5-250c0f8d7c42",
