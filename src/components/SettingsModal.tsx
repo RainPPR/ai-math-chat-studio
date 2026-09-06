@@ -4,6 +4,7 @@ import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, Sk
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
 import { sortProviders, sortModels, sortTempModels, sortCharacters, sortSkills, sortTemplates } from '../../shared/sorting';
+import { extractThinkingBlocks } from '../../shared/thinking';
 
 
 function formatClaudeDate(dateStr: string) {
@@ -635,22 +636,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
         const chat_messages = fullSession.messages.map(m => {
           const contentBlocks: any[] = [];
-          const thinkRegex = /<think>([\s\S]*?)<\/think>/g;
-          let textWithoutThinking = m.content;
-          const matches = Array.from(m.content.matchAll(thinkRegex));
-
-          for (const match of matches) {
+          const extracted = extractThinkingBlocks(m.content);
+          for (const thought of extracted.thoughts) {
             contentBlocks.push({
               type: 'thinking',
-              thinking: (match as any)[1].trim()
+              thinking: thought
             });
-            textWithoutThinking = textWithoutThinking.replace(match[0], '');
           }
-
-          textWithoutThinking = textWithoutThinking.trim();
           contentBlocks.push({
             type: 'text',
-            text: textWithoutThinking
+            text: extracted.mainContent
           });
 
           return {
