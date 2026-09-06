@@ -56,11 +56,13 @@ export function cleanHeadingText(rawText: string): string {
  * Matches line-anchored code fences properly with matching opening and closing fence boundaries
  * or true end-of-file fallback.
  */
+import { THINK_REGEX } from '../../shared/thinking';
+
 export function stripNonContentForTOC(content: string): string {
   let text = content;
 
   // Remove <think>...</think> blocks or unclosed <think>...
-  text = text.replace(/<think>(?:[\s\S]*?)(?:<\/think>|$)/gi, '');
+  text = text.replace(THINK_REGEX, '');
 
   // Remove line-anchored code blocks ```...``` or ~~~...~~~
   text = text.replace(/^[ \t]*(```|~~~)[^\n]*\n[\s\S]*?(?:\n[ \t]*\1[ \t]*\r?$|$(?![\s\S]))/gm, '');

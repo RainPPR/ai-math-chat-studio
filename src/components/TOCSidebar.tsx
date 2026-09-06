@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ChatMessage } from '../types';
 import { MessageTOC, extractHeadingsFromContent } from '../lib/toc';
+import { stripThinking } from '../../shared/thinking';
 import { ListTree, ChevronDown, ChevronRight, X, Layers, ChevronsUpDown, ChevronsDownUp, PanelRightClose } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -40,8 +41,7 @@ export const TOCSidebar: React.FC<TOCSidebarProps> = ({
         const headings = extractHeadingsFromContent(msg.id, msg.content);
         if (headings.length === 0) return null;
 
-        let snippet = msg.content
-          .replace(/<think>[\s\S]*?<\/think>/gi, '')
+          let snippet = stripThinking(msg.content)
           .replace(/```[\s\S]*?```/g, '')
           .replace(/[#*`_~$-]/g, '')
           .trim();
