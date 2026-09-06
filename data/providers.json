@@ -8,6 +8,14 @@
     "baseURL": "https://developer.amd.com.cn/radeon/api/v1"
   },
   {
+    "id": "34df14d4-5357-4db4-9bf1-1a9e5ce35d3b",
+    "type": "openai-compatible",
+    "name": "CloudFlare",
+    "apiKey": "",
+    "envKey": "CLOUDFLARE_API_KEY",
+    "baseURL": "https://api.cloudflare.com/client/v4/accounts/25f0629003a6d2e3b6fc62681cea61a2/ai/v1/chat/completions"
+  },
+  {
     "id": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
     "type": "openai-compatible",
     "name": "DeepSeek (Paid)",
@@ -20,6 +28,14 @@
     "type": "google",
     "name": "Google Gemini",
     "envKey": "GEMINI_API_KEY"
+  },
+  {
+    "id": "d235e0b2-0946-4732-ab6f-abab768dd91f",
+    "type": "openai-compatible",
+    "name": "HuggingFace",
+    "apiKey": "",
+    "envKey": "HUGGINGFACE_API_KEY",
+    "baseURL": "https://router.huggingface.co/v1"
   },
   {
     "id": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",

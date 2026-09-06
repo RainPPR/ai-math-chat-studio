@@ -24,6 +24,24 @@
     "reasoningEffort": "xhigh"
   },
   {
+    "id": "123b07dc-0779-4e37-b4d2-5746020e9c7c",
+    "providerId": "34df14d4-5357-4db4-9bf1-1a9e5ce35d3b",
+    "providerType": "openai-compatible",
+    "modelId": "openrouter/openai/gpt-5.6-luna",
+    "displayName": "GPT 5.6 Luna",
+    "maxTokens": 128000,
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "b84200b8-47f3-40a5-8f63-9513d3dd90e5",
+    "providerId": "34df14d4-5357-4db4-9bf1-1a9e5ce35d3b",
+    "providerType": "openai-compatible",
+    "modelId": "thinkingmachines/inkling",
+    "displayName": "Inkling (CloudFlare)",
+    "reasoningEffort": "max",
+    "maxTokens": 64000
+  },
+  {
     "id": "4cce3d2d-b094-4255-8027-b8e9819e7f69",
     "providerId": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
     "providerType": "openai-compatible",
@@ -126,14 +144,6 @@
     "thinkingLevel": "high"
   },
   {
-    "id": "5dc7e824-7efb-454c-bf7a-0bfb4925fcd0",
-    "providerId": "p-google-fc62",
-    "providerType": "google",
-    "modelId": "gemini-flash-latest-high-res-exp",
-    "displayName": "Gemini Flash Latest High Res Exp (Google)",
-    "thinkingLevel": "high"
-  },
-  {
     "id": "b3906fe0-048b-4534-9d1c-72bf4025637e",
     "providerId": "p-google-fc62",
     "providerType": "google",
@@ -166,6 +176,15 @@
     "enableTools": true,
     "disabledTools": [],
     "thinkingLevel": "high"
+  },
+  {
+    "id": "a6d8565a-cd4e-4404-93cc-6c35d08331a9",
+    "providerId": "d235e0b2-0946-4732-ab6f-abab768dd91f",
+    "providerType": "openai-compatible",
+    "modelId": "thinkingmachines/Inkling:cheapest",
+    "displayName": "Inkling (HuggingFace)",
+    "reasoningEffort": "max",
+    "maxTokens": 262144
   },
   {
     "id": "09ef0b20-79ba-434b-90c3-bf77fd56497e",
