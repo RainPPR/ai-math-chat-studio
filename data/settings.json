@@ -7,6 +7,7 @@
   "autoScroll": false,
   "collapseThinkingFinished": true,
   "trimThinkingSpaces": false,
+  "stripThinkingForApi": true,
   "userAsSystem": false,
   "starredSessions": {
     "06bab8c0-08c2-4629-8c32-b8b6bd85a09b": "rose",
