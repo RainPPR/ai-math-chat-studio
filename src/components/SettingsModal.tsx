@@ -1228,6 +1228,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   { key: 'collapseThinkingFinished', label: 'Auto-collapse thinking process when finished' },
                   { key: 'renderThinkingAsMarkdown', label: 'Render thinking process as Markdown' },
                   { key: 'trimThinkingSpaces', label: 'Remove leading spaces from thinking' },
+                  { key: 'userAsSystem', label: '不将 system prompt 作为 role: system 传入 API，而是以 role: user，<system>xxx</system> 形式传入' },
                 ].map(({ key, label }) => (
                   <label key={key} className="flex items-center space-x-3 cursor-pointer">
                     <input type="checkbox" checked={(local as any)[key] ?? false} onChange={e => { setLocal(s => ({ ...s, [key]: e.target.checked })); }} className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900" />
