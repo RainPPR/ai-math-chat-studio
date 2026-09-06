@@ -8,14 +8,6 @@
     "baseURL": "https://developer.amd.com.cn/radeon/api/v1"
   },
   {
-    "id": "34df14d4-5357-4db4-9bf1-1a9e5ce35d3b",
-    "type": "openai-compatible",
-    "name": "CloudFlare",
-    "apiKey": "",
-    "envKey": "CLOUDFLARE_API_KEY",
-    "baseURL": "https://api.cloudflare.com/client/v4/accounts/25f0629003a6d2e3b6fc62681cea61a2/ai/v1/chat/completions"
-  },
-  {
     "id": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
     "type": "openai-compatible",
     "name": "DeepSeek (Paid)",

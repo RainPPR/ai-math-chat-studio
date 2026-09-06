@@ -7,9 +7,11 @@
   "autoScroll": false,
   "collapseThinkingFinished": true,
   "trimThinkingSpaces": false,
+  "userAsSystem": false,
   "starredSessions": {
     "06bab8c0-08c2-4629-8c32-b8b6bd85a09b": "rose",
-    "7d1a0874-418a-467d-96d0-f2531ac06865": "rose"
+    "7d1a0874-418a-467d-96d0-f2531ac06865": "rose",
+    "29e942c0-d884-4b45-a85c-fba4f39329d3": "rose"
   },
   "claudeChunks": [
     "2026-07-19T08:53:15.252Z",
@@ -29,5 +31,5 @@
   ],
   "katexFont": "euler",
   "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
-  "activeModelId": "090f132d-1796-47d5-b6fa-32244e602e13"
+  "activeModelId": "3d4c0dbb-fafc-4877-9405-2b8ff8bfa7ff"
 }
