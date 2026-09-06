@@ -74,6 +74,7 @@ export interface UserSettings {
   autoScroll: boolean;
   collapseThinkingFinished: boolean;
   trimThinkingSpaces: boolean;
+  stripThinkingForApi?: boolean;
   userAsSystem?: boolean;
   starredSessions?: Record<string, StarColor>;
   claudeChunks?: string[];
@@ -96,6 +97,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   autoScroll: true,
   collapseThinkingFinished: true,
   trimThinkingSpaces: false,
+  stripThinkingForApi: false,
   userAsSystem: false,
   starredSessions: {},
   claudeChunks: [],

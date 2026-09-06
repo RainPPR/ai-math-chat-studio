@@ -5,6 +5,7 @@ import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, Sk
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
 import { sortProviders, sortModels, sortTempModels, sortCharacters, sortSkills, sortTemplates } from '../../shared/sorting';
+import { extractThinkingBlocks } from '../../shared/thinking';
 
 
 function formatClaudeDate(dateStr: string) {
@@ -636,22 +637,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
         const chat_messages = fullSession.messages.map(m => {
           const contentBlocks: any[] = [];
-          const thinkRegex = /<think>([\s\S]*?)<\/think>/g;
-          let textWithoutThinking = m.content;
-          const matches = Array.from(m.content.matchAll(thinkRegex));
-
-          for (const match of matches) {
+          const extracted = extractThinkingBlocks(m.content, false);
+          for (const thought of extracted.thoughts) {
             contentBlocks.push({
               type: 'thinking',
-              thinking: (match as any)[1].trim()
+              thinking: thought
             });
-            textWithoutThinking = textWithoutThinking.replace(match[0], '');
           }
-
-          textWithoutThinking = textWithoutThinking.trim();
           contentBlocks.push({
             type: 'text',
-            text: textWithoutThinking
+            text: extracted.mainContent
           });
 
           return {
@@ -1229,7 +1224,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   { key: 'collapseThinkingFinished', label: 'Auto-collapse thinking process when finished' },
                   { key: 'renderThinkingAsMarkdown', label: 'Render thinking process as Markdown' },
                   { key: 'trimThinkingSpaces', label: 'Remove leading spaces from thinking' },
-                  { key: 'userAsSystem', label: '不将 system prompt 作为 role: system 传入 API，而是以 role: user，<system>xxx</system> 形式传入' },
+                  { key: 'stripThinkingForApi', label: '发送给 API 的消息不包含旧的思考过程' },
+                  { key: 'userAsSystem', label: '将 System Prompt 以 role: user 传入' },
                 ].map(({ key, label }) => (
                   <label key={key} className="flex items-center space-x-3 cursor-pointer">
                     <input type="checkbox" checked={(local as any)[key] ?? false} onChange={e => { setLocal(s => ({ ...s, [key]: e.target.checked })); }} className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900" />

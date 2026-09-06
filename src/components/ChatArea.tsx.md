@@ -11,6 +11,7 @@ import {
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { buildConstructedSystemPrompt } from '../../shared/system-prompt';
 import { TOCSidebar } from './TOCSidebar';
+import { extractThinkingBlocks } from '../../shared/thinking';
 
 interface ChatAreaProps {
   session?: ChatSession;
@@ -111,13 +112,9 @@ export function parseMessageContent(
     thoughts = converted.thoughts;
     mainContent = converted.mainContent;
   } else {
-    const thoughtRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/g;
-    for (const m of content.matchAll(thoughtRegex)) {
-      if (m[1]) {
-        thoughts.push(m[1].trim());
-      }
-    }
-    mainContent = mainContent.replace(thoughtRegex, '').trim();
+    const extracted = extractThinkingBlocks(content);
+    thoughts = extracted.thoughts;
+    mainContent = extracted.mainContent;
   }
 
   if (settings.trimThinkingSpaces) {
@@ -328,7 +325,7 @@ const parseMessagesToBlocks = (messages: ChatMessage[]): EditBlock[] => {
         content = `<think>\n${converted.thoughts.join('\n')}\n</think>\n\n${converted.mainContent}`;
       }
 
-      const thinkRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/g;
+      const thinkRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/gi;
       let lastIndex = 0;
       let match;
       while ((match = thinkRegex.exec(content)) !== null) {
