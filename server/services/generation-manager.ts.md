@@ -316,7 +316,7 @@ export class GenerationManager {
 
 
 
-  async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, characterId?: string, skillIds?: string[]): Promise<void> {
+  async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, characterId?: string, skillIds?: string[], userAsSystem?: boolean): Promise<void> {
     let session = await this.readSession(sessionId);
     if (!session) {
       // Create session with temporary title immediately
@@ -353,10 +353,10 @@ export class GenerationManager {
     await this.debouncedWrite(session, 0); // Immediate write for first message
 
     // Start generation immediately (fire-and-forget, errors handled internally)
-    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
+    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, userAsSystem).catch(() => {});
   }
 
-  async retryMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
+  async retryMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, userAsSystem?: boolean): Promise<void> {
     const session = await this.readSession(sessionId);
     if (!session) throw new Error('Session not found');
 
@@ -374,7 +374,7 @@ export class GenerationManager {
     try {
       await this.writeSession(session);
       // Start generation (fire-and-forget, errors handled internally)
-      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, userAsSystem).catch(() => {});
     } catch (err) {
       session.messages = originalMessages;
       await this.writeSession(session);
@@ -382,7 +382,7 @@ export class GenerationManager {
     }
   }
 
-  async continueGeneration(sessionId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
+  async continueGeneration(sessionId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, userAsSystem?: boolean): Promise<void> {
     const session = await this.readSession(sessionId);
     if (!session) throw new Error('Session not found');
     if (session.messages.length === 0) throw new Error('Session has no messages');
@@ -393,10 +393,10 @@ export class GenerationManager {
     }
 
     // Start generation (fire-and-forget, errors handled internally)
-    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
+    this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, userAsSystem).catch(() => {});
   }
 
-  async regenerateMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
+  async regenerateMessage(sessionId: string, messageId: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, userAsSystem?: boolean): Promise<void> {
     const session = await this.readSession(sessionId);
     if (!session) throw new Error('Session not found');
 
@@ -427,7 +427,7 @@ export class GenerationManager {
     try {
       await this.writeSession(session);
       // Start generation (fire-and-forget, errors handled internally)
-      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate).catch(() => {});
+      this.startGeneration(session, model, provider, systemPrompt, injectThinkingTemplate, userAsSystem).catch(() => {});
     } catch (err) {
       session.messages = originalMessages;
       await this.writeSession(session);
@@ -435,7 +435,7 @@ export class GenerationManager {
     }
   }
 
-  private async startGeneration(session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
+  private async startGeneration(session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, userAsSystem?: boolean): Promise<void> {
     const existing = this.tasks.get(session.id);
     if (existing?.status === 'running') {
       // Abort existing task
@@ -460,7 +460,7 @@ export class GenerationManager {
     this.tasks.set(session.id, task);
 
     try {
-      await this.runGeneration(task, session, model, provider, systemPrompt, injectThinkingTemplate);
+      await this.runGeneration(task, session, model, provider, systemPrompt, injectThinkingTemplate, userAsSystem);
     } catch (err: any) {
       console.warn('[Generation] Error for session %s:', session.id, err);
       task.status = 'error';
@@ -473,7 +473,7 @@ export class GenerationManager {
     }
   }
 
-  private async runGeneration(task: GenerationTask, session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean): Promise<void> {
+  private async runGeneration(task: GenerationTask, session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, userAsSystem?: boolean): Promise<void> {
     console.log('[Generation] Starting for session %s, provider=%s, model=%s, messages=%d', session.id, model.providerType, model.modelId, session.messages.length);
 
     const messages = session.messages.map(m => ({
@@ -591,6 +591,7 @@ export class GenerationManager {
         model: model.modelId,
         messages: reqMessages,
         systemPrompt: buildSystemPrompt(),
+        userAsSystem,
         temperature: model.temperature,
         maxTokens: model.maxTokens,
         reasoningEffort: model.reasoningEffort,

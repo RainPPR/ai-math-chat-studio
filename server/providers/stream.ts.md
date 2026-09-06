@@ -7,6 +7,7 @@ export interface StreamRequest {
   model: string;
   messages: { role: string; content: string }[];
   systemPrompt?: string;
+  userAsSystem?: boolean;
   temperature?: number;
   maxTokens?: number;
   reasoningEffort?: string;
@@ -58,7 +59,14 @@ async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; a
   }));
 
   const config: any = {};
-  config.systemInstruction = req.systemPrompt;
+  if (req.userAsSystem && req.systemPrompt) {
+    contents.unshift({
+      role: 'user',
+      parts: [{ text: `<system>${req.systemPrompt}</system>` }],
+    });
+  } else if (req.systemPrompt) {
+    config.systemInstruction = req.systemPrompt;
+  }
 
   if (req.thinkingLevel && req.thinkingLevel !== 'none') {
     const valid = ['minimal', 'low', 'medium', 'high'];
@@ -100,7 +108,9 @@ async function* streamOpenAIHelper(
   const client = new OpenAI({ baseURL, apiKey });
 
   const messages: any[] = [];
-  if (req.systemPrompt) {
+  if (req.userAsSystem && req.systemPrompt) {
+    messages.push({ role: 'user', content: `<system>${req.systemPrompt}</system>` });
+  } else if (req.systemPrompt) {
     messages.push({ role: 'system', content: req.systemPrompt });
   }
 
