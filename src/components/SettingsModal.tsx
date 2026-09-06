@@ -636,7 +636,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
         const chat_messages = fullSession.messages.map(m => {
           const contentBlocks: any[] = [];
-          const extracted = extractThinkingBlocks(m.content);
+          const extracted = extractThinkingBlocks(m.content, false);
           for (const thought of extracted.thoughts) {
             contentBlocks.push({
               type: 'thinking',

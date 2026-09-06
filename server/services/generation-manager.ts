@@ -476,9 +476,9 @@ export class GenerationManager {
   private async runGeneration(task: GenerationTask, session: ServerChatSession, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, userAsSystem?: boolean, stripThinkingForApi?: boolean): Promise<void> {
     console.log('[Generation] Starting for session %s, provider=%s, model=%s, messages=%d', session.id, model.providerType, model.modelId, session.messages.length);
 
-    const messages = session.messages.map(m => {
+    const messages = session.messages.map((m, idx) => {
       let content = m.content;
-      if (stripThinkingForApi && m.role === 'model') {
+      if (stripThinkingForApi && m.role === 'model' && idx < session.messages.length - 1) {
         content = stripThinking(content);
       }
       return {

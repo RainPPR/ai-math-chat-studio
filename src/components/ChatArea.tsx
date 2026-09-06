@@ -324,7 +324,7 @@ const parseMessagesToBlocks = (messages: ChatMessage[]): EditBlock[] => {
         content = `<think>\n${converted.thoughts.join('\n')}\n</think>\n\n${converted.mainContent}`;
       }
 
-      const thinkRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/g;
+      const thinkRegex = /<think>(?:\r?\n)?([\s\S]*?)(?:(?:\r?\n)?<\/think>(?:\r?\n)*|$)/gi;
       let lastIndex = 0;
       let match;
       while ((match = thinkRegex.exec(content)) !== null) {
