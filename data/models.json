@@ -27,53 +27,17 @@
     "id": "4cce3d2d-b094-4255-8027-b8e9819e7f69",
     "providerId": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
     "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-flash",
-    "displayName": "DeepSeek V4 Flash Max (Paid)",
-    "reasoningEffort": "max",
-    "extraBody": {
-      "thinking": {
-        "type": "enabled"
-      }
-    }
+    "modelId": "deepseek-flash",
+    "displayName": "DeepSeek V4.1 Flash Max (Paid)",
+    "reasoningEffort": "max"
   },
   {
     "id": "56c32e3d-24fb-4182-9d0b-3963065057ba",
     "providerId": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
     "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-flash",
-    "displayName": "DeepSeek V4 Flash High (Paid)",
-    "reasoningEffort": "high",
-    "extraBody": {
-      "thinking": {
-        "type": "enabled"
-      }
-    }
-  },
-  {
-    "id": "0d616585-87e4-4d5e-a7d1-c2318e02e8f4",
-    "providerId": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-pro",
-    "displayName": "DeepSeek V4 Pro Max (Paid)",
-    "reasoningEffort": "max",
-    "extraBody": {
-      "thinking": {
-        "type": "enabled"
-      }
-    }
-  },
-  {
-    "id": "6b6ff3c0-6632-4711-9ac7-9d215d6bed90",
-    "providerId": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-pro",
-    "displayName": "DeepSeek V4 Pro High (Paid)",
-    "reasoningEffort": "high",
-    "extraBody": {
-      "thinking": {
-        "type": "enabled"
-      }
-    }
+    "modelId": "deepseek-flash",
+    "displayName": "DeepSeek V4.1 Flash High (Paid)",
+    "reasoningEffort": "high"
   },
   {
     "id": "090f132d-1796-47d5-b6fa-32244e602e13",
@@ -321,13 +285,6 @@
     "providerType": "openai-compatible",
     "modelId": "gemma-4-26b",
     "displayName": "Gemma 4 26B (LogFare)"
-  },
-  {
-    "id": "3f357e03-54a5-51d0-992d-0f0bd0f318f9",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "glm-5.3",
-    "displayName": "GLM 5.3 (LogFare)"
   },
   {
     "id": "4f8ed2e1-bf74-5b93-9568-215df207fa0d",
