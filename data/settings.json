@@ -1,7 +1,5 @@
 {
-  "activeSkillIds": [
-    "f8513ca7-52fb-4748-8389-af1db9d071f7"
-  ],
+  "activeSkillIds": [],
   "systemPrompt": "",
   "renderThinkingAsMarkdown": true,
   "autoScroll": false,
@@ -18,7 +16,8 @@
     "2026-07-19T08:53:15.252Z",
     "2026-07-30T05:14:11.684Z",
     "2026-08-15T04:37:46.743Z",
-    "2026-08-20T06:56:52.213Z"
+    "2026-08-20T06:56:52.213Z",
+    "2026-09-10T13:48:00.377Z"
   ],
   "claudeChunkRemarks": {
     "2026-08-15T04:37:46.743Z": "截止到这里所有已经导出完毕"
@@ -31,6 +30,6 @@
     }
   ],
   "katexFont": "euler",
-  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
-  "activeModelId": "090f132d-1796-47d5-b6fa-32244e602e13"
+  "activeCharacterId": "0f4ce28b-5c40-4ba5-890d-e0980d3c4f8e",
+  "activeModelId": "12c229f0-ff53-5395-ba4b-2e8dea5a8072"
 }

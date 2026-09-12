@@ -205,6 +205,13 @@
     "displayName": "inclusionAI: Ling 3.0 Flash Sante (Kilo)"
   },
   {
+    "id": "d4481c11-70e4-54e1-95c6-b8f6b686dadf",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "inclusionai/ling-3.0-flash-vl:free",
+    "displayName": "inclusionAI: Ling 3.0 Flash VL (Kilo)"
+  },
+  {
     "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -217,6 +224,22 @@
     "providerType": "openai-compatible",
     "modelId": "liquid/lfm-2.5-2.6b:free",
     "displayName": "LiquidAI: LFM2.5-2.6B (Kilo)"
+  },
+  {
+    "id": "8dcf7923-72af-5594-856f-cc81c33896bd",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "nex-agi/nex-n2.5-mini:free",
+    "displayName": "Nex AGI: Nex-N2.5-Mini (Kilo)",
+    "reasoningEffort": "high"
+  },
+  {
+    "id": "12c229f0-ff53-5395-ba4b-2e8dea5a8072",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "nex-agi/nex-n2.5-pro:free",
+    "displayName": "Nex AGI: Nex-N2.5-Pro (Kilo)",
+    "reasoningEffort": "high"
   },
   {
     "id": "cfcdca0f-3efd-5c17-9003-8d05a905ce00",
@@ -293,28 +316,6 @@
     "reasoningEffort": "max"
   },
   {
-    "id": "ab13e3a6-9a49-5bff-b113-c938de15974e",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "thinkingmachines/inkling:free",
-    "displayName": "Thinking Machines: Inkling (Kilo)",
-    "reasoningEffort": "max"
-  },
-  {
-    "id": "cda1b042-7087-5159-8362-b734d8e5845e",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-flash-0731",
-    "displayName": "DeepSeek v4 Flash 0731 (LogFare)"
-  },
-  {
-    "id": "166f55ed-513c-5fdd-90fa-776669c59e6e",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-pro-0813",
-    "displayName": "DeepSeek V4 Pro 0813 (LogFare)"
-  },
-  {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -327,20 +328,6 @@
     "providerType": "openai-compatible",
     "modelId": "glm-5.3",
     "displayName": "GLM 5.3 (LogFare)"
-  },
-  {
-    "id": "581eadd1-f00a-55ce-bbdf-1bc0f905583b",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kimi-k3",
-    "displayName": "Kimi K3 (LogFare)"
-  },
-  {
-    "id": "8eaf5e6a-0a2c-531b-8450-7796bfb3a79b",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kimi-k3:fast",
-    "displayName": "Kimi K3 (Fast, Low context) (LogFare)"
   },
   {
     "id": "4f8ed2e1-bf74-5b93-9568-215df207fa0d",
@@ -540,5 +527,12 @@
     "providerType": "openai-compatible",
     "modelId": "gemma-4-31b-t",
     "displayName": "Gemma-4-31B-T (Poe)"
+  },
+  {
+    "id": "a6526110-0c83-580e-a82d-aa79ceefbe1e",
+    "providerId": "p-poe-8d3e",
+    "providerType": "openai-compatible",
+    "modelId": "minimax-h3-n",
+    "displayName": "Minimax-H3-N (Poe)"
   }
 ]
