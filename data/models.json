@@ -280,6 +280,14 @@
     "reasoningEffort": "max"
   },
   {
+    "id": "772a9e6b-0c0e-5a88-a5ca-3441e594d481",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "z-ai/glm-5.2:free",
+    "displayName": "Z.ai: GLM 5.2 (Kilo)",
+    "reasoningEffort": "xhigh"
+  },
+  {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -292,6 +300,13 @@
     "providerType": "openai-compatible",
     "modelId": "glm-5.3",
     "displayName": "GLM 5.3 (LogFare)"
+  },
+  {
+    "id": "3b387ff4-2854-53f0-b973-b1153125e9ad",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5.3-flash",
+    "displayName": "GLM 5.3 Flash (LogFare)"
   },
   {
     "id": "6ff1f6f8-28ba-5fe5-baed-6b3c96e9874d",
