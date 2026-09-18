@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ChatSession, Character, StarColor } from '../types';
 import { Plus, Settings, MessageSquare, Trash2, Copy, ChevronDown, ChevronRight, User, Star, Search, X, FileSearch, Loader2, AlertCircle } from 'lucide-react';
 import { normalizeForSearch } from '../../shared/thinking';
@@ -271,6 +271,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [matchedSessionIds, setMatchedSessionIds] = useState<Set<string> | null>(null);
   const [showCloseConfirmModal, setShowCloseConfirmModal] = useState(false);
 
+  // Search execution tracking ref to avoid stale async state updates
+  const activeSearchIdRef = useRef<number>(0);
+
   // Close activeColorPickerId when clicking outside using capture-phase event listener
   useEffect(() => {
     const handleClosePicker = (e: MouseEvent) => {
@@ -315,6 +318,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const normalizedQuery = q.toLowerCase().replace(/\s/g, '');
     if (!normalizedQuery) return;
 
+    const currentSearchId = ++activeSearchIdRef.current;
+
     setIsFullTextMode(true);
     setIsSearching(true);
     setSearchProgress({ current: 0, total: sessions.length });
@@ -322,6 +327,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const matchedIds = new Set<string>();
 
     for (let i = 0; i < sessions.length; i++) {
+      if (activeSearchIdRef.current !== currentSearchId) {
+        return;
+      }
+
       const session = sessions[i];
 
       // Match title or ID first
@@ -346,12 +355,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         matchedIds.add(session.id);
       }
 
+      if (activeSearchIdRef.current !== currentSearchId) {
+        return;
+      }
       setSearchProgress({ current: i + 1, total: sessions.length });
 
       // Yield control every 5 sessions to keep UI smooth and show progress bar update
       if (i % 5 === 0) {
         await new Promise(resolve => setTimeout(resolve, 0));
       }
+    }
+
+    if (activeSearchIdRef.current !== currentSearchId) {
+      return;
     }
 
     setMatchedSessionIds(matchedIds);
@@ -363,6 +379,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const confirmCloseFullTextSearch = () => {
+    // Invalidate any in-flight async search scan
+    activeSearchIdRef.current++;
     setIsFullTextMode(false);
     setIsSearching(false);
     setMatchedSessionIds(null);
