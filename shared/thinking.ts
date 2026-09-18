@@ -21,6 +21,16 @@ export function stripThinking(content: string): string {
 }
 
 /**
+ * Normalizes text for searching by stripping thinking blocks, clearing all whitespace
+ * (newlines, carriage returns, spaces, tabs), and converting to lowercase.
+ */
+export function normalizeForSearch(content: string): string {
+  if (!content) return '';
+  const withoutThinking = stripThinking(content);
+  return withoutThinking.toLowerCase().replace(/\s/g, '');
+}
+
+/**
  * Extracts thinking processes and main text content from a message.
  * @param content The raw message content
  * @param allowUnclosed Whether to include unclosed <think>... blocks (default: true).
