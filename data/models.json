@@ -264,11 +264,12 @@
     "displayName": "Poolside: Laguna XS 2.1 (Kilo)"
   },
   {
-    "id": "6ac83892-3427-5d36-9764-f201bf330440",
+    "id": "c440a031-c576-5cb4-abca-f75219d1a5a2",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
-    "modelId": "stealth/union-alpha",
-    "displayName": "Union Alpha (Kilo)"
+    "modelId": "qwen/qwen3.8-27b:free",
+    "displayName": "Qwen: Qwen3.8 27B (Kilo)",
+    "reasoningEffort": "xhigh"
   },
   {
     "id": "c93e0a30-0931-543b-bb9b-d7c020d6b0b3",

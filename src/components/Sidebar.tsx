@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ChatSession, Character, StarColor } from '../types';
-import { Plus, Settings, MessageSquare, Trash2, Copy, ChevronDown, ChevronRight, User, Star, Search, X } from 'lucide-react';
+import { Plus, Settings, MessageSquare, Trash2, Copy, ChevronDown, ChevronRight, User, Star, Search, X, FileSearch, Loader2, AlertCircle } from 'lucide-react';
+import { normalizeForSearch } from '../../shared/thinking';
 
 const STAR_COLORS = [
   { id: 'yellow', name: '黄', colorClass: 'text-yellow-500 hover:text-yellow-400', bgClass: 'bg-yellow-500' },
@@ -263,6 +264,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [activeColorPickerId, setActiveColorPickerId] = useState<string | null>(null);
   const [isStarredCollapsed, setIsStarredCollapsed] = useState(false);
 
+  // Full text search states
+  const [isFullTextMode, setIsFullTextMode] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchProgress, setSearchProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
+  const [matchedSessionIds, setMatchedSessionIds] = useState<Set<string> | null>(null);
+  const [showCloseConfirmModal, setShowCloseConfirmModal] = useState(false);
+
   // Close activeColorPickerId when clicking outside using capture-phase event listener
   useEffect(() => {
     const handleClosePicker = (e: MouseEvent) => {
@@ -287,13 +295,80 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (!query) {
       return list;
     }
+
+    if (isFullTextMode && matchedSessionIds !== null) {
+      return list.filter(s => matchedSessionIds.has(s.id));
+    }
+
     const strippedQuery = query.toLowerCase().replace(/\s/g, '');
     return list.filter(s => {
       const titleMatch = s.title ? s.title.toLowerCase().replace(/\s/g, '').includes(strippedQuery) : false;
       const idMatch = s.id ? s.id.toLowerCase().replace(/\s/g, '').includes(strippedQuery) : false;
       return titleMatch || idMatch;
     });
-  }, [sessions, filterCharacterId, searchQuery]);
+  }, [sessions, filterCharacterId, searchQuery, isFullTextMode, matchedSessionIds]);
+
+  const handleStartFullTextSearch = async (queryToSearch?: string) => {
+    const q = (queryToSearch !== undefined ? queryToSearch : searchQuery).trim();
+    if (!q) return;
+
+    const normalizedQuery = q.toLowerCase().replace(/\s/g, '');
+    if (!normalizedQuery) return;
+
+    setIsFullTextMode(true);
+    setIsSearching(true);
+    setSearchProgress({ current: 0, total: sessions.length });
+
+    const matchedIds = new Set<string>();
+
+    for (let i = 0; i < sessions.length; i++) {
+      const session = sessions[i];
+
+      // Match title or ID first
+      const normalizedTitle = session.title ? session.title.toLowerCase().replace(/\s/g, '') : '';
+      const normalizedId = session.id ? session.id.toLowerCase().replace(/\s/g, '') : '';
+
+      let matched = normalizedTitle.includes(normalizedQuery) || normalizedId.includes(normalizedQuery);
+
+      if (!matched && session.messages) {
+        for (const msg of session.messages) {
+          if (msg.content) {
+            const normalizedContent = normalizeForSearch(msg.content);
+            if (normalizedContent.includes(normalizedQuery)) {
+              matched = true;
+              break;
+            }
+          }
+        }
+      }
+
+      if (matched) {
+        matchedIds.add(session.id);
+      }
+
+      setSearchProgress({ current: i + 1, total: sessions.length });
+
+      // Yield control every 5 sessions to keep UI smooth and show progress bar update
+      if (i % 5 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
+
+    setMatchedSessionIds(matchedIds);
+    setIsSearching(false);
+  };
+
+  const requestCloseFullTextSearch = () => {
+    setShowCloseConfirmModal(true);
+  };
+
+  const confirmCloseFullTextSearch = () => {
+    setIsFullTextMode(false);
+    setIsSearching(false);
+    setMatchedSessionIds(null);
+    setSearchQuery('');
+    setShowCloseConfirmModal(false);
+  };
 
   const starredSessionsList = useMemo(() => {
     if (!starredSessions) {
@@ -379,25 +454,96 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        <div className="relative group">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
-            <Search size={14} />
+        <div className="space-y-1.5">
+          <div className="relative group flex items-center">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+              <Search size={14} />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  if (isFullTextMode) {
+                    requestCloseFullTextSearch();
+                  } else if (searchQuery.trim()) {
+                    handleStartFullTextSearch();
+                  }
+                }
+              }}
+              disabled={isFullTextMode}
+              placeholder={isFullTextMode ? "全文搜索已开启 (输入已锁定)" : "搜索标题/ID或按按钮全文搜索..."}
+              className={`w-full bg-gray-900 border text-gray-300 text-xs rounded-lg pl-9 pr-14 py-2 focus:outline-none transition-colors ${
+                isFullTextMode
+                  ? 'border-blue-500/50 bg-gray-900/80 cursor-not-allowed opacity-90'
+                  : 'border-gray-800 focus:border-blue-500/50 hover:bg-gray-800/50'
+              }`}
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {isFullTextMode ? (
+                <button
+                  onClick={requestCloseFullTextSearch}
+                  className="p-1 rounded text-red-400 hover:text-red-300 hover:bg-red-950/30 transition-colors cursor-pointer"
+                  title="关闭全文搜索 (需确认)"
+                >
+                  <X size={14} />
+                </button>
+              ) : (
+                <>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="p-1 text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+                      title="清空搜索"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleStartFullTextSearch()}
+                    disabled={!searchQuery.trim() || isSearching}
+                    className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-950/40 disabled:opacity-30 disabled:hover:bg-transparent rounded transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    title="开启全文搜索 (检索正文源码)"
+                  >
+                    <FileSearch size={14} />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索会话标题或 ID..."
-            className="w-full bg-gray-900 border border-gray-800 text-gray-300 text-xs rounded-lg pl-9 pr-8 py-2 focus:outline-none focus:border-blue-500/50 transition-colors hover:bg-gray-800/50"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-              title="Clear Search"
-            >
-              <X size={14} />
-            </button>
+
+          {/* Full Text Search Progress Bar */}
+          {isFullTextMode && (
+            <div className="bg-gray-900 border border-blue-900/40 rounded-lg p-2 space-y-1.5 text-xs text-gray-300">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="flex items-center gap-1 text-blue-400 font-medium">
+                  {isSearching ? (
+                    <>
+                      <Loader2 size={12} className="animate-spin shrink-0" />
+                      <span>正文检索中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileSearch size={12} className="shrink-0" />
+                      <span>全文搜索结果</span>
+                    </>
+                  )}
+                </span>
+                <span className="text-gray-400 font-mono">
+                  {searchProgress.current} / {searchProgress.total}
+                </span>
+              </div>
+
+              <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-blue-500 h-full transition-all duration-150 rounded-full"
+                  style={{
+                    width: searchProgress.total > 0 ? `${(searchProgress.current / searchProgress.total) * 100}%` : '0%'
+                  }}
+                />
+              </div>
+            </div>
           )}
         </div>
 
@@ -518,6 +664,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span>Settings</span>
         </button>
       </div>
+
+      {/* Confirmation Modal for Closing Full-Text Search */}
+      {showCloseConfirmModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl max-w-sm w-full p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-yellow-500/10 text-yellow-500 rounded-lg shrink-0">
+                <AlertCircle size={20} />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-semibold text-gray-100">结束全文搜索</h3>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  关闭全文搜索将解锁输入框并恢复正常会话列表。是否确定要结束当前的全文搜索？
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-1">
+              <button
+                onClick={() => setShowCloseConfirmModal(false)}
+                className="px-3.5 py-1.5 text-xs font-medium text-gray-300 hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
+              >
+                取消
+              </button>
+              <button
+                onClick={confirmCloseFullTextSearch}
+                className="px-3.5 py-1.5 text-xs font-medium bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors cursor-pointer shadow-sm"
+              >
+                确定结束
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
