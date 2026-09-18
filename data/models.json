@@ -148,6 +148,14 @@
     "displayName": "Cohere: North Mini Code (Kilo)"
   },
   {
+    "id": "693f66a4-6008-5c56-914a-0070e74da02b",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek/deepseek-v4-flash-0731:free",
+    "displayName": "DeepSeek: DeepSeek V4 Flash 0731 (Kilo)",
+    "reasoningEffort": "max"
+  },
+  {
     "id": "0637ab32-20fe-5999-8fec-1aff621f4c6d",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
