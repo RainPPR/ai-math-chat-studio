@@ -180,14 +180,6 @@
     "displayName": "Cohere: North Mini Code (Kilo)"
   },
   {
-    "id": "693f66a4-6008-5c56-914a-0070e74da02b",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek/deepseek-v4-flash-0731:free",
-    "displayName": "DeepSeek: DeepSeek V4 Flash 0731 (Kilo)",
-    "reasoningEffort": "max"
-  },
-  {
     "id": "0637ab32-20fe-5999-8fec-1aff621f4c6d",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -343,13 +335,6 @@
     "displayName": "DeepSeek V3.2 (LogFare)"
   },
   {
-    "id": "cda1b042-7087-5159-8362-b734d8e5845e",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-flash-0731",
-    "displayName": "DeepSeek v4 Flash 0731 (LogFare)"
-  },
-  {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -362,6 +347,20 @@
     "providerType": "openai-compatible",
     "modelId": "glm-5",
     "displayName": "GLM 5 (LogFare)"
+  },
+  {
+    "id": "3f357e03-54a5-51d0-992d-0f0bd0f318f9",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5.3",
+    "displayName": "GLM 5.3 (LogFare)"
+  },
+  {
+    "id": "3b387ff4-2854-53f0-b973-b1153125e9ad",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5.3-flash",
+    "displayName": "GLM 5.3 Flash (LogFare)"
   },
   {
     "id": "fac9330f-2f89-56b7-8ca7-66272edb2068",
@@ -378,25 +377,11 @@
     "displayName": "Kimi K2.5 (LogFare)"
   },
   {
-    "id": "6ff1f6f8-28ba-5fe5-baed-6b3c96e9874d",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kimi-k2.6",
-    "displayName": "Kimi K2.6 (LogFare)"
-  },
-  {
     "id": "4f8ed2e1-bf74-5b93-9568-215df207fa0d",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
     "modelId": "logfare/auto",
     "displayName": "Logfare Auto (LogFare)"
-  },
-  {
-    "id": "e1e8e975-b3ce-58d8-bc4b-812a5bd4b9c5",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "mimo-v2.5",
-    "displayName": "MiMo V2.5 (LogFare)"
   },
   {
     "id": "3be55c22-3d55-55fc-9c02-8c7825c928f6",
