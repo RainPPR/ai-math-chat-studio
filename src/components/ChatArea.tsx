@@ -1051,7 +1051,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 className="flex items-center gap-1 px-1.5 py-0.5 hover:bg-gray-800 rounded transition-colors text-xs text-gray-500"
               >
                 {(() => {
-                  const c = settings.characters.find(x => x.id === settings.activeCharacterId);
+                  const c = settings.characters.find(x => x.id === session.characterId);
                   if (c) return `(${c.name})`;
                   return '(No Character)';
                 })()}
@@ -1060,16 +1060,16 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               {headerCharacterDropdownOpen && (
                 <div className="absolute top-full left-0 mt-1 z-50 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-64 overflow-auto">
                   <button
-                    onClick={() => { onSelectCharacter?.(''); setHeaderCharacterDropdownOpen(false); }}
-                    className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${!settings.activeCharacterId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
+                    onClick={() => { onUpdateSessionCharacter?.(''); setHeaderCharacterDropdownOpen(false); }}
+                    className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${!session.characterId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
                   >
                     None
                   </button>
                   {settings.characters.map(c => (
                     <button
                       key={c.id}
-                      onClick={() => { onSelectCharacter?.(c.id); setHeaderCharacterDropdownOpen(false); }}
-                      className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${c.id === settings.activeCharacterId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
+                      onClick={() => { onUpdateSessionCharacter?.(c.id); setHeaderCharacterDropdownOpen(false); }}
+                      className={`w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ${c.id === session.characterId ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300'}`}
                     >
                       {c.name}
                     </button>

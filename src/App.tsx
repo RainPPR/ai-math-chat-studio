@@ -423,7 +423,8 @@ export default function App() {
       'Failed to update selected skills'
     );
 
-  const handleUpdateSessionCharacter = handleSelectCharacter;
+  const handleUpdateSessionCharacter = (characterId: string) =>
+    handleUpdateSessionProperty('characterId', characterId || undefined);
   const handleUpdateSessionSkills = handleSelectSkills;
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
