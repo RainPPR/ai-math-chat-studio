@@ -330,7 +330,7 @@ export class GenerationManager {
       };
     }
 
-    if (characterId !== undefined) {
+    if (session.characterId === undefined && characterId !== undefined) {
       session.characterId = characterId || undefined;
     }
     if (skillIds !== undefined) {

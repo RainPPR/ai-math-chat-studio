@@ -52,8 +52,9 @@ export function cleanHeadingText(rawText: string): string {
 }
 
 /**
- * Remove code blocks and <think> blocks from markdown before extracting headings
- * to avoid false positives (e.g. comments in code blocks or headers in thinking).
+ * Remove code blocks, math blocks ($$...$$, \[...\], \begin{...}...\end{...}), and <think> blocks
+ * from markdown before extracting headings to avoid false positives
+ * (e.g. comments in code blocks, math equation lines formatted like Setext headers, or headers in thinking).
  * Matches line-anchored code fences properly with matching opening and closing fence boundaries
  * or true end-of-file fallback.
  */
@@ -67,6 +68,15 @@ export function stripNonContentForTOC(content: string): string {
 
   // Remove line-anchored code blocks ```...``` or ~~~...~~~
   text = text.replace(/^[ \t]*(```|~~~)[^\n]*\n[\s\S]*?(?:\n[ \t]*\1[ \t]*\r?$|$(?![\s\S]))/gm, '');
+
+  // Remove display math blocks $$...$$ (or unclosed $$...)
+  text = text.replace(/\$\$[\s\S]*?(?:\$\$|$)/g, '');
+
+  // Remove display math blocks \[...\] (or unclosed \[...)
+  text = text.replace(/\\\[[\s\S]*?(?:\\\]|$)/g, '');
+
+  // Remove LaTeX environment blocks \begin{env}...\end{env} (or unclosed \begin{env}...)
+  text = text.replace(/\\begin\{([a-zA-Z0-9*]+)\}[\s\S]*?(?:\\end\{\1\}|$)/gi, '');
 
   return text;
 }
