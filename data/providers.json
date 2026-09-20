@@ -22,6 +22,14 @@
     "envKey": "GEMINI_API_KEY"
   },
   {
+    "id": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "type": "openai-compatible",
+    "name": "Google Gemini2API",
+    "apiKey": "none",
+    "envKey": "",
+    "baseURL": "http://localhost:8081/v1"
+  },
+  {
     "id": "d235e0b2-0946-4732-ab6f-abab768dd91f",
     "type": "openai-compatible",
     "name": "HuggingFace",

@@ -124,6 +124,38 @@
     "thinkingLevel": "high"
   },
   {
+    "id": "8c222c49-2940-4748-b609-08c1624694e4",
+    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-3.5-flash-thinking",
+    "displayName": "Gemini 3.5 Flash Thinking",
+    "reasoningEffort": "none"
+  },
+  {
+    "id": "1b9faa4c-99b2-4f16-8fb2-e9863fb470d4",
+    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-3.6-flash",
+    "displayName": "Gemini 3.6 Flash",
+    "reasoningEffort": "none"
+  },
+  {
+    "id": "e514604c-cd3e-41fc-9932-9ff359d6a35e",
+    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-3.7-flash",
+    "displayName": "Gemini 3.7 Flash",
+    "reasoningEffort": "none"
+  },
+  {
+    "id": "4bfaedc8-2a17-4c88-a531-ed629694a3f8",
+    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-auto",
+    "displayName": "Gemini Auto",
+    "reasoningEffort": "none"
+  },
+  {
     "id": "a6d8565a-cd4e-4404-93cc-6c35d08331a9",
     "providerId": "d235e0b2-0946-4732-ab6f-abab768dd91f",
     "providerType": "openai-compatible",
@@ -332,13 +364,6 @@
     "displayName": "GLM 5 (LogFare)"
   },
   {
-    "id": "3b387ff4-2854-53f0-b973-b1153125e9ad",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "glm-5.3-flash",
-    "displayName": "GLM 5.3 Flash (LogFare)"
-  },
-  {
     "id": "fac9330f-2f89-56b7-8ca7-66272edb2068",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -386,6 +411,13 @@
     "providerType": "openai-compatible",
     "modelId": "qwen-3.8-27b",
     "displayName": "Qwen 3.8 27b (LogFare)"
+  },
+  {
+    "id": "ca94f797-5465-53ae-a827-8052a0597516",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "qwen-3.8-max",
+    "displayName": "Qwen 3.8 Max (LogFare)"
   },
   {
     "id": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89",
@@ -500,12 +532,34 @@
     "injectThinkingTemplate": false
   },
   {
+    "id": "170cdeb1-0c2a-46dc-87b2-695eba4c1a52",
+    "providerId": "p-nvidia-9a1b",
+    "providerType": "nvidia",
+    "modelId": "z-ai/glm-5.3",
+    "displayName": "GLM 5.3 (Nvidia)",
+    "injectThinkingTemplate": false
+  },
+  {
+    "id": "f8c070c4-abd3-467e-adb5-9092c5ae7d8f",
+    "providerId": "p-nvidia-9a1b",
+    "providerType": "nvidia",
+    "modelId": "z-ai/glm-5.3-flash",
+    "displayName": "GLM 5.3 Flash (Nvidia)"
+  },
+  {
     "id": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
     "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
     "providerType": "openai-compatible",
     "modelId": "deepseek-v4-flash-free",
     "displayName": "DeepSeek V4 Flash Free (OpenCode)",
     "reasoningEffort": "max"
+  },
+  {
+    "id": "eee83df8-7255-5436-a30b-114c1aaee15d",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "jev-1.13-free",
+    "displayName": "Jev 1.13 Free (OpenCode)"
   },
   {
     "id": "1e6a0079-3d0c-5b51-89c5-250c0f8d7c42",

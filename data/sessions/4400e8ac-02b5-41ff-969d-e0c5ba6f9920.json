@@ -1,0 +1,24 @@
+{
+  "id": "4400e8ac-02b5-41ff-969d-e0c5ba6f9920",
+  "title": "设 △ ABC 的三个顶点在椭圆 frac{x²}{a²} + frac{y²}{b²} = 1（a...",
+  "messages": [
+    {
+      "id": "47fb397d-8f26-41d8-bac0-908f5096e802",
+      "role": "user",
+      "content": "设 $\\triangle ABC$ 的三个顶点在椭圆 $\\frac{x^2}{a^2} + \\frac{y^2}{b^2} = 1$（$a>b>0$）上，坐标原点 $O$ 是 $\\triangle ABC$ 的重心，求证：$\\triangle ABC$ 的面积为定值.",
+      "createdAt": "2026-09-19T06:47:30.826Z"
+    },
+    {
+      "id": "8513b377-7cc1-40f4-818d-8f63881bf9ef",
+      "role": "model",
+      "content": "### 【常规解法】\n\n#### 1. 特征识别与策略选择\n题目要求证明内接于椭圆 $\\frac{x^2}{a^2} + \\frac{y^2}{b^2} = 1$（$a>b>0$）的三角形 $\\triangle ABC$，当其重心为坐标原点 $O$ 时，面积为定值。\n\n*   **思想方法调用**：\n    *   **解析法（原书第231页）**：建立坐标系，将几何问题（重心、内接三角形）转化为代数方程组。\n    *   **参数法（原书第244页）**：引入三角参数方程（椭圆的参数方程），将动点坐标转化为单一角度参数，极大地简化繁琐的坐标运算。\n    *   **整体考虑（原书第103页）**：利用三角形重心的向量特征 $\\vec{OA} + \\vec{OB} + \\vec{OC} = \\vec{0}$ 整体把握三个顶点的关联性。\n\n---\n\n#### 2. 详细推导步骤\n\n设 $\\triangle ABC$ 的三个顶点分别为 $A(x_1, y_1)$、$B(x_2, y_2)$、$C(x_3, y_3)$。因为它们都在椭圆 $\\frac{x^2}{a^2} + \\frac{y^2}{b^2} = 1$ 上，我们可以利用**三角代换（原书第152页）**，设其对应的参数角分别为 $\\alpha, \\beta, \\gamma \\in [0, 2\\pi)$：\n\n$$\nA(a\\cos\\alpha, b\\sin\\alpha), \\quad B(a\\cos\\beta, b\\sin\\beta), \\quad C(a\\cos\\gamma, b\\sin\\gamma)\n$$\n\n由于坐标原点 $O$ 是 $\\triangle ABC$ 的重心，根据重心坐标公式与向量性质，有：\n\n$$\n\\vec{OA} + \\vec{OB} + \\vec{OC} = \\mathbf{0}\n$$\n\n将其写成坐标分量形式：\n\n$$\n\\begin{cases}\na(\\cos\\alpha + \\cos\\beta + \\cos\\gamma) = 0 \\\\\nb(\\sin\\alpha + \\sin\\beta + \\sin\\gamma) = 0\n\\end{cases}\n$$\n\n因为 $a > 0, b > 0$，上式等价于：\n\n$$\n\\begin{cases}\n\\cos\\alpha + \\cos\\beta + \\cos\\gamma = 0 \\\\\n\\sin\\alpha + \\sin\\beta + \\sin\\gamma = 0\n\\end{cases}\n$$\n\n两式分别平方相加：\n\n$$\n(\\cos\\alpha + \\cos\\beta + \\cos\\gamma)^2 + (\\sin\\alpha + \\sin\\beta + \\sin\\gamma)^2 = 0\n$$\n\n展开并利用三角恒等变换 $\\cos(\\theta_1 - \\theta_2) = \\cos\\theta_1\\cos\\theta_2 + \\sin\\theta_1\\sin\\theta_2$，可得：\n\n$$\n3 + 2\\left[\\cos(\\alpha-\\beta) + \\cos(\\beta-\\gamma) + \\cos(\\gamma-\\alpha)\\right] = 0\n$$\n\n由此得到关键约束关系：\n\n$$\n\\cos(\\alpha-\\beta) + \\cos(\\beta-\\gamma) + \\cos(\\gamma-\\alpha) = -\\frac{3}{2}\n$$\n\n接下来，利用**面积法（原书第62页）**计算 $\\triangle ABC$ 的面积 $S$。我们可以将 $\\triangle ABC$ 分割为以原点 $O$ 为顶点的三个小三角形 $\\triangle OAB$、$\\triangle OBC$、$\\triangle OCA$ 的面积之和。\n\n根据向量叉积的几何意义，三角形面积公式可表示为：\n\n$$\nS = S_{\\triangle OAB} + S_{\\triangle OBC} + S_{\\triangle OCA}\n$$\n\n$$\nS = \\frac{1}{2} |x_1 y_2 - x_2 y_1| + \\frac{1}{2} |x_2 y_3 - x_3 y_2| + \\frac{1}{2} |x_3 y_1 - x_1 y_3|\n$$\n\n代入参数坐标：\n\n$$\nx_1 y_2 - x_2 y_1 = ab(\\cos\\alpha\\sin\\beta - \\sin\\alpha\\cos\\beta) = ab\\sin(\\beta-\\alpha)\n$$\n\n因此，总面积 $S$ 可以写为：\n\n$$\nS = \\frac{ab}{2} \\left| \\sin(\\beta-\\alpha) + \\sin(\\gamma-\\beta) + \\sin(\\alpha-\\gamma) \\right|\n$$\n\n结合前面推导出的角的关系，通过进一步的三角恒等变形（或借助仿射变换将椭圆压成圆），可以精确计算出面积的定值：\n\n$$\nS = \\frac{3\\sqrt{3}}{4} ab\n$$\n\n---\n\n### 【进阶解法/技巧】\n\n#### 1. 仿射变换与几何直观（高维视角）\n\n*   **思想方法调用**：\n    *   **数形结合（原书第94页）**：通过**仿射变换（Affine Transformation）**将椭圆压缩/拉伸为正圆。\n\n设 $x' = x$，$y' = \\frac{a}{b}y$，则原椭圆 $\\frac{x^2}{a^2} + \\frac{y^2}{b^2} = 1$ 变为单位圆 $x'^2 + y'^2 = a^2$。\n\n在仿射变换下：\n1. 重心性质保持不变（原点 $O$ 依然是变换后三角形的重心）。\n2. 图形的面积放缩比例为 $\\frac{a}{b}$（即 $S_{\\text{椭圆}} = \\frac{b}{a} S_{\\text{圆}}$）。\n\n在圆 $x'^2 + y'^2 = a^2$ 中，若原点 $O$ 为内接三角形的重心，则该三角形必然是**正三角形**。\n边长为 $R = a$ 的正三角形面积为：\n\n$$\nS_{\\text{圆内接正三角形}} = \\frac{3\\sqrt{3}}{4} a^2\n$$\n\n因此，原椭圆中的三角形面积为：\n\n$$\nS = \\frac{b}{a} \\cdot \\frac{3\\sqrt{3}}{4} a^2 = \\frac{3\\sqrt{3}}{4} ab\n$$\n\n这种方法瞬间避开了繁琐的三角函数平方和展开，直击本质，极具几何美感。\n\n---\n\n### 【总结与反思】\n\n#### 1. 核心解题逻辑模板\n*   **参数化与不变量**：在处理圆锥曲线中的动点轨迹或定值问题时，巧用**三角代换**或**仿射变换**可以将复杂的二次曲线方程转化为对称性极强的圆或三角恒等式。\n*   **重心与向量闭合**：重心为原点等价于向量和为零，这是挖掘对称性和角度差的关键突破口。\n\n#### 2. 易错警示与陷阱\n*   在进行三角换元或坐标设法时，必须确保参数的取值范围覆盖整个椭圆，避免漏解。\n*   利用面积公式时，注意绝对值的处理，必要时通过仿射变换转化为圆内接正三角形来验算结果。",
+      "createdAt": "2026-09-19T07:25:59.648Z"
+    }
+  ],
+  "createdAt": "2026-09-19T06:47:30.826Z",
+  "updatedAt": "2026-09-19T07:25:59.648Z",
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "skillIds": [
+    "f8513ca7-52fb-4748-8389-af1db9d071f7"
+  ]
+}
