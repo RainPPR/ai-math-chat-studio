@@ -74,7 +74,14 @@
     "apiKey": "public",
     "envKey": "",
     "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/opencode-free-ai-math.json",
-    "baseURL": "https://opencode.ai/zen/v1"
+    "baseURL": "https://opencode.ai/zen/v1",
+    "extra": {
+      "User-Agent": "opencode/1.14.28 ai-sdk/provider-utils/4.0.23 runtime/bun/1.3.13",
+      "x-opencode-client": "cli",
+      "x-opencode-project": "global",
+      "x-opencode-session": "d3d74f71-367d-4807-81e4-6a9d6887f083",
+      "x-opencode-request": "2f444f76-6b58-4521-9dab-2b76f64c68bd"
+    }
   },
   {
     "id": "75871cff-67ba-4673-9c2e-1f84985396d3",
