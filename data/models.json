@@ -328,6 +328,13 @@
     "reasoningEffort": "xhigh"
   },
   {
+    "id": "05c26077-fe51-5e2d-b1ba-0e6e248b857d",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v3.2",
+    "displayName": "DeepSeek V3.2 (LogFare)"
+  },
+  {
     "id": "166f55ed-513c-5fdd-90fa-776669c59e6e",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -342,6 +349,20 @@
     "displayName": "Gemma 4 26B (LogFare)"
   },
   {
+    "id": "d8110e6a-edb8-5f9f-84bb-957bf68379e4",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gemma-4-31b-it",
+    "displayName": "Gemma 4 31b IT (LogFare)"
+  },
+  {
+    "id": "69697e2f-c604-5cfb-b16c-98a0d8a1ffa9",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5",
+    "displayName": "GLM 5 (LogFare)"
+  },
+  {
     "id": "3f357e03-54a5-51d0-992d-0f0bd0f318f9",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -354,6 +375,20 @@
     "providerType": "openai-compatible",
     "modelId": "glm-5.3-flash",
     "displayName": "GLM 5.3 Flash (LogFare)"
+  },
+  {
+    "id": "fac9330f-2f89-56b7-8ca7-66272edb2068",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "grok-4.6",
+    "displayName": "Grok 4.6 (LogFare)"
+  },
+  {
+    "id": "28fd236c-ee91-555b-85e2-c37abd80e1bb",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kimi-k2.5",
+    "displayName": "Kimi K2.5 (LogFare)"
   },
   {
     "id": "6ff1f6f8-28ba-5fe5-baed-6b3c96e9874d",
@@ -389,13 +424,6 @@
     "providerType": "openai-compatible",
     "modelId": "qwen-3.8-27b",
     "displayName": "Qwen 3.8 27b (LogFare)"
-  },
-  {
-    "id": "ca94f797-5465-53ae-a827-8052a0597516",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "qwen-3.8-max",
-    "displayName": "Qwen 3.8 Max (LogFare)"
   },
   {
     "id": "29f217f8-556a-5d77-8a39-92c6050a8c17",
