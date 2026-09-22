@@ -335,6 +335,13 @@
     "displayName": "DeepSeek V3.2 (LogFare)"
   },
   {
+    "id": "166f55ed-513c-5fdd-90fa-776669c59e6e",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4-pro-0813",
+    "displayName": "DeepSeek V4 Pro 0813 (LogFare)"
+  },
+  {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -377,6 +384,20 @@
     "displayName": "Kimi K2.5 (LogFare)"
   },
   {
+    "id": "6ff1f6f8-28ba-5fe5-baed-6b3c96e9874d",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kimi-k2.6",
+    "displayName": "Kimi K2.6 (LogFare)"
+  },
+  {
+    "id": "d4cb5d70-7982-59d7-bd72-4337d101bf05",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kimi-k2.7-code",
+    "displayName": "Kimi K2.7 Code (LogFare)"
+  },
+  {
     "id": "4f8ed2e1-bf74-5b93-9568-215df207fa0d",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -403,6 +424,13 @@
     "providerType": "openai-compatible",
     "modelId": "qwen-3.8-max",
     "displayName": "Qwen 3.8 Max (LogFare)"
+  },
+  {
+    "id": "29f217f8-556a-5d77-8a39-92c6050a8c17",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "step-3.7-flash",
+    "displayName": "Step 3.7 Flash (LogFare)"
   },
   {
     "id": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89",
@@ -544,7 +572,7 @@
     "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
     "providerType": "openai-compatible",
     "modelId": "jev-1.13-free",
-    "displayName": "Jev 1.13 Free (OpenCode)"
+    "displayName": "Jev 1.13 (OpenCode)"
   },
   {
     "id": "1e6a0079-3d0c-5b51-89c5-250c0f8d7c42",
@@ -559,6 +587,13 @@
     "providerType": "openai-compatible",
     "modelId": "mimo-v2.5-free",
     "displayName": "MiMo V2.5 Free (OpenCode)"
+  },
+  {
+    "id": "f34a1efa-9fd2-5845-8673-d0158bde8c6f",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "mimo-v2.6-flash-free",
+    "displayName": "MiMo-V2.6-Flash Free (OpenCode)"
   },
   {
     "id": "2d2b234b-3550-5b46-8e55-fb2a1c38eafb",

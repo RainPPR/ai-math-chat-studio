@@ -1,6 +1,6 @@
 {
   "activeSkillIds": [
-    "2643fa0f-554e-4e17-be6e-c5014132524d"
+    "f8513ca7-52fb-4748-8389-af1db9d071f7"
   ],
   "systemPrompt": "",
   "renderThinkingAsMarkdown": true,
@@ -33,6 +33,6 @@
     }
   ],
   "katexFont": "euler",
-  "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e",
-  "activeModelId": "0a4df899-3617-4a54-ae03-b8f5377f45d1"
+  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
+  "activeModelId": "090f132d-1796-47d5-b6fa-32244e602e13"
 }
