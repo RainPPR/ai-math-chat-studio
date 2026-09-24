@@ -152,95 +152,121 @@ graph TD
 *   **模板管理**: 允许用户通过图形界面添加、编辑、删除、上下移动（Reorder）聊天自动填入模板（如三角形基础、锐角三角形等数学题目常用句式）。编辑内容支持多行文本。保存后会通过 `/api/templates` 持久化到服务器的 `data/templates.json` 中。
 ```
 
-### 文件结构
+### AI 供应商集成文档
 
 ```text
-ai-math-chat-studio/
-├── .env                      # 环境变量（不提交）
-├── .env.example              # 环境变量模板
-├── .gitignore
-├── .prettierignore           # Prettier 忽略文件
-├── AGENTS.md                 # AI 开发指导文件
-├── docs/                     # 项目文档
-│   ├── architecture.md       # 架构概览
-│   ├── api-providers.md      # AI 供应商集成
-│   ├── components.md         # 组件结构
-│   ├── data-models.md        # 数据模型
-│   ├── tech-stack.md         # 技术栈
-│   ├── linting-and-quality.md # 代码质量指南
-│   └── file-structure.md     # 本文件
-├── data/                     # 本地数据存储（不提交）
-│   ├── settings.json         # 用户设置
-│   ├── providers.json        # 提供商数据
-│   ├── models.json           # 模型数据
-│   ├── temp-models.json      # 临时模型数据
-│   ├── characters.json       # 角色数据
-│   ├── skills.json           # 技能数据
-│   ├── templates.json        # 聊天自动填入模板设置
-│   ├── sessions/             # 会话数据
-│   └── log/                  # 日志数据 (YYYY-MM-DD.log)
-├── index.html                # SPA 入口 HTML
-├── package.json              # 项目依赖和脚本
-├── bun.lock                  # Bun 依赖锁定文件
-├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
-├── server/                   # 后端模块
-│   ├── app.ts                # Express 5 应用组装，挂载所有路由
-│   ├── vite-helper.ts        # Vite 开发服务器辅助
-│   ├── providers/            # AI 供应商相关
-│   │   ├── built-in.ts       # 内置提供商类型定义
-│   │   ├── config.ts         # 提供商配置解析（apiKey、baseURL）
-│   │   └── stream.ts         # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
-│   ├── routes/               # API 路由
-│   │   ├── settings.ts       # /api/settings GET/PUT
-│   │   ├── templates.ts      # /api/templates GET/PUT
-│   │   ├── sessions.ts       # /api/sessions GET/GET/:id/DELETE
-│   │   ├── chat.ts           # /api/sessions/:id/messages, generation, retry, continue
-│   │   └── models.ts         # /api/providers, /api/providers/:type/models
-│   └── services/             # 核心服务
-│       ├── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
-│       └── logger.ts             # 日志服务：拦截 console 输出并持久化到 data/log/
-├── src/
-│   ├── App.tsx               # 主应用组件（状态管理）
-│   ├── main.tsx              # React 入口
-│   ├── index.css             # Tailwind 导入
-│   ├── types.ts              # TypeScript 类型定义
-│   ├── vite-env.d.ts         # Vite 类型声明
-│   ├── components/
-│   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
-│   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
-│   │   ├── SettingsModal.tsx # 设置弹窗（General / Providers / Models / Characters / Skills / Templates）
-│   │   └── Sidebar.tsx       # 左侧栏（会话列表）
-│   └── lib/
-│       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
-│       └── utils.ts          # cn() 样式合并工具
-├── tsconfig.json             # TypeScript 配置
-└── vite.config.ts            # Vite 构建配置
+
 ```
 
-### 文件结构 / 关键文件说明
+### AI 供应商集成文档 / 供应商总览
 
 ```text
-| 文件 | 职责 |
-|------|------|
-| `server.ts` | 入口文件，`import 'dotenv/config'` + `startApp()` |
-| `server/app.ts` | Express 5 应用组装，挂载路由，创建 GenerationManager |
-| `server/providers/built-in.ts` | 内置 3 种提供商类型定义（google / nvidia / openai-compatible） |
-| `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
-| `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
-| `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、取消。 |
-| `server/services/logger.ts` | **日志服务**：拦截 console 输出并持久化到 `data/log/`。 |
-| `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
-| `server/routes/settings.ts` | `/api/settings` GET/PUT |
-| `server/routes/templates.ts` | `/api/templates` GET/PUT |
-| `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
-| `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
-| `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
-| `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
-| `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
-| `src/components/SettingsModal.tsx` | 设置弹窗（General / Providers / Models / Characters / Skills / Templates） |
-| `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
-| `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
-| `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
+本项目内置 3 种提供商类型，均通过服务端代理调用：
+
+| 类型 | ID | 默认 Base URL | 默认 Env Key |
+|------|-------------|----------|----------|
+| Google Gemini | `google` | generativelanguage.googleapis.com/v1beta | `GEMINI_API_KEY` |
+| Nvidia NIM | `nvidia` | integrate.api.nvidia.com/v1 | `NVIDIA_API_KEY` |
+| OpenAI Compatible | `openai-compatible` | 用户配置 | `OPENAI_API_KEY` |
+
+> 用户可自行添加任意数量的 `openai-compatible` 提供商实例，也可以在 Settings 中独立配置不依赖 Provider 实体、只支持 OpenAI 兼容 API 的“临时模型 (Temp Models)”。
+```
+
+### AI 供应商集成文档 / 架构
+
+```text
+
+```
+
+### AI 供应商集成文档 / 架构 / 服务端模块
+
+```text
+- **`server/providers/built-in.ts`** — 内置提供商类型定义
+  - `BUILT_IN_PROVIDERS` 记录：存储每种内置类型的默认配置
+  
+- **`server/providers/config.ts`** — 提供商配置解析
+  - `resolveApiKey()` — 解析 API Key（优先配置项，其次环境变量，最后 `OPENAI_API_KEY` 回退）
+  - `resolveBaseURL()` — 解析 Base URL（优先配置项，其次内置默认值）
+
+- **`server/routes/chat.ts`** — 模型/提供商解析
+  - `resolveActiveModel()` — 根据 `activeModelId` 解析要使用的模型与提供商；如命中临时模型（TempModel），自动合成 `openai-compatible` 类型提供商 payload（采用显式 Base URL 与 API Key）
+
+- **`server/providers/stream.ts`** — 流式 API 调用
+  - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
+  - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
+  - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK，不启用 `reasoning_effort` 级联回退机制）
+  - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用，支持 `reasoning_effort` 自动重试机制（若未显式指定级别，会从 `max` -> `xhigh` -> `high` 依次尝试请求，每个级别失败后重试一次。若抛出 401、403、404 等严重配置或不存在错误，则立即停止并向上抛出；若抛出与 `reasoning_effort` 相关的 400 或 422 错误，则立刻停止重试尝试并直接回退调用无 `reasoning_effort` 参数的模型流；若检测到 429 速率限制，也会立即向上抛出错误以提升用户体验）
+  - `StreamRequest` / `StreamChunk` 类型定义
+```
+
+### AI 供应商集成文档 / 架构 / 前端统一客户端
+
+```text
+- **`src/lib/api.ts`** — 统一 API 客户端
+  - `api.settings` — 设置读写
+  - `api.sessions` — 会话 CRUD
+  - `api.chat` — 消息发送、停止、重试、继续
+  - `api.providers` — 获取内置提供商类型列表和模型列表
+  - `api.subscribeGeneration()` — SSE 订阅生成进度
+```
+
+### AI 供应商集成文档 / Google Gemini
+
+```text
+- **SDK**：`@google/genai`
+- **特殊功能**：
+  - Thinking Level 配置（minimal/low/medium/high）
+  - `includeThoughts: true` 确保思考过程可见
+  - 流式响应 + 思考过程分段（`part.thought` 标记）
+```
+
+### AI 供应商集成文档 / Nvidia NIM
+
+```text
+- **SDK**：OpenAI SDK
+- **Base URL**：`https://integrate.api.nvidia.com/v1`
+- **特殊功能**：支持 `extraBody` 透传（如 `chat_template_kwargs`）
+- **推理过程**：通过 `delta.reasoning` 或 `delta.reasoning_content` 字段检测
+- **推理强度配置**：不启用 `reasoning_effort` 级联回退机制或自动参数注入。在未显式设置 `reasoning_effort` 时，默认进行无 `reasoning_effort` 参数的请求；若用户显式配置了 `reasoning_effort`（例如 Kimi K2.6），则依然会直接遵循该显式配置发出请求。
+```
+
+### AI 供应商集成文档 / OpenAI Compatible
+
+```text
+- **SDK**：OpenAI SDK
+- **用途**：支持任意 OpenAI 兼容 API 端点
+- **配置方式**：在 Settings → Providers tab 中手动填写名称、Base URL、API Key、Env Key Prefix
+```
+
+### AI 供应商集成文档 / SSE 流式协议
+
+```text
+前端通过 `EventSource` 订阅 `/api/sessions/:id/generation`，服务端发送以下事件：
+
+event: delta
+data: {"content": "完整内容（含思考过程包装）"}
+
+event: done
+data: {"content": "最终内容"}
+
+event: error
+data: {"message": "错误信息"}
+
+event: stopped
+data: {}
+
+**标题生成**：当新建会话时，服务端同步生成标题（使用 `unicodeit` + `markdown-to-txt` 转换 Markdown 为 Plain Text）。标题生成后立即保存到 session.json。
+```
+
+### AI 供应商集成文档 / 环境变量汇总
+
+```text
+GEMINI_API_KEY=          # Google Gemini
+NVIDIA_API_KEY=          # Nvidia NIM
+OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
+
+> 所有 API Key 均在服务端读取（通过 dotenv），前端不暴露任何 Key。
+> API Key 解析优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量（如 `GEMINI_API_KEY`）> `OPENAI_API_KEY` 回退。
 ```
 
 ### 代码质量与格式规范
@@ -528,133 +554,6 @@ graph TD
 -   **文档同步规则**: `AGENTS.md` 中明确规定，任何对代码、架构或数据模型的修改都必须同步更新相关的文档，以保持其准确性。
 ```
 
-### 技术栈详情
-
-```text
-
-```
-
-### 技术栈详情 / 前端框架
-
-```text
-| 技术 | 版本 |
-|---|---|
-| React | ^19.2.8 |
-| TypeScript | ^7.0.2 |
-| Vite | ^8.2.1 |
-| Tailwind CSS | ^4.3.3 |
-| @tailwindcss/typography | ^0.5.20 |
-```
-
-### 技术栈详情 / 后端
-
-```text
-| 技术 | 版本 |
-|---|---|
-| Express | ^5.2.1 |
-| tsx | ^4.23.12 |
-| OpenAI SDK | ^7.4.0 |
-| dotenv | ^17.4.2 |
-```
-
-### 技术栈详情 / AI/数学库
-
-```text
-| 技术 | 版本 |
-|---|---|
-| @google/genai | ^2.17.1 |
-| KaTeX | ^0.18.4 |
-```
-
-### 技术栈详情 / Markdown 渲染管线
-
-```text
-| 技术 | 版本 |
-|---|---|
-| react-markdown | ^10.1.0 |
-| remark-math | ^6.0.0 |
-| remark-gfm | ^4.0.1 |
-| remark-breaks | ^4.0.0 |
-| remark-cjk-friendly | ^2.3.1 |
-| remark-squeeze-paragraphs | ^6.0.0 |
-| rehype-katex | ^7.0.1 |
-| rehype-raw | ^7.0.0 |
-| rehype-sanitize | ^6.0.0 |
-| rehype-external-links | ^3.0.0 |
-| katex/contrib/mhchem | (Bundled with KaTeX) |
-```
-
-### 技术栈详情 / 其他依赖
-
-```text
-| 技术 | 版本 |
-|---|---|
-| lucide-react | ^1.31.0 |
-| motion | ^13.1.0 |
-| clsx | ^2.1.1 |
-| tailwind-merge | ^3.6.0 |
-| uuid | ^14.0.1 |
-| unicodeit | ^0.7.5 |
-| markdown-to-txt | ^2.0.1 |
-```
-
-### 技术栈详情 / 其他依赖 / 标题生成
-
-```text
-标题生成使用纯 JavaScript 字符串操作，无需异步：
-
-- **unicodeit**: 将 LaTeX 数学公式转换为 Unicode 字符（如 `\alpha` → `α`)
-- **markdown-to-txt**: 清理 Markdown 语法（标题、粗体、链接等）
-- 处理流程：替换 `\dfrac` → `\frac` → 处理块级数学 `$$...$$` → 处理行内数学 `$...$` → Markdown 转文本 → 移除剩余 `$` 和 `\`
-- 只处理前200个字符，保证极快的处理速度
-```
-
-### 技术栈详情 / 开发工具
-
-```text
-| 工具 | 用途 |
-|---|---|
-| Bun | 依赖管理、脚本运行、构建 |
-| TypeScript (`tsc --noEmit`) | 类型检查 |
-| Vite HMR | 热模块替换 |
-```
-
-### 技术栈详情 / 构建命令
-
-```text
-bun run dev           # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
-bun run build         # Vite 生产构建
-bun run preview       # 预览生产构建
-bun run build:bundle    # 打包服务端代码为单个 bundle
-bun run build:compile  # 使用 Bun 编译为可执行文件
-bun run check         # TypeScript 类型检查
-bun run clean         # 清除 dist、dist-server、dist-compile、release 目录
-```
-
-### 技术栈详情 / 路径别名
-
-```text
-`@/*` 映射到项目根目录，配置在 `tsconfig.json` 和 `vite.config.ts` 中。
-```
-
-### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts)
-
-```text
-本应用支持动态 KaTeX 数学字体选择，允许用户在设置（SettingsModal.tsx）中切换不同的数学渲染字体：
-- **Default**: KaTeX 默认自带字体。
-- **Euler Math**: 典雅的 Euler 数学字体 (Euler-Math.woff2 / Euler-Math.otf)。
-- **Fira Math**: 现代的 Fira 数学无衬线字体 (FiraMath-Regular.woff2 / FiraMath-Regular.otf)。
-- **Cambria Math**: 经典的 Cambria 数学衬线字体 (Cambria Math.woff2 / Cambria Math.ttf)。
-```
-
-### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts) / 字体实现细节
-
-```text
-1. **源字体与 WOFF2 转换**: 字体文件存放于 `src/fonts/` 下，转换使用标准的 `woff2_compress` 压缩技术将 OTF/TTF 转换为体积更小的 WOFF2 格式。
-2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义在 `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
-3. **CJK/中文优雅回退**: 避免定制数学字体对数学公式内的中文（如 `\text{中文}` 或 `.cjk_fallback`）造成非预期的强制覆盖，系统在 `src/index.css` 增加了高优先级的非冲突 CJK 回退处理器，强制使 `.cjk_fallback` 及它的子元素回退并使用网页正文字体 (`system-ui, sans-serif`)。
-```
-
 ### 数据模型与存储
 
 ```text
@@ -890,120 +789,221 @@ const DEFAULT_SETTINGS: UserSettings = {
 > **设计要点**：所有参数（temperature、maxTokens 等）为 "Unset" 时不传给 API，由供应商使用默认值。已删除 `topP` 参数。
 ```
 
-### AI 供应商集成文档
+### 技术栈详情
 
 ```text
 
 ```
 
-### AI 供应商集成文档 / 供应商总览
+### 技术栈详情 / 前端框架
 
 ```text
-本项目内置 3 种提供商类型，均通过服务端代理调用：
-
-| 类型 | ID | 默认 Base URL | 默认 Env Key |
-|------|-------------|----------|----------|
-| Google Gemini | `google` | generativelanguage.googleapis.com/v1beta | `GEMINI_API_KEY` |
-| Nvidia NIM | `nvidia` | integrate.api.nvidia.com/v1 | `NVIDIA_API_KEY` |
-| OpenAI Compatible | `openai-compatible` | 用户配置 | `OPENAI_API_KEY` |
-
-> 用户可自行添加任意数量的 `openai-compatible` 提供商实例，也可以在 Settings 中独立配置不依赖 Provider 实体、只支持 OpenAI 兼容 API 的“临时模型 (Temp Models)”。
+| 技术 | 版本 |
+|---|---|
+| React | ^19.2.8 |
+| TypeScript | ^7.0.2 |
+| Vite | ^8.2.1 |
+| Tailwind CSS | ^4.3.3 |
+| @tailwindcss/typography | ^0.5.20 |
 ```
 
-### AI 供应商集成文档 / 架构
+### 技术栈详情 / 后端
 
 ```text
-
+| 技术 | 版本 |
+|---|---|
+| Express | ^5.2.1 |
+| tsx | ^4.23.12 |
+| OpenAI SDK | ^7.4.0 |
+| dotenv | ^17.4.2 |
 ```
 
-### AI 供应商集成文档 / 架构 / 服务端模块
+### 技术栈详情 / AI/数学库
 
 ```text
-- **`server/providers/built-in.ts`** — 内置提供商类型定义
-  - `BUILT_IN_PROVIDERS` 记录：存储每种内置类型的默认配置
-  
-- **`server/providers/config.ts`** — 提供商配置解析
-  - `resolveApiKey()` — 解析 API Key（优先配置项，其次环境变量，最后 `OPENAI_API_KEY` 回退）
-  - `resolveBaseURL()` — 解析 Base URL（优先配置项，其次内置默认值）
-
-- **`server/routes/chat.ts`** — 模型/提供商解析
-  - `resolveActiveModel()` — 根据 `activeModelId` 解析要使用的模型与提供商；如命中临时模型（TempModel），自动合成 `openai-compatible` 类型提供商 payload（采用显式 Base URL 与 API Key）
-
-- **`server/providers/stream.ts`** — 流式 API 调用
-  - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
-  - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
-  - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK，不启用 `reasoning_effort` 级联回退机制）
-  - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用，支持 `reasoning_effort` 自动重试机制（若未显式指定级别，会从 `max` -> `xhigh` -> `high` 依次尝试请求，每个级别失败后重试一次。若抛出 401、403、404 等严重配置或不存在错误，则立即停止并向上抛出；若抛出与 `reasoning_effort` 相关的 400 或 422 错误，则立刻停止重试尝试并直接回退调用无 `reasoning_effort` 参数的模型流；若检测到 429 速率限制，也会立即向上抛出错误以提升用户体验）
-  - `StreamRequest` / `StreamChunk` 类型定义
+| 技术 | 版本 |
+|---|---|
+| @google/genai | ^2.17.1 |
+| KaTeX | ^0.18.4 |
 ```
 
-### AI 供应商集成文档 / 架构 / 前端统一客户端
+### 技术栈详情 / Markdown 渲染管线
 
 ```text
-- **`src/lib/api.ts`** — 统一 API 客户端
-  - `api.settings` — 设置读写
-  - `api.sessions` — 会话 CRUD
-  - `api.chat` — 消息发送、停止、重试、继续
-  - `api.providers` — 获取内置提供商类型列表和模型列表
-  - `api.subscribeGeneration()` — SSE 订阅生成进度
+| 技术 | 版本 |
+|---|---|
+| react-markdown | ^10.1.0 |
+| remark-math | ^6.0.0 |
+| remark-gfm | ^4.0.1 |
+| remark-breaks | ^4.0.0 |
+| remark-cjk-friendly | ^2.3.1 |
+| remark-squeeze-paragraphs | ^6.0.0 |
+| rehype-katex | ^7.0.1 |
+| rehype-raw | ^7.0.0 |
+| rehype-sanitize | ^6.0.0 |
+| rehype-external-links | ^3.0.0 |
+| katex/contrib/mhchem | (Bundled with KaTeX) |
 ```
 
-### AI 供应商集成文档 / Google Gemini
+### 技术栈详情 / 其他依赖
 
 ```text
-- **SDK**：`@google/genai`
-- **特殊功能**：
-  - Thinking Level 配置（minimal/low/medium/high）
-  - `includeThoughts: true` 确保思考过程可见
-  - 流式响应 + 思考过程分段（`part.thought` 标记）
+| 技术 | 版本 |
+|---|---|
+| lucide-react | ^1.31.0 |
+| motion | ^13.1.0 |
+| clsx | ^2.1.1 |
+| tailwind-merge | ^3.6.0 |
+| uuid | ^14.0.1 |
+| unicodeit | ^0.7.5 |
+| markdown-to-txt | ^2.0.1 |
 ```
 
-### AI 供应商集成文档 / Nvidia NIM
+### 技术栈详情 / 其他依赖 / 标题生成
 
 ```text
-- **SDK**：OpenAI SDK
-- **Base URL**：`https://integrate.api.nvidia.com/v1`
-- **特殊功能**：支持 `extraBody` 透传（如 `chat_template_kwargs`）
-- **推理过程**：通过 `delta.reasoning` 或 `delta.reasoning_content` 字段检测
-- **推理强度配置**：不启用 `reasoning_effort` 级联回退机制或自动参数注入。在未显式设置 `reasoning_effort` 时，默认进行无 `reasoning_effort` 参数的请求；若用户显式配置了 `reasoning_effort`（例如 Kimi K2.6），则依然会直接遵循该显式配置发出请求。
+标题生成使用纯 JavaScript 字符串操作，无需异步：
+
+- **unicodeit**: 将 LaTeX 数学公式转换为 Unicode 字符（如 `\alpha` → `α`)
+- **markdown-to-txt**: 清理 Markdown 语法（标题、粗体、链接等）
+- 处理流程：替换 `\dfrac` → `\frac` → 处理块级数学 `$$...$$` → 处理行内数学 `$...$` → Markdown 转文本 → 移除剩余 `$` 和 `\`
+- 只处理前200个字符，保证极快的处理速度
 ```
 
-### AI 供应商集成文档 / OpenAI Compatible
+### 技术栈详情 / 开发工具
 
 ```text
-- **SDK**：OpenAI SDK
-- **用途**：支持任意 OpenAI 兼容 API 端点
-- **配置方式**：在 Settings → Providers tab 中手动填写名称、Base URL、API Key、Env Key Prefix
+| 工具 | 用途 |
+|---|---|
+| Bun | 依赖管理、脚本运行、构建 |
+| TypeScript (`tsc --noEmit`) | 类型检查 |
+| Vite HMR | 热模块替换 |
 ```
 
-### AI 供应商集成文档 / SSE 流式协议
+### 技术栈详情 / 构建命令
 
 ```text
-前端通过 `EventSource` 订阅 `/api/sessions/:id/generation`，服务端发送以下事件：
-
-event: delta
-data: {"content": "完整内容（含思考过程包装）"}
-
-event: done
-data: {"content": "最终内容"}
-
-event: error
-data: {"message": "错误信息"}
-
-event: stopped
-data: {}
-
-**标题生成**：当新建会话时，服务端同步生成标题（使用 `unicodeit` + `markdown-to-txt` 转换 Markdown 为 Plain Text）。标题生成后立即保存到 session.json。
+bun run dev           # 启动开发服务器（tsx server.ts → Express + Vite 中间件）
+bun run build         # Vite 生产构建
+bun run preview       # 预览生产构建
+bun run build:bundle    # 打包服务端代码为单个 bundle
+bun run build:compile  # 使用 Bun 编译为可执行文件
+bun run check         # TypeScript 类型检查
+bun run clean         # 清除 dist、dist-server、dist-compile、release 目录
 ```
 
-### AI 供应商集成文档 / 环境变量汇总
+### 技术栈详情 / 路径别名
 
 ```text
-GEMINI_API_KEY=          # Google Gemini
-NVIDIA_API_KEY=          # Nvidia NIM
-OPENAI_API_KEY=          # 通用回退（所有 OpenAI 兼容供应商）
+`@/*` 映射到项目根目录，配置在 `tsconfig.json` 和 `vite.config.ts` 中。
+```
 
-> 所有 API Key 均在服务端读取（通过 dotenv），前端不暴露任何 Key。
-> API Key 解析优先级：Providers 配置中的 API Key > 配置中的 Env Key 对应的环境变量 > 供应商默认环境变量（如 `GEMINI_API_KEY`）> `OPENAI_API_KEY` 回退。
+### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts)
+
+```text
+本应用支持动态 KaTeX 数学字体选择，允许用户在设置（SettingsModal.tsx）中切换不同的数学渲染字体：
+- **Default**: KaTeX 默认自带字体。
+- **Euler Math**: 典雅的 Euler 数学字体 (Euler-Math.woff2 / Euler-Math.otf)。
+- **Fira Math**: 现代的 Fira 数学无衬线字体 (FiraMath-Regular.woff2 / FiraMath-Regular.otf)。
+- **Cambria Math**: 经典的 Cambria 数学衬线字体 (Cambria Math.woff2 / Cambria Math.ttf)。
+```
+
+### 技术栈详情 / KaTeX 数学字体选择 (KaTeX Math Fonts) / 字体实现细节
+
+```text
+1. **源字体与 WOFF2 转换**: 字体文件存放于 `src/fonts/` 下，转换使用标准的 `woff2_compress` 压缩技术将 OTF/TTF 转换为体积更小的 WOFF2 格式。
+2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义在 `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
+3. **CJK/中文优雅回退**: 避免定制数学字体对数学公式内的中文（如 `\text{中文}` 或 `.cjk_fallback`）造成非预期的强制覆盖，系统在 `src/index.css` 增加了高优先级的非冲突 CJK 回退处理器，强制使 `.cjk_fallback` 及它的子元素回退并使用网页正文字体 (`system-ui, sans-serif`)。
+```
+
+### 文件结构
+
+```text
+ai-math-chat-studio/
+├── .env                      # 环境变量（不提交）
+├── .env.example              # 环境变量模板
+├── .gitignore
+├── .prettierignore           # Prettier 忽略文件
+├── AGENTS.md                 # AI 开发指导文件
+├── docs/                     # 项目文档
+│   ├── architecture.md       # 架构概览
+│   ├── api-providers.md      # AI 供应商集成
+│   ├── components.md         # 组件结构
+│   ├── data-models.md        # 数据模型
+│   ├── tech-stack.md         # 技术栈
+│   ├── linting-and-quality.md # 代码质量指南
+│   └── file-structure.md     # 本文件
+├── data/                     # 本地数据存储（不提交）
+│   ├── settings.json         # 用户设置
+│   ├── providers.json        # 提供商数据
+│   ├── models.json           # 模型数据
+│   ├── temp-models.json      # 临时模型数据
+│   ├── characters.json       # 角色数据
+│   ├── skills.json           # 技能数据
+│   ├── templates.json        # 聊天自动填入模板设置
+│   ├── sessions/             # 会话数据
+│   └── log/                  # 日志数据 (YYYY-MM-DD.log)
+├── index.html                # SPA 入口 HTML
+├── package.json              # 项目依赖和脚本
+├── bun.lock                  # Bun 依赖锁定文件
+├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
+├── server/                   # 后端模块
+│   ├── app.ts                # Express 5 应用组装，挂载所有路由
+│   ├── vite-helper.ts        # Vite 开发服务器辅助
+│   ├── providers/            # AI 供应商相关
+│   │   ├── built-in.ts       # 内置提供商类型定义
+│   │   ├── config.ts         # 提供商配置解析（apiKey、baseURL）
+│   │   └── stream.ts         # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
+│   ├── routes/               # API 路由
+│   │   ├── settings.ts       # /api/settings GET/PUT
+│   │   ├── templates.ts      # /api/templates GET/PUT
+│   │   ├── sessions.ts       # /api/sessions GET/GET/:id/DELETE
+│   │   ├── chat.ts           # /api/sessions/:id/messages, generation, retry, continue
+│   │   └── models.ts         # /api/providers, /api/providers/:type/models
+│   └── services/             # 核心服务
+│       ├── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
+│       └── logger.ts             # 日志服务：拦截 console 输出并持久化到 data/log/
+├── src/
+│   ├── App.tsx               # 主应用组件（状态管理）
+│   ├── main.tsx              # React 入口
+│   ├── index.css             # Tailwind 导入
+│   ├── types.ts              # TypeScript 类型定义
+│   ├── vite-env.d.ts         # Vite 类型声明
+│   ├── components/
+│   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
+│   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
+│   │   ├── SettingsModal.tsx # 设置弹窗（General / Providers / Models / Characters / Skills / Templates）
+│   │   └── Sidebar.tsx       # 左侧栏（会话列表）
+│   └── lib/
+│       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
+│       └── utils.ts          # cn() 样式合并工具
+├── tsconfig.json             # TypeScript 配置
+└── vite.config.ts            # Vite 构建配置
+```
+
+### 文件结构 / 关键文件说明
+
+```text
+| 文件 | 职责 |
+|------|------|
+| `server.ts` | 入口文件，`import 'dotenv/config'` + `startApp()` |
+| `server/app.ts` | Express 5 应用组装，挂载路由，创建 GenerationManager |
+| `server/providers/built-in.ts` | 内置 3 种提供商类型定义（google / nvidia / openai-compatible） |
+| `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
+| `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
+| `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、取消。 |
+| `server/services/logger.ts` | **日志服务**：拦截 console 输出并持久化到 `data/log/`。 |
+| `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
+| `server/routes/settings.ts` | `/api/settings` GET/PUT |
+| `server/routes/templates.ts` | `/api/templates` GET/PUT |
+| `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
+| `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
+| `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
+| `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
+| `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
+| `src/components/SettingsModal.tsx` | 设置弹窗（General / Providers / Models / Characters / Skills / Templates） |
+| `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
+| `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
+| `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
 ```
 
