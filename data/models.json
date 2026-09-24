@@ -201,13 +201,6 @@
     "displayName": "inclusionAI: Ling 3.0 Flash Sante (Kilo)"
   },
   {
-    "id": "d4481c11-70e4-54e1-95c6-b8f6b686dadf",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "inclusionai/ling-3.0-flash-vl:free",
-    "displayName": "inclusionAI: Ling 3.0 Flash VL (Kilo)"
-  },
-  {
     "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -302,6 +295,14 @@
     "modelId": "qwen/qwen3.8-27b:free",
     "displayName": "Qwen: Qwen3.8 27B (Kilo)",
     "reasoningEffort": "xhigh"
+  },
+  {
+    "id": "63679ae9-09eb-5ebd-ab59-dd2d218c0437",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "stealth/space-bunny-alpha",
+    "displayName": "Space Bunny Alpha (Kilo)",
+    "reasoningEffort": "max"
   },
   {
     "id": "c93e0a30-0931-543b-bb9b-d7c020d6b0b3",
@@ -631,6 +632,14 @@
     "providerType": "openai-compatible",
     "modelId": "nemotron-3.5-lightning-free",
     "displayName": "Nemotron 3.5 Lightning Free (OpenCode)"
+  },
+  {
+    "id": "b6912502-59dc-5745-ab69-ee284e65731e",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "space-bunny-free",
+    "displayName": "Space Bunny Free (OpenCode)",
+    "reasoningEffort": "max"
   },
   {
     "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
