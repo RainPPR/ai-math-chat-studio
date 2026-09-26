@@ -215,22 +215,6 @@
     "displayName": "LiquidAI: LFM2.5-2.6B (Kilo)"
   },
   {
-    "id": "8dcf7923-72af-5594-856f-cc81c33896bd",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "nex-agi/nex-n2.5-mini:free",
-    "displayName": "Nex AGI: Nex-N2.5-Mini (Kilo)",
-    "reasoningEffort": "high"
-  },
-  {
-    "id": "12c229f0-ff53-5395-ba4b-2e8dea5a8072",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "nex-agi/nex-n2.5-pro:free",
-    "displayName": "Nex AGI: Nex-N2.5-Pro (Kilo)",
-    "reasoningEffort": "high"
-  },
-  {
     "id": "cfcdca0f-3efd-5c17-9003-8d05a905ce00",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -301,7 +285,7 @@
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
     "modelId": "stealth/space-bunny-alpha",
-    "displayName": "Space Bunny Alpha (Kilo)",
+    "displayName": "Space Bunny Alpha (new) (Kilo)",
     "reasoningEffort": "max"
   },
   {
@@ -321,14 +305,6 @@
     "reasoningEffort": "max"
   },
   {
-    "id": "772a9e6b-0c0e-5a88-a5ca-3441e594d481",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "z-ai/glm-5.2:free",
-    "displayName": "Z.ai: GLM 5.2 (Kilo)",
-    "reasoningEffort": "xhigh"
-  },
-  {
     "id": "ddff9808-ca42-5aa8-acdb-1dd3923ea527",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -343,11 +319,11 @@
     "displayName": "DeepSeek V3.2 (LogFare)"
   },
   {
-    "id": "166f55ed-513c-5fdd-90fa-776669c59e6e",
+    "id": "4740a6bc-1677-5955-8ae2-a9ddd28bf15a",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-pro-0813",
-    "displayName": "DeepSeek V4 Pro 0813 (LogFare)"
+    "modelId": "deepseek-v4.1-flash",
+    "displayName": "Deepseek v4.1 Flash (LogFare)"
   },
   {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
@@ -376,6 +352,13 @@
     "providerType": "openai-compatible",
     "modelId": "glm-5.3-flash",
     "displayName": "GLM 5.3 Flash (LogFare)"
+  },
+  {
+    "id": "31640c75-4298-514d-a9b2-3e2ccc8a8452",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-6-sol",
+    "displayName": "GPT 6 Sol (LogFare)"
   },
   {
     "id": "fac9330f-2f89-56b7-8ca7-66272edb2068",
@@ -418,6 +401,13 @@
     "providerType": "openai-compatible",
     "modelId": "logfare/auto",
     "displayName": "Logfare Auto (LogFare)"
+  },
+  {
+    "id": "40bd9a35-19bc-5083-9c69-63fceac54c8c",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "mimo-v2.6-pro",
+    "displayName": "Mimo v2.6 Pro (LogFare)"
   },
   {
     "id": "3be55c22-3d55-55fc-9c02-8c7825c928f6",

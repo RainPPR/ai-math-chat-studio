@@ -5,6 +5,11 @@
     "content": "在 $\\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，"
   },
   {
+    "id": "a6509168-7dd0-4cd3-9ab5-5bad436ac09c",
+    "name": "总结",
+    "content": "总结一下题型模型和思想方法"
+  },
+  {
     "id": "template-3",
     "name": "数列 a",
     "content": "已知数列 $\\{a_n\\}$ 的前 $n$ 项和为 $S_n$，"
