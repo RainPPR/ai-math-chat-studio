@@ -1,6 +1,6 @@
 {
   "id": "c6bdb4a1-bb00-4916-a7a4-d867cd256e9a",
-  "title": "（1）已知函数 f(x)=x²+ax+b，其中 a,b 是实数，函数 f(x) 的值域为 [0,+∞...",
+  "title": "（1）已知点 P 是 y 轴左侧（不含 y 轴）一点，抛物线 C:y²=4x 上存在不同的两点 A,...",
   "messages": [
     {
       "id": "fcb3d758-6cb6-4e4a-86b9-e5649e74aad2",
@@ -27,7 +27,7 @@
       "createdAt": "2026-09-27T06:49:54.824Z"
     }
   ],
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
   "createdAt": "2026-09-27T05:45:21.631Z",
-  "updatedAt": "2026-09-27T06:49:54.824Z",
-  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
+  "updatedAt": "2026-09-27T06:49:54.824Z"
 }
