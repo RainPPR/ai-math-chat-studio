@@ -132,7 +132,6 @@ interface ChatSession {
   title: string;            // 会话标题
   messages: ChatMessage[];  // 消息列表
   characterId?: string;    // 创建时使用的角色 ID（仅记录首次）
-  skillIds?: string[];      // 会话选择的技能 ID 列表
   createdAt: string;        // ISO 时间戳
   updatedAt: string;        // ISO 时间戳
 }

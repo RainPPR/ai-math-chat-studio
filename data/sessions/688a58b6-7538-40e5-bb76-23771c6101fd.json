@@ -29,8 +29,5 @@
   ],
   "createdAt": "2026-08-31T07:35:18.879Z",
   "updatedAt": "2026-08-31T07:39:16.880Z",
-  "characterId": "0f4ce28b-5c40-4ba5-890d-e0980d3c4f8e",
-  "skillIds": [
-    "default-assistant"
-  ]
+  "characterId": "0f4ce28b-5c40-4ba5-890d-e0980d3c4f8e"
 }
