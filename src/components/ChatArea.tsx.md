@@ -29,7 +29,6 @@ interface ChatAreaProps {
   onSelectCharacter?: (characterId: string) => void;
   onSelectSkills?: (skillIds: string[]) => void;
   onUpdateSessionCharacter?: (characterId: string) => void;
-  onUpdateSessionSkills?: (skillIds: string[]) => void;
   onUpdateSession?: (sessionId: string, updates: Partial<ChatSession>) => Promise<void>;
   error?: string | null;
   onClearError?: () => void;
@@ -448,7 +447,7 @@ const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
 export const ChatArea: React.FC<ChatAreaProps> = ({
   session, onSendMessage, isGenerating, isStopping, settings, templates,
   onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel,
-  onSelectCharacter, onSelectSkills, onUpdateSessionCharacter, onUpdateSessionSkills, onUpdateSession, error,
+  onSelectCharacter, onSelectSkills, onUpdateSessionCharacter, onUpdateSession, error,
   onClearError, onError, isMobile = false, onOpenMobileSidebar
 }) => {
   const [input, setInput] = useState('');

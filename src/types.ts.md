@@ -140,7 +140,6 @@ export interface ChatSession {
   title: string;
   messages: ChatMessage[];
   characterId?: string;  // 创建时使用的角色 ID（仅记录首次）
-  skillIds?: string[];    // 选择的技能 ID 列表
   createdAt: string;
   updatedAt: string;
 }

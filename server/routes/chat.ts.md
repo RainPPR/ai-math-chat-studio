@@ -77,17 +77,13 @@ function resolveActiveModel(settings: SettingsData) {
 
 function resolveSessionContext(settings: SettingsData) {
   const characterId = settings.activeCharacterId;
-  let skillIds: string[] = [];
-  if (Array.isArray(settings.activeSkillIds)) {
-    skillIds = settings.activeSkillIds;
-  }
-  return { characterId, skillIds };
+  return { characterId };
 }
 
-function resolveSystemPrompt(settings: SettingsData, characterId?: string, skillIds?: string[]): string {
+function resolveSystemPrompt(settings: SettingsData, characterId?: string): string {
   return buildSystemPromptBase({
     skills: settings.skills,
-    activeSkillIds: skillIds,
+    activeSkillIds: settings.activeSkillIds,
     characters: settings.characters,
     activeCharacterId: characterId,
     systemPrompt: settings.systemPrompt,
@@ -106,10 +102,10 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
-    const { characterId, skillIds } = resolveSessionContext(settings);
+    const { characterId } = resolveSessionContext(settings);
 
     const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
-    await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings, characterId, skillIds), injectThinkingTemplate, characterId, skillIds, settings.userAsSystem, settings.stripThinkingForApi);
+    await gm.sendMessage(sessionId, content.trim(), result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate, characterId, settings.userAsSystem, settings.stripThinkingForApi);
     res.status(202).json({ ok: true });
   });
 
@@ -197,11 +193,11 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
-    const { characterId, skillIds } = resolveSessionContext(settings);
+    const { characterId } = resolveSessionContext(settings);
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
-      await gm.retryMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId, skillIds), injectThinkingTemplate, settings.userAsSystem, settings.stripThinkingForApi);
+      await gm.retryMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate, settings.userAsSystem, settings.stripThinkingForApi);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -214,11 +210,11 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
-    const { characterId, skillIds } = resolveSessionContext(settings);
+    const { characterId } = resolveSessionContext(settings);
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
-      await gm.continueGeneration(sessionId, result.model, result.provider, resolveSystemPrompt(settings, characterId, skillIds), injectThinkingTemplate, settings.userAsSystem, settings.stripThinkingForApi);
+      await gm.continueGeneration(sessionId, result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate, settings.userAsSystem, settings.stripThinkingForApi);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -234,11 +230,11 @@ export function createChatRouter(gm: GenerationManager, settingsFile: string) {
     if (!result?.model || !result.provider) return res.status(400).json({ error: 'No active model configured' });
 
     const sessionId = req.params.id;
-    const { characterId, skillIds } = resolveSessionContext(settings);
+    const { characterId } = resolveSessionContext(settings);
 
     try {
       const injectThinkingTemplate = result.model.injectThinkingTemplate ?? settings.injectThinkingTemplate;
-      await gm.regenerateMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId, skillIds), injectThinkingTemplate, settings.userAsSystem, settings.stripThinkingForApi);
+      await gm.regenerateMessage(sessionId, messageId, result.model, result.provider, resolveSystemPrompt(settings, characterId), injectThinkingTemplate, settings.userAsSystem, settings.stripThinkingForApi);
       res.status(202).json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });

@@ -105,7 +105,6 @@ export default function App() {
       id, title: 'New Chat',
       messages: [],
       characterId: settings.activeCharacterId,
-      skillIds: settings.activeSkillIds || [],
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
     setSessions(prev => [session, ...prev]);
@@ -426,7 +425,6 @@ export default function App() {
 
   const handleUpdateSessionCharacter = (characterId: string) =>
     handleUpdateSessionProperty('characterId', characterId || undefined);
-  const handleUpdateSessionSkills = handleSelectSkills;
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -534,7 +532,6 @@ export default function App() {
           onSelectCharacter={handleSelectCharacter}
           onSelectSkills={handleSelectSkills}
           onUpdateSessionCharacter={handleUpdateSessionCharacter}
-          onUpdateSessionSkills={handleUpdateSessionSkills}
           onUpdateSession={handleUpdateSession}
           error={error}
           onClearError={clearError}
