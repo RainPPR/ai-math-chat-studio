@@ -305,11 +305,25 @@
     "reasoningEffort": "max"
   },
   {
+    "id": "b0eac1bb-55f9-54c7-958d-7f84f5f770c2",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "claude-fable-5-1",
+    "displayName": "Claude Fable 5.1 (LogFare)"
+  },
+  {
     "id": "ddff9808-ca42-5aa8-acdb-1dd3923ea527",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
     "modelId": "claude-opus-4.6",
     "displayName": "Claude Opus 4.6 (LogFare)"
+  },
+  {
+    "id": "28d54736-8e71-528a-a8d2-deb5d56a8aa8",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "claude-opus-5",
+    "displayName": "Claude Opus 5 (LogFare)"
   },
   {
     "id": "05c26077-fe51-5e2d-b1ba-0e6e248b857d",
@@ -324,6 +338,13 @@
     "providerType": "openai-compatible",
     "modelId": "deepseek-v4.1-flash",
     "displayName": "Deepseek v4.1 Flash (LogFare)"
+  },
+  {
+    "id": "7ff846ad-e1d2-55a6-aade-2309eadeb09e",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-3.8-flash",
+    "displayName": "Gemini 3.8 Flash (LogFare)"
   },
   {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
@@ -352,6 +373,20 @@
     "providerType": "openai-compatible",
     "modelId": "glm-5.3-flash",
     "displayName": "GLM 5.3 Flash (LogFare)"
+  },
+  {
+    "id": "08ae4b17-5a28-586d-a14b-d13fbd4818ce",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5.6-sol",
+    "displayName": "GPT 5.6 Sol (LogFare)"
+  },
+  {
+    "id": "322c5e93-bf87-5128-bf37-0b4e6e8282a4",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-6-astra",
+    "displayName": "GPT 6 Astra (LogFare)"
   },
   {
     "id": "31640c75-4298-514d-a9b2-3e2ccc8a8452",
@@ -422,6 +457,13 @@
     "providerType": "openai-compatible",
     "modelId": "qwen-3.8-27b",
     "displayName": "Qwen 3.8 27b (LogFare)"
+  },
+  {
+    "id": "b13f9191-a373-501d-b034-c47d50d41fc4",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "space-bunny-alpha",
+    "displayName": "Space Bunny Alpha (LogFare)"
   },
   {
     "id": "29f217f8-556a-5d77-8a39-92c6050a8c17",
@@ -578,6 +620,13 @@
     "providerType": "openai-compatible",
     "modelId": "ling-3.0-flash-fin-free",
     "displayName": "Ling 3.0 Flash Fin Free (OpenCode)"
+  },
+  {
+    "id": "c02e3b97-bd90-5ff2-b97e-2c7ad6f8c105",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "longcat-2.5-preview-free",
+    "displayName": "LongCat 2.5 Preview Free (OpenCode)"
   },
   {
     "id": "1a49d398-0224-583f-973a-a0bb2af90ee2",
