@@ -173,7 +173,7 @@ graph TD
 3.  **API 调用**: `api.ts` 中的 `sendMessage` 函数被调用，向后端 `POST /api/sessions/:id/messages` 发送请求。
 4.  **后端接收**: `server/routes/chat.ts` 中的路由处理器接收到请求。
 5.  **启动生成**: 后端将用户消息保存到对应的 `session.json` 文件中，然后调用 `GenerationManager` 来启动一个新的 AI 生成任务。
-    *   **提示词注入**: 后端根据 `activeCharacterId` 及选择的 `skillIds` 组合最终系统提示词：最头上注入 `FORMAT_INSTRUCTIONS` 格式约束，随后注入各 selected skill 块 (`# Skill: ${name}\n${prompt}`)，最后拼接角色提示词。
+    *   **提示词注入**: 后端根据 `activeCharacterId` 及全局选择的 `activeSkillIds` 组合最终系统提示词：最头上注入 `FORMAT_INSTRUCTIONS` 格式约束，随后注入各 selected skill 块 (`# Skill: ${name}\n${prompt}`)，最后拼接角色提示词。
 6.  **SSE 连接**: 与此同时，前端的 `ChatArea` 组件通过 `useEffect` 自动订阅 `/api/sessions/:id/generation` 的 SSE 端点。
 7.  **流式响应**: `GenerationManager` 通过 `stream.ts` 调用相应的 AI Provider API。获取到的数据块被包装成 `delta` 事件，通过 SSE 连接实时发送回前端。
 8.  **前端渲染**: `ChatArea` 接收到 `delta` 事件，并将其内容追加到当前正在生成的回复中，用户看到平滑的打字机效果。

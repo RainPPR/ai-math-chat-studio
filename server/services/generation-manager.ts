@@ -123,7 +123,6 @@ export interface ServerChatSession {
   title: string;
   messages: ServerChatMessage[];
   characterId?: string;
-  skillIds?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -272,7 +271,7 @@ export class GenerationManager {
       return null;
     }
 
-    const shouldUpdateTimestamp = Object.keys(updates).some(key => key !== 'characterId' && key !== 'skillIds');
+    const shouldUpdateTimestamp = Object.keys(updates).some(key => key !== 'characterId');
     const updated = {
       ...session,
       ...updates,
@@ -316,7 +315,7 @@ export class GenerationManager {
 
 
 
-  async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, characterId?: string, skillIds?: string[], userAsSystem?: boolean, stripThinkingForApi?: boolean): Promise<void> {
+  async sendMessage(sessionId: string, content: string, model: GenerationModel, provider: GenerationProvider, systemPrompt: string, injectThinkingTemplate?: boolean, characterId?: string, userAsSystem?: boolean, stripThinkingForApi?: boolean): Promise<void> {
     let session = await this.readSession(sessionId);
     if (!session) {
       // Create session with temporary title immediately
@@ -331,9 +330,6 @@ export class GenerationManager {
 
     if (session.characterId === undefined && characterId !== undefined) {
       session.characterId = characterId || undefined;
-    }
-    if (skillIds !== undefined) {
-      session.skillIds = skillIds;
     }
 
     const userMsg: ServerChatMessage = {
@@ -704,7 +700,6 @@ export class GenerationManager {
       title,
       messages,
       characterId: raw.characterId,
-      skillIds: raw.skillIds,
       createdAt: raw.createdAt ?? new Date().toISOString(),
       updatedAt: raw.updatedAt ?? new Date().toISOString(),
     };
