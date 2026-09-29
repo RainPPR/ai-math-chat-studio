@@ -187,13 +187,6 @@
     "displayName": "Dots Studio: Dots3-Note Preview (Kilo)"
   },
   {
-    "id": "334574dc-81a4-5981-86ce-b864a93b51d5",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "inclusionai/ling-3.0-flash-fin:free",
-    "displayName": "inclusionAI: Ling 3.0 Flash Fin (Kilo)"
-  },
-  {
     "id": "8a35fcb1-e29f-5176-8752-632cefb86721",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -305,46 +298,11 @@
     "reasoningEffort": "max"
   },
   {
-    "id": "b0eac1bb-55f9-54c7-958d-7f84f5f770c2",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "claude-fable-5-1",
-    "displayName": "Claude Fable 5.1 (LogFare)"
-  },
-  {
-    "id": "ddff9808-ca42-5aa8-acdb-1dd3923ea527",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "claude-opus-4.6",
-    "displayName": "Claude Opus 4.6 (LogFare)"
-  },
-  {
-    "id": "28d54736-8e71-528a-a8d2-deb5d56a8aa8",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "claude-opus-5",
-    "displayName": "Claude Opus 5 (LogFare)"
-  },
-  {
     "id": "05c26077-fe51-5e2d-b1ba-0e6e248b857d",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
     "modelId": "deepseek-v3.2",
     "displayName": "DeepSeek V3.2 (LogFare)"
-  },
-  {
-    "id": "4740a6bc-1677-5955-8ae2-a9ddd28bf15a",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4.1-flash",
-    "displayName": "Deepseek v4.1 Flash (LogFare)"
-  },
-  {
-    "id": "7ff846ad-e1d2-55a6-aade-2309eadeb09e",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "gemini-3.8-flash",
-    "displayName": "Gemini 3.8 Flash (LogFare)"
   },
   {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
@@ -361,41 +319,6 @@
     "displayName": "GLM 5 (LogFare)"
   },
   {
-    "id": "3f357e03-54a5-51d0-992d-0f0bd0f318f9",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "glm-5.3",
-    "displayName": "GLM 5.3 (LogFare)"
-  },
-  {
-    "id": "3b387ff4-2854-53f0-b973-b1153125e9ad",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "glm-5.3-flash",
-    "displayName": "GLM 5.3 Flash (LogFare)"
-  },
-  {
-    "id": "08ae4b17-5a28-586d-a14b-d13fbd4818ce",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "gpt-5.6-sol",
-    "displayName": "GPT 5.6 Sol (LogFare)"
-  },
-  {
-    "id": "322c5e93-bf87-5128-bf37-0b4e6e8282a4",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "gpt-6-astra",
-    "displayName": "GPT 6 Astra (LogFare)"
-  },
-  {
-    "id": "31640c75-4298-514d-a9b2-3e2ccc8a8452",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "gpt-6-sol",
-    "displayName": "GPT 6 Sol (LogFare)"
-  },
-  {
     "id": "fac9330f-2f89-56b7-8ca7-66272edb2068",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -410,46 +333,11 @@
     "displayName": "Kimi K2.5 (LogFare)"
   },
   {
-    "id": "6ff1f6f8-28ba-5fe5-baed-6b3c96e9874d",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kimi-k2.6",
-    "displayName": "Kimi K2.6 (LogFare)"
-  },
-  {
-    "id": "d4cb5d70-7982-59d7-bd72-4337d101bf05",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kimi-k2.7-code",
-    "displayName": "Kimi K2.7 Code (LogFare)"
-  },
-  {
-    "id": "581eadd1-f00a-55ce-bbdf-1bc0f905583b",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kimi-k3",
-    "displayName": "Kimi K3 (LogFare)"
-  },
-  {
     "id": "4f8ed2e1-bf74-5b93-9568-215df207fa0d",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
     "modelId": "logfare/auto",
     "displayName": "Logfare Auto (LogFare)"
-  },
-  {
-    "id": "40bd9a35-19bc-5083-9c69-63fceac54c8c",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "mimo-v2.6-pro",
-    "displayName": "Mimo v2.6 Pro (LogFare)"
-  },
-  {
-    "id": "3be55c22-3d55-55fc-9c02-8c7825c928f6",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "moondream3.1",
-    "displayName": "Moondream 3.1 9B (LogFare)"
   },
   {
     "id": "e193beee-0f6c-59e6-830f-ddf4d6e9aed8",
