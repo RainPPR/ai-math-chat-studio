@@ -1,8 +1,9 @@
 ```typescript
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ChatSession, Character, StarColor } from '../types';
-import { Plus, Settings, MessageSquare, Trash2, Copy, ChevronDown, ChevronRight, User, Star, Search, X, FileSearch, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Settings, MessageSquare, Trash2, Copy, ChevronDown, ChevronRight, User, Star, Search, X, FileSearch, Loader2, AlertCircle, CheckSquare, Square, Download, Layers } from 'lucide-react';
 import { normalizeForSearch } from '../../shared/thinking';
+import { BatchExportModal } from './BatchExportModal';
 
 const STAR_COLORS = [
   { id: 'yellow', name: '黄', colorClass: 'text-yellow-500 hover:text-yellow-400', bgClass: 'bg-yellow-500' },
@@ -26,6 +27,9 @@ interface SessionItemProps {
   isStarred: boolean;
   starredColor: string;
   showColorPicker: boolean;
+  isBatchMode?: boolean;
+  isBatchChecked?: boolean;
+  onToggleBatchCheck?: () => void;
   onSelect: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -40,6 +44,9 @@ const SessionItem: React.FC<SessionItemProps> = ({
   isStarred,
   starredColor,
   showColorPicker,
+  isBatchMode,
+  isBatchChecked,
+  onToggleBatchCheck,
   onSelect,
   onDuplicate,
   onDelete,
@@ -68,73 +75,93 @@ const SessionItem: React.FC<SessionItemProps> = ({
     <div
       className={`group flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${bgClass}`}
     >
+      {isBatchMode && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleBatchCheck?.();
+          }}
+          className="mr-2 text-gray-400 hover:text-white transition-colors shrink-0 cursor-pointer p-0.5"
+          title={isBatchChecked ? '取消勾选' : '勾选'}
+        >
+          {isBatchChecked ? (
+            <CheckSquare size={16} className="text-blue-400 fill-blue-500/20" />
+          ) : (
+            <Square size={16} className="text-gray-500" />
+          )}
+        </button>
+      )}
+
       <button
-        onClick={onSelect}
+        onClick={isBatchMode ? onToggleBatchCheck : onSelect}
         className="flex items-center gap-3 overflow-hidden min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded cursor-pointer py-1"
       >
         <MessageSquare size={16} className="shrink-0" />
         <span className="truncate text-sm font-medium">{session.title}</span>
       </button>
-      <div className="flex items-center gap-1 shrink-0 relative">
-        <div className="relative">
-          <button
-            onClick={onStarClick}
-            data-picker-element="true"
-            className={`p-1 rounded transition cursor-pointer ${starButtonClass}`}
-            title="Star Chat"
-          >
-            <Star size={16} fill={starFill} />
-          </button>
 
-          {showColorPicker && (
-            <div
-              onClick={(e) => { e.stopPropagation(); }}
+      {!isBatchMode && (
+        <div className="flex items-center gap-1 shrink-0 relative">
+          <div className="relative">
+            <button
+              onClick={onStarClick}
               data-picker-element="true"
-              className="absolute right-0 top-full mt-1 z-[100] bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-2 flex items-center gap-1.5 whitespace-nowrap"
+              className={`p-1 rounded transition cursor-pointer ${starButtonClass}`}
+              title="Star Chat"
             >
-              {STAR_COLORS.map(color => (
-                <button
-                  key={color.id}
-                  onClick={(e) => onSelectColor(e, color.id)}
-                  className={`w-4 h-4 rounded-full ${color.bgClass} border border-white/20 hover:scale-125 transition-transform cursor-pointer`}
-                  title={color.name}
-                />
-              ))}
-              {isStarred && (
-                <button
-                  onClick={onUnstar}
-                  className="text-xs text-gray-400 hover:text-red-400 px-1 border-l border-gray-700 transition-colors cursor-pointer"
-                >
-                  取消
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+              <Star size={16} fill={starFill} />
+            </button>
 
-        <div className="flex items-center opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDuplicate();
-            }}
-            className="text-gray-500 hover:text-blue-400 transition-colors p-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
-            title="Duplicate Chat"
-          >
-            <Copy size={16} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="text-gray-500 hover:text-red-400 transition-colors p-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
-            title="Delete Chat"
-          >
-            <Trash2 size={16} />
-          </button>
+            {showColorPicker && (
+              <div
+                onClick={(e) => { e.stopPropagation(); }}
+                data-picker-element="true"
+                className="absolute right-0 top-full mt-1 z-[100] bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-2 flex items-center gap-1.5 whitespace-nowrap"
+              >
+                {STAR_COLORS.map(color => (
+                  <button
+                    key={color.id}
+                    onClick={(e) => onSelectColor(e, color.id)}
+                    className={`w-4 h-4 rounded-full ${color.bgClass} border border-white/20 hover:scale-125 transition-transform cursor-pointer`}
+                    title={color.name}
+                  />
+                ))}
+                {isStarred && (
+                  <button
+                    onClick={onUnstar}
+                    className="text-xs text-gray-400 hover:text-red-400 px-1 border-l border-gray-700 transition-colors cursor-pointer"
+                  >
+                    取消
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDuplicate();
+              }}
+              className="text-gray-500 hover:text-blue-400 transition-colors p-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+              title="Duplicate Chat"
+            >
+              <Copy size={16} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="text-gray-500 hover:text-red-400 transition-colors p-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
+              title="Delete Chat"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -271,6 +298,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [searchProgress, setSearchProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
   const [matchedSessionIds, setMatchedSessionIds] = useState<Set<string> | null>(null);
   const [showCloseConfirmModal, setShowCloseConfirmModal] = useState(false);
+
+  // Batch export mode states
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [selectedBatchIds, setSelectedBatchIds] = useState<Set<string>>(new Set());
+  const [isBatchExportModalOpen, setIsBatchExportModalOpen] = useState(false);
 
   // Search execution tracking ref to avoid stale async state updates
   const activeSearchIdRef = useRef<number>(0);
@@ -566,13 +598,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
-        <button
-          onClick={onNewChat}
-          className="w-full flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-3 rounded-lg transition-colors font-medium cursor-pointer"
-        >
-          <Plus size={20} />
-          <span>New Chat</span>
-        </button>
+        {isBatchMode ? (
+          <div className="bg-gray-900 border border-blue-900/40 rounded-lg p-3 space-y-2">
+            <div className="flex items-center justify-between text-xs text-gray-300">
+              <span className="flex items-center gap-1.5 text-blue-400 font-semibold">
+                <Layers size={14} />
+                <span>批量导出模式</span>
+              </span>
+              <span className="font-mono text-gray-400">
+                已选: <strong className="text-blue-400">{selectedBatchIds.size}</strong> / {filteredSessions.length}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 pt-1">
+              <button
+                onClick={() => setIsBatchExportModalOpen(true)}
+                disabled={selectedBatchIds.size === 0}
+                className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 text-white disabled:text-gray-500 rounded text-xs font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
+              >
+                <Download size={12} />
+                <span>导出 ({selectedBatchIds.size})</span>
+              </button>
+              <button
+                onClick={() => {
+                  setIsBatchMode(false);
+                  setSelectedBatchIds(new Set());
+                }}
+                className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded text-xs transition-colors cursor-pointer"
+                title="退出批量模式"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onNewChat}
+              className="flex-1 flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-3 rounded-lg transition-colors font-medium cursor-pointer"
+            >
+              <Plus size={20} />
+              <span>New Chat</span>
+            </button>
+            <button
+              onClick={() => setIsBatchMode(true)}
+              className="p-3 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+              title="批量导出会话"
+            >
+              <Layers size={20} />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-1">
@@ -601,6 +677,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   const isStarred = true;
                   const color = starredSessions?.[session.id] || 'yellow';
                   const pickerId = `starred-${session.id}`;
+                    const isBatchChecked = selectedBatchIds.has(session.id);
                   return (
                     <SessionItem
                       key={pickerId}
@@ -609,6 +686,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       isStarred={isStarred}
                       starredColor={color}
                       showColorPicker={activeColorPickerId === pickerId}
+                        isBatchMode={isBatchMode}
+                        isBatchChecked={isBatchChecked}
+                        onToggleBatchCheck={() => {
+                          setSelectedBatchIds(prev => {
+                            const next = new Set(prev);
+                            if (next.has(session.id)) next.delete(session.id);
+                            else next.add(session.id);
+                            return next;
+                          });
+                        }}
                       onSelect={() => onSelectSession(session.id)}
                       onDuplicate={() => onDuplicateChat(session.id)}
                       onDelete={() => onDeleteChat(session.id)}
@@ -649,6 +736,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       const isStarred = !!(starredSessions && starredSessions[session.id]);
                       const color = (starredSessions && starredSessions[session.id]) || '';
                       const pickerId = `regular-${session.id}`;
+                      const isBatchChecked = selectedBatchIds.has(session.id);
                       return (
                         <SessionItem
                           key={session.id}
@@ -657,6 +745,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           isStarred={isStarred}
                           starredColor={color}
                           showColorPicker={activeColorPickerId === pickerId}
+                          isBatchMode={isBatchMode}
+                          isBatchChecked={isBatchChecked}
+                          onToggleBatchCheck={() => {
+                            setSelectedBatchIds(prev => {
+                              const next = new Set(prev);
+                              if (next.has(session.id)) next.delete(session.id);
+                              else next.add(session.id);
+                              return next;
+                            });
+                          }}
                           onSelect={() => onSelectSession(session.id)}
                           onDuplicate={() => onDuplicateChat(session.id)}
                           onDelete={() => onDeleteChat(session.id)}
@@ -683,6 +781,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span>Settings</span>
         </button>
       </div>
+
+      {/* Batch Export Options Modal */}
+      {isBatchExportModalOpen && (
+        <BatchExportModal
+          selectedSessionIds={Array.from(selectedBatchIds)}
+          sessions={sessions}
+          onClose={() => setIsBatchExportModalOpen(false)}
+          onSuccess={() => {
+            setIsBatchMode(false);
+            setSelectedBatchIds(new Set());
+          }}
+        />
+      )}
 
       {/* Confirmation Modal for Closing Full-Text Search */}
       {showCloseConfirmModal && (
