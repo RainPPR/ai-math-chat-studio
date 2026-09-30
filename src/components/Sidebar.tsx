@@ -611,18 +611,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             <div className="flex items-center gap-1.5 pt-1">
               <button
-                onClick={() => {
-                  if (selectedBatchIds.size === filteredSessions.length) {
-                    setSelectedBatchIds(new Set());
-                  } else {
-                    setSelectedBatchIds(new Set(filteredSessions.map(s => s.id)));
-                  }
-                }}
-                className="flex-1 py-1.5 px-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-xs transition-colors cursor-pointer"
-              >
-                {selectedBatchIds.size === filteredSessions.length ? '取消全选' : '全选'}
-              </button>
-              <button
                 onClick={() => setIsBatchExportModalOpen(true)}
                 disabled={selectedBatchIds.size === 0}
                 className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 text-white disabled:text-gray-500 rounded text-xs font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
@@ -635,10 +623,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   setIsBatchMode(false);
                   setSelectedBatchIds(new Set());
                 }}
-                className="py-1.5 px-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded text-xs transition-colors cursor-pointer"
+                className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded text-xs transition-colors cursor-pointer"
                 title="退出批量模式"
               >
-                <X size={14} />
+                取消
               </button>
             </div>
           </div>

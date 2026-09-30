@@ -25,7 +25,8 @@ export const BatchExportModal: React.FC<BatchExportModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const handleStartExport = async () => {
-    if (selectedSessionIds.length === 0 || isExporting) return;
+    if (selectedSessionIds.length === 0) return;
+    if (isExporting) return;
 
     setIsExporting(true);
     setError(null);
@@ -34,35 +35,60 @@ export const BatchExportModal: React.FC<BatchExportModalProps> = ({
     try {
       const zip = new JSZip();
       const usedFilenames = new Set<string>();
+      const failedSessionIds: string[] = [];
 
       for (let i = 0; i < selectedSessionIds.length; i++) {
         const id = selectedSessionIds[i];
-        let session: ChatSession;
+        let session: ChatSession | null = null;
 
         try {
           session = await api.sessions.get(id);
         } catch {
-          // Fallback to in-memory session if fetch fails
           const found = sessions.find(s => s.id === id);
-          if (!found) continue;
-          session = found;
+          if (found) {
+            session = found;
+          }
         }
 
-        let text = `# ${session.title || 'Untitled Session'}\n\n`;
+        if (!session) {
+          failedSessionIds.push(id);
+          continue;
+        }
+
+        let text = '';
+        const titleStr = session.title || 'Untitled Session';
+        if (extension === 'txt') {
+          text = `${titleStr}\n\n`;
+        } else {
+          text = `# ${titleStr}\n\n`;
+        }
+
         if (session.messages && session.messages.length > 0) {
           session.messages.forEach(msg => {
-            const roleLabel = msg.role === 'user' ? 'User' : 'AI';
+            let roleLabel = 'AI';
+            if (msg.role === 'user') {
+              roleLabel = 'User';
+            }
+
             let msgContent = msg.content || '';
             if (!includeThinking) {
               msgContent = stripThinking(msgContent);
             }
-            text += `### ${roleLabel}\n${msgContent}\n\n`;
+
+            if (extension === 'txt') {
+              text += `[${roleLabel}]\n${msgContent}\n\n`;
+            } else {
+              text += `### ${roleLabel}\n${msgContent}\n\n`;
+            }
           });
         }
 
-        const rawTitle = (session.title || 'Untitled').trim();
+        let rawTitle = session.title || 'Untitled';
+        rawTitle = rawTitle.trim();
         let baseName = rawTitle.replace(/[/\\?%*:|"<>]/g, '_').replace(/\s+/g, ' ');
-        if (!baseName) baseName = 'Untitled';
+        if (!baseName) {
+          baseName = 'Untitled';
+        }
 
         let fileName = `${baseName}.${extension}`;
         let counter = 2;
@@ -73,11 +99,17 @@ export const BatchExportModal: React.FC<BatchExportModalProps> = ({
         usedFilenames.add(fileName.toLowerCase());
 
         zip.file(fileName, text);
-        setProgress({ current: i + 1, total: selectedSessionIds.length });
+        setProgress(prev => ({ current: prev.current + 1, total: prev.total }));
 
         if (i % 5 === 0) {
           await new Promise(r => setTimeout(r, 0));
         }
+      }
+
+      if (failedSessionIds.length > 0) {
+        setError(`导出中断：有 ${failedSessionIds.length} 个会话未能加载，未生成压缩包。`);
+        setIsExporting(false);
+        return;
       }
 
       const zipBlob = await zip.generateAsync({ type: 'blob' });
@@ -95,13 +127,49 @@ export const BatchExportModal: React.FC<BatchExportModalProps> = ({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      onSuccess?.();
+      if (onSuccess) {
+        onSuccess();
+      }
       onClose();
     } catch (err: any) {
       setError(err.message || '导出过程发生错误，请重试');
       setIsExporting(false);
     }
   };
+
+  let progressPercent = '0%';
+  if (progress.total > 0) {
+    progressPercent = `${(progress.current / progress.total) * 100}%`;
+  }
+
+  let includeThinkingYesClass = 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:bg-gray-800 hover:text-gray-200';
+  let includeThinkingYesCheckClass = 'opacity-0';
+  if (includeThinking) {
+    includeThinkingYesClass = 'bg-blue-600/20 border-blue-500/50 text-blue-300';
+    includeThinkingYesCheckClass = 'text-blue-400';
+  }
+
+  let includeThinkingNoClass = 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:bg-gray-800 hover:text-gray-200';
+  let includeThinkingNoCheckClass = 'opacity-0';
+  if (!includeThinking) {
+    includeThinkingNoClass = 'bg-blue-600/20 border-blue-500/50 text-blue-300';
+    includeThinkingNoCheckClass = 'text-blue-400';
+  }
+
+  let extMdClass = 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:bg-gray-800 hover:text-gray-200';
+  if (extension === 'md') {
+    extMdClass = 'bg-blue-600/20 border-blue-500/50 text-blue-300';
+  }
+
+  let extTxtClass = 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:bg-gray-800 hover:text-gray-200';
+  if (extension === 'txt') {
+    extTxtClass = 'bg-blue-600/20 border-blue-500/50 text-blue-300';
+  }
+
+  let isStartDisabled = false;
+  if (isExporting || selectedSessionIds.length === 0) {
+    isStartDisabled = true;
+  }
 
   return (
     <div
@@ -158,26 +226,18 @@ export const BatchExportModal: React.FC<BatchExportModalProps> = ({
                 type="button"
                 disabled={isExporting}
                 onClick={() => setIncludeThinking(true)}
-                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${
-                  includeThinking
-                    ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
-                    : 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-                }`}
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${includeThinkingYesClass}`}
               >
-                <CheckCircle2 size={14} className={includeThinking ? 'text-blue-400' : 'opacity-0'} />
+                <CheckCircle2 size={14} className={includeThinkingYesCheckClass} />
                 <span>保留思考过程</span>
               </button>
               <button
                 type="button"
                 disabled={isExporting}
                 onClick={() => setIncludeThinking(false)}
-                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${
-                  !includeThinking
-                    ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
-                    : 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-                }`}
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${includeThinkingNoClass}`}
               >
-                <CheckCircle2 size={14} className={!includeThinking ? 'text-blue-400' : 'opacity-0'} />
+                <CheckCircle2 size={14} className={includeThinkingNoCheckClass} />
                 <span>移除思考过程</span>
               </button>
             </div>
@@ -193,11 +253,7 @@ export const BatchExportModal: React.FC<BatchExportModalProps> = ({
                 type="button"
                 disabled={isExporting}
                 onClick={() => setExtension('md')}
-                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${
-                  extension === 'md'
-                    ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
-                    : 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-                }`}
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${extMdClass}`}
               >
                 <FileText size={14} className="text-blue-400" />
                 <span>Markdown (.md)</span>
@@ -206,11 +262,7 @@ export const BatchExportModal: React.FC<BatchExportModalProps> = ({
                 type="button"
                 disabled={isExporting}
                 onClick={() => setExtension('txt')}
-                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${
-                  extension === 'txt'
-                    ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
-                    : 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-                }`}
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${extTxtClass}`}
               >
                 <FileText size={14} className="text-gray-400" />
                 <span>纯文本 (.txt)</span>
@@ -233,9 +285,7 @@ export const BatchExportModal: React.FC<BatchExportModalProps> = ({
               <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
                 <div
                   className="bg-blue-500 h-full transition-all duration-150 rounded-full"
-                  style={{
-                    width: progress.total > 0 ? `${(progress.current / progress.total) * 100}%` : '0%'
-                  }}
+                  style={{ width: progressPercent }}
                 />
               </div>
             </div>
@@ -255,7 +305,7 @@ export const BatchExportModal: React.FC<BatchExportModalProps> = ({
           <button
             type="button"
             onClick={handleStartExport}
-            disabled={isExporting || selectedSessionIds.length === 0}
+            disabled={isStartDisabled}
             className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50"
           >
             {isExporting ? (
