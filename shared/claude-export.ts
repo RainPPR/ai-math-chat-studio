@@ -1,0 +1,185 @@
+/**
+ * Builders for Claude-compatible export bundles.
+ *
+ * Gemini 的 Import chats（gemini.google.com/import）从 2026-09 起会在「来源识别」
+ * 阶段拒绝只含一个 conversations.json 的压缩包，报「无法读取上传的文件。请确保该文件
+ * 来自受支持的 AI 应用」。可导入的结构需要同时满足：
+ *   - zip 根目录带有 Claude 导出包的标志文件：conversations.json + users.json + projects.json
+ *   - 每条消息带 text 字段（不能只有 content 块，且不能为空）
+ *   - 对话带 account 字段，thinking 块带 start/stop_timestamp
+ *   - 时间戳为 ISO-8601 UTC、6 位微秒、结尾大写 Z，且消息时间单调不降
+ */
+
+import { extractThinkingBlocks } from './thinking';
+
+export const CLAUDE_ACCOUNT_UUID = '7c3d41e5-9b02-4a6f-8f14-2d5e6a90c431';
+
+export interface ClaudeSourceMessage {
+  id: string;
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface ClaudeSourceSession {
+  id: string;
+  title?: string;
+  messages: ClaudeSourceMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ClaudeContentBlock =
+  | { type: 'thinking'; thinking: string; start_timestamp: string; stop_timestamp: string }
+  | { type: 'text'; text: string };
+
+export interface ClaudeMessage {
+  uuid: string;
+  text: string;
+  content: ClaudeContentBlock[];
+  sender: string;
+  created_at: string;
+  updated_at: string;
+  attachments: unknown[];
+  files: unknown[];
+}
+
+export interface ClaudeConversation {
+  uuid: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  account: { uuid: string };
+  chat_messages: ClaudeMessage[];
+}
+
+export interface ClaudeUser {
+  uuid: string;
+  full_name: string;
+  email_address: string;
+  verified_phone_number: null;
+}
+
+/** YYYY-MM-DDTHH:MM:SS.ffffffZ */
+export function formatClaudeTime(timeMs: number): string {
+  const iso = new Date(timeMs).toISOString();
+  return iso.replace(/\.(\d+)Z$/, (_match, fraction: string) => {
+    return '.' + fraction.padEnd(6, '0') + 'Z';
+  });
+}
+
+export function formatClaudeDate(dateStr: string): string {
+  const ms = new Date(dateStr).getTime();
+  return formatClaudeTime(Number.isFinite(ms) ? ms : Date.now());
+}
+
+/** 消息时间单调不降，回退或无效的时间戳顺延。 */
+export function buildMonotonicTimes(messages: ClaudeSourceMessage[]): number[] {
+  const times: number[] = [];
+  let previous = 0;
+  for (const message of messages) {
+    let current = new Date(message.createdAt).getTime();
+    if (!Number.isFinite(current) || (times.length > 0 && current < previous)) {
+      current = previous > 0 ? previous + 1 : Date.now();
+    }
+    times.push(current);
+    previous = current;
+  }
+  return times;
+}
+
+export function buildClaudeMessage(message: ClaudeSourceMessage, stamp: string): ClaudeMessage {
+  const extracted = extractThinkingBlocks(message.content, false);
+
+  const content: ClaudeContentBlock[] = [];
+  for (const thought of extracted.thoughts) {
+    content.push({
+      type: 'thinking',
+      thinking: thought,
+      start_timestamp: stamp,
+      stop_timestamp: stamp
+    });
+  }
+  if (extracted.mainContent) {
+    content.push({ type: 'text', text: extracted.mainContent });
+  } else if (extracted.thoughts.length === 0) {
+    content.push({ type: 'text', text: message.content || ' ' });
+  }
+
+  let text = extracted.mainContent;
+  if (!text && extracted.thoughts.length > 0) {
+    text = extracted.thoughts.join('\n\n');
+  }
+  if (!text || !text.trim()) {
+    text = message.content || ' ';
+  }
+
+  let sender = 'assistant';
+  if (message.role === 'user') {
+    sender = 'human';
+  }
+
+  return {
+    uuid: message.id,
+    text,
+    content,
+    sender,
+    created_at: stamp,
+    updated_at: stamp,
+    attachments: [],
+    files: []
+  };
+}
+
+export function buildClaudeConversation(session: ClaudeSourceSession): ClaudeConversation {
+  const messageTimes = buildMonotonicTimes(session.messages);
+  const chat_messages = session.messages.map((message, index) => {
+    return buildClaudeMessage(message, formatClaudeTime(messageTimes[index]));
+  });
+
+  let createdTime = new Date(session.createdAt).getTime();
+  let updatedTime = new Date(session.updatedAt).getTime();
+  if (!Number.isFinite(createdTime)) {
+    createdTime = messageTimes[0] || Date.now();
+  }
+  if (!Number.isFinite(updatedTime)) {
+    updatedTime = messageTimes[messageTimes.length - 1] || createdTime;
+  }
+
+  if (messageTimes.length > 0) {
+    createdTime = Math.min(createdTime, messageTimes[0]);
+    updatedTime = Math.max(updatedTime, messageTimes[messageTimes.length - 1]);
+  }
+  if (updatedTime < createdTime) {
+    updatedTime = createdTime;
+  }
+
+  return {
+    uuid: session.id,
+    name: session.title || '',
+    created_at: formatClaudeTime(createdTime),
+    updated_at: formatClaudeTime(updatedTime),
+    account: { uuid: CLAUDE_ACCOUNT_UUID },
+    chat_messages
+  };
+}
+
+export function buildClaudeUsersFile(): ClaudeUser[] {
+  return [
+    {
+      uuid: CLAUDE_ACCOUNT_UUID,
+      full_name: 'AI Math Chat Studio',
+      email_address: 'export@localhost',
+      verified_phone_number: null
+    }
+  ];
+}
+
+/** zip 根目录的三个成员，缺一不可（users.json 是 Gemini 识别 Claude 包的关键标志）。 */
+export function buildClaudeBundleFiles(conversations: ClaudeConversation[]): Record<string, string> {
+  return {
+    'conversations.json': JSON.stringify(conversations, null, 2),
+    'users.json': JSON.stringify(buildClaudeUsersFile(), null, 2),
+    'projects.json': JSON.stringify([], null, 2)
+  };
+}
