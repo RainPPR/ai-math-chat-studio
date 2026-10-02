@@ -13,7 +13,8 @@
     "name": "AMD Token Factory",
     "apiKey": "",
     "envKey": "AMD_API_KEY",
-    "baseURL": "https://developer.amd.com.cn/radeon/api/v1"
+    "baseURL": "https://developer.amd.com.cn/radeon/api/v1",
+    "modelSyncType": "v1_models"
   },
   {
     "id": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
@@ -29,7 +30,8 @@
     "name": "FreeTheAI",
     "apiKey": "",
     "envKey": "FTA_API_KEY",
-    "baseURL": "https://api.freetheai.org/v1"
+    "baseURL": "https://api.freetheai.org/v1",
+    "modelSyncType": "v1_models"
   },
   {
     "id": "p-google-fc62",
@@ -67,7 +69,8 @@
     "name": "Kilo Gateway",
     "baseURL": "https://api.kilo.ai/api/gateway",
     "envKey": "KILO_API_KEY",
-    "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/kilo-free-ai-math.json"
+    "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/kilo-free-ai-math.json",
+    "modelSyncType": "json"
   },
   {
     "id": "d687d0d8-349b-4114-81ad-29e752bd49a1",
@@ -75,7 +78,8 @@
     "name": "LogFare",
     "envKey": "LOGFARE_API_KEY",
     "baseURL": "https://logfare.ai/v1",
-    "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/logfare-ai-math.json"
+    "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/logfare-ai-math.json",
+    "modelSyncType": "json"
   },
   {
     "id": "3b1ab029-5556-415a-885d-53aa72c7308a",
@@ -83,7 +87,8 @@
     "name": "ModelScope",
     "apiKey": "",
     "envKey": "MS_API_KEY",
-    "baseURL": "https://api-inference.modelscope.cn/v1"
+    "baseURL": "https://api-inference.modelscope.cn/v1",
+    "modelSyncType": "v1_models"
   },
   {
     "id": "p-nvidia-9a1b",
@@ -98,6 +103,7 @@
     "apiKey": "public",
     "envKey": "",
     "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/opencode-free-ai-math.json",
+    "modelSyncType": "json",
     "baseURL": "https://opencode.ai/zen/v1",
     "extra": {
       "User-Agent": "opencode/1.14.28 ai-sdk/provider-utils/4.0.23 runtime/bun/1.3.13",
@@ -121,6 +127,7 @@
     "name": "Poe",
     "baseURL": "https://api.poe.com/v1",
     "envKey": "POE_API_KEY",
-    "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/poe-free-ai-math.json"
+    "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/poe-free-ai-math.json",
+    "modelSyncType": "json"
   }
 ]
