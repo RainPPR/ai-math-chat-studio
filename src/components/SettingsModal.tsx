@@ -511,7 +511,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const [isV1AccordionOpen, setIsV1AccordionOpen] = useState(false);
   const [unsavedWarningModal, setUnsavedWarningModal] = useState<{ onConfirm: () => void } | null>(null);
 
-  const hasUnsavedEdits = Boolean(editingProvider || editingModel || editingTempModel || editingCharacter || editingSkill || editingTemplate);
+  const hasUnsavedEdits = Boolean(editingProvider || editingModel || editingTempModel || editingCharacter || editingSkill || editingTemplate || editingNoteId);
 
   const requestClose = () => {
     if (hasUnsavedEdits) {
@@ -1599,9 +1599,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                         </div>
                       </div>
                     )}
-                    <button onClick={addTempModel} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-3 text-sm transition-colors">
-                      <Plus size={16} /> Add Temp Model
-                    </button>
                   </div>
 
                   {/* Part 2: Standard Models Section */}
@@ -2057,21 +2054,23 @@ const ProviderEditor: React.FC<{
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-300">Model Sync Mode</label>
-        <select
-          value={entry.modelSyncType || (entry.modelSource ? 'json' : 'none')}
-          onChange={e => {
-            const mode = e.target.value as 'none' | 'json' | 'v1_models';
-            onChange({ ...entry, modelSyncType: mode });
-          }}
-          className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 text-sm"
-        >
-          <option value="none">不处理 (Manual / None)</option>
-          <option value="json">从 JSON 读取 (Remote JSON URL)</option>
-          <option value="v1_models">从 /v1/models 读取 (/v1/models Endpoint)</option>
-        </select>
-      </div>
+      {entry.type !== 'google' && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Model Sync Mode</label>
+          <select
+            value={entry.modelSyncType || (entry.modelSource ? 'json' : 'none')}
+            onChange={e => {
+              const mode = e.target.value as 'none' | 'json' | 'v1_models';
+              onChange({ ...entry, modelSyncType: mode });
+            }}
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 text-sm"
+          >
+            <option value="none">不处理 (Manual / None)</option>
+            <option value="json">从 JSON 读取 (Remote JSON URL)</option>
+            <option value="v1_models">从 /v1/models 读取 (/v1/models Endpoint)</option>
+          </select>
+        </div>
+      )}
 
       {entry.type !== 'google' && (entry.modelSyncType === 'json' || (!entry.modelSyncType && entry.modelSource)) && (
         <div className="space-y-2">

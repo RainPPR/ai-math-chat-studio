@@ -24,7 +24,7 @@ interface RemoteModelDef {
 }
 
 function isTextGenerationModel(modelObj: any): boolean {
-  const modelId = String(modelObj.id || modelObj.modelId || '').trim();
+  const modelId = String(modelObj.modelId || modelObj.id || '').trim();
   const displayName = String(modelObj.displayName || modelObj.display_name || modelObj.name || '').trim();
   if (!modelId) return false;
 
@@ -65,7 +65,7 @@ function getProviderAbbreviation(providerName: string): string {
   const name = providerName.trim();
   if (name === 'ModelScope') return 'MS';
   if (name.startsWith('AMD')) return 'AMD';
-  if (name.startsWith('FreeTheAI') || name === 'FTA') return 'FTA';
+  if (name.startsWith('FreeTheAI')) return 'FTAI';
   const uppers = name.match(/[A-Z]/g);
   if (uppers && uppers.length >= 2) {
     return uppers.join('');
@@ -90,8 +90,14 @@ function deriveDisplayName(modelId: string, rawName?: string, providerName?: str
   return nameStr;
 }
 
-function buildV1ModelsUrl(baseURL?: string): string {
-  const base = (baseURL || 'https://integrate.api.nvidia.com/v1').trim().replace(/\/+$/, '');
+function buildV1ModelsUrl(provider: any): string | null {
+  if (provider.type === 'nvidia') {
+    return 'https://integrate.api.nvidia.com/v1/models';
+  }
+  if (!provider.baseURL || !provider.baseURL.trim()) {
+    return null;
+  }
+  const base = provider.baseURL.trim().replace(/\/+$/, '');
   if (base.endsWith('/models')) {
     return base;
   }
@@ -111,8 +117,6 @@ function buildProviderHeaders(provider: any): Record<string, string> {
   if (!apiKey) {
     if (provider.type === 'nvidia') {
       apiKey = process.env.NVIDIA_API_KEY;
-    } else {
-      apiKey = process.env.OPENAI_API_KEY;
     }
   }
 
@@ -133,7 +137,15 @@ async function syncRemoteModels(settingsFile: string) {
     );
 
     for (const provider of syncableProviders) {
-      const syncType = provider.modelSyncType || (provider.modelSource ? 'json' : 'none');
+      let syncType = provider.modelSyncType;
+      if (!syncType) {
+        if (provider.modelSource) {
+          syncType = 'json';
+        } else {
+          syncType = 'none';
+        }
+      }
+
       if (syncType === 'none') continue;
 
       try {
@@ -147,9 +159,19 @@ async function syncRemoteModels(settingsFile: string) {
             continue;
           }
           const json = await response.json();
-          rawRemoteModels = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
+          if (Array.isArray(json)) {
+            rawRemoteModels = json;
+          } else if (Array.isArray(json.data)) {
+            rawRemoteModels = json.data;
+          } else {
+            rawRemoteModels = [];
+          }
         } else if (syncType === 'v1_models') {
-          const url = buildV1ModelsUrl(provider.baseURL);
+          const url = buildV1ModelsUrl(provider);
+          if (!url) {
+            console.warn(`[Sync] Cannot sync /v1/models for ${provider.name}: Base URL is missing.`);
+            continue;
+          }
           const headers = buildProviderHeaders(provider);
           console.log(`[Sync] Fetching models from /v1/models: ${url} for provider ${provider.name} (${provider.id})`);
           const response = await fetch(url, { headers });
@@ -158,7 +180,13 @@ async function syncRemoteModels(settingsFile: string) {
             continue;
           }
           const json = await response.json();
-          rawRemoteModels = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
+          if (Array.isArray(json)) {
+            rawRemoteModels = json;
+          } else if (Array.isArray(json.data)) {
+            rawRemoteModels = json.data;
+          } else {
+            rawRemoteModels = [];
+          }
         } else {
           continue;
         }
@@ -167,8 +195,15 @@ async function syncRemoteModels(settingsFile: string) {
 
         const parsedRemoteModels: RemoteModelDef[] = filteredRemoteModels.map(item => {
           const modelId = String(item.modelId || item.id || '').trim();
-          const rawName = item.displayName || item.display_name || item.name || item.title || item.metadata?.display_name;
+          let rawName = item.displayName;
+          if (!rawName) rawName = item.display_name;
+          if (!rawName) rawName = item.name;
+          if (!rawName) rawName = item.title;
+          if (!rawName) rawName = item.metadata?.display_name;
           const displayName = deriveDisplayName(modelId, rawName, provider.name);
+
+          let re = item.reasoningEffort;
+          if (!re) re = item.reasoning_effort;
 
           return {
             id: item.id || crypto.randomUUID(),
@@ -176,7 +211,7 @@ async function syncRemoteModels(settingsFile: string) {
             displayName,
             temperature: item.temperature,
             maxTokens: item.maxTokens,
-            reasoningEffort: item.reasoningEffort || item.reasoning_effort,
+            reasoningEffort: re,
             thinkingLevel: item.thinkingLevel,
             extraBody: item.extraBody,
             injectThinkingTemplate: item.injectThinkingTemplate,
@@ -188,9 +223,15 @@ async function syncRemoteModels(settingsFile: string) {
           continue;
         }
 
-        // Merge & preserve existing models
+        // Merge & preserve existing models (supporting multiple instances per modelId)
         const existingForProvider = settings.models.filter((m: any) => m.providerId === provider.id);
-        const existingByModelId = new Map(existingForProvider.map((m: any) => [m.modelId, m]));
+        const existingByModelId = new Map<string, any[]>();
+        for (const existing of existingForProvider) {
+          const list = existingByModelId.get(existing.modelId) || [];
+          list.push(existing);
+          existingByModelId.set(existing.modelId, list);
+        }
+
         const otherModels = settings.models.filter((m: any) => m.providerId !== provider.id);
 
         const newModelsForProvider: any[] = [];
@@ -198,24 +239,52 @@ async function syncRemoteModels(settingsFile: string) {
 
         for (const remote of parsedRemoteModels) {
           processedModelIds.add(remote.modelId);
-          const existing = existingByModelId.get(remote.modelId);
+          const existingList = existingByModelId.get(remote.modelId);
 
-          if (existing) {
-            // REUSE existing local UUID & custom settings
-            const isRawName = !existing.displayName || existing.displayName === existing.modelId || existing.displayName.includes('/');
-            const finalDisplayName = isRawName ? remote.displayName : existing.displayName;
+          if (existingList && existingList.length > 0) {
+            // REUSE existing local instances (preserving all distinct instances)
+            for (const existing of existingList) {
+              const defaultDerivedName = deriveDisplayName(existing.modelId, existing.modelId, provider.name);
+              let isRawName = false;
+              if (!existing.displayName || existing.displayName === existing.modelId || existing.displayName.includes('/') || existing.displayName === defaultDerivedName) {
+                isRawName = true;
+              }
 
-            newModelsForProvider.push({
-              ...existing,
-              providerType: provider.type,
-              displayName: finalDisplayName,
-              temperature: existing.temperature ?? remote.temperature,
-              maxTokens: existing.maxTokens ?? remote.maxTokens,
-              reasoningEffort: existing.reasoningEffort || remote.reasoningEffort,
-              thinkingLevel: existing.thinkingLevel || remote.thinkingLevel,
-              extraBody: existing.extraBody || remote.extraBody,
-              injectThinkingTemplate: existing.injectThinkingTemplate ?? remote.injectThinkingTemplate,
-            });
+              let finalDisplayName = existing.displayName;
+              if (isRawName) {
+                finalDisplayName = remote.displayName;
+              }
+
+              let tempVal = existing.temperature;
+              if (tempVal === undefined) tempVal = remote.temperature;
+
+              let maxTokVal = existing.maxTokens;
+              if (maxTokVal === undefined) maxTokVal = remote.maxTokens;
+
+              let reVal = existing.reasoningEffort;
+              if (!reVal) reVal = remote.reasoningEffort;
+
+              let tlVal = existing.thinkingLevel;
+              if (!tlVal) tlVal = remote.thinkingLevel;
+
+              let ebVal = existing.extraBody;
+              if (!ebVal) ebVal = remote.extraBody;
+
+              let ittVal = existing.injectThinkingTemplate;
+              if (ittVal === undefined) ittVal = remote.injectThinkingTemplate;
+
+              newModelsForProvider.push({
+                ...existing,
+                providerType: provider.type,
+                displayName: finalDisplayName,
+                temperature: tempVal,
+                maxTokens: maxTokVal,
+                reasoningEffort: reVal,
+                thinkingLevel: tlVal,
+                extraBody: ebVal,
+                injectThinkingTemplate: ittVal,
+              });
+            }
           } else {
             // New model from remote
             newModelsForProvider.push({
@@ -234,16 +303,26 @@ async function syncRemoteModels(settingsFile: string) {
           }
         }
 
-        // Keep existing models that were not in remote list IF user configured custom settings for them
+        // Keep existing models that were not in remote list IF user configured custom settings or custom display name
         for (const existing of existingForProvider) {
           if (!processedModelIds.has(existing.modelId)) {
+            const defaultDerivedName = deriveDisplayName(existing.modelId, existing.modelId, provider.name);
+            const hasCustomDisplayName = Boolean(
+              existing.displayName &&
+              existing.displayName !== existing.modelId &&
+              !existing.displayName.includes('/') &&
+              existing.displayName !== defaultDerivedName
+            );
+
             const hasCustomizations =
+              hasCustomDisplayName ||
               existing.temperature !== undefined ||
               existing.maxTokens !== undefined ||
               existing.reasoningEffort !== undefined ||
               existing.thinkingLevel !== undefined ||
               existing.extraBody !== undefined ||
               existing.injectThinkingTemplate !== undefined;
+
             if (hasCustomizations) {
               newModelsForProvider.push(existing);
             }
