@@ -403,12 +403,236 @@
     "displayName": "Space Bunny Alpha (LogFare)"
   },
   {
+    "id": "843a25d5-bd2b-4eca-8e5b-69949c167843",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-ai/DeepSeek-V4-Flash-0731",
+    "displayName": "DeepSeek-V4-Flash-0731 (MS)"
+  },
+  {
+    "id": "a78cfda6-2bfd-49bc-a4fe-3f38a250a23f",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-ai/DeepSeek-V4-Pro",
+    "displayName": "DeepSeek-V4-Pro (MS)"
+  },
+  {
+    "id": "dc401296-5101-4815-90a6-a45b46e2bf78",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-ai/DeepSeek-V4-Pro-0813",
+    "displayName": "DeepSeek-V4-Pro-0813 (MS)"
+  },
+  {
     "id": "375d267f-8967-4b2e-95ee-60fce15c0bfe",
     "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
     "providerType": "openai-compatible",
     "modelId": "deepseek-ai/DeepSeek-V4.1-Flash",
     "displayName": "DeepSeek V4.1 Flash (MS)",
     "reasoningEffort": "max"
+  },
+  {
+    "id": "bdbecb38-9653-421b-952b-06aad3ab48ea",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "early-access/EA-29B-A4B",
+    "displayName": "EA-29B-A4B (MS)"
+  },
+  {
+    "id": "e8ed503c-9979-49ef-8759-1b350e8bfb10",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "MedAIBase/AntAngelMed",
+    "displayName": "AntAngelMed (MS)"
+  },
+  {
+    "id": "e90fb120-fb51-4bcb-967e-fb6ebe235b6a",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "meituan-longcat/LongCat-Flash-Lite",
+    "displayName": "LongCat-Flash-Lite (MS)"
+  },
+  {
+    "id": "e6213e1f-8986-4f2c-9349-1d9d0fc0205a",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "MiniMax/MiniMax-M1-80k",
+    "displayName": "MiniMax-M1-80k (MS)"
+  },
+  {
+    "id": "6e128133-5e97-42df-a2b0-bd239fca115a",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "MiniMax/MiniMax-M3",
+    "displayName": "MiniMax-M3 (MS)"
+  },
+  {
+    "id": "95671408-8439-4a7f-a19e-88a97927b34e",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "mistralai/Mistral-Large-Instruct-2407",
+    "displayName": "Mistral-Large-Instruct-2407 (MS)"
+  },
+  {
+    "id": "0fae2e97-1bcd-4495-9edd-75ac245b2647",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "nex-agi/Nex-N2.5-mini",
+    "displayName": "Nex-N2.5-mini (MS)"
+  },
+  {
+    "id": "9686d65f-72ae-485e-ad1f-eea2300e0f79",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "nex-agi/Nex-N2.5-Pro",
+    "displayName": "Nex-N2.5-Pro (MS)"
+  },
+  {
+    "id": "29898359-574b-4b3b-bf41-206891e0c149",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "opencompass/CompassJudger-1-32B-Instruct",
+    "displayName": "CompassJudger-1-32B-Instruct (MS)"
+  },
+  {
+    "id": "b30afa6c-5a15-445f-8e9a-1b9e5c926c91",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "OpenGVLab/InternVL3_5-241B-A28B",
+    "displayName": "InternVL3_5-241B-A28B (MS)"
+  },
+  {
+    "id": "612ec575-76af-42b3-bf17-c426dc9fe3d4",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "PaddlePaddle/ERNIE-4.5-0.3B-PT",
+    "displayName": "ERNIE-4.5-0.3B-PT (MS)"
+  },
+  {
+    "id": "d2a40093-b610-4f3b-81b2-de83663ccc7a",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "PaddlePaddle/ERNIE-4.5-21B-A3B-PT",
+    "displayName": "ERNIE-4.5-21B-A3B-PT (MS)"
+  },
+  {
+    "id": "8bde03ba-8850-4eb9-b7ed-25b3100c0b4b",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "PaddlePaddle/ERNIE-4.5-300B-A47B-PT",
+    "displayName": "ERNIE-4.5-300B-A47B-PT (MS)"
+  },
+  {
+    "id": "66e3179c-6701-4113-a742-f405f010ddb2",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "PaddlePaddle/ERNIE-4.5-VL-28B-A3B-PT",
+    "displayName": "ERNIE-4.5-VL-28B-A3B-PT (MS)"
+  },
+  {
+    "id": "afeb9bac-4f83-4c25-ba13-ab3501fa90b5",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "Qwen/Qwen3.5-122B-A10B",
+    "displayName": "Qwen3.5-122B-A10B (MS)"
+  },
+  {
+    "id": "48db5bb3-661f-4a7d-8edd-f570fb5c0ad4",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "Qwen/Qwen3.5-27B",
+    "displayName": "Qwen3.5-27B (MS)"
+  },
+  {
+    "id": "29aba901-6eec-4bac-9d98-8f8e3aa52d22",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "Qwen/Qwen3.5-35B-A3B",
+    "displayName": "Qwen3.5-35B-A3B (MS)"
+  },
+  {
+    "id": "aff6eedd-743b-45a3-b0f7-0a469b2e0586",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "Qwen/Qwen3.5-397B-A17B",
+    "displayName": "Qwen3.5-397B-A17B (MS)"
+  },
+  {
+    "id": "52aa23fd-a21b-4cb5-9485-0e2e9397ddc5",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "Qwen/Qwen3.8-27B",
+    "displayName": "Qwen3.8-27B (MS)"
+  },
+  {
+    "id": "29ca41bf-0a65-43e4-93e0-5f23ee9620fc",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "Qwen/Qwen3.8-Flash-Next",
+    "displayName": "Qwen3.8-Flash-Next (MS)"
+  },
+  {
+    "id": "47827a12-87ef-48d7-90c0-816be1f151a0",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "Shanghai_AI_Laboratory/Intern-S1",
+    "displayName": "Intern-S1 (MS)"
+  },
+  {
+    "id": "06ce69fc-0c7b-4199-8f2b-f2e6ebd2b080",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "Shanghai_AI_Laboratory/Intern-S1-mini",
+    "displayName": "Intern-S1-mini (MS)"
+  },
+  {
+    "id": "0982f93a-a49d-43ed-bdec-4d4de1ad6130",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "Shanghai_AI_Laboratory/Intern-S2-Preview",
+    "displayName": "Intern-S2-Preview (MS)"
+  },
+  {
+    "id": "342cb01b-cbe3-4ed7-b64a-6bd8b4e48b23",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "stepfun-ai/Step-3.5-Flash",
+    "displayName": "Step-3.5-Flash (MS)"
+  },
+  {
+    "id": "2bb81849-0881-46e2-9bf6-bd5f45703252",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "stepfun-ai/Step-3.7-Flash",
+    "displayName": "Step-3.7-Flash (MS)"
+  },
+  {
+    "id": "7b555a32-498a-4052-b544-d279c87b29df",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "XGenerationLab/XiYanSQL-QwenCoder-32B-2412",
+    "displayName": "XiYanSQL-QwenCoder-32B-2412 (MS)"
+  },
+  {
+    "id": "be5ae736-4b3c-410b-9d7f-4ecf75562d80",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "XGenerationLab/XiYanSQL-QwenCoder-32B-2504",
+    "displayName": "XiYanSQL-QwenCoder-32B-2504 (MS)"
+  },
+  {
+    "id": "f8fc0c9f-ca5c-4116-9b9c-6a405508ea0e",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "ZhipuAI/GLM-4.7-Flash",
+    "displayName": "GLM-4.7-Flash (MS)"
+  },
+  {
+    "id": "85b5337d-7fd6-453c-93bc-3e523b868bd7",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "ZhipuAI/GLM-5.2",
+    "displayName": "GLM-5.2 (MS)"
   },
   {
     "id": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89",
@@ -437,22 +661,6 @@
       "chat_template_kwargs": {
         "thinking": true,
         "reasoning_effort": "max"
-      }
-    }
-  },
-  {
-    "id": "fbfbd4f2-c04f-43b3-bf7c-01a44059afcc",
-    "providerId": "p-nvidia-9a1b",
-    "providerType": "nvidia",
-    "modelId": "google/diffusiongemma-26b-a4b-it",
-    "enableTools": true,
-    "disabledTools": [],
-    "displayName": "DiffusionGemma-26b-a4b-it (Nvidia)",
-    "maxTokens": 32768,
-    "injectThinkingTemplate": false,
-    "extraBody": {
-      "chat_template_kwargs": {
-        "enable_thinking": true
       }
     }
   },
