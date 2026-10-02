@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, Skill, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
 import { api } from '../lib/api';
-import { X, Plus, Trash2, Save, ChevronDown, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
+import { X, Plus, Trash2, Save, ChevronDown, ChevronRight, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
 import { sortProviders, sortModels, sortTempModels, sortCharacters, sortSkills, sortTemplates } from '../../shared/sorting';
 import { extractThinkingBlocks } from '../../shared/thinking';
 
@@ -507,6 +507,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteContent, setEditingNoteContent] = useState<string>('');
+
+  const [isJsonAccordionOpen, setIsJsonAccordionOpen] = useState(false);
+  const [isV1AccordionOpen, setIsV1AccordionOpen] = useState(false);
+  const [unsavedWarningModal, setUnsavedWarningModal] = useState<{ onConfirm: () => void } | null>(null);
+
+  const hasUnsavedEdits = Boolean(editingProvider || editingModel || editingTempModel || editingCharacter || editingSkill || editingTemplate || editingNoteId);
+
+  const requestClose = () => {
+    if (hasUnsavedEdits) {
+      setUnsavedWarningModal({ onConfirm: onClose });
+    } else {
+      onClose();
+    }
+  };
+
+  const requestSaveAll = () => {
+    if (hasUnsavedEdits) {
+      setUnsavedWarningModal({ onConfirm: handleSaveAll });
+    } else {
+      handleSaveAll();
+    }
+  };
 
   const handleAddNote = () => {
     const newNote = {
@@ -1159,7 +1181,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-6 border-b border-gray-800 shrink-0">
           <h2 className="text-xl font-semibold text-white">Settings</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><X size={24} /></button>
+          <button onClick={requestClose} className="text-gray-400 hover:text-white transition-colors"><X size={24} /></button>
         </div>
 
         <div className="flex border-b border-gray-800 shrink-0">
@@ -1452,7 +1474,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                             : p.type === 'google'
                               ? '(https://generativelanguage.googleapis.com/v1beta)'
                               : (p.baseURL || 'Custom Base URL')}
-                          {p.modelSource && ' · Auto-sync enabled'}
+                          {p.modelSyncType === 'v1_models' && ' · Sync via /v1/models'}
+                          {(p.modelSyncType === 'json' || (!p.modelSyncType && p.modelSource)) && ' · Sync via JSON'}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -1577,9 +1600,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                         </div>
                       </div>
                     )}
-                    <button onClick={addTempModel} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-3 text-sm transition-colors">
-                      <Plus size={16} /> Add Temp Model
-                    </button>
                   </div>
 
                   {/* Part 2: Standard Models Section */}
@@ -1587,26 +1607,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <h3 className="text-sm font-medium text-gray-300">常规模型 (Standard Models)</h3>
                     {local.models.length === 0 && <p className="text-xs text-gray-500">No models configured.</p>}
                     {(() => {
-                      const modelsByProvider = new Map<string, typeof local.models>();
-                      local.models.forEach(m => {
-                        const list = modelsByProvider.get(m.providerId) || [];
-                        list.push(m);
-                        modelsByProvider.set(m.providerId, list);
-                      });
+                      const jsonSyncProviders = local.providers.filter(p => (p.modelSyncType || (p.modelSource ? 'json' : 'none')) === 'json');
+                      const v1SyncProviders = local.providers.filter(p => (p.modelSyncType || (p.modelSource ? 'json' : 'none')) === 'v1_models');
+                      const manualProviders = local.providers.filter(p => (p.modelSyncType || (p.modelSource ? 'json' : 'none')) === 'none');
 
-                      return local.providers.map(provider => {
-                        const providerModels = modelsByProvider.get(provider.id) || [];
-                        if (providerModels.length === 0) return null;
+                      const renderProviderModelGroup = (providerList: typeof local.providers) => {
+                        const modelsByProvider = new Map<string, typeof local.models>();
+                        local.models.forEach(m => {
+                          const list = modelsByProvider.get(m.providerId) || [];
+                          list.push(m);
+                          modelsByProvider.set(m.providerId, list);
+                        });
 
-                        return (
-                          <div key={provider.id} className="bg-gray-800/50 rounded-lg border border-gray-700/50 overflow-hidden">
-                            <div className="bg-gray-800 px-3 py-2 border-b border-gray-700/50 flex items-center justify-between">
-                              <div className="text-xs font-medium text-gray-300">{provider.name}</div>
-                              <div className="text-xs text-gray-500">{providerModels.length} models</div>
-                            </div>
-                            <div className="divide-y divide-gray-700/30">
-                              {providerModels.map(m => {
-                                return (
+                        return providerList.map(provider => {
+                          const providerModels = modelsByProvider.get(provider.id) || [];
+                          if (providerModels.length === 0) return null;
+
+                          return (
+                            <div key={provider.id} className="bg-gray-800/50 rounded-lg border border-gray-700/50 overflow-hidden">
+                              <div className="bg-gray-800 px-3 py-2 border-b border-gray-700/50 flex items-center justify-between">
+                                <div className="text-xs font-medium text-gray-300">{provider.name}</div>
+                                <div className="text-xs text-gray-500">{providerModels.length} models</div>
+                              </div>
+                              <div className="divide-y divide-gray-700/30">
+                                {providerModels.map(m => (
                                   <div key={m.id} className="px-3 py-2 flex items-center justify-between hover:bg-gray-700/30 transition-colors">
                                     <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
                                       <div className="col-span-6 text-xs text-white truncate">{m.displayName || m.modelId}</div>
@@ -1618,18 +1642,83 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1 ml-2 shrink-0">
-                                      <button onClick={() => { setEditingModel({ ...m }); }} className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><Pencil size={14} /></button>
-                                      <button onClick={() => { deleteModelEntry(m.id); }} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                                      <button onClick={() => setEditingModel({ ...m })} className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><Pencil size={14} /></button>
+                                      <button onClick={() => deleteModelEntry(m.id)} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
                                     </div>
                                   </div>
-                                );
-                              })}
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      });
+                          );
+                        });
+                      };
+
+                      return (
+                        <div className="space-y-4">
+                          {/* Manual / None Sync Providers */}
+                          {renderProviderModelGroup(manualProviders)}
+
+                          {/* JSON Sync Accordion */}
+                          {jsonSyncProviders.length > 0 && (
+                            <div className="border border-gray-800 rounded-lg overflow-hidden bg-gray-900/60">
+                              <button
+                                type="button"
+                                onClick={() => setIsJsonAccordionOpen(!isJsonAccordionOpen)}
+                                className="w-full px-4 py-3 bg-gray-800/80 hover:bg-gray-800 flex items-center justify-between text-left transition-colors"
+                              >
+                                <div className="flex items-center gap-2">
+                                  {isJsonAccordionOpen ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+                                  <span className="text-sm font-medium text-gray-300">JSON 同步模型 ({jsonSyncProviders.length} 个 Provider)</span>
+                                </div>
+                                <span className="text-xs text-gray-500">
+                                  {local.models.filter(m => jsonSyncProviders.some(p => p.id === m.providerId)).length} models
+                                </span>
+                              </button>
+                              {isJsonAccordionOpen && (
+                                <div className="p-3 space-y-3 bg-gray-900/40 border-t border-gray-800">
+                                  {renderProviderModelGroup(jsonSyncProviders)}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* /v1/models Sync Accordion */}
+                          {v1SyncProviders.length > 0 && (
+                            <div className="border border-gray-800 rounded-lg overflow-hidden bg-gray-900/60">
+                              <button
+                                type="button"
+                                onClick={() => setIsV1AccordionOpen(!isV1AccordionOpen)}
+                                className="w-full px-4 py-3 bg-gray-800/80 hover:bg-gray-800 flex items-center justify-between text-left transition-colors"
+                              >
+                                <div className="flex items-center gap-2">
+                                  {isV1AccordionOpen ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+                                  <span className="text-sm font-medium text-gray-300">/v1/models 同步模型 ({v1SyncProviders.length} 个 Provider)</span>
+                                </div>
+                                <span className="text-xs text-gray-500">
+                                  {local.models.filter(m => v1SyncProviders.some(p => p.id === m.providerId)).length} models
+                                </span>
+                              </button>
+                              {isV1AccordionOpen && (
+                                <div className="p-3 space-y-3 bg-gray-900/40 border-t border-gray-800">
+                                  {renderProviderModelGroup(v1SyncProviders)}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
                     })()}
-                    <button onClick={addModel} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-3 text-sm transition-colors">
+                  </div>
+
+                  {/* Bottom spacing helper so scrollable list items are not obscured by sticky footer */}
+                  <div className="h-24" />
+
+                  {/* Sticky docked Add Model buttons footer */}
+                  <div className="sticky -bottom-6 bg-gray-900/95 backdrop-blur-sm pt-3 pb-6 border-t border-gray-800 flex gap-3 z-10 -mx-6 -mb-6 px-6 mt-4 shadow-2xl">
+                    <button onClick={addTempModel} className="flex-1 flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-purple-500/50 text-purple-300 rounded-lg p-2.5 text-xs font-medium transition-colors shadow-lg">
+                      <Plus size={16} /> Add Temp Model
+                    </button>
+                    <button onClick={addModel} className="flex-1 flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-dashed border-gray-600 text-gray-300 rounded-lg p-2.5 text-xs font-medium transition-colors shadow-lg">
                       <Plus size={16} /> Add Model
                     </button>
                   </div>
@@ -1800,10 +1889,51 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         </div>
 
         <div className="p-6 border-t border-gray-800 bg-gray-950 flex justify-end gap-3 shrink-0">
-          <button onClick={onClose} className="px-5 py-2.5 text-gray-300 hover:text-white font-medium transition-colors">Cancel</button>
-          <button onClick={handleSaveAll} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"><Save size={16} /> Save</button>
+          <button onClick={requestClose} className="px-5 py-2.5 text-gray-300 hover:text-white font-medium transition-colors">Cancel</button>
+          <button onClick={requestSaveAll} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"><Save size={16} /> Save</button>
         </div>
       </div>
+
+      {/* Unsaved Warning Modal */}
+      {unsavedWarningModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <AlertTriangle size={20} className="text-amber-400" />
+                未保存的编辑项
+              </h3>
+              <button onClick={() => setUnsavedWarningModal(null)} className="text-gray-400 hover:text-white transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              您当前有正在编辑但未点击保存的项目。直接关闭或保存主设置将丢弃当前子表单中未保存的修改。确定要继续吗？
+            </p>
+            <div className="flex justify-end gap-3 pt-3">
+              <button
+                type="button"
+                onClick={() => setUnsavedWarningModal(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
+              >
+                返回编辑
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const callback = unsavedWarningModal.onConfirm;
+                  setUnsavedWarningModal(null);
+                  callback();
+                }}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                放弃更改并继续
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {cleaning && (
         <div className="fixed inset-0 bg-black flex items-center justify-center z-[60]">
           {!cleanResult ? (
@@ -1906,14 +2036,14 @@ const ProviderEditor: React.FC<{
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-300">Env Key Prefix (default: {getDefaultEnvKey(entry.type)})</label>
+        <label className="block text-sm font-medium text-gray-300">Env Key Name (default: {getDefaultEnvKey(entry.type)})</label>
         <input
           value={entry.envKey || ''}
           onChange={e => { onChange({ ...entry, envKey: e.target.value || undefined }); }}
           placeholder={getDefaultEnvKey(entry.type)}
           className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
         />
-        <p className="text-xs text-gray-500">Leave empty to use the default env variable for this provider type.</p>
+        <p className="text-xs text-gray-500">Leave empty to use the default env variable name for this provider type.</p>
       </div>
 
       <div className="space-y-2">
@@ -1927,14 +2057,32 @@ const ProviderEditor: React.FC<{
 
       {entry.type !== 'google' && (
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-300">Model Source URL (optional)</label>
+          <label className="block text-sm font-medium text-gray-300">Model Sync Mode</label>
+          <select
+            value={entry.modelSyncType || (entry.modelSource ? 'json' : 'none')}
+            onChange={e => {
+              const mode = e.target.value as 'none' | 'json' | 'v1_models';
+              onChange({ ...entry, modelSyncType: mode });
+            }}
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 text-sm"
+          >
+            <option value="none">不处理 (Manual / None)</option>
+            <option value="json">从 JSON 读取 (Remote JSON URL)</option>
+            <option value="v1_models">从 /v1/models 读取 (/v1/models Endpoint)</option>
+          </select>
+        </div>
+      )}
+
+      {entry.type !== 'google' && (entry.modelSyncType === 'json' || (!entry.modelSyncType && entry.modelSource)) && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Model Source URL</label>
           <input
             value={entry.modelSource || ''}
             onChange={e => { onChange({ ...entry, modelSource: e.target.value || undefined }); }}
             placeholder="https://example.com/models.json"
             className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 font-mono text-sm"
           />
-          <p className="text-xs text-gray-500">Remote JSON URL for auto-syncing model list on startup. Will replace all existing models for this provider.</p>
+          <p className="text-xs text-gray-500">Remote JSON URL for auto-syncing model list on startup.</p>
         </div>
       )}
 

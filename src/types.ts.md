@@ -17,6 +17,7 @@ export interface ProviderInstance {
   envKey?: string;
   extra?: Record<string, any>;
   modelSource?: string; // 远程模型列表 JSON URL（仅适用于 nvidia/openai-compatible，启动时自动同步）
+  modelSyncType?: 'none' | 'json' | 'v1_models'; // 模型列表同步模式：none (不处理), json (从 JSON 读取), v1_models (从 /v1/models 读取)
 }
 
 // 用户配置的模型实例
