@@ -108,7 +108,7 @@ graph TD
 
 
 *   **危险区域操作**:
-    *   **Claude 格式导出**: 将所有会话数据转换为符合 Claude 官方规范的 JSON 格式并下载，自动处理思考过程块和时间戳精度。导出的主 ZIP 包含一个特殊的 `All_Conversations.zip` 子压缩包（内含所有符合日期限制且经过排序的对话记录），以及各个角色的独立子压缩包。所有导出数据均先按 character 拼音或字母正序排序，然后按更新时间降序排序。
+    *   **Claude 格式导出**: 将所有会话数据转换为符合 Claude 官方规范的 JSON 格式并下载，自动处理思考过程块和时间戳精度。导出的主 ZIP 包含一个特殊的 `All_Conversations.zip` 子压缩包（内含所有符合日期限制且经过排序的对话记录），以及各个角色的独立子压缩包。所有导出数据均先按 character 拼音或字母正序排序，然后按更新时间降序排序。每个子压缩包都是一个完整的 Claude 导出包（`conversations.json` + `users.json` + `projects.json`，DEFLATE 压缩），具体字段构造见 `shared/claude-export.ts`，这是 Gemini「Import chats」能识别来源应用的前提。
     *   **强制清洗数据**: 移除数据中的废弃字段，保持数据整洁。
 
 ### Characters Tab

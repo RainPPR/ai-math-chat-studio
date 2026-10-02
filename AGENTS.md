@@ -156,6 +156,14 @@
 - **API 集成**: 服务端通过 `GET /api/templates` 和 `PUT /api/templates` 路由实现模板数据的读取与存储。前端在 `App` 启动时拉取并注入 `ChatArea` 及设置模态框中。
 - **模态框管理 (Templates Tab)**: `SettingsModal.tsx` 提供一个专用的 "Templates" 选项卡，允许用户在图形界面中进行添加、编辑、删除以及在列表中上下移动（Reorder）等完整操作，极大地改善了模板配置的可维护性和易用性。
 
+### 9. Claude 导出包架构 (Claude Export Bundle)
+
+- **构造位置**: 所有字段构造集中在 `shared/claude-export.ts`，`SettingsModal.tsx` 只负责筛选、排序与打包，不再内联拼装 JSON。
+- **整包结构**: 每个子压缩包（`All_Conversations.zip` 及各角色包）根目录必须同时包含 `conversations.json`、`users.json`、`projects.json`，采用 DEFLATE 压缩。Gemini 的 Import chats 用这组标志文件识别「来自哪个 AI 应用」，只放 `conversations.json` 会在来源识别阶段被拒。
+- **消息字段**: 每条消息必须同时有 `text`（纯文本，不能缺失）和 `content`（thinking 块在前、text 块在后，thinking 块带 `start_timestamp` / `stop_timestamp`）。正文被 `<think>` 吃空时，`text` 回落为思考内容。
+- **时间戳**: 统一 `YYYY-MM-DDTHH:MM:SS.ffffffZ`（6 位微秒 + 大写 `Z`）；同一对话内消息时间单调不降，对话的 `created_at` / `updated_at` 必须包住所有消息时间。
+- **修改须知**: 改动导出字段后，用 `scripts/claude-export-probe/build_probe_zips.py` 重新生成探针包验证，再上传 Gemini 实测（每天 5 个 zip 的上限）。
+
 ## ⚠️ 严禁事项（强制执行）
 
 ### 包管理器

@@ -4,14 +4,19 @@ import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, Sk
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, ChevronRight, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
 import { sortProviders, sortModels, sortTempModels, sortCharacters, sortSkills, sortTemplates } from '../../shared/sorting';
-import { extractThinkingBlocks } from '../../shared/thinking';
+import { ClaudeConversation, buildClaudeBundleFiles, buildClaudeConversation } from '../../shared/claude-export';
 
 
-function formatClaudeDate(dateStr: string) {
-  const d = new Date(dateStr);
-  const iso = d.toISOString(); // YYYY-MM-DDTHH:mm:ss.sssZ
-  return iso.replace(/\.(\d+)Z$/, (match, p1) => {
-    return '.' + p1.padEnd(6, '0') + 'Z';
+async function buildClaudeBundle(conversations: ClaudeConversation[]) {
+  const bundle = new JSZip();
+  const files = buildClaudeBundleFiles(conversations);
+  for (const [name, text] of Object.entries(files)) {
+    bundle.file(name, text);
+  }
+  return bundle.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 6 }
   });
 }
 
@@ -597,18 +602,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     setIsChunkModalOpen(true);
   };
 
-  const sanitizeClaudeSession = (session: {
-    uuid: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-    chat_messages: any[];
-  }) => {
+  const sanitizeClaudeSession = (session: ClaudeConversation): ClaudeConversation => {
     return {
       uuid: session.uuid,
       name: session.name,
       created_at: session.created_at,
       updated_at: session.updated_at,
+      account: session.account,
       chat_messages: session.chat_messages
     };
   };
@@ -656,37 +656,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
           rawTime = parsedDate.getTime();
         }
 
-        const chat_messages = fullSession.messages.map(m => {
-          const contentBlocks: any[] = [];
-          const extracted = extractThinkingBlocks(m.content, false);
-          for (const thought of extracted.thoughts) {
-            contentBlocks.push({
-              type: 'thinking',
-              thinking: thought
-            });
-          }
-          contentBlocks.push({
-            type: 'text',
-            text: extracted.mainContent
-          });
-
-          return {
-            uuid: m.id,
-            sender: m.role === 'user' ? 'human' : 'assistant',
-            content: contentBlocks,
-            created_at: formatClaudeDate(m.createdAt),
-            updated_at: formatClaudeDate(m.createdAt),
-            attachments: [],
-            files: []
-          };
-        });
+        const conversation = buildClaudeConversation(fullSession);
 
         return {
-          uuid: fullSession.id,
-          name: fullSession.title || "",
-          created_at: formatClaudeDate(fullSession.createdAt),
-          updated_at: formatClaudeDate(fullSession.updatedAt),
-          chat_messages,
+          ...conversation,
           _characterId: charId,
           _characterName: charName,
           _updatedAtTime: rawTime
@@ -706,12 +679,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
       const masterZip = new JSZip();
 
-      // Create a sub-ZIP named All_Conversations.zip containing a conversations.json file with all sorted sessions (helper fields stripped)
+      // Create a sub-ZIP named All_Conversations.zip shaped like a real Claude export bundle
+      // (conversations.json + users.json + projects.json at the root, helper fields stripped)
       const cleanAllSessions = allExportedSessions.map(sanitizeClaudeSession);
 
-      const allConversationsZip = new JSZip();
-      allConversationsZip.file('conversations.json', JSON.stringify(cleanAllSessions, null, 2));
-      const allConversationsZipBlob = await allConversationsZip.generateAsync({ type: 'blob' });
+      const allConversationsZipBlob = await buildClaudeBundle(cleanAllSessions);
       masterZip.file('All_Conversations.zip', allConversationsZipBlob);
 
       // Group the sorted session array by character ID to create non-empty individual character sub-ZIP files
@@ -737,9 +709,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
         const cleanCharSessions = charSessions.map(sanitizeClaudeSession);
 
-        const charZip = new JSZip();
-        charZip.file('conversations.json', JSON.stringify(cleanCharSessions, null, 2));
-        const charZipBlob = await charZip.generateAsync({ type: 'blob' });
+        const charZipBlob = await buildClaudeBundle(cleanCharSessions);
         masterZip.file(`${charName}.zip`, charZipBlob);
       }
 

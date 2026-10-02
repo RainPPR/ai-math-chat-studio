@@ -57,6 +57,12 @@ ai-math-chat-studio/
 │   └── services/             # 核心服务
 │       ├── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
 │       └── logger.ts             # 日志服务：拦截 console 输出并持久化到 data/log/
+├── shared/                   # 前后端共享的纯函数模块
+│   ├── claude-export.ts      # Claude 导出包构造（conversations/users/projects + 时间戳规范化）
+│   ├── skills.ts             # 技能定义
+│   ├── sorting.ts            # 排序工具
+│   ├── system-prompt.ts      # 系统提示词拼装
+│   └── thinking.ts           # <think> 块解析工具
 ├── src/
 │   ├── App.tsx               # 主应用组件（状态管理）
 │   ├── main.tsx              # React 入口

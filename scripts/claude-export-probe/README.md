@@ -1,5 +1,22 @@
 # Gemini「Import chats」导入失败排查包
 
+> ## ✅ 结论（2026-10-02 实测）
+>
+> **`01-full-fidelity.zip` 上传成功**，排查到此结束，02 / 03 / 04 不必再测。
+>
+> 原因是下面第二节的 **A + B 两条同时成立**：Gemini 现在要求「整包特征 + 规范消息 schema」，
+> 只放一个 `conversations.json`、消息又缺 `text` 字段，会在**来源识别阶段**直接被拒。
+>
+> 修复已落地在 `shared/claude-export.ts`（`SettingsModal.tsx` 调用），
+> 现在 App 导出的每个子压缩包都和 `01-full-fidelity.zip` 同构，产物逐字节一致：
+>
+> * 子包根目录 = `conversations.json` + `users.json` + `projects.json`，DEFLATE 压缩
+> * 每条消息补齐 `text`（正文被 `<think>` 吃空时回落为思考内容）、`attachments: []`、`files: []`
+> * 对话补 `account: { uuid }`，与 `users.json` 对应
+>
+> 本目录保留作为排查记录与回归工具；`build_probe_zips.py` 是 `shared/claude-export.ts` 的
+> Python 镜像实现，改导出字段时两边都要改，并重新对拍。
+
 报错原文：
 
 > **无法导入文件**
