@@ -69,17 +69,18 @@ export function formatClaudeTime(timeMs: number): string {
 }
 
 export function formatClaudeDate(dateStr: string): string {
-  return formatClaudeTime(new Date(dateStr).getTime());
+  const ms = new Date(dateStr).getTime();
+  return formatClaudeTime(Number.isFinite(ms) ? ms : Date.now());
 }
 
-/** 消息时间单调不降，回退的时间戳顺延 1 毫秒。 */
+/** 消息时间单调不降，回退或无效的时间戳顺延。 */
 export function buildMonotonicTimes(messages: ClaudeSourceMessage[]): number[] {
   const times: number[] = [];
   let previous = 0;
   for (const message of messages) {
     let current = new Date(message.createdAt).getTime();
-    if (times.length > 0 && current < previous) {
-      current = previous + 1;
+    if (!Number.isFinite(current) || (times.length > 0 && current < previous)) {
+      current = previous > 0 ? previous + 1 : Date.now();
     }
     times.push(current);
     previous = current;
@@ -102,12 +103,15 @@ export function buildClaudeMessage(message: ClaudeSourceMessage, stamp: string):
   if (extracted.mainContent) {
     content.push({ type: 'text', text: extracted.mainContent });
   } else if (extracted.thoughts.length === 0) {
-    content.push({ type: 'text', text: '' });
+    content.push({ type: 'text', text: message.content || ' ' });
   }
 
   let text = extracted.mainContent;
   if (!text && extracted.thoughts.length > 0) {
     text = extracted.thoughts.join('\n\n');
+  }
+  if (!text || !text.trim()) {
+    text = message.content || ' ';
   }
 
   let sender = 'assistant';
@@ -135,6 +139,13 @@ export function buildClaudeConversation(session: ClaudeSourceSession): ClaudeCon
 
   let createdTime = new Date(session.createdAt).getTime();
   let updatedTime = new Date(session.updatedAt).getTime();
+  if (!Number.isFinite(createdTime)) {
+    createdTime = messageTimes[0] || Date.now();
+  }
+  if (!Number.isFinite(updatedTime)) {
+    updatedTime = messageTimes[messageTimes.length - 1] || createdTime;
+  }
+
   if (messageTimes.length > 0) {
     createdTime = Math.min(createdTime, messageTimes[0]);
     updatedTime = Math.max(updatedTime, messageTimes[messageTimes.length - 1]);
