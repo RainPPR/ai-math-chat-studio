@@ -34,34 +34,18 @@
     "modelSyncType": "v1_models"
   },
   {
-    "id": "p-google-fc62",
-    "type": "google",
-    "name": "Google Gemini",
-    "envKey": "GEMINI_API_KEY"
-  },
-  {
     "id": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
     "type": "openai-compatible",
-    "name": "Google Gemini2API",
+    "name": "Gemini2API",
     "apiKey": "none",
     "envKey": "",
     "baseURL": "http://localhost:8081/v1"
   },
   {
-    "id": "d235e0b2-0946-4732-ab6f-abab768dd91f",
-    "type": "openai-compatible",
-    "name": "HuggingFace",
-    "apiKey": "",
-    "envKey": "HUGGINGFACE_API_KEY",
-    "baseURL": "https://router.huggingface.co/v1"
-  },
-  {
-    "id": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
-    "type": "openai-compatible",
-    "name": "Kilo BYOK",
-    "apiKey": "",
-    "envKey": "KILO_API_KEY",
-    "baseURL": "https://api.kilo.ai/api/gateway"
+    "id": "p-google-fc62",
+    "type": "google",
+    "name": "Google Gemini",
+    "envKey": "GEMINI_API_KEY"
   },
   {
     "id": "p-kilo-gw",
@@ -97,37 +81,11 @@
     "envKey": "NVIDIA_API_KEY"
   },
   {
-    "id": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "type": "openai-compatible",
-    "name": "OpenCode Public",
-    "apiKey": "public",
-    "envKey": "",
-    "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/opencode-free-ai-math.json",
-    "modelSyncType": "json",
-    "baseURL": "https://opencode.ai/zen/v1",
-    "extra": {
-      "User-Agent": "opencode/1.14.28 ai-sdk/provider-utils/4.0.23 runtime/bun/1.3.13",
-      "x-opencode-client": "cli",
-      "x-opencode-project": "global",
-      "x-opencode-session": "d3d74f71-367d-4807-81e4-6a9d6887f083",
-      "x-opencode-request": "2f444f76-6b58-4521-9dab-2b76f64c68bd"
-    }
-  },
-  {
     "id": "75871cff-67ba-4673-9c2e-1f84985396d3",
     "type": "openai-compatible",
     "name": "OpenRouter",
     "apiKey": "",
     "envKey": "OPENROUTER_API_KEY",
     "baseURL": "https://openrouter.ai/api/v1"
-  },
-  {
-    "id": "p-poe-8d3e",
-    "type": "openai-compatible",
-    "name": "Poe",
-    "baseURL": "https://api.poe.com/v1",
-    "envKey": "POE_API_KEY",
-    "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/poe-free-ai-math.json",
-    "modelSyncType": "json"
   }
 ]

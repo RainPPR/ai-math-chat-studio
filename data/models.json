@@ -538,6 +538,38 @@
     "displayName": "glm-5.3-flash (FTAI)"
   },
   {
+    "id": "4bfaedc8-2a17-4c88-a531-ed629694a3f8",
+    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-3.1-pro",
+    "displayName": "Gemini 3.1 Pro",
+    "reasoningEffort": "none"
+  },
+  {
+    "id": "8c222c49-2940-4748-b609-08c1624694e4",
+    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-3.5-flash-thinking",
+    "displayName": "Gemini 3.5 Flash Thinking",
+    "reasoningEffort": "none"
+  },
+  {
+    "id": "1b9faa4c-99b2-4f16-8fb2-e9863fb470d4",
+    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-3.6-flash",
+    "displayName": "Gemini 3.6 Flash",
+    "reasoningEffort": "none"
+  },
+  {
+    "id": "e514604c-cd3e-41fc-9932-9ff359d6a35e",
+    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-3.7-flash",
+    "displayName": "Gemini 3.7 Flash",
+    "reasoningEffort": "none"
+  },
+  {
     "id": "090f132d-1796-47d5-b6fa-32244e602e13",
     "providerId": "p-google-fc62",
     "providerType": "google",
@@ -620,55 +652,6 @@
     "enableTools": true,
     "disabledTools": [],
     "thinkingLevel": "high"
-  },
-  {
-    "id": "4bfaedc8-2a17-4c88-a531-ed629694a3f8",
-    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
-    "providerType": "openai-compatible",
-    "modelId": "gemini-3.1-pro",
-    "displayName": "Gemini 3.1 Pro",
-    "reasoningEffort": "none"
-  },
-  {
-    "id": "8c222c49-2940-4748-b609-08c1624694e4",
-    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
-    "providerType": "openai-compatible",
-    "modelId": "gemini-3.5-flash-thinking",
-    "displayName": "Gemini 3.5 Flash Thinking",
-    "reasoningEffort": "none"
-  },
-  {
-    "id": "1b9faa4c-99b2-4f16-8fb2-e9863fb470d4",
-    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
-    "providerType": "openai-compatible",
-    "modelId": "gemini-3.6-flash",
-    "displayName": "Gemini 3.6 Flash",
-    "reasoningEffort": "none"
-  },
-  {
-    "id": "e514604c-cd3e-41fc-9932-9ff359d6a35e",
-    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
-    "providerType": "openai-compatible",
-    "modelId": "gemini-3.7-flash",
-    "displayName": "Gemini 3.7 Flash",
-    "reasoningEffort": "none"
-  },
-  {
-    "id": "a6d8565a-cd4e-4404-93cc-6c35d08331a9",
-    "providerId": "d235e0b2-0946-4732-ab6f-abab768dd91f",
-    "providerType": "openai-compatible",
-    "modelId": "thinkingmachines/Inkling:cheapest",
-    "displayName": "Inkling (HuggingFace)",
-    "reasoningEffort": "max",
-    "maxTokens": 262144
-  },
-  {
-    "id": "09ef0b20-79ba-434b-90c3-bf77fd56497e",
-    "providerId": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
-    "providerType": "openai-compatible",
-    "modelId": "google/gemini-3.6-flash",
-    "displayName": "Gemini 3.6 Flash (BYOK)",
-    "reasoningEffort": "max"
   },
   {
     "id": "20637bd7-0eb7-5414-9134-cfea03f36731",
@@ -1186,108 +1169,5 @@
     "providerType": "nvidia",
     "modelId": "z-ai/glm-5.3-flash",
     "displayName": "GLM 5.3 Flash (Nvidia)"
-  },
-  {
-    "id": "f2966238-6603-52b9-aa2c-3dc37c3c19a9",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "deepseek-v4-flash-free",
-    "displayName": "DeepSeek V4 Flash Free (OpenCode)",
-    "reasoningEffort": "max"
-  },
-  {
-    "id": "c0b4d2ef-5e2f-598b-b4ce-72fcc5800190",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "fledge-alpha-free",
-    "displayName": "Fledge Alpha Free (OpenCode)",
-    "reasoningEffort": "max"
-  },
-  {
-    "id": "eee83df8-7255-5436-a30b-114c1aaee15d",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "jev-1.13-free",
-    "displayName": "Jev 1.13 (OpenCode)"
-  },
-  {
-    "id": "1e6a0079-3d0c-5b51-89c5-250c0f8d7c42",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "ling-3.0-flash-fin-free",
-    "displayName": "Ling 3.0 Flash Fin Free (OpenCode)"
-  },
-  {
-    "id": "c02e3b97-bd90-5ff2-b97e-2c7ad6f8c105",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "longcat-2.5-preview-free",
-    "displayName": "LongCat 2.5 Preview Free (OpenCode)"
-  },
-  {
-    "id": "1a49d398-0224-583f-973a-a0bb2af90ee2",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "mimo-v2.5-free",
-    "displayName": "MiMo V2.5 Free (OpenCode)"
-  },
-  {
-    "id": "f34a1efa-9fd2-5845-8673-d0158bde8c6f",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "mimo-v2.6-flash-free",
-    "displayName": "MiMo-V2.6-Flash Free (OpenCode)"
-  },
-  {
-    "id": "2d2b234b-3550-5b46-8e55-fb2a1c38eafb",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "muse-spark-1.2-contributor-free",
-    "displayName": "Muse Spark 1.2 Free (OpenCode)",
-    "reasoningEffort": "xhigh"
-  },
-  {
-    "id": "e6677191-9635-529a-9001-df7d4587be65",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "muse-spark-1.3-contributor-free",
-    "displayName": "Muse Spark 1.3 Free (OpenCode)",
-    "reasoningEffort": "xhigh"
-  },
-  {
-    "id": "14f57ded-622b-5af6-8331-a14e299bdd14",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "nemotron-3-ultra-free",
-    "displayName": "Nemotron 3 Ultra Free (OpenCode)"
-  },
-  {
-    "id": "0944c784-0e4c-5e44-a48d-c9b608953465",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "nemotron-3.5-lightning-free",
-    "displayName": "Nemotron 3.5 Lightning Free (OpenCode)"
-  },
-  {
-    "id": "b6912502-59dc-5745-ab69-ee284e65731e",
-    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
-    "providerType": "openai-compatible",
-    "modelId": "space-bunny-free",
-    "displayName": "Space Bunny Free (OpenCode)",
-    "reasoningEffort": "max"
-  },
-  {
-    "id": "38cae9a5-8a17-5744-a713-3161c3da71f2",
-    "providerId": "p-poe-8d3e",
-    "providerType": "openai-compatible",
-    "modelId": "gemma-4-31b",
-    "displayName": "Gemma-4-31B (Poe)"
-  },
-  {
-    "id": "a6526110-0c83-580e-a82d-aa79ceefbe1e",
-    "providerId": "p-poe-8d3e",
-    "providerType": "openai-compatible",
-    "modelId": "minimax-h3-n",
-    "displayName": "Minimax-H3-N (Poe)"
   }
 ]
