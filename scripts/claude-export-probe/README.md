@@ -1,90 +1,96 @@
 # Gemini「Import chats」导入失败排查包
 
-> 结论先行：**当前导出的 `conversations.json` 里，每条消息都缺少 Claude 规范要求的 `text` 字段**，
-> 这是 9 月起导入失败的头号嫌疑。下面给了 3 个只在格式维度上不同的 zip，按顺序上传即可定位。
+报错原文：
+
+> **无法导入文件**
+> 无法读取上传的文件。请确保该文件来自**受支持的 AI 应用**。你可以换个文件再试一次。
+
+这条文案是**来源识别阶段**就被拒了（连「部分导入 / 0 条对话」都没走到），
+所以问题不在某条消息解析不出来，而在「这个 zip 不被认成一个受支持的导出包」。
 
 ---
 
-## 一、我做了什么
+## 一、已经查实的事实
 
-1. 你贴的那段 JSON 对应的会话是 `data/sessions/929097a8-b187-4752-8de4-a8ea0f44aff8.json`
-   （标题、uuid、两个时间戳、消息 uuid 全部一字不差）。你附件里的 zip 没有传到我这边，
-   所以我**用仓库里的真实会话数据 + `SettingsModal.tsx` 的导出逻辑重新复刻了那个失败的 zip**。
-2. 复刻方式是把 `formatClaudeDate()` / `extractThinkingBlocks(content, false)` 逐行翻译成 Python，
-   再用 Node 跑一遍原始 TS 逻辑做对拍：**两边生成的 JSON 字节级完全一致**，所以复刻可信。
-3. 对照 `RainPPR/claude-export-document` 的规范，以及 Claude 2026-09 换成
-   「manifest + 分片 batch zip」新版导出之后、各家第三方解析器（chatlore #5、
-   claude-conversation-viewer #2 等）在 9 月集中做的适配改动，逐条比对差异。
+| # | 事实 | 怎么查的 |
+|---|------|----------|
+| 1 | 你贴的 JSON 对应 `data/sessions/929097a8-b187-4752-8de4-a8ea0f44aff8.json`，标题 / uuid / 两个时间戳 / 消息 uuid 全部一字不差 | 直接比对仓库数据 |
+| 2 | 失败的那个 zip 我**按导出代码 1:1 复刻出来了**（你的附件没传到我这边）。把 `formatClaudeDate()` / `extractThinkingBlocks(c,false)` 翻成 Python，再用 Node 跑原始 TS 逻辑对拍，**两边 JSON 字节级完全一致** | `00-current-output.zip` |
+| 3 | 导出代码最后一次改动是 **2026-07-25**（`git log -S chat_messages`），9 月之后一行没动 | git 历史 |
+| 4 | **不是体积问题**：8/20 成功那次（7/20→8/20 增量）是 400 会话 / 6.9M 字符；9/10 失败那次是 267 会话 / 6.2M 字符，10/2 失败那次只有 186 会话 / 4.0M 字符。**失败的包比成功的包还小** | 按 chunk 边界统计 |
+| 5 | **不是数据脏**：1453 会话 / 4254 消息里，零个孤立代理项（lone surrogate）、零个控制字符、UUID 全是合法 v4 且无重复、时间戳全部是 6 位微秒 + `Z`、顶层是数组、`sender` 只有 `human`/`assistant`、根目录无子目录、UTF-8 无 BOM | 脚本内置自检 |
+| 6 | **不是 zip 容器问题**：JSZip 生成的是 STORE + 无 data descriptor 的标准包，和 8/20 成功那次用的是同一套代码 | 用 JSZip 在本地复现并解析头部 |
 
-## 二、当前导出产物与 Claude 官方规范的差异
+**结论：你这边什么都没变，变的是 Gemini 的识别/校验规则**（9 月初 Claude 把官方导出
+换成了「manifest + 多分片 batch zip」，各家解析器都在 9 月重写了 Claude 分支）。
 
-| # | 项目 | 规范要求 | 本项目现状 | 嫌疑 |
-|---|------|----------|------------|------|
-| 1 | `chat_messages[].text` | **必填**（文档第四章第 3 条、你自己的 schema 也写了 `text: string`） | **完全没有输出** | ⭐⭐⭐⭐⭐ |
-| 2 | 空正文消息 | `text` 至少是 `""`，正常情况下有内容 | 全量数据里有 **91 条**消息只剩 `{"type":"text","text":""}`（正文被 `<think>` 吃光），既无 `text` 又无可读 `content` | ⭐⭐⭐⭐ |
-| 3 | `thinking` 块 | 允许 `start_timestamp` / `stop_timestamp` | 只有 `{type, thinking}` | ⭐⭐⭐ |
-| 4 | 对话 `account` | 可选，但真实导出一定有 | 没有 | ⭐⭐ |
-| 5 | zip 内其它文件 | 真实导出还有 `users.json` / `projects.json`（新版更是多文件分片包） | zip 里只有一个 `conversations.json` | ⭐⭐ |
-| 6 | 压缩方式 | 任意 | JSZip 默认 **STORE 不压缩**（全量导出会是 ~35 MB 裸文件） | ⭐ |
-| 7 | 其余（顶层数组、`human`/`assistant`、6 位微秒 + `Z`、UUID v4 唯一性、根目录无子目录、UTF-8 无 BOM） | — | **全部合规**，1453 个会话 / 4254 条消息零违规 | — |
+## 二、剩下的两个嫌疑
 
-为什么「以前能传、9 月开始不行」能和第 1 条对上：你的导出代码最后一次改动是 2026-07-25
-（`git log -S chat_messages`），**自己这边没变**；变的是对面——Claude 9 月换了新版导出格式，
-各家解析器（包括 Gemini 的 ingest）都在 9 月重写了 Claude 分支。
-老解析器「优先读 `content`、读不到再回退 `text`」，新解析器很可能反过来以 `text` 为准，
-于是「只有 content、没有 text」的包就整包没有可读消息了。
+| 嫌疑 | 说明 | 对应探针 |
+|------|------|----------|
+| **A. 整包特征不够**：新版识别器可能先看 zip 里有没有 Claude 包的标志文件（`users.json` / `projects.json`），而不是直接去读 `conversations.json` | 真实 Claude 导出永远是多文件；我们只有孤零零一个 `conversations.json`。ChatGPT 包是 `user.json`（单数），Claude 包是 `users.json`（复数），正好是「判断来自哪个 AI 应用」最省事的做法 | 01 / 02 |
+| **B. 消息 schema 不合规**：每条消息都**缺少规范要求的 `text` 字段**（你自己的文档第四章第 3 条写了「必须有」），全量数据里还有 91 条消息连 `content` 里的 text 块都是空串 | 老解析器「优先读 content、回退 text」，新解析器很可能以 `text` 为准，于是整包没有一条可读消息 → 直接判定「读不出来」 | 01 / 04 |
 
-## 三、三个测试包（在 `out/` 目录）
+其余已排除：体积、CJK/LaTeX、thinking 块（8/20 成功那包里这些全都有）。
 
-| 文件 | 和现状的差异 | 用途 |
-|------|--------------|------|
-| `00-current-output.zip` | 无（现状 1:1 复刻） | **不要上传**，只是基线，用来和下面几个 diff |
-| `01-full-fidelity.zip` | 补 `text`；空正文消息用思考内容兜底；`thinking` 块补 start/stop 时间戳；对话补 `account`；zip 根再放 `users.json` + `projects.json` | **第一个传这个** |
-| `02-vanilla-text.zip` | 最保守老式结构：只有 `conversations.json`，消息只有 `text` + `content:[{type:"text"}]`，**完全不出现 thinking 块** | 备用 |
-| `03-control-sample.zip` | 和你的数据无关：2026-06 实测可导入的英文最小样例（2 段对话，1 KB） | 对照组 |
+## 三、探针包（`out/` 目录，2×2 设计）
 
-4 个包里的会话是同一批 12 个真实会话（35 条消息），覆盖了 thinking 块、未闭合 `<think>`、
-290 KB 的超长 LaTeX 正文、空正文消息、纯文本会话，足以代表全量数据。
-它们都是根目录直接放 `conversations.json`，无子目录、无 `__MACOSX`、UTF-8 无 BOM。
+|  | 真实数据（12 个会话 / 35 条消息） | 已知可用的最小样例（2 段英文对话） |
+|---|---|---|
+| **多文件整包**（+`users.json` +`projects.json`） | `01-full-fidelity.zip` 224 KB | `02-control-bundle.zip` 1.3 KB |
+| **裸 `conversations.json`** | `00-current-output.zip` 192 KB ← 现状，已知失败 | `03-control-bare.zip` 1.0 KB ← 2026-06 实测可用的结构 |
 
-## 四、上传顺序（最多 2 次就能定位）
+另外：`04-vanilla-no-thinking.zip`（106 KB）= 真实数据 + 整包特征，但**完全不输出 thinking 块**，
+消息只有 `text` + `content:[{type:"text"}]`。
+
+`01` / `04` 相对现状的改动：补 `text`（正文被 `<think>` 吃光时用思考内容兜底，保证没有空消息）、
+`thinking` 块补 `start/stop_timestamp`、对话补 `account`、时间戳收敛（对话区间包住所有消息、
+消息时间单调不降）、zip 根目录补 `users.json` / `projects.json`。
+
+12 个探针会话覆盖了 thinking 块、未闭合 `<think>`、290 KB 超长 LaTeX 正文、空正文消息、
+纯文本会话，足以代表全量数据。
+
+## 四、上传顺序（最多 2 次定位）
 
 ```
-上传 01-full-fidelity.zip
-├── 成功 → 原因在 JSON 字段层面。按 01 的生成逻辑改 SettingsModal.tsx 即可（见第五节 A 方案）
-└── 失败 → 上传 03-control-sample.zip（1 KB 对照组）
-          ├── 03 成功 → Gemini 仍收手工 zip，但不吃我们的结构/数据
-          │            → 再传 02-vanilla-text.zip 判断是不是 thinking 块/体积的问题
-          └── 03 失败 → 和我们的 JSON 无关：对面的门槛变了（新版 Claude 导出是
-                       manifest + 多分片 batch 包），或者是账号/区域/当日配额问题
-                       → 下一轮我按「manifest + 分片」的新版结构再做一包
+① 上传 01-full-fidelity.zip
+   ├─ 成功 → 嫌疑 A/B 命中。我按 01 的生成逻辑改 SettingsModal.tsx，全量重导一次就行
+   └─ 失败 → ② 上传 02-control-bundle.zip（1.3 KB，最干净的标准包）
+              ├─ 成功 → Gemini 还收手工包，是我们的真实数据里有东西过不了
+              │          → ③ 上传 04-vanilla-no-thinking.zip 判断是不是 thinking 块
+              └─ 失败 → 和我们的 JSON 无关：对面门槛变了（新版是 manifest + 分片 batch 包），
+                         或账号/区域/配额问题 → 下一轮我按「分片 batch 包」结构再做一包
 ```
 
-上传后请告诉我：**哪个包成功、失败时 Gemini 的原话是什么**（是立刻弹错误，
-还是导入条目出现但显示 0 条/部分对话）。这两种现象指向完全不同的原因。
+- `00-current-output.zip` **不要上传**，它只是基线复刻件，用来和上面几个做 diff。
+- `03-control-bare.zip` 是备用对照：只在「01 成功、但想知道到底是 `users.json` 还是 `text` 起的作用」时才需要。
+- 零成本的小手脚：上传前把文件名改成 Claude 官方那种 `data-7c3d41e5-9b02-4a6f-8f14-2d5e6a90c431-20261002-batch-0000.zip`，
+  万一对面也看文件名就赚了（不看也没损失）。
+
+反馈时请告诉我：**哪个包成功**；失败的话是**同样这句「无法读取上传的文件」**，还是换了别的文案。
 
 ## 五、测出结果后的改法
 
-**A 方案（01 成功）**：改 `src/components/SettingsModal.tsx` 的 `executeExport()`
-- 每条消息补 `text`（正文为空时用 thinking 内容兜底，保证不出现空消息）
-- `thinking` 块补 `start_timestamp` / `stop_timestamp`
-- 每个对话补 `account: { uuid }`
-- 每个子 zip 根目录补 `users.json` / `projects.json`
-- `generateAsync({ type: 'blob', compression: 'DEFLATE' })`，全量包从 ~35 MB 降到 ~8 MB
+**A 方案（01 成功）** — 改 `src/components/SettingsModal.tsx` 的 `executeExport()`：
+1. 每条消息补 `text`（正文为空时用 thinking 内容兜底）
+2. `thinking` 块补 `start_timestamp` / `stop_timestamp`
+3. 对话补 `account: { uuid }`（固定一个 UUID 存设置里即可）
+4. 每个子 zip 根目录补 `users.json` / `projects.json`
+5. 时间戳收敛：对话区间包住所有消息、消息时间单调不降
+6. `generateAsync({ type: 'blob', compression: 'DEFLATE' })`：全量包从 ~35 MB 降到 ~8 MB
 
-**B 方案（只有 02 成功）**：在 A 的基础上把 thinking 内容并进正文（或直接丢弃），
-不再输出 `thinking` 块。
+**B 方案（只有 04 成功）**：在 A 的基础上不再输出 `thinking` 块，思考内容并进正文或丢弃。
 
-**C 方案（01/02/03 全失败）**：问题在 zip 容器/平台侧，改成模仿新版 Claude 导出：
-`manifest.json` + `data-<uuid>-<ts>-<hash>-batch-0000.zip` 分片命名，再测一轮。
+**C 方案（01/02 都失败）**：改成模仿新版 Claude 导出的「manifest + `data-<uuid>-<ts>-<hash>-batch-0000.zip` 分片」结构再测。
 
 ## 六、重新生成
 
 ```bash
-python3 scripts/claude-export-probe/build_probe_zips.py            # 12 个探针会话
-python3 scripts/claude-export-probe/build_probe_zips.py --all      # 全部 1453 个会话
+python3 scripts/claude-export-probe/build_probe_zips.py          # 12 个探针会话
+python3 scripts/claude-export-probe/build_probe_zips.py --all    # 全部 1453 个会话
 python3 scripts/claude-export-probe/build_probe_zips.py --out /tmp/probe
 ```
 
-脚本只用 Python 标准库，内置上传前自检（顶层数组、sender 取值、时间戳 6 位微秒、
-UUID v4 与唯一性、必填数组字段）。排查结束后整个 `scripts/claude-export-probe/` 目录可以删掉。
+脚本只用 Python 标准库，内置上传前自检（顶层数组、`sender` 取值、6 位微秒时间戳、
+UUID v4 与全局唯一、必填数组字段、`text` 非空、消息时间单调）。
+排查结束后整个 `scripts/claude-export-probe/` 目录可以删掉。
