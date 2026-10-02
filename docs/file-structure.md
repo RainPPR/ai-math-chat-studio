@@ -26,6 +26,18 @@ ai-math-chat-studio/
 │   ├── sessions/             # 会话数据
 │   └── log/                  # 日志数据 (YYYY-MM-DD.log)
 ├── index.html                # SPA 入口 HTML
+├── scripts/                  # 构建与辅助脚本
+│   ├── build-bundle.ts       # 打包构建
+│   ├── build-bun-compile.ts  # bun compile 可执行文件构建
+│   ├── create-server-entry.ts # 生成服务端入口
+│   ├── prepare-context7.ts   # Context7 预处理
+│   ├── sync-context7.ts      # Context7 同步
+│   ├── sync-main.ts          # 主分支同步
+│   └── claude-export-probe/  # Gemini「Import chats」导入失败排查（临时诊断用，可删）
+│       ├── README.md         # 排查结论与上传顺序
+│       ├── build_probe_zips.py # 生成格式对比用的测试 zip
+│       ├── control-sample-conversations.json # 已知可导入的最小样例
+│       └── out/              # 生成的测试 zip
 ├── package.json              # 项目依赖和脚本
 ├── bun.lock                  # Bun 依赖锁定文件
 ├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
