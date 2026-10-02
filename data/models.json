@@ -24,6 +24,48 @@
     "reasoningEffort": "max"
   },
   {
+    "id": "244975d9-a12b-4ea4-8453-166d33857d1f",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "DeepSeek-V4.1-Flash",
+    "displayName": "DeepSeek-V4.1-Flash (AMD)"
+  },
+  {
+    "id": "8f3609f0-122a-4b8f-9d17-ee970036d285",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "GLM-5.3-Flash",
+    "displayName": "GLM-5.3-Flash (AMD)"
+  },
+  {
+    "id": "f5ac07ee-6feb-4e92-bf52-28c00d1ed432",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "MiMo-V2.6-Flash",
+    "displayName": "MiMo-V2.6-Flash (AMD)"
+  },
+  {
+    "id": "058b02bc-ddaf-414f-888b-9893bfbee5bd",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "MinerU2.5-Pro",
+    "displayName": "MinerU2.5-Pro (AMD)"
+  },
+  {
+    "id": "8c558803-c737-4e20-9fc5-bbf69472edde",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "MiniCPM5-2B",
+    "displayName": "MiniCPM5-2B (AMD)"
+  },
+  {
+    "id": "49e71f84-ed58-4c8e-9d84-2410d2bad08e",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "Qwen3.8-27B",
+    "displayName": "Qwen3.8-27B (AMD)"
+  },
+  {
     "id": "da5102b4-c633-4ac1-b75e-90eaf57ef64c",
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
@@ -48,52 +90,452 @@
     "reasoningEffort": "high"
   },
   {
-    "id": "7e496326-650b-48d1-9193-bb898d274e4c",
+    "id": "093d9e89-0eed-437c-bc3f-ca710ebeaee9",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/bbl/gemini-2.5-flash-lite",
+    "displayName": "gemini-2.5-flash-lite (FTAI)"
+  },
+  {
+    "id": "c523d8a5-662b-47c8-be26-921ef9764f9d",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/bbl/gemini-3-flash-preview",
+    "displayName": "gemini-3-flash-preview (FTAI)"
+  },
+  {
+    "id": "d0a99ef6-0653-4bf0-a9fa-68764809fa06",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/bbl/gemini-3.1-flash-lite",
+    "displayName": "gemini-3.1-flash-lite (FTAI)"
+  },
+  {
+    "id": "566547c4-3bab-4c17-ab43-a5681b620f2a",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/bbl/gemini-3.5-flash",
+    "displayName": "gemini-3.5-flash (FTAI)"
+  },
+  {
+    "id": "d015b3c2-2046-43f4-8082-a7e5f1d307d7",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/bbl/gpt-5.4-mini",
+    "displayName": "gpt-5.4-mini (FTAI)"
+  },
+  {
+    "id": "6c8973db-2f40-437a-9242-4f235d013d51",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/bbl/grok-4-1-fast-non-reasoning",
+    "displayName": "grok-4-1-fast-non-reasoning (FTAI)"
+  },
+  {
+    "id": "75cd7aa6-fe47-43c3-bfba-dbca5f046e72",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/cat/minimaxai/minimax-m2.7",
+    "displayName": "minimax-m2.7 (FTAI)"
+  },
+  {
+    "id": "185b383d-e720-4137-8baf-aebcea4123ba",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/claude-4-5-haiku",
+    "displayName": "claude-4-5-haiku (FTAI)"
+  },
+  {
+    "id": "a1205bd8-ce90-4a46-9c8a-5105de3f217f",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/claude-4-5-sonnet",
+    "displayName": "claude-4-5-sonnet (FTAI)"
+  },
+  {
+    "id": "cf90763b-6e1d-4d94-8b28-5f0ba572ac9d",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/claude-4-6-sonnet",
+    "displayName": "claude-4-6-sonnet (FTAI)"
+  },
+  {
+    "id": "6b62f3c1-50a2-451d-8cba-c00f64ef3a77",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/claude-5-sonnet",
+    "displayName": "claude-5-sonnet (FTAI)"
+  },
+  {
+    "id": "9e337859-8f63-493c-b7ab-5349ad1f8450",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/claude-fable-5",
+    "displayName": "claude-fable-5 (FTAI)"
+  },
+  {
+    "id": "7211d8bd-7ef8-47c6-be8b-fd1f809ca7f1",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/claude-fable-5.1",
+    "displayName": "claude-fable-5.1 (FTAI)"
+  },
+  {
+    "id": "123abd1a-230a-4b03-8016-e20283507a0f",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/claude-opus-4-7",
+    "displayName": "claude-opus-4-7 (FTAI)"
+  },
+  {
+    "id": "550e157e-00d7-4368-a0f3-5b5a30ed1c17",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/claude-opus-4-8",
+    "displayName": "claude-opus-4-8 (FTAI)"
+  },
+  {
+    "id": "2561030f-e4f0-4a00-bab5-f87d79c31411",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/claude-opus-5",
+    "displayName": "claude-opus-5 (FTAI)"
+  },
+  {
+    "id": "50b6dee8-42f2-421a-9300-b5244dc19a77",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
     "modelId": "fta/dog/claude-opus-5-5",
-    "displayName": "Claude Opus 5.5 (FTA)",
-    "reasoningEffort": "max"
+    "displayName": "claude-opus-5-5 (FTAI)"
   },
   {
-    "id": "a58aa9e3-8f30-4726-bb64-7c655d1c773c",
+    "id": "5e09eedb-0824-44af-8762-c3b7197c53c1",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gemini-2-5-flash",
+    "displayName": "gemini-2-5-flash (FTAI)"
+  },
+  {
+    "id": "8ef4802e-30f2-447b-8866-9449e84ca39c",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gemini-3-1-pro",
+    "displayName": "gemini-3-1-pro (FTAI)"
+  },
+  {
+    "id": "e5b9f642-be8b-40cc-a4b7-c6d0689d2ba9",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gemini-3-5-flash",
+    "displayName": "gemini-3-5-flash (FTAI)"
+  },
+  {
+    "id": "664d92b6-0578-4815-a73a-6e5c3e84c23c",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gemini-3-6-flash",
+    "displayName": "gemini-3-6-flash (FTAI)"
+  },
+  {
+    "id": "ccbc133a-7398-4cd0-a66d-65e81f1ca46f",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gemini-3-7-flash",
+    "displayName": "gemini-3-7-flash (FTAI)"
+  },
+  {
+    "id": "523ec45d-d537-4ea3-a674-6a33de5c30c5",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
     "modelId": "fta/dog/gemini-3-8-flash",
-    "displayName": "Gemini 3.8 Flash (FTA)",
-    "reasoningEffort": "max"
+    "displayName": "gemini-3-8-flash (FTAI)"
   },
   {
-    "id": "054b5970-e408-4666-b52e-b99611299781",
+    "id": "134f5a88-a71f-4a53-b2b5-e55bb0ec2e50",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gemini-3-flash",
+    "displayName": "gemini-3-flash (FTAI)"
+  },
+  {
+    "id": "c5e9d86b-8ce6-426b-84c3-e3a2619c6973",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-4.1",
+    "displayName": "gpt-4.1 (FTAI)"
+  },
+  {
+    "id": "b4aeabde-66b3-41fe-b1ed-1454e322b708",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-4.1-mini",
+    "displayName": "gpt-4.1-mini (FTAI)"
+  },
+  {
+    "id": "ffcb496d-6971-4873-9bd6-1e8cab1541ba",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-5",
+    "displayName": "gpt-5 (FTAI)"
+  },
+  {
+    "id": "7ab24c3a-52e1-4576-a3a4-12207afdc3d2",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-5-mini",
+    "displayName": "gpt-5-mini (FTAI)"
+  },
+  {
+    "id": "3cebb526-4e3a-41df-9b9b-e6ec8a340d8d",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-5.1",
+    "displayName": "gpt-5.1 (FTAI)"
+  },
+  {
+    "id": "5cc6d5b4-7974-4220-902a-bf5c2f4c873c",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-5.2",
+    "displayName": "gpt-5.2 (FTAI)"
+  },
+  {
+    "id": "9cfb881c-c40c-4c5a-8796-38ebb8b848d6",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-5.4",
+    "displayName": "gpt-5.4 (FTAI)"
+  },
+  {
+    "id": "e4be0111-9695-45b4-a4c0-1ed7d2c488d4",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-5.4-mini",
+    "displayName": "gpt-5.4-mini (FTAI)"
+  },
+  {
+    "id": "6ffcce74-5d46-4467-9812-3ac819397e20",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-5.5",
+    "displayName": "gpt-5.5 (FTAI)"
+  },
+  {
+    "id": "6d6eb74b-3e8d-432d-8b28-29536e1177b5",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-5.6-luna",
+    "displayName": "gpt-5.6-luna (FTAI)"
+  },
+  {
+    "id": "44809651-89e5-44bf-992f-d4c732189aae",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-5.6-sol",
+    "displayName": "gpt-5.6-sol (FTAI)"
+  },
+  {
+    "id": "9a0fe58e-4735-4db1-94f9-0e21432abd17",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-5.6-terra",
+    "displayName": "gpt-5.6-terra (FTAI)"
+  },
+  {
+    "id": "68d92740-7aa8-4904-9cf5-884a73f4c98a",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
     "modelId": "fta/dog/gpt-6-astra",
-    "displayName": "GPT 6 Astra (FTA)",
-    "reasoningEffort": "max"
+    "displayName": "gpt-6-astra (FTAI)"
   },
   {
-    "id": "64efdf50-f790-4966-8913-2564e8a4c499",
+    "id": "c3e25d10-8634-4825-8c60-c4a2414e2dfe",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-6-luna",
+    "displayName": "gpt-6-luna (FTAI)"
+  },
+  {
+    "id": "773c9e64-d626-454d-bcfa-5a4ba183f351",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-6-sol",
+    "displayName": "gpt-6-sol (FTAI)"
+  },
+  {
+    "id": "a96e53e6-e725-4ccb-8d11-71372ede0603",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/cohere/north-mini-code:free",
+    "displayName": "north-mini-code:free (FTAI)"
+  },
+  {
+    "id": "9be05c3b-3bb4-45fd-a305-4ad9fda03284",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/dots-studio/dots-3-note-preview:free",
+    "displayName": "dots-3-note-preview:free (FTAI)"
+  },
+  {
+    "id": "53064328-ae4e-4d1f-b74d-f7f0075fcf8f",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/inclusionai/ling-3.0-flash-sante:free",
+    "displayName": "ling-3.0-flash-sante:free (FTAI)"
+  },
+  {
+    "id": "52ee0295-04e7-48f6-af2d-90b3765aa2cb",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/kilo-auto/free",
+    "displayName": "free (FTAI)"
+  },
+  {
+    "id": "7d9b1c28-c05c-43d2-b939-ddc0e8a7fb57",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/liquid/lfm-2.5-2.6b:free",
+    "displayName": "lfm-2.5-2.6b:free (FTAI)"
+  },
+  {
+    "id": "c872b39d-8c82-4750-9114-7066b764ea98",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "displayName": "nemotron-3-nano-omni-30b-a3b-reasoning:free (FTAI)"
+  },
+  {
+    "id": "49a5a29a-0938-4920-a9bf-4067139d03f2",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/nvidia/nemotron-3-super-120b-a12b:free",
+    "displayName": "nemotron-3-super-120b-a12b:free (FTAI)"
+  },
+  {
+    "id": "683008c1-3e17-417d-b7f4-c18277164db2",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/nvidia/nemotron-3-ultra-550b-a55b:free",
+    "displayName": "nemotron-3-ultra-550b-a55b:free (FTAI)"
+  },
+  {
+    "id": "ad2b40a3-2d1c-49d9-9043-43a474e44853",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/nvidia/nemotron-3.5-lightning:free",
+    "displayName": "nemotron-3.5-lightning:free (FTAI)"
+  },
+  {
+    "id": "828d3844-753c-45a6-8e1d-24eaf41d9d91",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/openrouter/free",
+    "displayName": "free (FTAI)"
+  },
+  {
+    "id": "a88db7b3-b9b6-4f0d-95ec-ab852dd36563",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/poolside/laguna-xs-2.1:free",
+    "displayName": "laguna-xs-2.1:free (FTAI)"
+  },
+  {
+    "id": "1b34dd78-2556-4097-8d2d-7b31a730668b",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/stealth/space-bunny-alpha",
+    "displayName": "space-bunny-alpha (FTAI)"
+  },
+  {
+    "id": "ae40e9a1-71b3-40d1-b9bd-a343b2cf6a21",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kai/stepfun/step-3.7-flash:free",
+    "displayName": "step-3.7-flash:free (FTAI)"
+  },
+  {
+    "id": "267d284e-aaa5-4efe-8c0d-946696625278",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
     "modelId": "fta/kimi/k3",
-    "displayName": "Kimi K3 (FTA)",
-    "reasoningEffort": "max"
+    "displayName": "k3 (FTAI)"
   },
   {
-    "id": "506065d5-dfb1-4edc-81ea-bb0854e050d0",
+    "id": "369ebe6d-768a-498a-8bea-6625f0f4b8ac",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/mmx/minimax-m3",
+    "displayName": "minimax-m3 (FTAI)"
+  },
+  {
+    "id": "6cd44f69-d532-45d2-ad74-0e113119b525",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/space-bunny-free",
+    "displayName": "space-bunny-free (FTAI)"
+  },
+  {
+    "id": "f130d928-3a0b-4ce7-ba24-6e936c036a79",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/olf/gemma4:31b",
+    "displayName": "gemma4:31b (FTAI)"
+  },
+  {
+    "id": "804746b3-74af-42d2-bf1a-69d7fad86d94",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/olf/gpt-oss:120b",
+    "displayName": "gpt-oss:120b (FTAI)"
+  },
+  {
+    "id": "fa016205-624b-41cc-afe5-611e2b2bda47",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/olf/gpt-oss:20b",
+    "displayName": "gpt-oss:20b (FTAI)"
+  },
+  {
+    "id": "0eabf9bc-6a4c-4528-8102-47d219f0ec5d",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/olf/nemotron-3-nano:30b",
+    "displayName": "nemotron-3-nano:30b (FTAI)"
+  },
+  {
+    "id": "3e136ff9-3915-48e8-92c2-ff0925ef153b",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/olf/nemotron-3-super",
+    "displayName": "nemotron-3-super (FTAI)"
+  },
+  {
+    "id": "e605eabb-716f-44b2-892b-89c4bceddcf0",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/olf/nemotron-3-ultra",
+    "displayName": "nemotron-3-ultra (FTAI)"
+  },
+  {
+    "id": "40964346-dfef-41bc-ac83-8e576f046019",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/olm/kimi-k2.7-code",
+    "displayName": "kimi-k2.7-code (FTAI)"
+  },
+  {
+    "id": "076378a5-5837-447d-aed0-62d5b84f0f16",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
     "modelId": "fta/zai/glm-5.3",
-    "displayName": "GLM 5.3 (FTA)",
-    "reasoningEffort": "max"
+    "displayName": "glm-5.3 (FTAI)"
   },
   {
-    "id": "3abe15dc-48b4-4a32-a8cc-2dcaf1d09fab",
+    "id": "5c2754ff-cf77-4f26-a6df-425844fdcdfa",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
     "modelId": "fta/zai/glm-5.3-flash",
-    "displayName": "GLM 5.3 Flash (FTA)",
-    "reasoningEffort": "max"
+    "displayName": "glm-5.3-flash (FTAI)"
   },
   {
     "id": "090f132d-1796-47d5-b6fa-32244e602e13",

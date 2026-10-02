@@ -79,7 +79,7 @@
     "envKey": "LOGFARE_API_KEY",
     "baseURL": "https://logfare.ai/v1",
     "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/logfare-ai-math.json",
-    "modelSyncType": "json"
+    "modelSyncType": "v1_models"
   },
   {
     "id": "3b1ab029-5556-415a-885d-53aa72c7308a",
