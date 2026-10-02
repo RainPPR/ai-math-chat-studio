@@ -3,16 +3,21 @@ import JSZip from "jszip";
 import React, { useState, useEffect, useRef } from 'react';
 import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, Skill, BuiltInProviderType, DEFAULT_SETTINGS, KATEX_FONTS, Template } from '../types';
 import { api } from '../lib/api';
-import { X, Plus, Trash2, Save, ChevronDown, ChevronRight, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown } from 'lucide-react';
+import { X, Plus, Trash2, Save, ChevronDown, ChevronRight, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 import { sortProviders, sortModels, sortTempModels, sortCharacters, sortSkills, sortTemplates } from '../../shared/sorting';
-import { extractThinkingBlocks } from '../../shared/thinking';
+import { ClaudeConversation, buildClaudeBundleFiles, buildClaudeConversation } from '../../shared/claude-export';
 
 
-function formatClaudeDate(dateStr: string) {
-  const d = new Date(dateStr);
-  const iso = d.toISOString(); // YYYY-MM-DDTHH:mm:ss.sssZ
-  return iso.replace(/\.(\d+)Z$/, (match, p1) => {
-    return '.' + p1.padEnd(6, '0') + 'Z';
+async function buildClaudeBundle(conversations: ClaudeConversation[]) {
+  const bundle = new JSZip();
+  const files = buildClaudeBundleFiles(conversations);
+  for (const [name, text] of Object.entries(files)) {
+    bundle.file(name, text);
+  }
+  return bundle.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 6 }
   });
 }
 
@@ -505,6 +510,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const [selectedChunk, setSelectedChunk] = useState<string>('all');
   const [newCustomChunk, setNewCustomChunk] = useState<string>('');
 
+  const [isExportingClaude, setIsExportingClaude] = useState(false);
+  const [exportProgress, setExportProgress] = useState<{ current: number; total: number; step: string }>({ current: 0, total: 0, step: '' });
+
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteContent, setEditingNoteContent] = useState<string>('');
 
@@ -598,24 +606,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     setIsChunkModalOpen(true);
   };
 
-  const sanitizeClaudeSession = (session: {
-    uuid: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-    chat_messages: any[];
-  }) => {
+  const sanitizeClaudeSession = (session: ClaudeConversation): ClaudeConversation => {
     return {
       uuid: session.uuid,
       name: session.name,
       created_at: session.created_at,
       updated_at: session.updated_at,
+      account: session.account,
       chat_messages: session.chat_messages
     };
   };
 
   const executeExport = async (chunkTime: string) => {
     try {
+      setIsExportingClaude(true);
+      setExportProgress({ current: 0, total: 0, step: '正在拉取会话列表...' });
+
       // Capture the pre-export boundary time before listing sessions
       const preExportBoundary = new Date().toISOString();
 
@@ -635,12 +641,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       }
 
       if (filteredSessions.length === 0) {
+        setIsExportingClaude(false);
         alert('没有找到符合条件的会话进行导出！');
         return;
       }
 
-      const allExportedSessions = await Promise.all(filteredSessions.map(async (s) => {
-        const fullSession = await api.sessions.get(s.id);
+      setExportProgress({ current: 0, total: filteredSessions.length, step: '正在转换会话格式...' });
+
+      const allExportedSessions: any[] = [];
+      for (let i = 0; i < filteredSessions.length; i++) {
+        const fullSession = filteredSessions[i];
         const charId = fullSession.characterId || 'default';
         const character = characters.find(c => c.id === charId);
         let charName = 'Unknown';
@@ -657,45 +667,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
           rawTime = parsedDate.getTime();
         }
 
-        const chat_messages = fullSession.messages.map(m => {
-          const contentBlocks: any[] = [];
-          const extracted = extractThinkingBlocks(m.content, false);
-          for (const thought of extracted.thoughts) {
-            contentBlocks.push({
-              type: 'thinking',
-              thinking: thought
-            });
-          }
-          contentBlocks.push({
-            type: 'text',
-            text: extracted.mainContent
-          });
+        const conversation = buildClaudeConversation(fullSession);
 
-          return {
-            uuid: m.id,
-            sender: m.role === 'user' ? 'human' : 'assistant',
-            content: contentBlocks,
-            created_at: formatClaudeDate(m.createdAt),
-            updated_at: formatClaudeDate(m.createdAt),
-            attachments: [],
-            files: []
-          };
-        });
-
-        return {
-          uuid: fullSession.id,
-          name: fullSession.title || "",
-          created_at: formatClaudeDate(fullSession.createdAt),
-          updated_at: formatClaudeDate(fullSession.updatedAt),
-          chat_messages,
+        allExportedSessions.push({
+          ...conversation,
           _characterId: charId,
           _characterName: charName,
           _updatedAtTime: rawTime
-        };
-      }));
+        });
+
+        setExportProgress({ current: i + 1, total: filteredSessions.length, step: '正在转换会话格式...' });
+
+        if (i % 10 === 0) {
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+
+      setExportProgress({ current: filteredSessions.length, total: filteredSessions.length, step: '正在排序与构建 ZIP 文件...' });
+      await new Promise(r => setTimeout(r, 0));
 
       // Sort the sessions primarily by _characterName, secondarily by _updatedAtTime (descending, newest first)
-      // Note: Standalone ternary expressions are forbidden by project rule, so we use standard if/else statements.
       allExportedSessions.sort((a, b) => {
         const charComp = a._characterName.localeCompare(b._characterName, 'zh-Hans-u-co-pinyin', { sensitivity: 'base' });
         if (charComp !== 0) {
@@ -707,17 +698,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
       const masterZip = new JSZip();
 
-      // Create a sub-ZIP named All_Conversations.zip containing a conversations.json file with all sorted sessions (helper fields stripped)
+      // Create a sub-ZIP named All_Conversations.zip shaped like a real Claude export bundle
+      // (conversations.json + users.json + projects.json at the root, helper fields stripped)
       const cleanAllSessions = allExportedSessions.map(sanitizeClaudeSession);
 
-      const allConversationsZip = new JSZip();
-      allConversationsZip.file('conversations.json', JSON.stringify(cleanAllSessions, null, 2));
-      const allConversationsZipBlob = await allConversationsZip.generateAsync({ type: 'blob' });
+      const allConversationsZipBlob = await buildClaudeBundle(cleanAllSessions);
       masterZip.file('All_Conversations.zip', allConversationsZipBlob);
 
       // Group the sorted session array by character ID to create non-empty individual character sub-ZIP files
-      // Since allExportedSessions is already sorted by character name and updated time, each group's sessions
-      // will also automatically preserve that exact sorted order.
       const groupedByCharacter: Record<string, typeof allExportedSessions> = {};
       for (const session of allExportedSessions) {
         const charId = session._characterId;
@@ -738,11 +726,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
         const cleanCharSessions = charSessions.map(sanitizeClaudeSession);
 
-        const charZip = new JSZip();
-        charZip.file('conversations.json', JSON.stringify(cleanCharSessions, null, 2));
-        const charZipBlob = await charZip.generateAsync({ type: 'blob' });
+        const charZipBlob = await buildClaudeBundle(cleanCharSessions);
         masterZip.file(`${charName}.zip`, charZipBlob);
       }
+
+      setExportProgress({ current: filteredSessions.length, total: filteredSessions.length, step: '正在生成最终压缩文件并触发下载...' });
+      await new Promise(r => setTimeout(r, 0));
 
       const now = new Date();
       const timestamp = now.getFullYear().toString() +
@@ -769,8 +758,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       const updatedSettings = { ...local, claudeChunks: updatedChunks };
       setLocal(updatedSettings);
       onSave(updatedSettings);
+      setIsExportingClaude(false);
     } catch (err: any) {
       console.error('Export failed', err);
+      setIsExportingClaude(false);
       alert('Export failed: ' + err.message);
     }
   };
@@ -1930,6 +1921,35 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                 放弃更改并继续
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {isExportingClaude && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[150] p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <Loader2 className="animate-spin text-blue-400 shrink-0" size={24} />
+              <div>
+                <h3 className="text-base font-semibold text-white">正在导出 Claude 格式数据</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{exportProgress.step}</p>
+              </div>
+            </div>
+
+            {exportProgress.total > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs text-gray-400 font-mono">
+                  <span>进度</span>
+                  <span>{exportProgress.current} / {exportProgress.total}</span>
+                </div>
+                <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-blue-500 h-full transition-all duration-150 rounded-full"
+                    style={{ width: `${Math.min(100, Math.round((exportProgress.current / exportProgress.total) * 100))}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

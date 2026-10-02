@@ -129,7 +129,7 @@ graph TD
 
 
 *   **危险区域操作**:
-    *   **Claude 格式导出**: 将所有会话数据转换为符合 Claude 官方规范的 JSON 格式并下载，自动处理思考过程块和时间戳精度。导出的主 ZIP 包含一个特殊的 `All_Conversations.zip` 子压缩包（内含所有符合日期限制且经过排序的对话记录），以及各个角色的独立子压缩包。所有导出数据均先按 character 拼音或字母正序排序，然后按更新时间降序排序。
+    *   **Claude 格式导出**: 将所有会话数据转换为符合 Claude 官方规范的 JSON 格式并下载，自动处理思考过程块和时间戳精度。导出的主 ZIP 包含一个特殊的 `All_Conversations.zip` 子压缩包（内含所有符合日期限制且经过排序的对话记录），以及各个角色的独立子压缩包。所有导出数据均先按 character 拼音或字母正序排序，然后按更新时间降序排序。每个子压缩包都是一个完整的 Claude 导出包（`conversations.json` + `users.json` + `projects.json`，DEFLATE 压缩），具体字段构造见 `shared/claude-export.ts`，这是 Gemini「Import chats」能识别来源应用的前提。
     *   **强制清洗数据**: 移除数据中的废弃字段，保持数据整洁。
 ```
 
@@ -788,6 +788,41 @@ const DEFAULT_SETTINGS: UserSettings = {
 > **设计要点**：所有参数（temperature、maxTokens 等）为 "Unset" 时不传给 API，由供应商使用默认值。已删除 `topP` 参数。
 ```
 
+### 数据模型与存储 / Claude 导出包（`shared/claude-export.ts`）
+
+```text
+「导出为 Claude 格式」生成的每个子压缩包都必须是一个**完整的 Claude 导出包**，而不是单独一个 `conversations.json`：
+
+All_Conversations.zip / <角色名>.zip
+├── conversations.json   # Conversation[]
+├── users.json           # [{ uuid, full_name, email_address, verified_phone_number }]
+└── projects.json        # []
+
+interface ClaudeConversation {
+  uuid: string;             // 会话 id（UUID v4，全局唯一）
+  name: string;             // 标题，无标题写 ""
+  created_at: string;       // YYYY-MM-DDTHH:MM:SS.ffffffZ
+  updated_at: string;       // 同上，且 >= created_at
+  account: { uuid: string };// 账号主键，与 users.json 一致
+  chat_messages: ClaudeMessage[];
+}
+
+interface ClaudeMessage {
+  uuid: string;             // 消息 id（UUID v4，全局唯一）
+  text: string;             // 纯文本正文，必填；正文被 <think> 吃空时回落为思考内容
+  content: ClaudeContentBlock[];  // thinking 块在前、text 块在后
+  sender: 'human' | 'assistant';
+  created_at: string;       // 同对话层级格式，组内单调不降
+  updated_at: string;
+  attachments: [];
+  files: [];
+}
+
+> **约束来源**：Gemini 的 Import chats 自 2026-09 起在「来源识别」阶段校验整包特征，
+> 只放 `conversations.json` 或消息缺少 `text` 会被判定为「无法读取上传的文件。请确保该文件来自受支持的 AI 应用」。
+> 时间戳必须是 6 位微秒 + 大写 `Z`；`sender` 只能是 `human` / `assistant`（不是 `user`）。
+```
+
 ### 技术栈详情
 
 ```text
@@ -943,6 +978,18 @@ ai-math-chat-studio/
 │   ├── sessions/             # 会话数据
 │   └── log/                  # 日志数据 (YYYY-MM-DD.log)
 ├── index.html                # SPA 入口 HTML
+├── scripts/                  # 构建与辅助脚本
+│   ├── build-bundle.ts       # 打包构建
+│   ├── build-bun-compile.ts  # bun compile 可执行文件构建
+│   ├── create-server-entry.ts # 生成服务端入口
+│   ├── prepare-context7.ts   # Context7 预处理
+│   ├── sync-context7.ts      # Context7 同步
+│   ├── sync-main.ts          # 主分支同步
+│   └── claude-export-probe/  # Gemini「Import chats」导入失败排查（临时诊断用，可删）
+│       ├── README.md         # 排查结论与上传顺序
+│       ├── build_probe_zips.py # 生成格式对比用的测试 zip
+│       ├── control-sample-conversations.json # 已知可导入的最小样例
+│       └── out/              # 生成的测试 zip
 ├── package.json              # 项目依赖和脚本
 ├── bun.lock                  # Bun 依赖锁定文件
 ├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
@@ -962,6 +1009,12 @@ ai-math-chat-studio/
 │   └── services/             # 核心服务
 │       ├── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
 │       └── logger.ts             # 日志服务：拦截 console 输出并持久化到 data/log/
+├── shared/                   # 前后端共享的纯函数模块
+│   ├── claude-export.ts      # Claude 导出包构造（conversations/users/projects + 时间戳规范化）
+│   ├── skills.ts             # 技能定义
+│   ├── sorting.ts            # 排序工具
+│   ├── system-prompt.ts      # 系统提示词拼装
+│   └── thinking.ts           # <think> 块解析工具
 ├── src/
 │   ├── App.tsx               # 主应用组件（状态管理）
 │   ├── main.tsx              # React 入口

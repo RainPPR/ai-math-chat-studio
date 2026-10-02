@@ -245,8 +245,9 @@ export class GenerationManager {
     if (!source) return null;
 
     const now = new Date().toISOString();
+    const { characterId, ...restSource } = source;
     const newSession: ServerChatSession = {
-      ...source,
+      ...restSource,
       id: crypto.randomUUID(),
       title: source.title,
       messages: (source.messages || []).map(m => ({
@@ -255,6 +256,7 @@ export class GenerationManager {
       })),
       createdAt: now,
       updatedAt: now,
+      ...(characterId !== undefined ? { characterId } : {}),
     };
 
     await this.writeSession(newSession);
@@ -273,16 +275,18 @@ export class GenerationManager {
     }
 
     const shouldUpdateTimestamp = Object.keys(updates).some(key => key !== 'characterId');
-    const updated = {
+    const merged = {
       ...session,
       ...updates,
       id: session.id,
       updatedAt: shouldUpdateTimestamp ? new Date().toISOString() : session.updatedAt,
     };
 
-    if (updated.characterId === "") {
-      delete updated.characterId;
-    }
+    const { characterId, ...restMerged } = merged;
+    const updated: ServerChatSession = {
+      ...restMerged,
+      ...(characterId && characterId !== "" ? { characterId } : {}),
+    };
 
     await this.writeSession(updated);
     return updated;
@@ -696,14 +700,19 @@ export class GenerationManager {
     const firstUserMsg = messages.find((m: any) => m.role === 'user');
     const title = firstUserMsg ? generateTitleFromMarkdown(firstUserMsg.content) : 'Untitled';
 
-    return {
+    const result: ServerChatSession = {
       id: raw.id ?? crypto.randomUUID(),
       title,
       messages,
-      characterId: raw.characterId,
       createdAt: raw.createdAt ?? new Date().toISOString(),
       updatedAt: raw.updatedAt ?? new Date().toISOString(),
     };
+
+    if (raw.characterId) {
+      result.characterId = raw.characterId;
+    }
+
+    return result;
   }
 
   async cleanSessions(): Promise<{ cleaned: number; total: number; details: string[] }> {
