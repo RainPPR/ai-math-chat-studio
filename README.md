@@ -45,7 +45,7 @@
 
 ### 📥 数据导出
 
-- **Claude 格式导出**：支持将所有会话导出为 Claude 官方 `conversations.json` 格式
+- **Claude 格式导出**：支持将所有会话导出为 Claude 官方导出包格式（`conversations.json` + `users.json` + `projects.json`），可直接上传到 Gemini 的 Import chats
 - **Markdown 导出**：支持将会话导出为纯文本 Markdown 格式
 
 ### 💡 后端驱动架构

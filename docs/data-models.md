@@ -219,3 +219,40 @@ const DEFAULT_SETTINGS: UserSettings = {
 ```
 
 > **设计要点**：所有参数（temperature、maxTokens 等）为 "Unset" 时不传给 API，由供应商使用默认值。已删除 `topP` 参数。
+
+## Claude 导出包（`shared/claude-export.ts`）
+
+「导出为 Claude 格式」生成的每个子压缩包都必须是一个**完整的 Claude 导出包**，而不是单独一个 `conversations.json`：
+
+```
+All_Conversations.zip / <角色名>.zip
+├── conversations.json   # Conversation[]
+├── users.json           # [{ uuid, full_name, email_address, verified_phone_number }]
+└── projects.json        # []
+```
+
+```typescript
+interface ClaudeConversation {
+  uuid: string;             // 会话 id（UUID v4，全局唯一）
+  name: string;             // 标题，无标题写 ""
+  created_at: string;       // YYYY-MM-DDTHH:MM:SS.ffffffZ
+  updated_at: string;       // 同上，且 >= created_at
+  account: { uuid: string };// 账号主键，与 users.json 一致
+  chat_messages: ClaudeMessage[];
+}
+
+interface ClaudeMessage {
+  uuid: string;             // 消息 id（UUID v4，全局唯一）
+  text: string;             // 纯文本正文，必填；正文被 <think> 吃空时回落为思考内容
+  content: ClaudeContentBlock[];  // thinking 块在前、text 块在后
+  sender: 'human' | 'assistant';
+  created_at: string;       // 同对话层级格式，组内单调不降
+  updated_at: string;
+  attachments: [];
+  files: [];
+}
+```
+
+> **约束来源**：Gemini 的 Import chats 自 2026-09 起在「来源识别」阶段校验整包特征，
+> 只放 `conversations.json` 或消息缺少 `text` 会被判定为「无法读取上传的文件。请确保该文件来自受支持的 AI 应用」。
+> 时间戳必须是 6 位微秒 + 大写 `Z`；`sender` 只能是 `human` / `assistant`（不是 `user`）。
