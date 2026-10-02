@@ -1,5 +1,13 @@
 [
   {
+    "id": "4cb76848-930a-402f-b342-ca8eb98744d9",
+    "type": "openai-compatible",
+    "name": "Agnes",
+    "apiKey": "",
+    "envKey": "AGNES_API_KEY",
+    "baseURL": "https://apihub.agnes-ai.com/v1"
+  },
+  {
     "id": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "type": "openai-compatible",
     "name": "AMD Token Factory",
@@ -14,6 +22,14 @@
     "apiKey": "",
     "envKey": "DEEPSEEK_API_KEY",
     "baseURL": "https://api.deepseek.com"
+  },
+  {
+    "id": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "type": "openai-compatible",
+    "name": "FreeTheAI",
+    "apiKey": "",
+    "envKey": "FTA_API_KEY",
+    "baseURL": "https://api.freetheai.org/v1"
   },
   {
     "id": "p-google-fc62",
@@ -60,6 +76,14 @@
     "envKey": "LOGFARE_API_KEY",
     "baseURL": "https://logfare.ai/v1",
     "modelSource": "https://raw.githubusercontent.com/RainPPR/free-models-list/refs/heads/main/logfare-ai-math.json"
+  },
+  {
+    "id": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "type": "openai-compatible",
+    "name": "ModelScope",
+    "apiKey": "",
+    "envKey": "MS_API_KEY",
+    "baseURL": "https://api-inference.modelscope.cn/v1"
   },
   {
     "id": "p-nvidia-9a1b",

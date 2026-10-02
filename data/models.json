@@ -1,5 +1,13 @@
 [
   {
+    "id": "d8ee454a-2c6a-4747-8595-f253a5879c91",
+    "providerId": "4cb76848-930a-402f-b342-ca8eb98744d9",
+    "providerType": "openai-compatible",
+    "modelId": "agnes-3.0-flash",
+    "displayName": "Agnes 3.0 Flash",
+    "reasoningEffort": "max"
+  },
+  {
     "id": "8857da95-1ab9-4ec0-8b33-5298939e45ab",
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
@@ -38,6 +46,54 @@
     "modelId": "deepseek-flash",
     "displayName": "DeepSeek V4.1 Flash High (Paid)",
     "reasoningEffort": "high"
+  },
+  {
+    "id": "7e496326-650b-48d1-9193-bb898d274e4c",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/claude-opus-5-5",
+    "displayName": "Claude Opus 5.5 (FTA)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "a58aa9e3-8f30-4726-bb64-7c655d1c773c",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gemini-3-8-flash",
+    "displayName": "Gemini 3.8 Flash (FTA)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "054b5970-e408-4666-b52e-b99611299781",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/dog/gpt-6-astra",
+    "displayName": "GPT 6 Astra (FTA)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "64efdf50-f790-4966-8913-2564e8a4c499",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/kimi/k3",
+    "displayName": "Kimi K3 (FTA)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "506065d5-dfb1-4edc-81ea-bb0854e050d0",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/zai/glm-5.3",
+    "displayName": "GLM 5.3 (FTA)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "3abe15dc-48b4-4a32-a8cc-2dcaf1d09fab",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/zai/glm-5.3-flash",
+    "displayName": "GLM 5.3 Flash (FTA)",
+    "reasoningEffort": "max"
   },
   {
     "id": "090f132d-1796-47d5-b6fa-32244e602e13",
@@ -124,6 +180,14 @@
     "thinkingLevel": "high"
   },
   {
+    "id": "4bfaedc8-2a17-4c88-a531-ed629694a3f8",
+    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-3.1-pro",
+    "displayName": "Gemini 3.1 Pro",
+    "reasoningEffort": "none"
+  },
+  {
     "id": "8c222c49-2940-4748-b609-08c1624694e4",
     "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
     "providerType": "openai-compatible",
@@ -148,14 +212,6 @@
     "reasoningEffort": "none"
   },
   {
-    "id": "4bfaedc8-2a17-4c88-a531-ed629694a3f8",
-    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
-    "providerType": "openai-compatible",
-    "modelId": "gemini-auto",
-    "displayName": "Gemini Auto",
-    "reasoningEffort": "none"
-  },
-  {
     "id": "a6d8565a-cd4e-4404-93cc-6c35d08331a9",
     "providerId": "d235e0b2-0946-4732-ab6f-abab768dd91f",
     "providerType": "openai-compatible",
@@ -168,9 +224,16 @@
     "id": "09ef0b20-79ba-434b-90c3-bf77fd56497e",
     "providerId": "96a41789-cdc1-4e9a-b4f5-e9d28eccbc15",
     "providerType": "openai-compatible",
-    "modelId": "google/gemini-3.8-flash",
-    "displayName": "Gemini 3.8 Flash (BYOK)",
+    "modelId": "google/gemini-3.6-flash",
+    "displayName": "Gemini 3.6 Flash (BYOK)",
     "reasoningEffort": "max"
+  },
+  {
+    "id": "20637bd7-0eb7-5414-9134-cfea03f36731",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "apodex/apodex-1.1-mini:free",
+    "displayName": "Apodex: Apodex 1.1 Mini (Kilo)"
   },
   {
     "id": "e2c6d1c5-44b3-5bcd-aa30-790edccdc2ed",
@@ -278,7 +341,7 @@
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
     "modelId": "stealth/space-bunny-alpha",
-    "displayName": "Space Bunny Alpha (new) (Kilo)",
+    "displayName": "Space Bunny Alpha (retires Oct 5) (Kilo)",
     "reasoningEffort": "max"
   },
   {
@@ -298,11 +361,11 @@
     "reasoningEffort": "max"
   },
   {
-    "id": "05c26077-fe51-5e2d-b1ba-0e6e248b857d",
+    "id": "4740a6bc-1677-5955-8ae2-a9ddd28bf15a",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
-    "modelId": "deepseek-v3.2",
-    "displayName": "DeepSeek V3.2 (LogFare)"
+    "modelId": "deepseek-v4.1-flash",
+    "displayName": "Deepseek v4.1 Flash (LogFare)"
   },
   {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
@@ -312,25 +375,11 @@
     "displayName": "Gemma 4 26B (LogFare)"
   },
   {
-    "id": "69697e2f-c604-5cfb-b16c-98a0d8a1ffa9",
+    "id": "1abe6765-b67e-5a58-bfef-23b78ae8c91b",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
-    "modelId": "glm-5",
-    "displayName": "GLM 5 (LogFare)"
-  },
-  {
-    "id": "fac9330f-2f89-56b7-8ca7-66272edb2068",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "grok-4.6",
-    "displayName": "Grok 4.6 (LogFare)"
-  },
-  {
-    "id": "28fd236c-ee91-555b-85e2-c37abd80e1bb",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
-    "providerType": "openai-compatible",
-    "modelId": "kimi-k2.5",
-    "displayName": "Kimi K2.5 (LogFare)"
+    "modelId": "ling-3.0-flash-vl",
+    "displayName": "Ling 3.0 Flash VL (LogFare)"
   },
   {
     "id": "4f8ed2e1-bf74-5b93-9568-215df207fa0d",
@@ -354,11 +403,12 @@
     "displayName": "Space Bunny Alpha (LogFare)"
   },
   {
-    "id": "29f217f8-556a-5d77-8a39-92c6050a8c17",
-    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "id": "375d267f-8967-4b2e-95ee-60fce15c0bfe",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
     "providerType": "openai-compatible",
-    "modelId": "step-3.7-flash",
-    "displayName": "Step 3.7 Flash (LogFare)"
+    "modelId": "deepseek-ai/DeepSeek-V4.1-Flash",
+    "displayName": "DeepSeek V4.1 Flash (MS)",
+    "reasoningEffort": "max"
   },
   {
     "id": "b9123c45-d678-4e90-a1b2-3c4d5e6f7a89",
@@ -493,6 +543,14 @@
     "providerType": "openai-compatible",
     "modelId": "deepseek-v4-flash-free",
     "displayName": "DeepSeek V4 Flash Free (OpenCode)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "c0b4d2ef-5e2f-598b-b4ce-72fcc5800190",
+    "providerId": "82c41d0c-43bf-4981-ad9b-dda5eeef26bf",
+    "providerType": "openai-compatible",
+    "modelId": "fledge-alpha-free",
+    "displayName": "Fledge Alpha Free (OpenCode)",
     "reasoningEffort": "max"
   },
   {
