@@ -16,16 +16,8 @@
     "2026-08-15T04:37:46.743Z",
     "2026-08-20T06:56:52.213Z"
   ],
-  "claudeChunkRemarks": {
-    "2026-08-15T04:37:46.743Z": "截止到这里所有已经导出完毕"
-  },
-  "stickyNotes": [
-    {
-      "id": "22aa0235-61f5-4431-9524-1288e515c5b5",
-      "content": "颜色备注：绿色的代表做完了，暂时不看，需要定时清除；黄色的表示看完一半，需要看完了变成绿色或者取消颜色；红色、蓝色代表很重要，需要再看。",
-      "createdAt": "2026/9/5 13:14:19"
-    }
-  ],
+  "claudeChunkRemarks": {},
+  "stickyNotes": [],
   "katexFont": "euler",
   "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
   "activeModelId": "090f132d-1796-47d5-b6fa-32244e602e13"
