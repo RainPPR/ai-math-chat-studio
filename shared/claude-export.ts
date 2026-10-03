@@ -10,9 +10,12 @@
  *   - 时间戳为 ISO-8601 UTC、6 位微秒、结尾大写 Z，且消息时间单调不降
  */
 
+import { v4 as uuidv4 } from 'uuid';
+
 import { extractThinkingBlocks } from './thinking';
 
-export const CLAUDE_ACCOUNT_UUID = '7c3d41e5-9b02-4a6f-8f14-2d5e6a90c431';
+/** 导出包内 account.uuid / users.json 共用的账户 UUID，每次导出时用标准库生成一个，不手写。 */
+export const CLAUDE_ACCOUNT_UUID = uuidv4();
 
 export interface ClaudeSourceMessage {
   id: string;
@@ -100,12 +103,16 @@ export function buildClaudeMessage(message: ClaudeSourceMessage, stamp: string):
       stop_timestamp: stamp
     });
   }
+  // content 数组只在「有正文」或「完全没有思考内容」时补一个 text 块；
+  // 纯思考（生成被打断，仅有 <think> 没有正文）的消息，content 就只保留 thinking 块，
+  // 不额外拼接重复的 text 块——这与真实 Claude 导出样例完全一致。
   if (extracted.mainContent) {
     content.push({ type: 'text', text: extracted.mainContent });
   } else if (extracted.thoughts.length === 0) {
     content.push({ type: 'text', text: message.content || ' ' });
   }
 
+  // text 字段永不为空：正文 -> 思考内容兜底 -> 原始内容兜底 -> 空格兜底。
   let text = extracted.mainContent;
   if (!text && extracted.thoughts.length > 0) {
     text = extracted.thoughts.join('\n\n');
