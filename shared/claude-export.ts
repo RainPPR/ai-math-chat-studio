@@ -216,9 +216,11 @@ export function buildClaudeAssistantMessage(message: ClaudeSourceMessage, stamp:
     text: outputText
   };
 
+  const topLevelText = extracted.mainContent?.trim() || thinkingText;
+
   return {
     uuid: message.id,
-    text: outputText,
+    text: topLevelText,
     content: [thinkingBlock, textBlock],
     sender: 'assistant',
     created_at: stamp,
