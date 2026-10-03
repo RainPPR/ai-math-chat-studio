@@ -10,9 +10,12 @@
  *   - 时间戳为 ISO-8601 UTC、6 位微秒、结尾大写 Z，且消息时间单调不降
  */
 
+import { v4 as uuidv4 } from 'uuid';
+
 import { extractThinkingBlocks } from './thinking';
 
-export const CLAUDE_ACCOUNT_UUID = '7c3d41e5-9b02-4a6f-8f14-2d5e6a90c431';
+/** 导出包内 account.uuid / users.json 共用的账户 UUID，每次导出时用标准库生成一个，不手写。 */
+export const CLAUDE_ACCOUNT_UUID = uuidv4();
 
 export interface ClaudeSourceMessage {
   id: string;
@@ -100,12 +103,8 @@ export function buildClaudeMessage(message: ClaudeSourceMessage, stamp: string):
       stop_timestamp: stamp
     });
   }
-  if (extracted.mainContent) {
-    content.push({ type: 'text', text: extracted.mainContent });
-  } else if (extracted.thoughts.length === 0) {
-    content.push({ type: 'text', text: message.content || ' ' });
-  }
 
+  // text 字段永不为空：正文 -> 思考内容兜底 -> 原始内容兜底 -> 空格兜底。
   let text = extracted.mainContent;
   if (!text && extracted.thoughts.length > 0) {
     text = extracted.thoughts.join('\n\n');
@@ -113,6 +112,10 @@ export function buildClaudeMessage(message: ClaudeSourceMessage, stamp: string):
   if (!text || !text.trim()) {
     text = message.content || ' ';
   }
+
+  // content 数组永远以且只以一个 text 块收尾（thinking 块在前），和 text 字段保持同源，
+  // 避免「正文被 <think> 吃空」时 content 里只剩 thinking 块、没有 text 块的情况。
+  content.push({ type: 'text', text: extracted.mainContent || text });
 
   let sender = 'assistant';
   if (message.role === 'user') {
