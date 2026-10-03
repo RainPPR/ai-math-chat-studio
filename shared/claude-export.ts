@@ -108,8 +108,6 @@ export function buildClaudeMessage(message: ClaudeSourceMessage, stamp: string):
   // 不额外拼接重复的 text 块——这与真实 Claude 导出样例完全一致。
   if (extracted.mainContent) {
     content.push({ type: 'text', text: extracted.mainContent });
-  } else if (extracted.thoughts.length === 0) {
-    content.push({ type: 'text', text: message.content || ' ' });
   }
 
   // text 字段永不为空：正文 -> 思考内容兜底 -> 原始内容兜底 -> 空格兜底。
@@ -118,7 +116,15 @@ export function buildClaudeMessage(message: ClaudeSourceMessage, stamp: string):
     text = extracted.thoughts.join('\n\n');
   }
   if (!text || !text.trim()) {
-    text = message.content || ' ';
+    // Gemini rejects Claude messages whose visible text is empty. Keep the
+    // message structurally valid and make the text/content representations
+    // agree, instead of emitting a blank text block or a single whitespace.
+    text = '(empty message)';
+  }
+  // A Claude message always has a readable text block. Thinking-only messages
+  // still retain their thinking block, but also need this fallback text block.
+  if (content.length === extracted.thoughts.length) {
+    content.push({ type: 'text', text });
   }
 
   let sender = 'assistant';
