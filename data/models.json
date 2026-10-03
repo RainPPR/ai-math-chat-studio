@@ -468,6 +468,48 @@
     "displayName": "minimax-m3 (FTAI)"
   },
   {
+    "id": "639bd6aa-5071-4de3-a89d-8bcaf2742a41",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/fledge-alpha-free",
+    "displayName": "fledge-alpha-free (FTAI)"
+  },
+  {
+    "id": "275918a6-ef0b-4b90-b4a5-ee10eac26c5f",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/ling-3.1-flash-free",
+    "displayName": "ling-3.1-flash-free (FTAI)"
+  },
+  {
+    "id": "0a84a2de-062c-4a54-9965-ff4b8502bb17",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/longcat-2.5-preview-free",
+    "displayName": "longcat-2.5-preview-free (FTAI)"
+  },
+  {
+    "id": "f94403ff-8732-4a5c-a099-12a07b9a816e",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/mimo-v2.6-flash-free",
+    "displayName": "mimo-v2.6-flash-free (FTAI)"
+  },
+  {
+    "id": "fa5213eb-1f8b-456d-a13c-11a2931bcaee",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/nemotron-3-ultra-free",
+    "displayName": "nemotron-3-ultra-free (FTAI)"
+  },
+  {
+    "id": "b35f24f0-b80a-4078-b770-13494ca2b3b5",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/nemotron-3.5-lightning-free",
+    "displayName": "nemotron-3.5-lightning-free (FTAI)"
+  },
+  {
     "id": "6cd44f69-d532-45d2-ad74-0e113119b525",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
@@ -680,6 +722,13 @@
     "providerType": "openai-compatible",
     "modelId": "inclusionai/ling-3.0-flash-sante:free",
     "displayName": "inclusionAI: Ling 3.0 Flash Sante (Kilo)"
+  },
+  {
+    "id": "977eefef-ffac-4d64-90b1-926eb0c913f6",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "inclusionai/ling-3.1-flash",
+    "displayName": "inclusionAI: Ling 3.1 Flash (new) (Kilo) (KG)"
   },
   {
     "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
