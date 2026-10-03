@@ -8,7 +8,6 @@
  *   - 每条消息带 text 字段（不能只有 content 块，且不能为空）
  *   - 对话带 account 字段，thinking 块带 start/stop_timestamp
  *   - 时间戳为 ISO-8601 UTC、6 位微秒、结尾大写 Z，且消息时间单调不降
- *   - 严格遵循 “输入 -> 思考 -> 输出” 的轮次结构，缺失部分自动使用 '...' 补齐占位
  */
 
 import { extractThinkingBlocks } from './thinking';
@@ -61,17 +60,6 @@ export interface ClaudeUser {
   verified_phone_number: null;
 }
 
-export function generateUuidV4(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
 /** YYYY-MM-DDTHH:MM:SS.ffffffZ */
 export function formatClaudeTime(timeMs: number): string {
   const iso = new Date(timeMs).toISOString();
@@ -91,7 +79,7 @@ export function buildMonotonicTimes(messages: ClaudeSourceMessage[]): number[] {
   let previous = 0;
   for (const message of messages) {
     let current = new Date(message.createdAt).getTime();
-    if (!Number.isFinite(current) || (times.length > 0 && current <= previous)) {
+    if (!Number.isFinite(current) || (times.length > 0 && current < previous)) {
       current = previous > 0 ? previous + 1 : Date.now();
     }
     times.push(current);
@@ -100,160 +88,60 @@ export function buildMonotonicTimes(messages: ClaudeSourceMessage[]): number[] {
   return times;
 }
 
-/**
- * Align source messages into strict alternating pairs: Human ('user') -> Assistant ('model'/'assistant').
- * Missing turns are automatically supplemented with placeholder messages containing '...'.
- */
-export function alignStrictTurns(sourceMessages: ClaudeSourceMessage[], baseTimeMs: number): ClaudeSourceMessage[] {
-  if (sourceMessages.length === 0) {
-    return [];
-  }
-
-  const aligned: ClaudeSourceMessage[] = [];
-  let sourceIdx = 0;
-  let lastTimeMs = baseTimeMs;
-
-  while (sourceIdx < sourceMessages.length) {
-    // 1. Expect Human message ('user')
-    if (sourceIdx < sourceMessages.length && sourceMessages[sourceIdx].role === 'user') {
-      const msg = sourceMessages[sourceIdx];
-      const timeMs = new Date(msg.createdAt).getTime();
-      if (Number.isFinite(timeMs) && timeMs > lastTimeMs) {
-        lastTimeMs = timeMs;
-      } else {
-        lastTimeMs = lastTimeMs + 1;
-      }
-      aligned.push({
-        id: msg.id || generateUuidV4(),
-        role: 'user',
-        content: msg.content,
-        createdAt: new Date(lastTimeMs).toISOString()
-      });
-      sourceIdx++;
-    } else {
-      // Missing Human message before Assistant -> Insert placeholder Human message
-      lastTimeMs = lastTimeMs + 1;
-      aligned.push({
-        id: generateUuidV4(),
-        role: 'user',
-        content: '...',
-        createdAt: new Date(lastTimeMs).toISOString()
-      });
-    }
-
-    // 2. Expect Assistant message ('model' or 'assistant')
-    if (sourceIdx < sourceMessages.length && sourceMessages[sourceIdx].role !== 'user') {
-      const msg = sourceMessages[sourceIdx];
-      const timeMs = new Date(msg.createdAt).getTime();
-      if (Number.isFinite(timeMs) && timeMs > lastTimeMs) {
-        lastTimeMs = timeMs;
-      } else {
-        lastTimeMs = lastTimeMs + 1;
-      }
-      aligned.push({
-        id: msg.id || generateUuidV4(),
-        role: 'model',
-        content: msg.content,
-        createdAt: new Date(lastTimeMs).toISOString()
-      });
-      sourceIdx++;
-    } else {
-      // Missing Assistant message after Human -> Insert placeholder Assistant message
-      lastTimeMs = lastTimeMs + 1;
-      aligned.push({
-        id: generateUuidV4(),
-        role: 'model',
-        content: '...',
-        createdAt: new Date(lastTimeMs).toISOString()
-      });
-    }
-  }
-
-  return aligned;
-}
-
-export function buildClaudeHumanMessage(message: ClaudeSourceMessage, stamp: string): ClaudeMessage {
-  const textContent = message.content?.trim() || '...';
-  return {
-    uuid: message.id,
-    text: textContent,
-    content: [{ type: 'text', text: textContent }],
-    sender: 'human',
-    created_at: stamp,
-    updated_at: stamp,
-    attachments: [],
-    files: []
-  };
-}
-
-export function buildClaudeAssistantMessage(message: ClaudeSourceMessage, stamp: string): ClaudeMessage {
-  const extracted = extractThinkingBlocks(message.content || '', false);
-
-  // 1. Thinking block
-  let thinkingText = '...';
-  if (extracted.thoughts.length > 0) {
-    const joined = extracted.thoughts.join('\n\n').trim();
-    if (joined) {
-      thinkingText = joined;
-    }
-  }
-
-  const thinkingBlock: ClaudeContentBlock = {
-    type: 'thinking',
-    thinking: thinkingText,
-    start_timestamp: stamp,
-    stop_timestamp: stamp
-  };
-
-  // 2. Output text block
-  let outputText = '...';
-  if (extracted.mainContent?.trim()) {
-    outputText = extracted.mainContent.trim();
-  }
-
-  const textBlock: ClaudeContentBlock = {
-    type: 'text',
-    text: outputText
-  };
-
-  const topLevelText = extracted.mainContent?.trim() || thinkingText;
-
-  return {
-    uuid: message.id,
-    text: topLevelText,
-    content: [thinkingBlock, textBlock],
-    sender: 'assistant',
-    created_at: stamp,
-    updated_at: stamp,
-    attachments: [],
-    files: []
-  };
-}
-
 export function buildClaudeMessage(message: ClaudeSourceMessage, stamp: string): ClaudeMessage {
-  if (message.role === 'user') {
-    return buildClaudeHumanMessage(message, stamp);
-  } else {
-    return buildClaudeAssistantMessage(message, stamp);
+  const extracted = extractThinkingBlocks(message.content, false);
+
+  const content: ClaudeContentBlock[] = [];
+  for (const thought of extracted.thoughts) {
+    content.push({
+      type: 'thinking',
+      thinking: thought,
+      start_timestamp: stamp,
+      stop_timestamp: stamp
+    });
   }
+  if (extracted.mainContent) {
+    content.push({ type: 'text', text: extracted.mainContent });
+  } else if (extracted.thoughts.length === 0) {
+    content.push({ type: 'text', text: message.content || ' ' });
+  }
+
+  let text = extracted.mainContent;
+  if (!text && extracted.thoughts.length > 0) {
+    text = extracted.thoughts.join('\n\n');
+  }
+  if (!text || !text.trim()) {
+    text = message.content || ' ';
+  }
+
+  let sender = 'assistant';
+  if (message.role === 'user') {
+    sender = 'human';
+  }
+
+  return {
+    uuid: message.id,
+    text,
+    content,
+    sender,
+    created_at: stamp,
+    updated_at: stamp,
+    attachments: [],
+    files: []
+  };
 }
 
 export function buildClaudeConversation(session: ClaudeSourceSession): ClaudeConversation {
-  let initialTimeMs = new Date(session.createdAt).getTime();
-  if (!Number.isFinite(initialTimeMs)) {
-    initialTimeMs = Date.now();
-  }
-
-  const alignedMessages = alignStrictTurns(session.messages, initialTimeMs);
-  const messageTimes = buildMonotonicTimes(alignedMessages);
-
-  const chat_messages = alignedMessages.map((message, index) => {
-    const stamp = formatClaudeTime(messageTimes[index]);
-    return buildClaudeMessage(message, stamp);
+  const messageTimes = buildMonotonicTimes(session.messages);
+  const chat_messages = session.messages.map((message, index) => {
+    return buildClaudeMessage(message, formatClaudeTime(messageTimes[index]));
   });
 
-  let createdTime = initialTimeMs;
+  let createdTime = new Date(session.createdAt).getTime();
   let updatedTime = new Date(session.updatedAt).getTime();
+  if (!Number.isFinite(createdTime)) {
+    createdTime = messageTimes[0] || Date.now();
+  }
   if (!Number.isFinite(updatedTime)) {
     updatedTime = messageTimes[messageTimes.length - 1] || createdTime;
   }
