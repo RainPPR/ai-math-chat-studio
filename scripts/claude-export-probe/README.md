@@ -1,5 +1,27 @@
 # Gemini「Import chats」导入失败排查包
 
+> ## ✅ 第二轮结论（2026-10-03：全量包失败、删到只剩前两条就成功）
+>
+> 整包特征修好后，`All_Conversations.zip` 全量上传仍失败，但手工把 `conversations.json`
+> 删到只剩前两条对话就能成功——根因是**数据里混入了孤立代理项（lone surrogate）**：
+>
+> * 会话标题生成用 `text.slice(0, 50)` 按 UTF-16 码元截断，把 unicodeit 产出的
+>   𝐑 / 𝕟 等数学字母数字符号（U+1D400+，双码元代理对）从中间切开，
+>   在 7 个会话标题末尾留下孤立的 `\uD835`；
+> * `JSON.stringify` 把它序列化成 `"\ud835"` 转义——语法上是合法 JSON，但解码后是
+>   非良构 Unicode，Gemini 的严格校验会**拒收整个文件**；中招标题不在前两条对话里，
+>   所以「删到只剩前两条」恰好能传；
+> * 第一轮自检（下文事实 #5 的「零个孤立代理项」）没查这一项，当时的结论已过时。
+>
+> 修复（均已落地）：
+> 1. `shared/text.ts` 新增 `stripIllFormedUnicode()` / `truncateWellFormed()`；
+> 2. `shared/claude-export.ts` 导出前对标题和正文统一清洗（本脚本已同步镜像并重新对拍，
+>    1457 个会话逐条字节一致）；
+> 3. 标题截断改为代理对安全：`server/services/generation-manager.ts` 与 `src/App.tsx`；
+> 4. `data/sessions` 里 7 个中招标题已修复；`validate()` 补上孤立代理项/非法控制符检查。
+>
+> 以下为第一轮（2026-10-02，整包特征 + text 字段）的排查记录。
+
 > ## ✅ 结论（2026-10-02 实测）
 >
 > **`01-full-fidelity.zip` 上传成功**，排查到此结束，02 / 03 / 04 不必再测。

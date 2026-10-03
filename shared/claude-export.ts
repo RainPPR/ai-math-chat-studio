@@ -9,10 +9,15 @@
  *   - 对话带 account 字段，thinking 块带 start/stop_timestamp
  *   - 时间戳为 ISO-8601 UTC、6 位微秒、结尾大写 Z，且消息时间单调不降
  *   - 严格遵循 “输入 -> 思考 -> 输出” 的轮次结构，缺失部分自动使用 '...' 补齐占位
+ *   - 所有字符串必须是良构（well-formed）Unicode：孤立代理项（lone surrogate）会被
+ *     JSON.stringify 序列化成 "\ud835" 这类转义，解码后是非法 Unicode，Gemini 会
+ *     直接拒收整个文件（2026-10 实测：7 个被截断标题里的 \ud835 导致全量包上传失败，
+ *     删到只剩未中招的前两条对话就能成功）。导出前统一用 stripIllFormedUnicode 清洗。
  */
 
 import { v4 as generateUuidV4 } from 'uuid';
 import { extractThinkingBlocks } from './thinking';
+import { stripIllFormedUnicode } from './text';
 
 export const CLAUDE_ACCOUNT_UUID = generateUuidV4();
 
@@ -163,7 +168,7 @@ export function alignStrictTurns(sourceMessages: ClaudeSourceMessage[], baseTime
 }
 
 export function buildClaudeHumanMessage(message: ClaudeSourceMessage, stamp: string): ClaudeMessage {
-  const textContent = message.content?.trim() || '...';
+  const textContent = stripIllFormedUnicode(message.content || '').trim() || '...';
   return {
     uuid: message.id,
     text: textContent,
@@ -177,7 +182,7 @@ export function buildClaudeHumanMessage(message: ClaudeSourceMessage, stamp: str
 }
 
 export function buildClaudeAssistantMessage(message: ClaudeSourceMessage, stamp: string): ClaudeMessage {
-  const extracted = extractThinkingBlocks(message.content || '', false);
+  const extracted = extractThinkingBlocks(stripIllFormedUnicode(message.content || ''), false);
 
   // 1. Thinking block
   let thinkingText = '...';
@@ -258,7 +263,7 @@ export function buildClaudeConversation(session: ClaudeSourceSession): ClaudeCon
 
   return {
     uuid: session.id,
-    name: session.title || '',
+    name: stripIllFormedUnicode(session.title || ''),
     created_at: formatClaudeTime(createdTime),
     updated_at: formatClaudeTime(updatedTime),
     account: { uuid: CLAUDE_ACCOUNT_UUID },

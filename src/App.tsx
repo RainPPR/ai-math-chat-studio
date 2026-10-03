@@ -5,6 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
 import { Loader2 } from 'lucide-react';
+import { truncateWellFormed } from '../shared/text';
 
 let settingsSaveQueue = Promise.resolve();
 
@@ -179,7 +180,8 @@ export default function App() {
       sessionId = crypto.randomUUID();
       activeSession = {
         id: sessionId,
-        title: content.trim().slice(0, 50) + (content.length > 50 ? '...' : ''),
+        // 代理对安全截断，避免把 𝐑/𝕟 等双码元字符切成孤立代理项（会污染后续 Claude 格式导出）
+        title: truncateWellFormed(content.trim(), 50),
         messages: [],
         characterId: settings.activeCharacterId,
         createdAt: new Date().toISOString(),

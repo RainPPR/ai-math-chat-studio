@@ -6,6 +6,7 @@ import { FORMAT_INSTRUCTIONS } from '../providers/config';
 import * as unicodeit from 'unicodeit';
 import { markdownToTxt } from 'markdown-to-txt';
 import { stripThinking } from '../../shared/thinking';
+import { truncateWellFormed } from '../../shared/text';
 
 /**
  * Convert non-standard thinking format to standard format.
@@ -106,9 +107,11 @@ function generateTitleFromMarkdown(markdown: string): string {
   // Remove remaining $ and backslashes, then trim
   text = text.replace(/[$\\]/g, '').trim().replace(/[\n\r]+/g, ' ');
 
-  // 返回最多 50 个字符，如果超过则强制切断
-  if (text.length <= 50) return text;
-  return text.slice(0, 50) + '...';
+  // 返回最多 50 个字符，如果超过则强制切断。
+  // 必须用代理对安全的截断：unicodeit 会产出 𝐑 / 𝕟 这类数学字母数字符号
+  //（U+1D400+，两个 UTF-16 码元），裸 slice 会把代理对切成孤立代理项，
+  // 导致 Claude 格式导出的 conversations.json 含非法 Unicode、被 Gemini 拒收。
+  return truncateWellFormed(text, 50);
 }
 
 export interface ServerChatMessage {

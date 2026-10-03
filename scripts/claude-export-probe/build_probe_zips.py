@@ -40,6 +40,7 @@ import glob
 import json
 import os
 import re
+import uuid
 import zipfile
 from datetime import datetime, timedelta, timezone
 
@@ -79,6 +80,29 @@ def parse_stamp(date_str: str) -> datetime:
 
 def to_stamp(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M:%S.") + f"{dt.microsecond:06d}Z"
+
+
+def strip_ill_formed_unicode(value: str) -> str:
+    """等价于 shared/text.ts 的 stripIllFormedUnicode()。
+
+    Python 的 json.load 会把合法代理对合并成单个星面字符，残留在 str 里的
+    U+D800–U+DFFF 一定是孤立代理项（JSON.stringify 会把它转义成 \\ud835，
+    语法合法但解码后是非良构 Unicode，Gemini 导入会整包拒收）。
+    同时剔除 \\t\\n\\r 之外的 C0 控制符、DEL 和 U+FFFE/U+FFFF。
+    """
+    if not value:
+        return value or ""
+    out: list[str] = []
+    for ch in value:
+        code = ord(ch)
+        if 0xD800 <= code <= 0xDFFF:
+            continue
+        if (code < 0x20 and code not in (0x09, 0x0A, 0x0D)) or code == 0x7F:
+            continue
+        if code in (0xFFFE, 0xFFFF):
+            continue
+        out.append(ch)
+    return "".join(out)
 
 
 def extract_thinking_blocks(content: str) -> tuple[list[str], str]:
@@ -136,7 +160,7 @@ def load_sessions(all_sessions: bool) -> list[dict]:
 
 def build_message_current(message: dict) -> dict:
     """现状：没有 text 字段，只有 content 块（正文为空时留一个空 text 块）。"""
-    thoughts, main = extract_thinking_blocks(message["content"] or "")
+    thoughts, main = extract_thinking_blocks(strip_ill_formed_unicode(message["content"] or ""))
     blocks: list[dict] = [{"type": "thinking", "thinking": t} for t in thoughts]
     blocks.append({"type": "text", "text": main})
     stamp = format_claude_date(message["createdAt"])
@@ -152,32 +176,44 @@ def build_message_current(message: dict) -> dict:
 
 
 def build_message_full(message: dict, stamp: str) -> dict:
-    """规范完整版：text + content(thinking 带时间戳) + 必填空数组。"""
-    thoughts, main = extract_thinking_blocks(message["content"] or "")
-    plain = main
-    if not plain and thoughts:
-        plain = "\n\n".join(thoughts)
+    """等价于 shared/claude-export.ts 的 buildClaudeMessage()（已与 TS 实现对拍）。"""
+    if message["role"] == "user":
+        # buildClaudeHumanMessage
+        text_content = strip_ill_formed_unicode(message["content"] or "").strip() or "..."
+        return {
+            "uuid": message["id"],
+            "text": text_content,
+            "content": [{"type": "text", "text": text_content}],
+            "sender": "human",
+            "created_at": stamp,
+            "updated_at": stamp,
+            "attachments": [],
+            "files": [],
+        }
 
-    blocks: list[dict] = []
-    for thought in thoughts:
-        blocks.append(
-            {
-                "type": "thinking",
-                "thinking": thought,
-                "start_timestamp": stamp,
-                "stop_timestamp": stamp,
-            }
-        )
-    if main:
-        blocks.append({"type": "text", "text": main})
-    elif not thoughts:
-        blocks.append({"type": "text", "text": ""})
+    # buildClaudeAssistantMessage：固定 thinking 块 + text 块，缺失用 '...' 占位
+    thoughts, main = extract_thinking_blocks(strip_ill_formed_unicode(message["content"] or ""))
+    thinking_text = "..."
+    if thoughts:
+        joined = "\n\n".join(thoughts).strip()
+        if joined:
+            thinking_text = joined
+    output_text = main.strip() if main and main.strip() else "..."
+    top_level_text = main.strip() if main and main.strip() else thinking_text
 
     return {
         "uuid": message["id"],
-        "text": plain,
-        "content": blocks,
-        "sender": "human" if message["role"] == "user" else "assistant",
+        "text": top_level_text,
+        "content": [
+            {
+                "type": "thinking",
+                "thinking": thinking_text,
+                "start_timestamp": stamp,
+                "stop_timestamp": stamp,
+            },
+            {"type": "text", "text": output_text},
+        ],
+        "sender": "assistant",
         "created_at": stamp,
         "updated_at": stamp,
         "attachments": [],
@@ -187,10 +223,11 @@ def build_message_full(message: dict, stamp: str) -> dict:
 
 def build_message_vanilla(message: dict, stamp: str) -> dict:
     """老式最小结构：没有 thinking 块，text 与 content 同源。"""
-    thoughts, main = extract_thinking_blocks(message["content"] or "")
+    thoughts, main = extract_thinking_blocks(strip_ill_formed_unicode(message["content"] or ""))
     plain = main
     if not plain and thoughts:
         plain = "\n\n".join(thoughts)
+    plain = plain.strip() or "..."
     return {
         "uuid": message["id"],
         "text": plain,
@@ -201,6 +238,63 @@ def build_message_vanilla(message: dict, stamp: str) -> dict:
         "attachments": [],
         "files": [],
     }
+
+
+def parse_ms(date_str: str | None):
+    """等价于 new Date(str).getTime()，失败返回 None（TS 里是 NaN）。"""
+    if not date_str:
+        return None
+    try:
+        return int(parse_stamp(date_str).timestamp() * 1000)
+    except (ValueError, TypeError):
+        return None
+
+
+def format_claude_time(time_ms: int) -> str:
+    """等价于 formatClaudeTime()：毫秒精度，微秒位补零到 6 位。"""
+    dt = datetime.fromtimestamp(time_ms // 1000, tz=timezone.utc)
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.") + f"{time_ms % 1000:03d}000Z"
+
+
+def align_strict_turns(source_messages: list[dict], base_time_ms: int) -> list[dict]:
+    """等价于 alignStrictTurns()：对齐成 Human -> Assistant 轮次，缺口用 '...' 占位。
+
+    返回的 createdAt 直接存毫秒时间戳（严格递增，等价于 TS 里
+    alignStrictTurns + buildMonotonicTimes 的叠加结果）。
+    """
+    if not source_messages:
+        return []
+
+    aligned: list[dict] = []
+    idx = 0
+    last = base_time_ms
+    total = len(source_messages)
+    while idx < total:
+        # 1. Human 轮
+        if idx < total and source_messages[idx]["role"] == "user":
+            msg = source_messages[idx]
+            t = parse_ms(msg.get("createdAt"))
+            last = t if (t is not None and t > last) else last + 1
+            aligned.append({"id": msg.get("id") or str(uuid.uuid4()), "role": "user",
+                            "content": msg.get("content") or "", "createdAt": last})
+            idx += 1
+        else:
+            last += 1
+            aligned.append({"id": str(uuid.uuid4()), "role": "user", "content": "...", "createdAt": last})
+
+        # 2. Assistant 轮
+        if idx < total and source_messages[idx]["role"] != "user":
+            msg = source_messages[idx]
+            t = parse_ms(msg.get("createdAt"))
+            last = t if (t is not None and t > last) else last + 1
+            aligned.append({"id": msg.get("id") or str(uuid.uuid4()), "role": "model",
+                            "content": msg.get("content") or "", "createdAt": last})
+            idx += 1
+        else:
+            last += 1
+            aligned.append({"id": str(uuid.uuid4()), "role": "model", "content": "...", "createdAt": last})
+
+    return aligned
 
 
 def monotonic_stamps(session: dict) -> list[str]:
@@ -221,17 +315,43 @@ def build_conversation(session: dict, kind: str) -> dict:
     if kind == "current":
         return {
             "uuid": session["id"],
-            "name": session.get("title") or "",
+            "name": strip_ill_formed_unicode(session.get("title") or ""),
             "created_at": format_claude_date(session["createdAt"]),
             "updated_at": format_claude_date(session["updatedAt"]),
             "chat_messages": [build_message_current(m) for m in session["messages"]],
         }
 
+    if kind == "full":
+        # 等价于 buildClaudeConversation()：严格轮次对齐 + 单调时间戳 + '...' 占位
+        initial_ms = parse_ms(session.get("createdAt"))
+        if initial_ms is None:
+            initial_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+
+        aligned = align_strict_turns(session["messages"], initial_ms)
+        times = [m["createdAt"] for m in aligned]
+        messages = [build_message_full(m, format_claude_time(t)) for m, t in zip(aligned, times)]
+
+        created_ms = initial_ms
+        updated_ms = parse_ms(session.get("updatedAt"))
+        if updated_ms is None:
+            updated_ms = times[-1] if times else created_ms
+        if times:
+            created_ms = min(created_ms, times[0])
+            updated_ms = max(updated_ms, times[-1])
+        if updated_ms < created_ms:
+            updated_ms = created_ms
+
+        return {
+            "uuid": session["id"],
+            "name": strip_ill_formed_unicode(session.get("title") or ""),
+            "created_at": format_claude_time(created_ms),
+            "updated_at": format_claude_time(updated_ms),
+            "account": {"uuid": ACCOUNT_UUID},
+            "chat_messages": messages,
+        }
+
     stamps = monotonic_stamps(session)
-    builder = build_message_full
-    if kind == "vanilla":
-        builder = build_message_vanilla
-    messages = [builder(m, s) for m, s in zip(session["messages"], stamps)]
+    messages = [build_message_vanilla(m, s) for m, s in zip(session["messages"], stamps)]
 
     created = parse_stamp(session["createdAt"])
     updated = parse_stamp(session["updatedAt"])
@@ -243,7 +363,7 @@ def build_conversation(session: dict, kind: str) -> dict:
 
     return {
         "uuid": session["id"],
-        "name": session.get("title") or "",
+        "name": strip_ill_formed_unicode(session.get("title") or ""),
         "created_at": to_stamp(created),
         "updated_at": to_stamp(updated),
         "account": {"uuid": ACCOUNT_UUID},
@@ -257,6 +377,15 @@ def build_conversation(session: dict, kind: str) -> dict:
 
 UUID_V4 = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 STAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$")
+# 孤立代理项 / 非法控制符 / 非字符：JSON.stringify 会原样转义（如 \ud835），
+# 语法合法但解码后非良构，Gemini 来源校验会整包拒收（2026-10-03 实锤的全量包失败根因）
+ILL_FORMED = re.compile("[\ud800-\udfff\x00-\x08\x0b\x0c\x0e-\x1f\x7f\ufffe\uffff]")
+
+
+def find_ill_formed(value, where: str, problems: list[str]) -> None:
+    if isinstance(value, str) and ILL_FORMED.search(value):
+        bad = ILL_FORMED.search(value).group(0)
+        problems.append(f"{where} 含孤立代理项/非法字符 U+{ord(bad):04X}")
 
 
 def validate(conversations: list[dict], require_text: bool) -> list[str]:
@@ -268,6 +397,7 @@ def validate(conversations: list[dict], require_text: bool) -> list[str]:
         for key in ("uuid", "name", "created_at", "updated_at", "chat_messages"):
             if key not in conversation:
                 problems.append(f"conv[{index}] 缺少 {key}")
+        find_ill_formed(conversation.get("name"), f"conv[{index}].name", problems)
         uuid_value = conversation.get("uuid", "")
         if not UUID_V4.match(uuid_value):
             problems.append(f"conv[{index}] uuid 不是 v4: {uuid_value}")
@@ -292,8 +422,14 @@ def validate(conversations: list[dict], require_text: bool) -> list[str]:
                 problems.append(f"conv[{index}].msg[{position}] 缺少 text")
             if require_text and not message.get("text"):
                 problems.append(f"conv[{index}].msg[{position}] text 为空")
+            find_ill_formed(message.get("text"), f"conv[{index}].msg[{position}].text", problems)
             if not isinstance(message.get("content"), list):
                 problems.append(f"conv[{index}].msg[{position}] content 不是数组")
+            else:
+                for bi, block in enumerate(message["content"]):
+                    if isinstance(block, dict):
+                        find_ill_formed(block.get("text"), f"conv[{index}].msg[{position}].content[{bi}].text", problems)
+                        find_ill_formed(block.get("thinking"), f"conv[{index}].msg[{position}].content[{bi}].thinking", problems)
             for key in ("attachments", "files"):
                 if not isinstance(message.get(key), list):
                     problems.append(f"conv[{index}].msg[{position}] {key} 不是数组")
