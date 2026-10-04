@@ -21,8 +21,8 @@ export interface UserSettings {
   collapseThinkingFinished: boolean;
   trimThinkingSpaces: boolean;
   starredSessions?: Record<string, string>;
-  claudeChunks?: string[];
-  claudeChunkRemarks?: Record<string, string>;
+  chatgptChunks?: string[];
+  chatgptChunkRemarks?: Record<string, string>;
   stickyNotes?: any[];
   [key: string]: any;
 }

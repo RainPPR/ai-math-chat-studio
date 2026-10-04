@@ -34,7 +34,7 @@ export function normalizeForSearch(content: string): string {
  * Extracts thinking processes and main text content from a message.
  * @param content The raw message content
  * @param allowUnclosed Whether to include unclosed <think>... blocks (default: true).
- *                      Set to false for exports (e.g. Claude export) where unmatched tags shouldn't strip trailing content.
+ *                      Set to false for exports where unmatched tags shouldn't strip trailing content.
  */
 export function extractThinkingBlocks(
   content: string,
