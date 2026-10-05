@@ -510,7 +510,7 @@ export class GenerationManager {
       const basePrompt = (systemPrompt || '').trim();
       const formatText = FORMAT_INSTRUCTIONS.trim();
       if (basePrompt) {
-        return `${formatText}\n\n${basePrompt}`;
+        return `${basePrompt}\n\n${formatText}`;
       } else {
         return formatText;
       }
