@@ -835,6 +835,27 @@
     "reasoningEffort": "max"
   },
   {
+    "id": "142e4cc3-b3aa-47e2-bb52-e375bddefc7d",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "claude-opus-4.6",
+    "displayName": "Claude Opus 4.6 (LF)"
+  },
+  {
+    "id": "04aec796-a6f4-4743-924f-e0c651601d4e",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "claude-sonnet-4.6",
+    "displayName": "Claude Sonnet 4.6 (LF)"
+  },
+  {
+    "id": "c35a3a9c-4112-4676-bcc9-be37b132fd6e",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v3.2",
+    "displayName": "DeepSeek V3.2 (LF)"
+  },
+  {
     "id": "4740a6bc-1677-5955-8ae2-a9ddd28bf15a",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -847,6 +868,48 @@
     "providerType": "openai-compatible",
     "modelId": "gemma-4-26b",
     "displayName": "Gemma 4 26B (LogFare)"
+  },
+  {
+    "id": "8f8b0ff1-e225-44ec-9e5e-368e6532fb0f",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gemma-4-31b",
+    "displayName": "Gemma 4 31B (LF)"
+  },
+  {
+    "id": "11475f8d-1630-4624-bd32-686f086c0a43",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5",
+    "displayName": "GLM 5 (LF)"
+  },
+  {
+    "id": "63621718-4723-4fea-8636-59d57ca2fde3",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-oss-120b",
+    "displayName": "GPT OSS 120B (LF)"
+  },
+  {
+    "id": "c9fd619b-10f3-4be6-a33f-e1675fe0b926",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "grok-4.6",
+    "displayName": "Grok 4.6 (LF)"
+  },
+  {
+    "id": "c7636f0b-7735-44a3-86b4-db117bfc7b97",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kimi-k2-thinking",
+    "displayName": "Kimi K2 Thinking (LF)"
+  },
+  {
+    "id": "a5fe04b2-6df6-44a5-88ab-11f81e97697f",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kimi-k2.5",
+    "displayName": "Kimi K2.5 (LF)"
   },
   {
     "id": "1abe6765-b67e-5a58-bfef-23b78ae8c91b",
