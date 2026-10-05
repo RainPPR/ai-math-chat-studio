@@ -4,12 +4,12 @@ import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, Sk
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, ChevronRight, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 import { sortProviders, sortModels, sortTempModels, sortCharacters, sortSkills, sortTemplates } from '../../shared/sorting';
-import { ClaudeConversation, buildClaudeBundleFiles, buildClaudeConversation } from '../../shared/claude-export';
+import { ChatGPTConversation, buildChatGPTBundleFiles, buildChatGPTConversation } from '../../shared/chatgpt-export';
 
 
-async function buildClaudeBundle(conversations: ClaudeConversation[]) {
+async function buildChatGPTBundle(conversations: ChatGPTConversation[]) {
   const bundle = new JSZip();
-  const files = buildClaudeBundleFiles(conversations);
+  const files = buildChatGPTBundleFiles(conversations);
   for (const [name, text] of Object.entries(files)) {
     bundle.file(name, text);
   }
@@ -509,7 +509,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
   const [selectedChunk, setSelectedChunk] = useState<string>('all');
   const [newCustomChunk, setNewCustomChunk] = useState<string>('');
 
-  const [isExportingClaude, setIsExportingClaude] = useState(false);
+  const [isExportingChatGPT, setIsExportingChatGPT] = useState(false);
   const [exportProgress, setExportProgress] = useState<{ current: number; total: number; step: string }>({ current: 0, total: 0, step: '' });
 
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -601,24 +601,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     }
   }
 
-  const handleExportClaude = () => {
+  const handleExportChatGPT = () => {
     setIsChunkModalOpen(true);
   };
 
-  const sanitizeClaudeSession = (session: ClaudeConversation): ClaudeConversation => {
-    return {
-      uuid: session.uuid,
-      name: session.name,
-      created_at: session.created_at,
-      updated_at: session.updated_at,
-      account: session.account,
-      chat_messages: session.chat_messages
-    };
+  const sanitizeChatGPTSession = (session: ChatGPTConversation & { _characterId?: string; _characterName?: string; _updatedAtTime?: number }): ChatGPTConversation => {
+    const { _characterId, _characterName, _updatedAtTime, ...clean } = session;
+    return clean;
   };
 
   const executeExport = async (chunkTime: string) => {
     try {
-      setIsExportingClaude(true);
+      setIsExportingChatGPT(true);
       setExportProgress({ current: 0, total: 0, step: '正在拉取会话列表...' });
 
       // Capture the pre-export boundary time before listing sessions
@@ -640,14 +634,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       }
 
       if (filteredSessions.length === 0) {
-        setIsExportingClaude(false);
+        setIsExportingChatGPT(false);
         alert('没有找到符合条件的会话进行导出！');
         return;
       }
 
       setExportProgress({ current: 0, total: filteredSessions.length, step: '正在转换会话格式...' });
 
-      const allExportedSessions: any[] = [];
+      const allExportedSessions: (ChatGPTConversation & { _characterId: string; _characterName: string; _updatedAtTime: number })[] = [];
       for (let i = 0; i < filteredSessions.length; i++) {
         const fullSession = filteredSessions[i];
         const charId = fullSession.characterId || 'default';
@@ -666,7 +660,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
           rawTime = parsedDate.getTime();
         }
 
-        const conversation = buildClaudeConversation(fullSession);
+        const conversation = buildChatGPTConversation(fullSession);
 
         allExportedSessions.push({
           ...conversation,
@@ -697,11 +691,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
 
       const masterZip = new JSZip();
 
-      // Create a sub-ZIP named All_Conversations.zip shaped like a real Claude export bundle
-      // (conversations.json + users.json + projects.json at the root, helper fields stripped)
-      const cleanAllSessions = allExportedSessions.map(sanitizeClaudeSession);
+      // Create a sub-ZIP named All_Conversations.zip shaped like a real ChatGPT export bundle
+      // (conversations.json + user.json + export_manifest.json at root)
+      const cleanAllSessions = allExportedSessions.map(sanitizeChatGPTSession);
 
-      const allConversationsZipBlob = await buildClaudeBundle(cleanAllSessions);
+      const allConversationsZipBlob = await buildChatGPTBundle(cleanAllSessions);
       masterZip.file('All_Conversations.zip', allConversationsZipBlob);
 
       // Group the sorted session array by character ID to create non-empty individual character sub-ZIP files
@@ -723,9 +717,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
           charName = 'Default';
         }
 
-        const cleanCharSessions = charSessions.map(sanitizeClaudeSession);
+        const cleanCharSessions = charSessions.map(sanitizeChatGPTSession);
 
-        const charZipBlob = await buildClaudeBundle(cleanCharSessions);
+        const charZipBlob = await buildChatGPTBundle(cleanCharSessions);
         masterZip.file(`${charName}.zip`, charZipBlob);
       }
 
@@ -744,23 +738,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       const url = URL.createObjectURL(finalBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Claude_Export_${timestamp}.zip`;
+      a.download = `ChatGPT_Export_${timestamp}.zip`;
       a.click();
       URL.revokeObjectURL(url);
 
       // Only add a new chunk for preExportBoundary if build & download initiated successfully
-      const updatedChunks = [...(local.claudeChunks || [])];
+      const updatedChunks = [...(local.chatgptChunks || [])];
       if (!updatedChunks.includes(preExportBoundary)) {
         updatedChunks.push(preExportBoundary);
       }
 
-      const updatedSettings = { ...local, claudeChunks: updatedChunks };
+      const updatedSettings = { ...local, chatgptChunks: updatedChunks };
       setLocal(updatedSettings);
       onSave(updatedSettings);
-      setIsExportingClaude(false);
+      setIsExportingChatGPT(false);
     } catch (err: any) {
       console.error('Export failed', err);
-      setIsExportingClaude(false);
+      setIsExportingChatGPT(false);
       alert('Export failed: ' + err.message);
     }
   };
@@ -1264,9 +1258,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
               </div>
 
               <div className="space-y-3 pt-4 border-t border-red-900/50">
-                <button onClick={handleExportClaude} className="w-full bg-red-600/90 hover:bg-red-600 text-white rounded-lg p-3 font-medium transition-colors flex items-center justify-center gap-2">
+                <button onClick={handleExportChatGPT} className="w-full bg-green-600/90 hover:bg-green-600 text-white rounded-lg p-3 font-medium transition-colors flex items-center justify-center gap-2">
                   <Download size={16} />
-                  导出为 Claude 格式
+                  导出为 ChatGPT 格式
                 </button>
                 <button onClick={handleCleanClick} className="w-full bg-red-600/90 hover:bg-red-600 text-white rounded-lg p-3 font-medium transition-colors flex items-center justify-center gap-2">
                   <AlertTriangle size={16} />
@@ -1292,7 +1286,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                   <label className="flex items-center space-x-3 p-2 rounded hover:bg-gray-700/30 cursor-pointer text-sm text-gray-300">
                     <input
                       type="radio"
-                      name="claude-chunk"
+                      name="chatgpt-chunk"
                       value="all"
                       checked={selectedChunk === 'all'}
                       onChange={() => setSelectedChunk('all')}
@@ -1301,14 +1295,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <span className="font-medium text-blue-400">全部导出 (不限时间)</span>
                   </label>
 
-                  {(local.claudeChunks || []).map((chunk) => {
-                    const remark = local.claudeChunkRemarks?.[chunk] || '';
+                  {(local.chatgptChunks || []).map((chunk) => {
+                    const remark = local.chatgptChunkRemarks?.[chunk] || '';
                     return (
                       <div key={chunk} className="flex items-center justify-between p-2 rounded hover:bg-gray-700/30 text-sm">
                         <label className="flex items-center space-x-3 cursor-pointer flex-1 text-gray-300 min-w-0">
                           <input
                             type="radio"
-                            name="claude-chunk"
+                            name="chatgpt-chunk"
                             value={chunk}
                             checked={selectedChunk === chunk}
                             onChange={() => setSelectedChunk(chunk)}
@@ -1326,17 +1320,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                         <div className="flex items-center">
                           <button
                             onClick={() => {
-                              const currentRemark = local.claudeChunkRemarks?.[chunk] || '';
+                              const currentRemark = local.chatgptChunkRemarks?.[chunk] || '';
                               const newRemark = window.prompt('编辑该时间点的备注：', currentRemark);
                               if (newRemark !== null) {
                                 setLocal(s => {
-                                  const remarks = { ...(s.claudeChunkRemarks || {}) };
+                                  const remarks = { ...(s.chatgptChunkRemarks || {}) };
                                   if (newRemark.trim()) {
                                     remarks[chunk] = newRemark.trim();
                                   } else {
                                     delete remarks[chunk];
                                   }
-                                  return { ...s, claudeChunkRemarks: remarks };
+                                  return { ...s, chatgptChunkRemarks: remarks };
                                 });
                               }
                             }}
@@ -1347,11 +1341,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                           </button>
                           <button
                             onClick={() => {
-                              const updated = (local.claudeChunks || []).filter(c => c !== chunk);
+                              const updated = (local.chatgptChunks || []).filter(c => c !== chunk);
                               setLocal(s => {
-                                const remarks = { ...(s.claudeChunkRemarks || {}) };
+                                const remarks = { ...(s.chatgptChunkRemarks || {}) };
                                 delete remarks[chunk];
-                                return { ...s, claudeChunks: updated, claudeChunkRemarks: remarks };
+                                return { ...s, chatgptChunks: updated, chatgptChunkRemarks: remarks };
                               });
                               if (selectedChunk === chunk) {
                                 setSelectedChunk('all');
@@ -1373,10 +1367,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <button
                       onClick={() => {
                         const nowStr = new Date().toISOString();
-                        const updated = [...(local.claudeChunks || [])];
+                        const updated = [...(local.chatgptChunks || [])];
                         if (!updated.includes(nowStr)) {
                           updated.push(nowStr);
-                          setLocal(s => ({ ...s, claudeChunks: updated }));
+                          setLocal(s => ({ ...s, chatgptChunks: updated }));
                         }
                       }}
                       className="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 px-3 rounded-lg transition-colors font-medium"
@@ -1401,10 +1395,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                           return;
                         }
                         const isoStr = date.toISOString();
-                        const updated = [...(local.claudeChunks || [])];
+                        const updated = [...(local.chatgptChunks || [])];
                         if (!updated.includes(isoStr)) {
                           updated.push(isoStr);
-                          setLocal(s => ({ ...s, claudeChunks: updated }));
+                          setLocal(s => ({ ...s, chatgptChunks: updated }));
                           setNewCustomChunk('');
                         } else {
                           alert('该分片时间已存在！');
@@ -1924,13 +1918,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         </div>
       )}
 
-      {isExportingClaude && (
+      {isExportingChatGPT && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[150] p-4">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
               <Loader2 className="animate-spin text-blue-400 shrink-0" size={24} />
               <div>
-                <h3 className="text-base font-semibold text-white">正在导出 Claude 格式数据</h3>
+                <h3 className="text-base font-semibold text-white">正在导出 ChatGPT 格式数据</h3>
                 <p className="text-xs text-gray-400 mt-0.5">{exportProgress.step}</p>
               </div>
             </div>

@@ -21,8 +21,8 @@ export interface UserSettings {
   collapseThinkingFinished: boolean;
   trimThinkingSpaces: boolean;
   starredSessions?: Record<string, string>;
-  claudeChunks?: string[];
-  claudeChunkRemarks?: Record<string, string>;
+  chatgptChunks?: string[];
+  chatgptChunkRemarks?: Record<string, string>;
   stickyNotes?: any[];
   [key: string]: any;
 }
@@ -217,6 +217,23 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
       await fs.mkdir(dataDir, { recursive: true });
       await writeIfChanged(skillsFile, JSON.stringify(skills, null, 2));
     } catch {}
+  }
+
+  // On-the-fly migration for claudeChunks -> chatgptChunks
+  if (settings.claudeChunks !== undefined && settings.chatgptChunks === undefined) {
+    settings.chatgptChunks = settings.claudeChunks;
+    delete settings.claudeChunks;
+    if (settings.claudeChunkRemarks !== undefined) {
+      settings.chatgptChunkRemarks = settings.claudeChunkRemarks;
+      delete settings.claudeChunkRemarks;
+    }
+    if (settingsExist) {
+      try {
+        await writeIfChanged(settingsFile, JSON.stringify(settings, null, 2));
+      } catch (err: any) {
+        console.warn(`[Settings Migration] Non-blocking failure while saving migrated files: ${err.message}`);
+      }
+    }
   }
 
   return {
