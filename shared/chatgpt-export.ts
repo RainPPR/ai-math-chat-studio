@@ -72,6 +72,18 @@ export interface ChatGPTUser {
   birth_year: number;
 }
 
+export interface ChatGPTUserSettingsItem {
+  announcements: Record<string, unknown>;
+  announcements_loaded: boolean;
+  beta_settings: Record<string, unknown>;
+  habitat_object_version: number;
+  settings: {
+    training_allowed: boolean;
+  };
+  settings_read_failed: boolean;
+  user_id: string;
+}
+
 export interface ChatGPTExportManifestFile {
   path: string;
   size_bytes: number;
@@ -117,7 +129,7 @@ function parseUnixTimestamp(val?: string | number): number | null {
  */
 export function buildChatGPTConversation(session: SourceSession): ChatGPTConversation {
   const convId = session.id || generateUuidV4();
-  const createTime = parseUnixTimestamp(session.createdAt) ?? (Date.now() / 1000);
+  const createTime = parseUnixTimestamp(session.createdAt) ?? Date.now() / 1000;
   const updateTime = parseUnixTimestamp(session.updatedAt) ?? createTime;
   const title = session.title || 'Untitled Conversation';
 
@@ -143,12 +155,11 @@ export function buildChatGPTConversation(session: SourceSession): ChatGPTConvers
 
     // Strip thinking process entirely for output only from assistant/model messages.
     // Use allowUnclosed = false to prevent unclosed <think> blocks from stripping trailing body content.
-    const cleanContent = authorRole === 'assistant'
-      ? extractThinkingBlocks(rawContent, false).mainContent
-      : rawContent;
+    const cleanContent =
+      authorRole === 'assistant' ? extractThinkingBlocks(rawContent, false).mainContent : rawContent;
 
     const msgId = msg.id || generateUuidV4();
-    const msgCreateTime = parseUnixTimestamp(msg.createdAt) ?? (createTime + i);
+    const msgCreateTime = parseUnixTimestamp(msg.createdAt) ?? createTime + i;
 
     const chatGPTMsg: ChatGPTMessage = {
       id: msgId,
@@ -209,38 +220,91 @@ export function buildChatGPTUserFile(): ChatGPTUser {
 }
 
 /**
- * Returns all bundle files required for an OpenAI/ChatGPT export ZIP.
+ * Builds user_settings.json object following official ChatGPT export format
+ */
+export function buildChatGPTUserSettingsFile(): ChatGPTUserSettingsItem[] {
+  return [
+    {
+      announcements: {},
+      announcements_loaded: true,
+      beta_settings: {},
+      habitat_object_version: 1,
+      settings: {
+        training_allowed: true,
+      },
+      settings_read_failed: false,
+      user_id: OPENAI_USER_ID,
+    },
+  ];
+}
+
+/**
+ * Returns all bundle files required for an OpenAI/ChatGPT export ZIP matching official file set.
  */
 export function buildChatGPTBundleFiles(conversations: ChatGPTConversation[]): Record<string, string> {
   const conversationsJson = JSON.stringify(conversations, null, 2);
   const userJson = JSON.stringify(buildChatGPTUserFile(), null, 2);
+  const userSettingsJson = JSON.stringify(buildChatGPTUserSettingsFile(), null, 2);
+  const adsJson = JSON.stringify({ ads_profile: [], ad_hides: [], reported_ads: [], ad_history: [] }, null, 2);
+  const assetNamesJson = JSON.stringify({}, null, 2);
+  const libraryFilesJson = JSON.stringify([], null, 2);
+  const sectionedConvsJson = JSON.stringify([], null, 2);
+  const sitesManifestJson = JSON.stringify(
+    {
+      artifacts: [],
+      incomplete_corpora: [],
+      inventory_warnings: [],
+      omissions: [],
+      redactions: [],
+      requested_at: new Date().toISOString(),
+    },
+    null,
+    2
+  );
+  const chatHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ChatGPT Conversations</title>
+</head>
+<body>
+  <h1>ChatGPT Conversations</h1>
+</body>
+</html>`;
 
-  const exportFiles: ChatGPTExportManifestFile[] = [
-    {
-      path: 'conversations.json',
-      size_bytes: new TextEncoder().encode(conversationsJson).length,
-    },
-    {
-      path: 'user.json',
-      size_bytes: new TextEncoder().encode(userJson).length,
-    },
-  ];
+  const filesToManifest: Record<string, string> = {
+    'ads.json': adsJson,
+    'chat.html': chatHtml,
+    'conversation_asset_file_names.json': assetNamesJson,
+    'conversations.json': conversationsJson,
+    'library_files.json': libraryFilesJson,
+    'sectioned_conversations.json': sectionedConvsJson,
+    'sites/export_manifest.json': sitesManifestJson,
+    'user.json': userJson,
+    'user_settings.json': userSettingsJson,
+  };
+
+  const exportFiles: ChatGPTExportManifestFile[] = Object.entries(filesToManifest).map(([path, content]) => ({
+    path,
+    size_bytes: new TextEncoder().encode(content).length,
+  }));
+
+  const logicalFiles: Record<string, { files: string[]; sharded: boolean }> = {};
+  for (const path of Object.keys(filesToManifest)) {
+    logicalFiles[path] = { files: [path], sharded: false };
+  }
 
   const exportManifest: ChatGPTExportManifest = {
     version: 1,
     manifest_file: 'export_manifest.json',
     export_files: exportFiles,
-    logical_files: {
-      'conversations.json': { files: ['conversations.json'], sharded: false },
-      'user.json': { files: ['user.json'], sharded: false },
-    },
+    logical_files: logicalFiles,
   };
 
   const manifestJson = JSON.stringify(exportManifest, null, 2);
 
   return {
-    'conversations.json': conversationsJson,
-    'user.json': userJson,
+    ...filesToManifest,
     'export_manifest.json': manifestJson,
   };
 }

@@ -689,16 +689,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         }
       });
 
+      const cleanAllSessions = allExportedSessions.map(sanitizeChatGPTSession);
+      const rootBundleFiles = buildChatGPTBundleFiles(cleanAllSessions);
+
       const masterZip = new JSZip();
 
-      // Create a sub-ZIP named All_Conversations.zip shaped like a real ChatGPT export bundle
-      // (conversations.json + user.json + export_manifest.json at root)
-      const cleanAllSessions = allExportedSessions.map(sanitizeChatGPTSession);
+      // 1. Put all 10 standard ChatGPT bundle files directly at the root of masterZip
+      for (const [fileName, fileContent] of Object.entries(rootBundleFiles)) {
+        masterZip.file(fileName, fileContent);
+      }
+
+      // 2. Place All_Conversations.zip and individual per-character sub-ZIP archives inside sub_archives/ folder
+      const subArchivesFolder = masterZip.folder('sub_archives');
 
       const allConversationsZipBlob = await buildChatGPTBundle(cleanAllSessions);
-      masterZip.file('All_Conversations.zip', allConversationsZipBlob);
+      subArchivesFolder?.file('All_Conversations.zip', allConversationsZipBlob);
 
-      // Group the sorted session array by character ID to create non-empty individual character sub-ZIP files
       const groupedByCharacter: Record<string, typeof allExportedSessions> = {};
       for (const session of allExportedSessions) {
         const charId = session._characterId;
@@ -720,7 +726,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         const cleanCharSessions = charSessions.map(sanitizeChatGPTSession);
 
         const charZipBlob = await buildChatGPTBundle(cleanCharSessions);
-        masterZip.file(`${charName}.zip`, charZipBlob);
+        subArchivesFolder?.file(`${charName}.zip`, charZipBlob);
       }
 
       setExportProgress({ current: filteredSessions.length, total: filteredSessions.length, step: '正在生成最终压缩文件并触发下载...' });
