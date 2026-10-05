@@ -1,5 +1,4 @@
 export const FORMAT_INSTRUCTIONS = `
-# CRUCIAL: FORMAT RULES
 When outputting math equations, ALWAYS use KaTeX formatting:
 - For inline math, use single dollar signs: $x^2$.
 - For block math, use double dollar signs:
@@ -56,6 +55,15 @@ export function buildSystemPromptBase(context: SystemPromptContext): string {
   const parts: string[] = [];
   const { skills, activeSkillIds, characters, activeCharacterId, systemPrompt } = context;
 
+  if (activeSkillIds && activeSkillIds.length > 0 && skills?.length) {
+    activeSkillIds.forEach(id => {
+      const skill = skills.find(s => s.id === id);
+      if (skill && skill.prompt && skill.prompt.trim()) {
+        parts.push(`# Skill: ${skill.name}\n${skill.prompt.trim()}`);
+      }
+    });
+  }
+
   let characterPromptAdded = false;
   if (activeCharacterId && characters?.length) {
     const character = characters.find(c => c.id === activeCharacterId);
@@ -69,15 +77,6 @@ export function buildSystemPromptBase(context: SystemPromptContext): string {
     parts.push(systemPrompt.trim());
   }
 
-  if (activeSkillIds && activeSkillIds.length > 0 && skills?.length) {
-    activeSkillIds.forEach(id => {
-      const skill = skills.find(s => s.id === id);
-      if (skill && skill.prompt && skill.prompt.trim()) {
-        parts.push(`# Skill: ${skill.name}\n${skill.prompt.trim()}`);
-      }
-    });
-  }
-
   return parts.join('\n\n');
 }
 
@@ -85,7 +84,7 @@ export function buildConstructedSystemPrompt(context: SystemPromptContext): stri
   const basePrompt = buildSystemPromptBase(context).trim();
   const formatText = FORMAT_INSTRUCTIONS.trim();
   if (basePrompt) {
-    return `${basePrompt}\n\n${formatText}`;
+    return `${formatText}\n\n${basePrompt}`;
   } else {
     return formatText;
   }
