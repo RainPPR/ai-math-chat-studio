@@ -1,4 +1,4 @@
-import { stripThinking } from './thinking';
+import { extractThinkingBlocks } from './thinking';
 
 /**
  * UUID v4 generator for NodeJS/Browser environments.
@@ -110,15 +110,17 @@ export interface SourceSession {
   messages: SourceMessage[];
 }
 
-function parseUnixTimestamp(val?: string | number): number {
+function parseUnixTimestamp(val?: string | number): number | null {
+  if (val === undefined || val === null) return null;
   if (typeof val === 'number') {
+    if (!Number.isFinite(val)) return null;
     return val > 1e11 ? val / 1000 : val;
   }
   if (typeof val === 'string') {
     const ms = Date.parse(val);
     if (Number.isFinite(ms)) return ms / 1000;
   }
-  return Date.now() / 1000;
+  return null;
 }
 
 /**
@@ -126,8 +128,8 @@ function parseUnixTimestamp(val?: string | number): number {
  */
 export function buildChatGPTConversation(session: SourceSession): ChatGPTConversation {
   const convId = session.id || generateUuidV4();
-  const createTime = parseUnixTimestamp(session.createdAt);
-  const updateTime = parseUnixTimestamp(session.updatedAt);
+  const createTime = parseUnixTimestamp(session.createdAt) ?? (Date.now() / 1000);
+  const updateTime = parseUnixTimestamp(session.updatedAt) ?? createTime;
   const title = session.title || 'Untitled Conversation';
 
   const mapping: Record<string, ChatGPTNode> = {};
@@ -147,14 +149,18 @@ export function buildChatGPTConversation(session: SourceSession): ChatGPTConvers
   for (let i = 0; i < session.messages.length; i++) {
     const msg = session.messages[i];
     const rawContent = msg.content || '';
-    // Strip thinking process entirely for output
-    const cleanContent = stripThinking(rawContent);
-
-    const msgId = msg.id || generateUuidV4();
-    const msgCreateTime = parseUnixTimestamp(msg.createdAt) || createTime + i;
 
     const authorRole: 'system' | 'user' | 'assistant' =
       msg.role === 'assistant' || msg.role === 'model' ? 'assistant' : msg.role === 'system' ? 'system' : 'user';
+
+    // Strip thinking process entirely for output only from assistant/model messages.
+    // Use allowUnclosed = false to prevent unclosed <think> blocks from stripping trailing body content.
+    const cleanContent = authorRole === 'assistant'
+      ? extractThinkingBlocks(rawContent, false).mainContent
+      : rawContent;
+
+    const msgId = msg.id || generateUuidV4();
+    const msgCreateTime = parseUnixTimestamp(msg.createdAt) ?? (createTime + i);
 
     const chatGPTMsg: ChatGPTMessage = {
       id: msgId,
@@ -170,7 +176,7 @@ export function buildChatGPTConversation(session: SourceSession): ChatGPTConvers
         parts: [cleanContent],
       },
       status: 'finished_successfully',
-      end_turn: true,
+      end_turn: authorRole === 'assistant' ? true : null,
       weight: 1.0,
       metadata: {},
       recipient: 'all',

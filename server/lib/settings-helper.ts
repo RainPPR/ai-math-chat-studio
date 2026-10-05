@@ -219,6 +219,21 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
     } catch {}
   }
 
+  // On-the-fly migration for claudeChunks -> chatgptChunks
+  if (settings.claudeChunks !== undefined && settings.chatgptChunks === undefined) {
+    settings.chatgptChunks = settings.claudeChunks;
+    delete settings.claudeChunks;
+    if (settings.claudeChunkRemarks !== undefined) {
+      settings.chatgptChunkRemarks = settings.claudeChunkRemarks;
+      delete settings.claudeChunkRemarks;
+    }
+    if (settingsExist) {
+      try {
+        await writeIfChanged(settingsFile, JSON.stringify(settings, null, 2));
+      } catch {}
+    }
+  }
+
   return {
     ...settings,
     providers,
