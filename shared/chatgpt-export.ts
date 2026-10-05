@@ -75,12 +75,8 @@ export interface ChatGPTConversation {
 export interface ChatGPTUser {
   id: string;
   email: string;
-  name: string;
-  picture: string;
-  idp: string;
-  iat: number;
-  mfa_verified: boolean;
-  user_id: string;
+  chatgpt_plus_user: boolean;
+  birth_year: number;
 }
 
 export interface ChatGPTExportManifestFile {
@@ -222,23 +218,19 @@ export function buildChatGPTConversation(session: SourceSession): ChatGPTConvers
 }
 
 /**
- * Builds user.json object
+ * Builds user.json object strictly following official ChatGPT export format
  */
 export function buildChatGPTUserFile(): ChatGPTUser {
   return {
     id: OPENAI_USER_ID,
     email: 'user@example.com',
-    name: 'ChatGPT User',
-    picture: '',
-    idp: 'auth0',
-    iat: Math.floor(Date.now() / 1000),
-    mfa_verified: false,
-    user_id: OPENAI_USER_ID,
+    chatgpt_plus_user: false,
+    birth_year: 2000,
   };
 }
 
 /**
- * Returns all bundle files required for an OpenAI/ChatGPT export ZIP (Option B).
+ * Returns all bundle files required for an OpenAI/ChatGPT export ZIP.
  */
 export function buildChatGPTBundleFiles(conversations: ChatGPTConversation[]): Record<string, string> {
   const conversationsJson = JSON.stringify(conversations, null, 2);
