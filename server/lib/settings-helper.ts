@@ -230,7 +230,9 @@ export async function loadSettings(settingsFile: string): Promise<UserSettings> 
     if (settingsExist) {
       try {
         await writeIfChanged(settingsFile, JSON.stringify(settings, null, 2));
-      } catch {}
+      } catch (err: any) {
+        console.warn(`[Settings Migration] Non-blocking failure while saving migrated files: ${err.message}`);
+      }
     }
   }
 
