@@ -78,8 +78,8 @@ export interface UserSettings {
   stripThinkingForApi?: boolean;
   userAsSystem?: boolean;
   starredSessions?: Record<string, StarColor>;
-  claudeChunks?: string[];
-  claudeChunkRemarks?: Record<string, string>;
+  chatgptChunks?: string[];
+  chatgptChunkRemarks?: Record<string, string>;
   stickyNotes?: { id: string; content: string; createdAt: string }[];
   katexFont?: string;
 }
@@ -101,8 +101,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   stripThinkingForApi: false,
   userAsSystem: false,
   starredSessions: {},
-  claudeChunks: [],
-  claudeChunkRemarks: {},
+  chatgptChunks: [],
+  chatgptChunkRemarks: {},
   stickyNotes: [],
   katexFont: 'default',
 };
