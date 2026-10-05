@@ -23,7 +23,6 @@ export const OPENAI_USER_ID = `user-${generateUuidV4().replace(/-/g, '').substri
 export interface ChatGPTAuthor {
   role: 'system' | 'user' | 'assistant';
   name: string | null;
-  metadata: Record<string, unknown>;
 }
 
 export interface ChatGPTContent {
@@ -35,20 +34,14 @@ export interface ChatGPTMessage {
   id: string;
   author: ChatGPTAuthor;
   create_time: number | null;
-  update_time?: number | null;
   content: ChatGPTContent;
-  status: 'finished_successfully';
-  end_turn: boolean | null;
-  weight: number;
   metadata: Record<string, unknown>;
-  recipient: 'all';
 }
 
 export interface ChatGPTNode {
   id: string;
   message: ChatGPTMessage | null;
   parent: string | null;
-  children: string[];
 }
 
 export interface ChatGPTConversation {
@@ -120,7 +113,7 @@ function parseUnixTimestamp(val?: string | number): number | null {
 }
 
 /**
- * Converts a local session into a ChatGPT format conversation object.
+ * Converts a local session into a ChatGPT format conversation object strictly matching official schema.
  */
 export function buildChatGPTConversation(session: SourceSession): ChatGPTConversation {
   const convId = session.id || generateUuidV4();
@@ -136,7 +129,6 @@ export function buildChatGPTConversation(session: SourceSession): ChatGPTConvers
     id: rootNodeId,
     message: null,
     parent: null,
-    children: [],
   };
 
   let parentId = rootNodeId;
@@ -163,35 +155,22 @@ export function buildChatGPTConversation(session: SourceSession): ChatGPTConvers
       author: {
         role: authorRole,
         name: null,
-        metadata: {},
       },
       create_time: msgCreateTime,
-      update_time: null,
       content: {
         content_type: 'text',
         parts: [cleanContent],
       },
-      status: 'finished_successfully',
-      end_turn: authorRole === 'assistant' ? true : null,
-      weight: 1.0,
-      metadata: {},
-      recipient: 'all',
+      metadata: authorRole === 'assistant' ? { model_slug: 'gpt-4o' } : {},
     };
 
     const node: ChatGPTNode = {
       id: msgId,
       message: chatGPTMsg,
       parent: parentId,
-      children: [],
     };
 
     mapping[msgId] = node;
-
-    // Attach as child to parent
-    if (mapping[parentId]) {
-      mapping[parentId].children.push(msgId);
-    }
-
     parentId = msgId;
   }
 
