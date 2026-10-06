@@ -1,0 +1,21 @@
+{
+  "id": "2070bd9b-52e8-401d-8540-9fd91d833eed",
+  "title": "在 △ ABC 中，角 A,B,C 所对的边分别为 a,b,c，已知 b=2，c=3，A=frac{...",
+  "messages": [
+    {
+      "id": "27fa5c97-079d-4e00-b42c-82950a9243ea",
+      "role": "user",
+      "content": "在 $\\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，已知 $b=2$，$c=3$，$A=\\dfrac{\\pi}{3}$，点 $M$ 为 $\\triangle ABC$ 外接圆圆心，设 $\\bm{AM}=\\lambda\\bm{AB}+\\mu\\bm{AC}$，则 $\\lambda+\\mu=$？",
+      "createdAt": "2026-10-06T02:53:07.140Z"
+    },
+    {
+      "id": "cf2a804e-d050-43ec-aa64-f48d74739aa0",
+      "role": "model",
+      "content": "## 【探索与特征透视】\n\n**未知量**：$\\lambda+\\mu$。**已知**：$AB=c=3$，$AC=b=2$，$A=\\dfrac{\\pi}{3}$，$M$ 为外心。**条件**：$\\overrightarrow{AM}=\\lambda\\overrightarrow{AB}+\\mu\\overrightarrow{AC}$。\n\n第一眼看到\"外心\"，就要**回到定义去**（定义法）：外心是三边中垂线的交点，于是 $M$ 在 $AB$ 上的投影恰是 $AB$ 中点。这立刻给出一个\"指纹\"结论：\n\n$$\n\\overrightarrow{AM}\\cdot\\overrightarrow{AB}=\\frac{1}{2}|\\overrightarrow{AB}|^2,\\qquad \\overrightarrow{AM}\\cdot\\overrightarrow{AC}=\\frac{1}{2}|\\overrightarrow{AC}|^2\n$$\n\n而我们手里有两个未知数 $\\lambda,\\mu$，正好需要两个方程——把分解式分别与 $\\overrightarrow{AB},\\overrightarrow{AC}$ 作数量积即可。这就是**基向量法 + 向量法**的标准路径。\n\n## 【严谨综合求解】\n\n### 常规解法：基向量点乘\n\n先算基底的数量积：$\\overrightarrow{AB}\\cdot\\overrightarrow{AC}=3\\cdot 2\\cdot\\cos\\dfrac{\\pi}{3}=3$。\n\n1. 两边点乘 $\\overrightarrow{AB}$：\n\n$$\n9\\lambda+3\\mu=\\frac{9}{2}\\quad\\Longrightarrow\\quad 3\\lambda+\\mu=\\frac{3}{2}\n$$\n\n2. 两边点乘 $\\overrightarrow{AC}$：\n\n$$\n3\\lambda+4\\mu=2\n$$\n\n3. 两式相减得 $3\\mu=\\dfrac{1}{2}$，即 $\\mu=\\dfrac{1}{6}$；回代得 $3\\lambda=\\dfrac{3}{2}-\\dfrac{1}{6}=\\dfrac{4}{3}$，$\\lambda=\\dfrac{4}{9}$。\n\n$$\n\\lambda+\\mu=\\frac{4}{9}+\\frac{1}{6}=\\frac{8}{18}+\\frac{3}{18}=\\frac{11}{18}\n$$\n\n**答案：$\\lambda+\\mu=\\dfrac{11}{18}$。**\n\n### 进阶解法一：解析法独立校验\n\n以 $A$ 为原点、$AB$ 为 $x$ 轴建系：$A(0,0)$，$B(3,0)$，$C(1,\\sqrt3)$。\n\n- $AB$ 的中垂线：$x=\\dfrac32$；\n- $AC$ 的中垂线过中点 $\\left(\\dfrac12,\\dfrac{\\sqrt3}{2}\\right)$ 且与 $(1,\\sqrt3)$ 垂直：$\\left(x-\\dfrac12\\right)+\\sqrt3\\left(y-\\dfrac{\\sqrt3}{2}\\right)=0$。\n\n代入 $x=\\dfrac32$ 得 $y=\\dfrac{\\sqrt3}{6}$，故 $M\\left(\\dfrac32,\\dfrac{\\sqrt3}{6}\\right)$。\n\n由 $\\lambda\\overrightarrow{AB}+\\mu\\overrightarrow{AC}=(3\\lambda+\\mu,\\ \\sqrt3\\mu)$，比较坐标：$\\mu=\\dfrac16$，$\\lambda=\\dfrac49$，与解法一完全吻合。\n\n### 进阶解法二：等高线几何直观（快速判断量级）\n\n直线 $BC$ 对应 $\\lambda+\\mu=1$，$A$ 对应 $\\lambda+\\mu=0$；$\\lambda+\\mu$ 的值与点到 $BC$ 的\"相对高度\"成线性关系。由余弦定理 $a^2=4+9-6=7<b^2+c^2=13$，三角形为锐角三角形，外心在 $\\triangle ABC$ 内部，所以必有 $0<\\lambda+\\mu<1$。$\\dfrac{11}{18}\\approx 0.61$ 落在该区间内，结论可信。\n\n## 【波利亚认知复盘】\n\n- **检验**：两种独立路径同时给出 $\\left(\\dfrac49,\\dfrac16\\right)$；锐角三角形 ⇒ 外心在内 ⇒ $\\lambda+\\mu\\in(0,1)$，三重吻合。\n- **解法模型**：凡\"特殊心（外心/垂心/重心/内心）+ 基底分解\"，固定套路是**回到该心的定义**提炼数量积等式，再用两条基底点乘建立 $2\\times2$ 线性方程组（基本量法）。外心专属\"指纹\"：$\\overrightarrow{AM}\\cdot\\overrightarrow{AB}=\\dfrac{c^2}{2}$，$\\overrightarrow{AM}\\cdot\\overrightarrow{AC}=\\dfrac{b^2}{2}$。\n- **迁移**：若换成垂心 $H$，指纹变为 $\\overrightarrow{AH}\\cdot\\overrightarrow{BC}=0$ 与 $\\overrightarrow{BH}\\cdot\\overrightarrow{AC}=0$；若换成内心，则用角平分线的单位向量和。方法不变，只是\"定义式\"不同。\n- **陷阱**：$\\overrightarrow{AB}\\cdot\\overrightarrow{AC}$ 用的是夹角 $A$，而 $\\overrightarrow{BA}\\cdot\\overrightarrow{BC}$ 要用角 $B$，起点务必统一，否则符号出错。",
+      "createdAt": "2026-10-06T02:57:57.601Z"
+    }
+  ],
+  "createdAt": "2026-10-06T02:54:59.731Z",
+  "updatedAt": "2026-10-06T02:57:57.601Z",
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
+}

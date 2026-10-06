@@ -440,13 +440,6 @@
     "displayName": "laguna-xs-2.1:free (FTAI)"
   },
   {
-    "id": "1b34dd78-2556-4097-8d2d-7b31a730668b",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/kai/stealth/space-bunny-alpha",
-    "displayName": "space-bunny-alpha (FTAI)"
-  },
-  {
     "id": "ae40e9a1-71b3-40d1-b9bd-a343b2cf6a21",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",

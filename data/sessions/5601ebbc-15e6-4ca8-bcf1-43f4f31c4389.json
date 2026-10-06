@@ -1,0 +1,21 @@
+{
+  "id": "5601ebbc-15e6-4ca8-bcf1-43f4f31c4389",
+  "title": "在 △ ABC 中，角 A,B,C 所对的边分别为 a,b,c，已知 b=2，c=3，A=frac{...",
+  "messages": [
+    {
+      "id": "d0ea7ee0-dee4-4d37-855a-28d0286f903a",
+      "role": "user",
+      "content": "在 $\\triangle ABC$ 中，角 $A,B,C$ 所对的边分别为 $a,b,c$，已知 $b=2$，$c=3$，$A=\\dfrac{\\pi}{3}$，点 $M$ 为 $\\triangle ABC$ 外接圆圆心，设 $\\bm{AM}=\\lambda\\bm{AB}+\\mu\\bm{AC}$，则 $\\lambda+\\mu=$？",
+      "createdAt": "2026-10-06T03:02:14.291Z"
+    },
+    {
+      "id": "f82194d9-d503-40e1-b0af-46df48608392",
+      "role": "model",
+      "content": "**关键是把“外接圆圆心到三个顶点距离相等”转化为向量数量积关系。**\n\n### 【常规解法】\n\n设 $\\vec{AB}=\\mathbf u$，$\\vec{AC}=\\mathbf v$，$\\vec{AM}=\\mathbf w$。注意边角对应关系：$AB=c=3$，$AC=b=2$，所以\n\n$$\n\\mathbf u^2=9,\\qquad\n\\mathbf v^2=4,\\qquad\n\\mathbf u\\cdot\\mathbf v=3\\cdot2\\cos\\frac{\\pi}{3}=3.\n$$\n\n**1. 利用圆心条件（定义法、向量法）。**\n\n由 $MA=MB$，得 $\\mathbf w^2=(\\mathbf w-\\mathbf u)^2$，因此\n\n$$\n\\mathbf w\\cdot\\mathbf u=\\frac{\\mathbf u^2}{2}=\\frac92.\n$$\n\n同理由 $MA=MC$，得\n\n$$\n\\mathbf w\\cdot\\mathbf v=\\frac{\\mathbf v^2}{2}=2.\n$$\n\n**2. 代入向量表达式（基向量法）。**\n\n将 $\\mathbf w=\\lambda\\mathbf u+\\mu\\mathbf v$ 分别与 $\\mathbf u,\\mathbf v$ 作数量积，得到\n\n$$\n\\begin{cases}\n9\\lambda+3\\mu=\\dfrac92,\\\\\n3\\lambda+4\\mu=2.\n\\end{cases}\n$$\n\n解得\n\n$$\n\\lambda=\\frac49,\\qquad \\mu=\\frac16.\n$$\n\n故**答案为**\n\n$$\n\\boxed{\\lambda+\\mu=\\frac{11}{18}}.\n$$\n\n### 【进阶解法/技巧】\n\n**整体考虑：只求系数和，不必分别解出系数。**\n\n将上述两式分别乘以 $1$、$6$ 后相加，恰好消除两个系数的差异：\n\n$$\n27\\lambda+27\\mu=\\frac92+12=\\frac{33}{2}.\n$$\n\n直接得到 $\\lambda+\\mu=\\dfrac{11}{18}$。\n\n### 【总结与反思】\n\n此类题的通用转换是：\n\n$$\nMA=MB\n\\quad\\Longrightarrow\\quad\n\\vec{AM}\\cdot\\vec{AB}=\\frac12|AB|^2.\n$$\n\n**圆心等距条件 → 数量积 → 系数方程。** 注意不要把 $AB=c$ 与 $AC=b$ 对应颠倒。",
+      "createdAt": "2026-10-06T03:02:33.987Z"
+    }
+  ],
+  "createdAt": "2026-10-06T03:02:14.291Z",
+  "updatedAt": "2026-10-06T03:02:33.988Z",
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
+}
