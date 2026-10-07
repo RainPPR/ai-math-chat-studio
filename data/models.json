@@ -132,11 +132,25 @@
     "displayName": "grok-4-1-fast-non-reasoning (FTAI)"
   },
   {
+    "id": "005736e4-b16d-4101-9086-357776468392",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/cat/deepseek-ai/deepseek-v4-flash-0731",
+    "displayName": "deepseek-v4-flash-0731 (FTAI)"
+  },
+  {
     "id": "75cd7aa6-fe47-43c3-bfba-dbca5f046e72",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
     "modelId": "fta/cat/minimaxai/minimax-m2.7",
     "displayName": "minimax-m2.7 (FTAI)"
+  },
+  {
+    "id": "73a668cd-c14a-45be-8b7f-0c252adf20a2",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/des/deepseek",
+    "displayName": "deepseek (FTAI)"
   },
   {
     "id": "185b383d-e720-4137-8baf-aebcea4123ba",
@@ -454,6 +468,300 @@
     "displayName": "k3 (FTAI)"
   },
   {
+    "id": "90a49caa-267a-4ccb-ac76-6ab25e0bb5e5",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/claude-4-5-haiku",
+    "displayName": "claude-4-5-haiku (FTAI)"
+  },
+  {
+    "id": "54ce6b65-311d-4c1b-acc1-9c7758f25f14",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/claude-4-5-sonnet",
+    "displayName": "claude-4-5-sonnet (FTAI)"
+  },
+  {
+    "id": "7dc8e2d6-8733-4d29-ad2c-0af19a6a375d",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/claude-4-6-sonnet",
+    "displayName": "claude-4-6-sonnet (FTAI)"
+  },
+  {
+    "id": "34da7dab-776f-45f6-a6e6-fe3f59bf76a7",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/claude-5-sonnet",
+    "displayName": "claude-5-sonnet (FTAI)"
+  },
+  {
+    "id": "a6f1a456-c025-4b0c-8529-6026e76ee4f4",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/claude-fable-5",
+    "displayName": "claude-fable-5 (FTAI)"
+  },
+  {
+    "id": "146fcb2e-a849-4d94-b803-3f0a46b66164",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/claude-fable-5.1",
+    "displayName": "claude-fable-5.1 (FTAI)"
+  },
+  {
+    "id": "0108ff8d-40d6-40bf-8f11-4273203d35d7",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/claude-opus-4-7",
+    "displayName": "claude-opus-4-7 (FTAI)"
+  },
+  {
+    "id": "ca7225e8-8faa-4811-995b-67a76a2e0dac",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/claude-opus-4-8",
+    "displayName": "claude-opus-4-8 (FTAI)"
+  },
+  {
+    "id": "7578d4f2-01bb-4828-b066-5e0eba9a32f7",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/claude-opus-5",
+    "displayName": "claude-opus-5 (FTAI)"
+  },
+  {
+    "id": "83e40979-bb80-4c0c-84ad-8f52b9fcc98e",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/claude-opus-5-5",
+    "displayName": "claude-opus-5-5 (FTAI)"
+  },
+  {
+    "id": "4f224b33-afe2-43ae-af91-46595f95e9c0",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gemini-2-5-flash",
+    "displayName": "gemini-2-5-flash (FTAI)"
+  },
+  {
+    "id": "7e2030da-8a9d-477c-abfb-0c99ff0e3de4",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gemini-3-1-pro",
+    "displayName": "gemini-3-1-pro (FTAI)"
+  },
+  {
+    "id": "a05dcf3d-fc03-4491-96d3-b3f8941e38a6",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gemini-3-5-flash",
+    "displayName": "gemini-3-5-flash (FTAI)"
+  },
+  {
+    "id": "1cb75981-ca3b-46f1-b154-df96f78bbea9",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gemini-3-6-flash",
+    "displayName": "gemini-3-6-flash (FTAI)"
+  },
+  {
+    "id": "bda86592-739b-4039-ac68-57df20f533fa",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gemini-3-7-flash",
+    "displayName": "gemini-3-7-flash (FTAI)"
+  },
+  {
+    "id": "2a8748ae-5bb9-4e43-bbe5-80b7fddd555b",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gemini-3-8-flash",
+    "displayName": "gemini-3-8-flash (FTAI)"
+  },
+  {
+    "id": "1b59292c-ec14-4e0e-8aa8-12ed50ab9eb0",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gemini-3-flash",
+    "displayName": "gemini-3-flash (FTAI)"
+  },
+  {
+    "id": "d5f0f776-65a6-440f-ae3b-4f7f5c6fbe6d",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-4.1",
+    "displayName": "gpt-4.1 (FTAI)"
+  },
+  {
+    "id": "9ac75950-34a8-48fc-8ad0-56503fadd70a",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-4.1-mini",
+    "displayName": "gpt-4.1-mini (FTAI)"
+  },
+  {
+    "id": "5762d936-45a7-46d1-a903-c2b9f2d34666",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-5",
+    "displayName": "gpt-5 (FTAI)"
+  },
+  {
+    "id": "2772998f-8bce-4edb-b6ae-3a2fc941dacc",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-5-mini",
+    "displayName": "gpt-5-mini (FTAI)"
+  },
+  {
+    "id": "aca34a56-4e04-464b-822d-d1187fd0d5b4",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-5.1",
+    "displayName": "gpt-5.1 (FTAI)"
+  },
+  {
+    "id": "7bf7823c-6a7c-4480-84a1-72067c4502cc",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-5.2",
+    "displayName": "gpt-5.2 (FTAI)"
+  },
+  {
+    "id": "759a8405-472d-4f76-abc5-157bb23407d8",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-5.4",
+    "displayName": "gpt-5.4 (FTAI)"
+  },
+  {
+    "id": "59862257-cdaa-4b09-b5eb-c8cacb026eb9",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-5.4-mini",
+    "displayName": "gpt-5.4-mini (FTAI)"
+  },
+  {
+    "id": "97b6b8ef-7e1c-4216-bf74-594cfb0e88bf",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-5.5",
+    "displayName": "gpt-5.5 (FTAI)"
+  },
+  {
+    "id": "f63ba8a2-701f-4c0b-8dee-c7c08eef5b3c",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-5.6-luna",
+    "displayName": "gpt-5.6-luna (FTAI)"
+  },
+  {
+    "id": "780aa392-0065-4389-8aaa-09d582c8c1a5",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-5.6-sol",
+    "displayName": "gpt-5.6-sol (FTAI)"
+  },
+  {
+    "id": "31c441b5-2844-40cc-9d3c-687492f398e3",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-5.6-terra",
+    "displayName": "gpt-5.6-terra (FTAI)"
+  },
+  {
+    "id": "ac576447-5822-4422-a5d7-194f12f53d95",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-6-astra",
+    "displayName": "gpt-6-astra (FTAI)"
+  },
+  {
+    "id": "a26f7fec-7756-4b28-a71b-40a51d47d033",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-6-luna",
+    "displayName": "gpt-6-luna (FTAI)"
+  },
+  {
+    "id": "a41df1d1-d3ba-43a2-9952-28bc3c3893df",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/lion/gpt-6-sol",
+    "displayName": "gpt-6-sol (FTAI)"
+  },
+  {
+    "id": "66b33ce8-96d0-4b6e-9f27-6b6265f208dc",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/meow/gpt-3.5-turbo",
+    "displayName": "gpt-3.5-turbo (FTAI)"
+  },
+  {
+    "id": "77979d2a-94e1-4efb-9509-f99b495172f9",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/meow/gpt-4-turbo",
+    "displayName": "gpt-4-turbo (FTAI)"
+  },
+  {
+    "id": "c80c3394-26a1-4158-bb56-c2b146984206",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/meow/gpt-4.1",
+    "displayName": "gpt-4.1 (FTAI)"
+  },
+  {
+    "id": "0cbd5dd5-ba84-45af-b6b2-4886a36e18fb",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/meow/gpt-4.1-mini",
+    "displayName": "gpt-4.1-mini (FTAI)"
+  },
+  {
+    "id": "9c58b654-1cad-496d-a1da-ffc389626953",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/meow/gpt-4.1-nano",
+    "displayName": "gpt-4.1-nano (FTAI)"
+  },
+  {
+    "id": "1258458d-8307-4914-a2a0-c29865105042",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/meow/gpt-4o",
+    "displayName": "gpt-4o (FTAI)"
+  },
+  {
+    "id": "f7bbfb0b-3493-42d4-953d-c6d0595d7936",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/meow/gpt-4o-mini",
+    "displayName": "gpt-4o-mini (FTAI)"
+  },
+  {
+    "id": "a6b0fea9-4ace-4a5a-bc2c-547b49ae3a49",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/meow/gpt-5",
+    "displayName": "gpt-5 (FTAI)"
+  },
+  {
+    "id": "4a94a732-a8a9-4a0f-a366-477c6f0b2670",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/meow/gpt-5-mini",
+    "displayName": "gpt-5-mini (FTAI)"
+  },
+  {
+    "id": "b6010ba2-bd23-49b6-a05e-1fd4fcca7988",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/meow/gpt-5-nano",
+    "displayName": "gpt-5-nano (FTAI)"
+  },
+  {
     "id": "369ebe6d-768a-498a-8bea-6625f0f4b8ac",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
@@ -571,6 +879,20 @@
     "providerType": "openai-compatible",
     "modelId": "fta/zai/glm-5.3-flash",
     "displayName": "glm-5.3-flash (FTAI)"
+  },
+  {
+    "id": "62dcc778-71d7-4fec-820a-9803342229ea",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/zzz/deepseek-chat",
+    "displayName": "deepseek-chat (FTAI)"
+  },
+  {
+    "id": "ef31797c-9496-490a-bf00-b3e2337c7ae0",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/zzz/deepseek-reasoner",
+    "displayName": "deepseek-reasoner (FTAI)"
   },
   {
     "id": "4bfaedc8-2a17-4c88-a531-ed629694a3f8",
