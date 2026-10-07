@@ -1266,7 +1266,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                           </div>
                           {providerModels.map(m => {
                             const isActive = m.id === settings.activeModelId;
-                            let buttonClass = 'w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ';
+                            let buttonClass = 'w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors flex items-center justify-between gap-2 min-w-0 ';
                             buttonClass += isActive ? 'text-blue-300 bg-blue-600/10' : 'text-gray-300';
 
                             return (
@@ -1274,9 +1274,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                                 key={m.id}
                                 ref={isActive ? activeModelRef : undefined}
                                 onClick={() => { onSelectModel?.(m.id); setModelDropdownOpen(false); }}
+                                title={m.modelId}
                                 className={buttonClass}
                               >
-                                {m.displayName || m.modelId}
+                                <span className="truncate shrink-0 max-w-[55%]">{m.displayName || m.modelId}</span>
+                                <span className="text-[10px] text-gray-400 font-mono truncate shrink min-w-0">{m.modelId}</span>
                               </button>
                             );
                           })}
@@ -1291,7 +1293,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                         </div>
                         {allFilteredTempModels.map(tm => {
                           const isActive = tm.id === settings.activeModelId;
-                          let buttonClass = 'w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors truncate ';
+                          let buttonClass = 'w-full px-2.5 py-1.5 text-left text-xs hover:bg-gray-700/50 transition-colors flex items-center justify-between gap-2 min-w-0 ';
                           buttonClass += isActive ? 'text-purple-300 bg-purple-600/10' : 'text-gray-300';
 
                           return (
@@ -1299,9 +1301,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                               key={tm.id}
                               ref={isActive ? activeModelRef : undefined}
                               onClick={() => { onSelectModel?.(tm.id); setModelDropdownOpen(false); }}
+                              title={tm.modelId}
                               className={buttonClass}
                             >
-                              {tm.name || tm.modelId}
+                              <span className="truncate shrink-0 max-w-[55%]">{tm.name || tm.modelId}</span>
+                              <span className="text-[10px] text-purple-300/70 font-mono truncate shrink min-w-0">{tm.modelId}</span>
                             </button>
                           );
                         })}
