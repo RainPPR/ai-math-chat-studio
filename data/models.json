@@ -391,13 +391,6 @@
     "displayName": "dots-3-note-preview:free (FTAI)"
   },
   {
-    "id": "53064328-ae4e-4d1f-b74d-f7f0075fcf8f",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/kai/inclusionai/ling-3.0-flash-sante:free",
-    "displayName": "ling-3.0-flash-sante:free (FTAI)"
-  },
-  {
     "id": "52ee0295-04e7-48f6-af2d-90b3765aa2cb",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
@@ -452,13 +445,6 @@
     "providerType": "openai-compatible",
     "modelId": "fta/kai/poolside/laguna-xs-2.1:free",
     "displayName": "laguna-xs-2.1:free (FTAI)"
-  },
-  {
-    "id": "ae40e9a1-71b3-40d1-b9bd-a343b2cf6a21",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/kai/stepfun/step-3.7-flash:free",
-    "displayName": "step-3.7-flash:free (FTAI)"
   },
   {
     "id": "267d284e-aaa5-4efe-8c0d-946696625278",
@@ -1126,6 +1112,14 @@
     "reasoningEffort": "xhigh"
   },
   {
+    "id": "c7935d10-0320-49e0-b31f-f27df31045a1",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "stealth/glyph-cluster",
+    "displayName": "Stealth: Glyph Cluster (Kilo) (KG)",
+    "reasoningEffort": "xhigh"
+  },
+  {
     "id": "63679ae9-09eb-5ebd-ab59-dd2d218c0437",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -1139,6 +1133,14 @@
     "providerType": "openai-compatible",
     "modelId": "stepfun/step-3.7-flash:free",
     "displayName": "StepFun: Step 3.7 Flash (Kilo)",
+    "reasoningEffort": "high"
+  },
+  {
+    "id": "30e895d2-e035-4ead-bd1e-2ac55123b5ad",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "stepfun/step-5-preview-free",
+    "displayName": "StepFun: Step 5 Preview (Kilo) (KG)",
     "reasoningEffort": "high"
   },
   {

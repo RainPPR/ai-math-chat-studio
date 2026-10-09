@@ -8,7 +8,7 @@
   "autoScroll": false,
   "collapseThinkingFinished": true,
   "trimThinkingSpaces": false,
-  "stripThinkingForApi": false,
+  "stripThinkingForApi": true,
   "userAsSystem": false,
   "starredSessions": {},
   "chatgptChunks": [
@@ -21,5 +21,5 @@
   "stickyNotes": [],
   "katexFont": "euler",
   "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
-  "activeModelId": "375d267f-8967-4b2e-95ee-60fce15c0bfe"
+  "activeModelId": "090f132d-1796-47d5-b6fa-32244e602e13"
 }
