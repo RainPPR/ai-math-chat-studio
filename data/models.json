@@ -31,6 +31,13 @@
     "displayName": "DeepSeek-V4.1-Flash (AMD)"
   },
   {
+    "id": "dcaffd01-9986-4e81-bef1-a37b9665ac04",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "Gemma-4-31B-IT",
+    "displayName": "Gemma 4 31B (AMD)"
+  },
+  {
     "id": "8f3609f0-122a-4b8f-9d17-ee970036d285",
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
@@ -144,13 +151,6 @@
     "providerType": "openai-compatible",
     "modelId": "fta/cat/minimaxai/minimax-m2.7",
     "displayName": "minimax-m2.7 (FTAI)"
-  },
-  {
-    "id": "73a668cd-c14a-45be-8b7f-0c252adf20a2",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/des/deepseek",
-    "displayName": "deepseek (FTAI)"
   },
   {
     "id": "185b383d-e720-4137-8baf-aebcea4123ba",
@@ -375,6 +375,13 @@
     "providerType": "openai-compatible",
     "modelId": "fta/dog/gpt-6-sol",
     "displayName": "gpt-6-sol (FTAI)"
+  },
+  {
+    "id": "0a6f980f-884e-42b3-87c0-b4398ee8b03d",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/fox/gpt-6-luna",
+    "displayName": "gpt-6-luna (FTAI)"
   },
   {
     "id": "a96e53e6-e725-4ccb-8d11-71372ede0603",
@@ -851,6 +858,48 @@
     "providerType": "openai-compatible",
     "modelId": "fta/olm/kimi-k2.7-code",
     "displayName": "kimi-k2.7-code (FTAI)"
+  },
+  {
+    "id": "0b0b41a9-66d9-449f-ad3d-12760f19b8ad",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/vbk/claude-haiku-4-5",
+    "displayName": "claude-haiku-4-5 (FTAI)"
+  },
+  {
+    "id": "6827a413-4a5d-4529-bcd5-87350bc5a59b",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/vbk/gemma4-31b",
+    "displayName": "gemma4-31b (FTAI)"
+  },
+  {
+    "id": "1750c7d7-9d6a-4944-9a40-8f9b574b840c",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/vbk/gpt-5.4-mini",
+    "displayName": "gpt-5.4-mini (FTAI)"
+  },
+  {
+    "id": "b1aff009-f106-42ae-a4c0-7247cb574a5a",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/vbk/gpt-6-luna",
+    "displayName": "gpt-6-luna (FTAI)"
+  },
+  {
+    "id": "8e978e41-e059-42d3-a5be-ebc5e843232e",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/vbk/gpt-oss-120b",
+    "displayName": "gpt-oss-120b (FTAI)"
+  },
+  {
+    "id": "fdc07855-ca03-4585-b0a6-332825546c30",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/vbk/mistral-small-2603",
+    "displayName": "mistral-small-2603 (FTAI)"
   },
   {
     "id": "076378a5-5837-447d-aed0-62d5b84f0f16",

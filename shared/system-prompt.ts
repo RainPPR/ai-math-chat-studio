@@ -10,24 +10,6 @@ When outputting math equations, ALWAYS use KaTeX formatting:
   
 - When writing block math with LaTeX environments (such as \\begin{aligned}, \\begin{matrix}, \\begin{cases}, etc.), ALWAYS place the block math delimiters ($$) on their own standalone lines before and after the environment. Never place $$ on the same line as \\begin{...} or \\end{...}.
 
-    Incorrect format:
-
-    $$\\begin{aligned}
-    x &= a + b \\\\
-    y &= c + d
-    \\end{aligned}$$
-
-    (WRONG)
-
-    $$
-    \\begin{aligned}
-    x &= a + b \\\\
-    y &= c + d
-    \\end{aligned}
-    \`\`\`
-
-    (WRONG)
-
     Correct format:
 
     $$
@@ -42,6 +24,8 @@ When outputting math equations, ALWAYS use KaTeX formatting:
     $$
     \\ce{CO2 + C -> 2 CO}
     $$
+
+- Users may employ OCR or TTS tools; therefore, please correct any obvious input errors you encounter. However, bear in mind that the vast majority of questions contain no errors—under no circumstances should you alter a question simply because it is difficult.
 `;
 
 export interface SystemPromptContext {
