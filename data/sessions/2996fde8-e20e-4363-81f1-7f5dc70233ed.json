@@ -1,0 +1,33 @@
+{
+  "id": "2996fde8-e20e-4363-81f1-7f5dc70233ed",
+  "title": "已知 X∼ N(900,2500)，估算 P(X>1000)",
+  "messages": [
+    {
+      "id": "150ad876-9437-46d2-ac04-347b6ab98f5c",
+      "role": "user",
+      "content": "已知 $X\\sim N(900,2500)$，估算 $P(X>1000)$",
+      "createdAt": "2026-10-14T03:39:28.027Z"
+    },
+    {
+      "id": "1f3d99a8-ad2b-4575-a30a-8203153965bd",
+      "role": "model",
+      "content": "<think>\n**Assessing the Probability**\n\nI'm currently focused on the user's request. It involves calculating the probability of a normally distributed random variable exceeding a certain value. The input, $X \\sim N(900, 2500)$, defines the distribution, and I must estimate $P(X > 1000)$. The user is a senior high school math expert.\n\n\n**Refining the Approach**\n\nI've decided to incorporate Polya's method and concepts from the Chinese materials. My strategy now involves a structured approach with exploration, solution, and reflection. I'm aiming for a deep chain-of-thought to ensure accuracy. The checklist is fully satisfied. I am also planning to implement the 3-sigma rule for normal distribution within the solution.\n\n\n**Calculating the Solution**\n\nNow, I'm focusing on the calculations and execution. I've standardized the variable to $Z$, where $Z = (X - 900)/50$. The goal is to determine $P(Z > 2)$. I'll use either a standard normal table or the 3-sigma rule, to find this tail probability. I'm recalling from previous experience that the value is approximately 0.0228, which is less than 0.15 for Z > 1.\n\n\n\n</think>\n\n### 【第一步：审题破局·提炼思想】\n\n本题考察概率论与数理统计中的核心模型——**正态分布（Normal Distribution）**及其概率计算。\n\n在《高中数学思想方法导引》的体系中，处理这类问题的核心策略是：\n1. **【模型法】（第 72 项）**：识别随机变量 $X$ 遵从参数为 $\\mu = 900$、$\\sigma^2 = 2500$ 的正态分布，记作 $X \\sim N(900, 2500)$。\n2. **【标准化法】**：由于正态分布的概率密度积分无法用初等函数直接表达，我们必须通过线性变换，将其转化为标准的**标准正态分布 $Z \\sim N(0, 1)$**，从而利用已知的数据表或常规结论进行求解。\n\n---\n\n### 【第二步：策略对比与思维支架】\n\n在着手计算前，我们先进行直观的审视：\n- 已知均值（期望） $\\mu = 900$，方差 $\\sigma^2 = 2500$，因此标准差 $\\sigma = \\sqrt{2500} = 50$。\n- 目标是求 $P(X > 1000)$。\n- 观察数值：$1000$ 距离均值 $900$ 的差值为 $100$，恰好是 **$2$ 个标准差**（因为 $1000 = 900 + 2 \\times 50$）。\n\n在概率统计中，有一个非常著名的经验法则（或称 $3\\sigma$ 原则）：\n- 约 $68.27\\%$ 的数据落在 $[\\mu - \\sigma, \\mu + \\sigma]$ 内；\n- 约 **$95.45\\%$** 的数据落在 $[\\mu - 2\\sigma, \\mu + 2\\sigma]$ 内；\n- 约 $99.73\\%$ 的数据落在 $[\\mu - 3\\sigma, \\mu + 3\\sigma]$ 内。\n\n既然 $X$ 落在 $(\\mu - 2\\sigma, \\mu + 2\\sigma)$ 内的概率约为 $0.9545$，那么根据对称性，超出这个区间的总概率为 $1 - 0.9545 = 0.0455$，因此单侧尾部 $P(X > \\mu + 2\\sigma)$ 应当约为一半，即 $\\frac{0.0455}{2} \\approx 0.0228$。下面我们通过严谨的标准化步骤予以精确推导。\n\n---\n\n### 【第三步：规范严谨·详细推演】\n\n**步骤一：确定数字特征**\n已知 $X \\sim N(900, 2500)$，其中：\n- 期望：$\\mu = 900$\n- 方差：$\\sigma^2 = 2500 \\implies$ 标准差 $\\sigma = \\sqrt{2500} = 50$\n\n**步骤二：变量标准化（Standardization）**\n令随机变量 $Z = \\frac{X - \\mu}{\\sigma} = \\frac{X - 900}{50}$。\n根据正态分布的线性性质，新随机变量 $Z$ 服从标准正态分布，即 $Z \\sim N(0, 1)$。\n\n**步骤三：转化概率不等式**\n我们将原概率表达式进行同解变形，两边同时减去 $900$ 并除以 $50$：\n\n$$\n\\begin{aligned}\nP(X > 1000) &= P\\left( X - 900 > 1000 - 900 \\right) \\\\\n&= P\\left( \\frac{X - 900}{50} > \\frac{100}{50} \\right) \\\\\n&= P(Z > 2)\n\\end{aligned}\n$$\n\n**步骤四：计算标准正态尾部概率**\n利用标准正态分布的对称性与累积分布函数 $\\Phi(z)$：\n\n$$\n\\begin{aligned}\nP(Z > 2) &= 1 - P(Z \\le 2) \\\\\n&= 1 - \\Phi(2)\n\\end{aligned}\n$$\n\n查标准正态分布表可知，$\\Phi(2) \\approx 0.9772$。因此：\n\n$$\nP(X > 1000) = 1 - 0.9772 = 0.0228\n$$\n\n即估算结果约为 $0.0228$（或写作 $2.28\\%$）。\n\n---\n\n### 【第四步：数学认知复盘】\n\n1. **易错点警示**：同学们在处理正态分布 $N(\\mu, \\sigma^2)$ 时，常犯的低级错误是**把方差直接当成标准差**去代入公式（误以为 $\\sigma = 2500$，从而算错标准化分母）。务必谨记：括号内的第二个参数是**方差**，开平方根后才是**标准差**。\n2. **方法论迁移**：一切非标准正态分布 $N(\\mu, \\sigma^2)$ 的概率计算，均可归结为**“减去均值、除以标准差”**的标准化核心操作。熟练掌握 $1\\sigma$、$2\\sigma$、$3\\sigma$ 对应的概率值（分别为 $68.3\\%$、$95.5\\%$、$99.7\\%$），不仅能在计算大题中快速验算结果，还能在选择填空题中实现秒杀。",
+      "createdAt": "2026-10-14T03:39:37.189Z"
+    },
+    {
+      "id": "ae71039b-f9cc-4ef8-8608-6c363b476d1a",
+      "role": "user",
+      "content": "题目给的 ±1σ 0.6827 2σ 0.9545 3σ 0.9973，按照这个数值估算，答案是多少？",
+      "createdAt": "2026-10-14T03:40:35.987Z"
+    },
+    {
+      "id": "e3ecbfed-2cec-41dc-8e9f-496d854cb489",
+      "role": "model",
+      "content": "<think>\n**Estimating Probability Values**\n\nI'm now focusing on calculating the probability that X is greater than 1000, using the 3-sigma values as a guide. I am attempting to determine how to apply the empirical data, i.e. the $3\\sigma$ rule, to approximate this specific probability value. This involves determining the relevance and limitations of the data for this approximation.\n\n\n**Calculating Probability from Z-Score**\n\nNow, I'm using the provided data to get a precise value. I've calculated that P(Z > 2) is equivalent to P(Z < -2) and that the $2\\sigma$ value can get me the value. Now, using the data that $P(-2 \\le Z \\le 2) = 0.9545$, I can derive $P(Z > 2)$ by accounting for symmetry and the probability outside of this range.\n\n\n**Refining Numerical Value**\n\nI've confirmed the probability value, focusing on precision. The calculation is now finalized as $0.02275$, precisely derived using the empirical rule. Now, I will explicitly relate this value back to $P(X > 1000)$, connecting the z-score to the original problem. The structure is set and I'm ready to present the final answer.\n\n\n\n</think>\n\n紧扣题目给出的经验数据（即 $2\\sigma$ 准则的精确数值），我们可以利用正态分布的**对称性**与**补集思想**进行精准估算，而无需查阅标准正态分布表。\n\n### 【推导过程】\n\n**第一步：明确标准化与边界定位**\n如前所述，经过标准化后：\n\n$$\nP(X > 1000) = P(Z > 2)\n$$\n\n其中 $Z \\sim N(0, 1)$。\n\n**第二步：调用给定的 $2\\sigma$ 数据**\n根据题目提供的 $2\\sigma$ 概率值，可知随机变量落在距均值 $2$ 个标准差以内的概率为：\n\n$$\nP(-2 \\le Z \\le 2) = 0.9545\n$$\n\n**第三步：利用对称性切分尾部概率**\n正态曲线关于纵轴 $Z = 0$ 呈严格的轴对称。因此，落在区间 $[-2, 2]$ **之外**（即两侧尾部）的总概率为：\n\n$$\nP(|Z| > 2) = 1 - P(-2 \\le Z \\le 2) = 1 - 0.9545 = 0.0455\n$$\n\n由于我们所求的是单侧尾部概率 $P(Z > 2)$（即 $Z > 2$ 的部分），它只占两侧总尾部概率的一半：\n\n$$\nP(Z > 2) = \\frac{0.0455}{2} = 0.02275\n$$\n\n---\n\n### 【最终结论】\n\n按照题目给出的数值估算，$\\mathbf{P(X > 1000) = 0.02275}$（即 $\\mathbf{2.275\\%}$）。 \n\n*(注：这个结果比直接查表得到的 $0.0228$ 更精准，完全基于题目所给的 $95.45\\%$ 这一特定数据推导而出。)*",
+      "createdAt": "2026-10-14T03:40:41.322Z"
+    }
+  ],
+  "createdAt": "2026-10-14T03:39:28.027Z",
+  "updatedAt": "2026-10-14T03:40:41.322Z",
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
+}

@@ -59,6 +59,20 @@
     "displayName": "MinerU2.5-Pro (AMD)"
   },
   {
+    "id": "57898102-4e34-43e6-8638-42860e47be39",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "MiniCPM-V-4.7-1B",
+    "displayName": "MiniCPM-V-4.7-1B (AMD)"
+  },
+  {
+    "id": "90247d2a-b023-46ec-934f-c725735020f9",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "MiniCPM-V-4.7-35B-A3B",
+    "displayName": "MiniCPM-V-4.7-35B-A3B (AMD)"
+  },
+  {
     "id": "8c558803-c737-4e20-9fc5-bbf69472edde",
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
@@ -776,18 +790,11 @@
     "displayName": "ling-3.1-flash-free (FTAI)"
   },
   {
-    "id": "0a84a2de-062c-4a54-9965-ff4b8502bb17",
+    "id": "0782e9b0-6cf1-46ba-878f-50d43f7b8bf6",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
     "modelId": "fta/ocz/longcat-2.5-preview-free",
     "displayName": "longcat-2.5-preview-free (FTAI)"
-  },
-  {
-    "id": "f94403ff-8732-4a5c-a099-12a07b9a816e",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/ocz/mimo-v2.6-flash-free",
-    "displayName": "mimo-v2.6-flash-free (FTAI)"
   },
   {
     "id": "fa5213eb-1f8b-456d-a13c-11a2931bcaee",
@@ -802,13 +809,6 @@
     "providerType": "openai-compatible",
     "modelId": "fta/ocz/nemotron-3.5-lightning-free",
     "displayName": "nemotron-3.5-lightning-free (FTAI)"
-  },
-  {
-    "id": "6cd44f69-d532-45d2-ad74-0e113119b525",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/ocz/space-bunny-free",
-    "displayName": "space-bunny-free (FTAI)"
   },
   {
     "id": "f130d928-3a0b-4ce7-ba24-6e936c036a79",
@@ -1292,6 +1292,13 @@
     "displayName": "Logfare Auto (LogFare)"
   },
   {
+    "id": "dbd5bea4-7aeb-46f9-9401-629e5c56f2be",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "mimo-v2.6-flash",
+    "displayName": "MiMo V2.6 Flash (LF)"
+  },
+  {
     "id": "e193beee-0f6c-59e6-830f-ddf4d6e9aed8",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -1304,6 +1311,13 @@
     "providerType": "openai-compatible",
     "modelId": "space-bunny-alpha",
     "displayName": "Space Bunny Alpha (LogFare)"
+  },
+  {
+    "id": "00f5747f-2c68-4280-a9ce-6655a50c5340",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "ACE-Step/acestep-v15-xl-sft",
+    "displayName": "acestep-v15-xl-sft (MS)"
   },
   {
     "id": "843a25d5-bd2b-4eca-8e5b-69949c167843",
