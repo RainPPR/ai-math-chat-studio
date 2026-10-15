@@ -38,7 +38,7 @@
     "displayName": "Gemma 4 31B (AMD)"
   },
   {
-    "id": "8f3609f0-122a-4b8f-9d17-ee970036d285",
+    "id": "cc12bae1-3249-403d-9acd-b154eef9b716",
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
     "modelId": "GLM-5.3-Flash",
@@ -783,14 +783,7 @@
     "displayName": "fledge-alpha-free (FTAI)"
   },
   {
-    "id": "275918a6-ef0b-4b90-b4a5-ee10eac26c5f",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/ocz/ling-3.1-flash-free",
-    "displayName": "ling-3.1-flash-free (FTAI)"
-  },
-  {
-    "id": "0782e9b0-6cf1-46ba-878f-50d43f7b8bf6",
+    "id": "7984a744-7496-4fbc-aecc-f78bc651cb92",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
     "modelId": "fta/ocz/longcat-2.5-preview-free",
@@ -809,6 +802,13 @@
     "providerType": "openai-compatible",
     "modelId": "fta/ocz/nemotron-3.5-lightning-free",
     "displayName": "nemotron-3.5-lightning-free (FTAI)"
+  },
+  {
+    "id": "0e71dfbc-3d37-4399-a8db-a182ce46db28",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/space-bunny-free",
+    "displayName": "space-bunny-free (FTAI)"
   },
   {
     "id": "f130d928-3a0b-4ce7-ba24-6e936c036a79",

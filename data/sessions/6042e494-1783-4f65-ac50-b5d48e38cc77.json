@@ -1,0 +1,21 @@
+{
+  "id": "6042e494-1783-4f65-ac50-b5d48e38cc77",
+  "title": "圆 C₁:x²+y²+4x−2y=0 关于直线 y=x 对称的圆 C₂ 的方程为？",
+  "messages": [
+    {
+      "id": "ccd7f3e9-47f3-4137-bde9-9791b44a9168",
+      "role": "user",
+      "content": "圆 $C_1:x^2+y^2+4x-2y=0$ 关于直线 $y=x$ 对称的圆 $C_2$ 的方程为？",
+      "createdAt": "2026-10-15T03:01:52.131Z"
+    },
+    {
+      "id": "aa718a11-e434-4462-8125-d53c93a4d863",
+      "role": "model",
+      "content": "<think>\n**Initiating the Analysis**\n\nI've initiated the analysis by breaking down the core problem: determining the equation of circle C2, which is the reflection of circle C1 across the line y=x. I'm focusing on the symmetry aspect to figure out the most efficient strategy.\n\n\n**Refining The Approach**\n\nI'm now refining the approach with a meta-analysis. I've categorized the problem as analytic geometry, specifically circle symmetry. The \"givens\" are circle $C_1$'s equation and the line y=x. My target is the equation for circle $C_2$. I'm considering using coordinate methods to reflect the center of $C_1$ to find the new center. I may use symmetry techniques or consider a coordinate transformation.\n\n\n**Confirming the Solution**\n\nThe coordinate swap method is validated! Reflecting the center is also confirming the direct derivation of the equation. Now, I have complete confidence. I confirmed the radius of the original circle, then performed the reflection. My algebraic approach, directly swapping x and y in the original equation, gives the same result. The geometric and algebraic results converge, leading to the same equation, proving the concept is sound!\n\n\n\n</think>\n\n这是一道经典的解析几何对称问题。下面我们按照波利亚“怎样解题”的四个阶段以及数学思想方法体系，深入剖析这道题的本质。\n\n---\n\n### 【第一步：审题破局·提炼思想】\n\n**1. 题目要素解构**：\n- **已知**：圆 $C_1$ 的一般方程为 $x^2+y^2+4x-2y=0$，对称轴为直线 $l: y=x$。\n- **未知**：关于直线 $y=x$ 对称的新圆 $C_2$ 的方程。\n\n**2. 核心数学思想方法调用**：\n- **【方法 62】解析法**：通过研究圆心坐标与半径的几何变换，将图形对称转化为坐标变换。\n- **【方法 12】对称法**：挖掘图形或代数方程的对称变换规律，实现“降维打击”。\n- **【方法 2】配方法**：将圆的一般方程化为标准方程，提取核心几何量（圆心与半径）。\n\n---\n\n### 【第二步：严谨综合求解】\n\n在这里，我们向大家展示两种解法：**常规几何解析法**（稳扎稳打，考场通性）与**高维代数直觉法**（秒杀技巧，思维跃迁）。\n\n#### 解法一：常规几何解析法（圆心半径法）\n\n**思路启发**：一个圆由其**圆心**和**半径**唯一确定。当圆关于某条直线对称时，其半径大小保持不变，而新圆的圆心就是原圆心关于该直线的对称点。\n\n**步骤 1：化一般方程为标准方程**\n对圆 $C_1$ 的方程使用 **【方法 2】配方法**：\n\n$$\n(x^2+4x+4) + (y^2-2y+1) = 4 + 1\n$$\n\n化简得：\n\n$$\n(x+2)^2 + (y-1)^2 = 5\n$$\n\n由此可知，圆 $C_1$ 的圆心坐标为 $O_1(-2, 1)$，半径为 $r = \\sqrt{5}$。\n\n**步骤 2：求圆心关于直线 $y=x$ 的对称点**\n设圆 $C_1$ 的圆心 $O_1(-2, 1)$ 关于直线 $y=x$ 的对称点为 $O_2(m, n)$。\n根据点关于直线 $y=x$ 对称的几何性质（横纵坐标直接互换）：\n- 对应坐标满足 $\\begin{cases} m = 1 \\\\ n = -2 \\end{cases}$\n\n因此，新圆 $C_2$ 的圆心为 $O_2(1, -2)$。\n\n**步骤 3：写出新圆 $C_2$ 的方程**\n因为图形关于直线对称不改变图形的大小与形状，故新圆 $C_2$ 的半径仍为 $r = \\sqrt{5}$。\n代入圆的标准方程公式：\n\n$$\n(x-1)^2 + [y-(-2)]^2 = (\\sqrt{5})^2\n$$\n\n展开并整理为一般方程：\n\n$$\nx^2 - 2x + 1 + y^2 + 4y + 4 = 5\n$$\n\n$$\nx^2 + y^2 - 2x + 4y = 0\n$$\n\n---\n\n#### 解法二：代数直觉秒杀法（对称代换法）\n\n**思路启发**：运用 **【方法 12】对称法**。从代数方程的本质来看，若点 $(x, y)$ 在原圆 $C_1$ 上，当它关于直线 $y=x$ 对称到新圆 $C_2$ 上时，其对应的坐标关系发生了置换。\n\n对于直线 $y=x$ 而言，若曲线上任意一点 $(x, y)$ 关于 $y=x$ 的对称点为 $(x', y')$，则显然有：\n$\\begin{cases} x' = y \\\\ y' = x \\end{cases} \\implies \\begin{cases} x = y' \\\\ y = x' \\end{cases}$\n\n因此，要得到关于直线 $y=x$ 对称的曲线方程，**只需直接将原方程中的 $x$ 替换为 $y$，$y$ 替换为 $x$ 即可**。\n\n**执行替换**：\n将圆 $C_1$ 方程 $x^2+y^2+4x-2y=0$ 中的 $x$ 换成 $y$，$y$ 换成 $x$，直接得到圆 $C_2$ 的方程：\n\n$$\ny^2 + x^2 + 4y - 2x = 0\n$$\n\n降幂排列整理即得：\n\n$$\nx^2 + y^2 - 2x + 4y = 0\n$$\n\n---\n\n### 【第三步：认知升华·复盘反思】\n\n**1. 结果多元检验（Verification Battery）**：\n- **半径不变性检验**：配方后 $C_2$ 的半径为 $\\sqrt{(-1)^2 + 2^2 - 0} = \\sqrt{5}$，与原圆半径一致，检验合格。\n- **圆心轨迹检验**：原圆心 $(-2, 1)$ 与新圆心 $(1, -2)$ 的连线方程为 $y - 1 = \\frac{-2 - 1}{1 - (-2)} (x - (-2)) \\implies y = -x - 1$，与对称轴 $y=x$ 垂直（斜率乘积为 $-1$），且中点 $\\left(\\frac{-2+1}{2}, \\frac{1+(-2)}{2}\\right) = \\left(-\\frac{1}{2}, -\\frac{1}{2}\\right)$ 准确落在直线 $y=x$ 上，几何闭环完美无瑕。\n\n**2. 思想方法总结（Meta-Cognitive Summary）**：\n- **几何视角（定性分析）**：通过“求圆心对称点 + 保持半径不变”是最稳妥、最不易出错的通性通法，适用于任何复杂的对称轴（如斜率不为 $1$ 的一般直线）。\n- **代数视角（定量秒杀）**：当遇到特殊对称轴（如 $y=x$、$y=-x$ 或坐标轴）时，利用**变量代换法（坐标互换）**可以瞬间避开繁琐的几何运算，这是高维视野下对代数对称性的深刻洞察。",
+      "createdAt": "2026-10-15T03:02:04.604Z"
+    }
+  ],
+  "createdAt": "2026-10-15T03:01:52.131Z",
+  "updatedAt": "2026-10-15T03:02:04.605Z",
+  "characterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5"
+}
