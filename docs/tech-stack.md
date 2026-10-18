@@ -84,9 +84,9 @@ bun run clean         # 清除 dist、dist-server、dist-compile、release 目�
 
 `@/*` 映射到项目根目录，配置在 `tsconfig.json` 和 `vite.config.ts` 中。
 
-## 数学公式渲染系统与字体选择 (Math Formula Rendering System & Fonts)
+## 数学公式渲染系统 (Math Formula Rendering System)
 
-本应用支持多渲染引擎与动态数学字体选择，用户可在设置 (`SettingsModal.tsx`) 中自由配置：
+本应用支持多渲染引擎选择，用户可在设置 (`SettingsModal.tsx`) 中自由配置：
 
 ### 数学渲染引擎 (`mathEngine`)
 - **KaTeX (v0 latest)**: 基于 `rehype-katex`，同步 AST 渲染，性能极高。
@@ -94,13 +94,7 @@ bun run clean         # 清除 dist、dist-server、dist-compile、release 目�
 - **MathJax v3 (latest)**: 基于 MathJax 3.2.2 CHTML 运行时，异步 Promise 排版。
 - **MathJax v4 (latest)**: 基于 MathJax 4.1.3 CHTML 运行时，支持最新 TeX/mhchem 特性。
 
-### 数学公式字体 (`katexFont`)
-- **Default**: KaTeX/TeX 默认数学字体 (`KaTeX_Main` / `TeX`)。
-- **Euler Math**: 典雅的 Euler 数学字体 (`Euler-Math.woff2` / `Euler-Math.otf`)。
-- **Fira Math**: 现代的 Fira 数学无衬线字体 (`FiraMath-Regular.woff2` / `FiraMath-Regular.otf`)。
-- **Cambria Math**: 经典的 Cambria 数学衬线字体 (`Cambria Math.woff2` / `Cambria Math.ttf`)。
-
 ### 实现细节
 1. **统一接口服务 (`src/lib/mathEngine.ts`)**: 统一管理 KaTeX 与 MathJax 脚本按需加载、类型排版队列 (`enqueueTypeset`)、自定义宏 (`\tag`, `\vec`, `\male`, `\female`) 与网络超时容错。
-2. **CSS 字体覆盖 (`src/index.css`)**: 通过 `.katex-font-${font}` 结合选取的 CSS 变量，统一覆盖 KaTeX 内部数学节点以及 MathJax CHTML 文本/字符节点。
+2. **默认库字体**: 各库全权使用其原生默认数学字体，不做强行设置与覆盖。
 3. **CJK/中文优雅回退**: 确保数学公式内的中文字符（如 `\text{中文}`）优雅回退至主字体 (`--font-main`)。

@@ -4,51 +4,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Noto+Sans+SC:wght@100..900&display=swap');
 
 @font-face {
-  font-family: 'Euler Math';
-  src: url('./fonts/Euler-Math.woff2') format('woff2'),
-    url('./fonts/Euler-Math.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Fira Math';
-  src: url('./fonts/FiraMath-Regular.woff2') format('woff2'),
-    url('./fonts/FiraMath-Regular.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cambria Math';
-  src: url('./fonts/Cambria Math.woff2') format('woff2'),
-    url('./fonts/Cambria Math.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
   font-family: 'FullWidthQuotes';
   src: url('./fonts/Noto Sans SC-Variable-subset.woff2') format('woff2');
   font-weight: 200 900;
   font-style: normal;
   unicode-range: U+2018, U+2019, U+201C, U+201D;
   font-display: swap;
-}
-
-/* =========================================================
-   1. 使用 CSS 原生变量管理自定义数学字体
-   ========================================================= */
-.katex-font-euler {
-  --katex-math-font: 'Euler Math', 'KaTeX_Main', serif;
-}
-
-.katex-font-fira {
-  --katex-math-font: 'Fira Math', 'KaTeX_Main', sans-serif;
-}
-
-.katex-font-cambria {
-  --katex-math-font: 'Cambria Math', 'KaTeX_Main', serif;
 }
 
 :root {
@@ -69,26 +30,7 @@
 }
 
 /* =========================================================
-   2. 统一覆盖 KaTeX / MathJax 自定义数学字体（默认字体不进行强行修改）
-   ========================================================= */
-/* katex-font- 类需加在数学节点的祖先元素上 */
-:is(.katex-font-euler, .katex-font-fira, .katex-font-cambria) :is(
-  .katex :is(.mbin, .mrel, .merl, .mopen, .mclose, .mpunct, .minner, .mord, .text):not(.cjk_fallback):not(:has(.cjk_fallback)),
-  .MathJax .mtext,
-  .MathJax .mn,
-  .MathJax .mi,
-  .MathJax .mo:not([style*="font-family: MathJax_Size"]):not([style*="font-family: MathJax_Symbol"]),
-  mjx-container .mjx-utext,
-  mjx-container .mjx-mtext,
-  mjx-container .mjx-mi,
-  mjx-container .mjx-mn,
-  mjx-container .mjx-mo:not(.mjx-surd *):not(.mjx-line *)
-) {
-  font-family: var(--katex-math-font) !important;
-}
-
-/* =========================================================
-   3. CJK / 中文字符彻底修复
+   CJK / 中文字符彻底修复
    ========================================================= */
 .katex .cjk_fallback,
 mjx-container .cjk_fallback,

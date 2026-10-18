@@ -661,7 +661,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     };
   }, [viewingContent]);
 
-  const executePrint = (htmlContent: string, sessionId?: string, katexFont?: string, onComplete?: () => void) => {
+  const executePrint = (htmlContent: string, sessionId?: string, onComplete?: () => void) => {
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
     iframe.style.right = '0';
@@ -683,9 +683,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
       .map(el => el.outerHTML)
       .join('\n');
-
-    const fontName = katexFont || 'default';
-    const currentFontClass = `katex-font-${fontName}`;
 
     const printStyles = `
       <style>
@@ -736,7 +733,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       '    ' + styles + '\n' +
       '    ' + printStyles + '\n' +
       '  </head>\n' +
-      '  <body class="' + currentFontClass + '">\n' +
+      '  <body>\n' +
       '    <div class="prose">\n' +
       (sessionId ? '      <h1>Session ID: ' + sessionId + '</h1>\n' : '') +
       '      ' + htmlContent + '\n' +
@@ -774,7 +771,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const handlePrint = () => {
     const printElement = document.getElementById('print-content-render');
     if (!printElement) return;
-    executePrint(printElement.innerHTML, session?.id, settings.katexFont);
+    executePrint(printElement.innerHTML, session?.id);
   };
 
   useEffect(() => {
@@ -883,7 +880,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     return executePrint(
       printElement.innerHTML,
       currentSession.id,
-      settingsRef.current.katexFont,
       () => setIsPrintingAll(false)
     );
   }, [isPrintingAll]);
