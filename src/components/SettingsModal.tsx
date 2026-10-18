@@ -1061,12 +1061,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       setEditingNoteId(null);
     }
     const mathEngineChanged = finalSettings.mathEngine !== settings.mathEngine;
-    onSave(finalSettings, characterReassignments);
+    await onSave(finalSettings, characterReassignments);
     await onSaveTemplates(localTemplates);
     if (mathEngineChanged) {
-      setTimeout(() => {
-        window.location.reload();
-      }, 200);
+      window.location.reload();
     }
   };
 

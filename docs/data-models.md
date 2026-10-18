@@ -110,6 +110,8 @@ interface UserSettings {
   collapseThinkingFinished: boolean;
   trimThinkingSpaces: boolean;
   starredSessions?: Record<string, string>; // 加星会话映射（会话 ID => 星星颜色 ID）
+  katexFont?: string;               // 数学公式字体选择 ('default' | 'euler' | 'fira' | 'cambria')
+  mathEngine?: 'katex' | 'mathjax-v2' | 'mathjax-v3' | 'mathjax-v4'; // 数学公式渲染引擎选择
 }
 ```
 
@@ -215,6 +217,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   collapseThinkingFinished: true,
   trimThinkingSpaces: false,
   starredSessions: {},
+  katexFont: 'default',
+  mathEngine: 'katex',
 };
 ```
 

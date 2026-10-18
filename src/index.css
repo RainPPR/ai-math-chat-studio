@@ -75,7 +75,7 @@
 /* =========================================================
    2. 统一覆盖 KaTeX / MathJax v2 / MathJax v3 / MathJax v4 内部数学节点
    ========================================================= */
-/* 兼容 katex-font- 类无论加在父元素还是数学节点本身 */
+/* katex-font- 类需加在数学节点的祖先元素上 */
 :is(.katex-font-euler, .katex-font-fira, .katex-font-cambria) :is(
   .katex :is(.mbin, .mrel, .merl, .mopen, .mclose, .mpunct, .minner, .mord, .text):not(.cjk_fallback):not(:has(.cjk_fallback)),
   .MathJax .MathJax_Main,

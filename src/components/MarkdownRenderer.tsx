@@ -1,4 +1,4 @@
-import React, { memo, useRef, useEffect } from 'react';
+import React, { memo, useRef, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
@@ -16,7 +16,7 @@ import 'katex/dist/katex-swap.min.css';
 import 'katex';
 import 'katex/dist/contrib/mhchem.mjs';
 import { MathEngine } from '../types';
-import { renderMathToElement } from '../lib/mathEngine';
+import { renderMathToElement, SHARED_KATEX_OPTIONS } from '../lib/mathEngine';
 
 interface MarkdownRendererProps {
   content: string;
@@ -100,49 +100,41 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content
 
   const isKatex = !mathEngine || mathEngine === 'katex';
 
-  const rehypePluginsList: any[] = [
-    rehypeRaw,
-    rehypeSanitize,
-    isKatex
-      ? [
-          rehypeKatex,
-          {
-            strict: false,
-            throwOnError: false,
-            macros: {
-              '\\tag': '\\qquad (#1)',
-              '\\male': '\\text{♂}',
-              '\\female': '\\text{♀}',
-              '\\vec': '\\bm{#1}',
-            },
-          },
-        ]
-      : rehypeMathTransform,
-    [rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }],
-  ];
+  const rehypePluginsList: any[] = [rehypeRaw, rehypeSanitize];
+
+  if (isKatex) {
+    rehypePluginsList.push([rehypeKatex, SHARED_KATEX_OPTIONS]);
+  } else {
+    rehypePluginsList.push(rehypeMathTransform);
+  }
+
+  rehypePluginsList.push([rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }]);
 
   if (messageId) {
     rehypePluginsList.push(() => rehypeTocHeadingIds(messageId));
   }
 
-  const customComponents: Record<string, any> = {};
-
-  if (!isKatex) {
-    customComponents['math-node'] = (props: any) => {
-      const math = props['data-math'] || '';
-      const display = props['data-display'] === 'true';
-      return <MathNode math={math} display={display} engine={mathEngine} />;
+  const customComponents: Record<string, any> = useMemo(() => {
+    if (isKatex) {
+      return {};
+    }
+    return {
+      'math-node': (props: any) => {
+        const math = props['data-math'] || '';
+        const display = props['data-display'] === 'true';
+        return <MathNode math={math} display={display} engine={mathEngine} />;
+      },
+      pre: ({ children, ...props }: any) => {
+        const isMath = React.Children.toArray(children).some(
+          (child: any) => child && (child.type === 'math-node' || (child.props && child.props['data-math']))
+        );
+        if (isMath) {
+          return <>{children}</>;
+        }
+        return <pre {...props}>{children}</pre>;
+      },
     };
-    customComponents.pre = ({ children, ...props }: any) => {
-      const isMath = React.Children.toArray(children).some(
-        (child: any) => child && (child.type === 'math-node' || (child.props && child.props['data-math']))
-      );
-      if (isMath) {
-        return <>{children}</>;
-      }
-      return <pre {...props}>{children}</pre>;
-    };
-  }
+  }, [isKatex, mathEngine]);
 
   return (
     <div className="prose prose-invert max-w-none">

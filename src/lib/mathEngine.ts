@@ -1,4 +1,4 @@
-import katex from 'katex';
+import katex, { KatexOptions } from 'katex';
 import { MathEngine } from '../types';
 
 declare global {
@@ -8,7 +8,26 @@ declare global {
   }
 }
 
+export const SHARED_KATEX_OPTIONS: KatexOptions = {
+  strict: false,
+  throwOnError: false,
+  macros: {
+    '\\tag': '\\qquad (#1)',
+    '\\male': '\\text{♂}',
+    '\\female': '\\text{♀}',
+    '\\vec': '\\bm{#1}',
+  },
+};
+
 const loadedScripts = new Map<string, { promise: Promise<void>; element: HTMLScriptElement }>();
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs = 10000, errorMsg = 'Operation timed out'): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(errorMsg)), timeoutMs);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
+}
 
 function loadScript(src: string): Promise<void> {
   const existing = loadedScripts.get(src);
@@ -28,8 +47,9 @@ function loadScript(src: string): Promise<void> {
     document.head.appendChild(scriptEl);
   });
 
-  loadedScripts.set(src, { promise, element: scriptEl! });
-  return promise;
+  const timedPromise = withTimeout(promise, 10000, `Script load timed out: ${src}`);
+  loadedScripts.set(src, { promise: timedPromise, element: scriptEl! });
+  return timedPromise;
 }
 
 function removeScript(src: string) {
@@ -61,7 +81,6 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
   if (window.__activeMathEngine && window.__activeMathEngine !== engine) {
     if (engine.startsWith('mathjax') || window.__activeMathEngine.startsWith('mathjax')) {
       delete window.MathJax;
-      // Remove previously loaded MathJax scripts so switching re-loads cleanly
       removeScript('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS_HTML');
       removeScript('https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js');
       removeScript('https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-chtml.js');
@@ -82,6 +101,14 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
           displayMath: [['\\[', '\\]'], ['$$', '$$']],
           processEscapes: true,
         },
+        TeX: {
+          Macros: {
+            tag: ['\\qquad (#1)', 1],
+            male: '{\\text{♂}}',
+            female: '{\\text{♀}}',
+            vec: ['\\bm{#1}', 1],
+          },
+        },
         'HTML-CSS': {
           preferredFont: 'TeX',
           availableFonts: ['TeX', 'STIX-Web', 'Asana-Math'],
@@ -96,6 +123,14 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
                 inlineMath: [['\\(', '\\)'], ['$', '$']],
                 displayMath: [['\\[', '\\]'], ['$$', '$$']],
                 processEscapes: true,
+              },
+              TeX: {
+                Macros: {
+                  tag: ['\\qquad (#1)', 1],
+                  male: '{\\text{♂}}',
+                  female: '{\\text{♀}}',
+                  vec: ['\\bm{#1}', 1],
+                },
               },
             });
           }
@@ -119,6 +154,12 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
           displayMath: [['\\[', '\\]'], ['$$', '$$']],
           processEscapes: true,
           packages: { '[+]': ['mhchem'] },
+          macros: {
+            tag: ['\\qquad (#1)', 1],
+            male: '{\\text{♂}}',
+            female: '{\\text{♀}}',
+            vec: ['\\bm{#1}', 1],
+          },
         },
         loader: {
           load: ['[tex]/mhchem'],
@@ -148,15 +189,8 @@ export async function renderMathToElement(
   if (engine === 'katex') {
     try {
       container.innerHTML = katex.renderToString(math, {
+        ...SHARED_KATEX_OPTIONS,
         displayMode: display,
-        throwOnError: false,
-        strict: false,
-        macros: {
-          '\\tag': '\\qquad (#1)',
-          '\\male': '\\text{♂}',
-          '\\female': '\\text{♀}',
-          '\\vec': '\\bm{#1}',
-        },
       });
     } catch {
       container.textContent = display ? `\\[${math}\\]` : `\\(${math}\\)`;
@@ -171,27 +205,38 @@ export async function renderMathToElement(
       await loadMathEngine(engine);
     } catch (err) {
       console.warn(`Failed to load ${engine}, falling back to KaTeX:`, err);
-      container.innerHTML = katex.renderToString(math, { displayMode: display, throwOnError: false });
+      container.innerHTML = katex.renderToString(math, {
+        ...SHARED_KATEX_OPTIONS,
+        displayMode: display,
+      });
       return;
     }
 
     if (engine === 'mathjax-v2') {
-      container.innerHTML = rawTex;
+      container.textContent = rawTex;
       if (window.MathJax && window.MathJax.Hub) {
-        await new Promise<void>((resolve) => {
-          window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub, container], resolve);
-        });
+        await withTimeout(
+          new Promise<void>((resolve) => {
+            window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub, container], resolve);
+          }),
+          10000,
+          'MathJax v2 typeset timed out'
+        ).catch((err) => console.warn('MathJax v2 typeset error:', err));
       }
     } else if (engine === 'mathjax-v3' || engine === 'mathjax-v4') {
-      container.innerHTML = rawTex;
-      if (window.MathJax && window.MathJax.typesetPromise) {
-        if (window.MathJax.typesetClear) {
-          try {
-            window.MathJax.typesetClear([container]);
-          } catch {}
-        }
+      if (window.MathJax && window.MathJax.typesetClear) {
         try {
-          await window.MathJax.typesetPromise([container]);
+          window.MathJax.typesetClear([container]);
+        } catch {}
+      }
+      container.textContent = rawTex;
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        try {
+          await withTimeout(
+            window.MathJax.typesetPromise([container]),
+            10000,
+            `${engine} typeset timed out`
+          );
         } catch (e) {
           console.warn(`${engine} typeset error:`, e);
         }

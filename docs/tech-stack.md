@@ -21,7 +21,10 @@
 | 技术 | 版本 |
 |---|---|
 | @google/genai | ^2.17.1 |
-| KaTeX | ^0.18.4 |
+| KaTeX | ^0.18.4 (v0 latest) |
+| MathJax v2 | 2.7.9 (CDN Runtime) |
+| MathJax v3 | 3.2.2 (CDN Runtime) |
+| MathJax v4 | 4.1.3 (CDN Runtime) |
 
 ## Markdown 渲染管线
 | 技术 | 版本 |
@@ -81,15 +84,23 @@ bun run clean         # 清除 dist、dist-server、dist-compile、release 目�
 
 `@/*` 映射到项目根目录，配置在 `tsconfig.json` 和 `vite.config.ts` 中。
 
-## KaTeX 数学字体选择 (KaTeX Math Fonts)
+## 数学公式渲染系统与字体选择 (Math Formula Rendering System & Fonts)
 
-本应用支持动态 KaTeX 数学字体选择，允许用户在设置（SettingsModal.tsx）中切换不同的数学渲染字体：
-- **Default**: KaTeX 默认自带字体。
-- **Euler Math**: 典雅的 Euler 数学字体 (Euler-Math.woff2 / Euler-Math.otf)。
-- **Fira Math**: 现代的 Fira 数学无衬线字体 (FiraMath-Regular.woff2 / FiraMath-Regular.otf)。
-- **Cambria Math**: 经典的 Cambria 数学衬线字体 (Cambria Math.woff2 / Cambria Math.ttf)。
+本应用支持多渲染引擎与动态数学字体选择，用户可在设置 (`SettingsModal.tsx`) 中自由配置：
 
-### 字体实现细节
-1. **源字体与 WOFF2 转换**: 字体文件存放于 `src/fonts/` 下，转换使用标准的 `woff2_compress` 压缩技术将 OTF/TTF 转换为体积更小的 WOFF2 格式。
-2. **CSS 导入与覆盖**: 字体导入和样式覆盖定义在 `src/index.css`。通过给根 div (`App.tsx`) 或打印容器 (`ChatArea.tsx` 的 iframe `body`) 动态绑定 `.katex-font-${settings.katexFont || 'default'}` 样式类来实现。
-3. **CJK/中文优雅回退**: 避免定制数学字体对数学公式内的中文（如 `\text{中文}` 或 `.cjk_fallback`）造成非预期的强制覆盖，系统在 `src/index.css` 增加了高优先级的非冲突 CJK 回退处理器，强制使 `.cjk_fallback` 及它的子元素回退并使用网页正文字体 (`system-ui, sans-serif`)。
+### 数学渲染引擎 (`mathEngine`)
+- **KaTeX (v0 latest)**: 基于 `rehype-katex`，同步 AST 渲染，性能极高。
+- **MathJax v2 (latest)**: 基于 MathJax 2.7.9 运行时，支持经典 TeX 命令与 HTML-CSS 排版。
+- **MathJax v3 (latest)**: 基于 MathJax 3.2.2 CHTML 运行时，异步 Promise 排版。
+- **MathJax v4 (latest)**: 基于 MathJax 4.1.3 CHTML 运行时，支持最新 TeX/mhchem 特性。
+
+### 数学公式字体 (`katexFont`)
+- **Default**: 默认系统数学字体。
+- **Euler Math**: 典雅的 Euler 数学字体 (`Euler-Math.woff2` / `Euler-Math.otf`)。
+- **Fira Math**: 现代的 Fira 数学无衬线字体 (`FiraMath-Regular.woff2` / `FiraMath-Regular.otf`)。
+- **Cambria Math**: 经典的 Cambria 数学衬线字体 (`Cambria Math.woff2` / `Cambria Math.ttf`)。
+
+### 实现细节
+1. **统一接口服务 (`src/lib/mathEngine.ts`)**: 统一管理 KaTeX 与 MathJax 脚本按需加载、类型排版队列 (`enqueueTypeset`)、自定义宏 (`\tag`, `\vec`, `\male`, `\female`) 与网络超时容错。
+2. **CSS 字体覆盖 (`src/index.css`)**: 通过 `.katex-font-${font}` 结合选取的 CSS 变量，统一覆盖 KaTeX 内部数学节点以及 MathJax CHTML 文本/字符节点。
+3. **CJK/中文优雅回退**: 确保数学公式内的中文字符（如 `\text{中文}`）优雅回退至主字体 (`--font-main`)。

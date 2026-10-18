@@ -1132,13 +1132,6 @@
     "displayName": "NVIDIA: Nemotron 3.5 Lightning (Kilo)"
   },
   {
-    "id": "2e43f4c0-c934-464e-96eb-113cd2984a1c",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "displayName": "NVIDIA: Nemotron 3.5 Super VL (Kilo) (KG)"
-  },
-  {
     "id": "14949368-d0cb-5c39-a1bd-8e78a0ef89fa",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -1166,14 +1159,6 @@
     "modelId": "qwen/qwen3.8-27b:free",
     "displayName": "Qwen: Qwen3.8 27B (Kilo)",
     "reasoningEffort": "xhigh"
-  },
-  {
-    "id": "ea1a82c8-bcbd-4a08-9164-bf1a8bf5badb",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "reflection/beam-free",
-    "displayName": "Reflection: Beam 1.0 (Kilo) (KG)",
-    "reasoningEffort": "max"
   },
   {
     "id": "c7935d10-0320-49e0-b31f-f27df31045a1",
@@ -1214,13 +1199,6 @@
     "modelId": "thinkingmachines/inkling-small:free",
     "displayName": "Thinking Machines: Inkling Small (Kilo)",
     "reasoningEffort": "max"
-  },
-  {
-    "id": "d3659c12-0e54-4716-819b-5e73020fca65",
-    "providerId": "p-kilo-gw",
-    "providerType": "openai-compatible",
-    "modelId": "xingchen-agi/xing4.0-29b-a4b:free",
-    "displayName": "XingChen: Xing4.0 29B A4B (Kilo) (KG)"
   },
   {
     "id": "142e4cc3-b3aa-47e2-bb52-e375bddefc7d",
