@@ -37,12 +37,8 @@
 }
 
 /* =========================================================
-   1. 使用 CSS 原生变量管理数学字体，大幅简化代码
+   1. 使用 CSS 原生变量管理自定义数学字体
    ========================================================= */
-.katex-font-default {
-  --katex-math-font: KaTeX_Main, TeX, serif;
-}
-
 .katex-font-euler {
   --katex-math-font: 'Euler Math', 'KaTeX_Main', serif;
 }
@@ -73,26 +69,26 @@
 }
 
 /* =========================================================
-   2. 统一覆盖 KaTeX / MathJax v2 / MathJax v3 / MathJax v4 内部数学节点
+   2. 统一覆盖 KaTeX / MathJax 自定义数学字体（默认字体不进行强行修改）
    ========================================================= */
 /* katex-font- 类需加在数学节点的祖先元素上 */
 :is(.katex-font-euler, .katex-font-fira, .katex-font-cambria) :is(
   .katex :is(.mbin, .mrel, .merl, .mopen, .mclose, .mpunct, .minner, .mord, .text):not(.cjk_fallback):not(:has(.cjk_fallback)),
-  .MathJax,
-  .MathJax *,
-  .MathJax span,
-  .MathJax [style*="font-family"],
-  .MathJax_Display,
-  .MathJax_Display *,
-  mjx-container,
-  mjx-container *,
-  mjx-container .mjx-c
+  .MathJax .mtext,
+  .MathJax .mn,
+  .MathJax .mi,
+  .MathJax .mo:not([style*="font-family: MathJax_Size"]):not([style*="font-family: MathJax_Symbol"]),
+  mjx-container .mjx-utext,
+  mjx-container .mjx-mtext,
+  mjx-container .mjx-mi,
+  mjx-container .mjx-mn,
+  mjx-container .mjx-mo:not(.mjx-surd *):not(.mjx-line *)
 ) {
   font-family: var(--katex-math-font) !important;
 }
 
 /* =========================================================
-   3. CJK / 中文字符彻底修复 (关键：重置斜体与字距)
+   3. CJK / 中文字符彻底修复
    ========================================================= */
 .katex .cjk_fallback,
 mjx-container .cjk_fallback,

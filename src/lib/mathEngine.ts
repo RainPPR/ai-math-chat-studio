@@ -8,14 +8,6 @@ declare global {
   }
 }
 
-/**
- * Centralized Math Macros Definition
- * Defines standard LaTeX custom macros across all rendering engines.
- * Each entry specifies:
- * - name: command name (e.g. 'tag', 'male', 'female', 'vec')
- * - definition: LaTeX replacement template
- * - args: number of arguments (optional, default 0)
- */
 export interface CustomMacro {
   name: string;
   definition: string;
@@ -67,7 +59,7 @@ export const SHARED_KATEX_OPTIONS: KatexOptions = {
   macros: buildKatexMacros(),
 };
 
-const MATHJAX_CDN_V2 = 'https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS_HTML';
+const MATHJAX_CDN_V2 = 'https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS_CHTML';
 const MATHJAX_CDN_V3 = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js';
 const MATHJAX_CDN_V4 = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js';
 
@@ -129,7 +121,6 @@ function enqueueTypeset<T>(fn: () => Promise<T>): Promise<T> {
 export async function loadMathEngine(engine: MathEngine): Promise<void> {
   if (typeof window === 'undefined') return;
 
-  // If engine changed, clean up conflicting window.MathJax instance & scripts
   if (window.__activeMathEngine && window.__activeMathEngine !== engine) {
     if (engine.startsWith('mathjax') || window.__activeMathEngine.startsWith('mathjax')) {
       delete window.MathJax;
@@ -149,6 +140,9 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
       const v2Macros = buildMathJaxV2Macros();
       window.MathJax = {
         skipStartupTypeset: true,
+        messageStyle: 'none',
+        showMathMenu: false,
+        showProcessingMessages: false,
         tex2jax: {
           inlineMath: [['\\(', '\\)'], ['$', '$']],
           displayMath: [['\\[', '\\]'], ['$$', '$$']],
@@ -157,16 +151,17 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
         TeX: {
           Macros: v2Macros,
         },
-        'HTML-CSS': {
-          preferredFont: 'TeX',
-          availableFonts: ['TeX', 'STIX-Web', 'Asana-Math'],
-          showMathMenu: false,
+        'fast-preview': { disabled: true },
+        CommonHTML: {
+          matchFontHeight: false,
+          linebreaks: { automatic: false },
         },
         AuthorInit: function () {
           if (window.MathJax && window.MathJax.Hub) {
             window.MathJax.Hub.Config({
               showMathMenu: false,
               messageStyle: 'none',
+              showProcessingMessages: false,
               tex2jax: {
                 inlineMath: [['\\(', '\\)'], ['$', '$']],
                 displayMath: [['\\[', '\\]'], ['$$', '$$']],
@@ -174,6 +169,11 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
               },
               TeX: {
                 Macros: v2Macros,
+              },
+              'fast-preview': { disabled: true },
+              CommonHTML: {
+                matchFontHeight: false,
+                linebreaks: { automatic: false },
               },
             });
           }
