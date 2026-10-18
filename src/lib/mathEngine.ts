@@ -29,20 +29,14 @@ export const CENTRAL_MACROS: CustomMacro[] = [
   { name: 'vec', definition: '\\bm{#1}', args: 1 },
 ];
 
-/**
- * Converts CENTRAL_MACROS into KaTeX macro configuration format
- */
 export function buildKatexMacros(): Record<string, string> {
   const macros: Record<string, string> = {};
   for (const m of CENTRAL_MACROS) {
-    macros[`\\\\${m.name}`] = m.definition;
+    macros[`\\${m.name}`] = m.definition;
   }
   return macros;
 }
 
-/**
- * Converts CENTRAL_MACROS into MathJax v2 macro configuration format
- */
 export function buildMathJaxV2Macros(): Record<string, any> {
   const macros: Record<string, any> = {};
   for (const m of CENTRAL_MACROS) {
@@ -55,9 +49,6 @@ export function buildMathJaxV2Macros(): Record<string, any> {
   return macros;
 }
 
-/**
- * Converts CENTRAL_MACROS into MathJax v3 / v4 macro configuration format
- */
 export function buildMathJaxV3V4Macros(): Record<string, any> {
   const macros: Record<string, any> = {};
   for (const m of CENTRAL_MACROS) {

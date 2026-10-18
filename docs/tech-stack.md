@@ -95,7 +95,7 @@ bun run clean         # 清除 dist、dist-server、dist-compile、release 目�
 - **MathJax v4 (latest)**: 基于 MathJax 4.1.3 CHTML 运行时，支持最新 TeX/mhchem 特性。
 
 ### 数学公式字体 (`katexFont`)
-- **Default**: 默认系统数学字体。
+- **Default**: KaTeX/TeX 默认数学字体 (`KaTeX_Main` / `TeX`)。
 - **Euler Math**: 典雅的 Euler 数学字体 (`Euler-Math.woff2` / `Euler-Math.otf`)。
 - **Fira Math**: 现代的 Fira 数学无衬线字体 (`FiraMath-Regular.woff2` / `FiraMath-Regular.otf`)。
 - **Cambria Math**: 经典的 Cambria 数学衬线字体 (`Cambria Math.woff2` / `Cambria Math.ttf`)。

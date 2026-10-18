@@ -124,7 +124,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content
         const display = props['data-display'] === 'true';
         return <MathNode math={math} display={display} engine={mathEngine} />;
       },
-      pre: ({ children, ...props }: any) => {
+      pre: ({ children, node: _node, ...props }: any) => {
         const isMath = React.Children.toArray(children).some(
           (child: any) => child && (child.type === 'math-node' || (child.props && child.props['data-math']))
         );
