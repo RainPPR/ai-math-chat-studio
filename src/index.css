@@ -78,13 +78,15 @@
 /* katex-font- 类需加在数学节点的祖先元素上 */
 :is(.katex-font-euler, .katex-font-fira, .katex-font-cambria) :is(
   .katex :is(.mbin, .mrel, .merl, .mopen, .mclose, .mpunct, .minner, .mord, .text):not(.cjk_fallback):not(:has(.cjk_fallback)),
-  .MathJax .MathJax_Main,
-  .MathJax .MathJax_Math,
+  .MathJax,
+  .MathJax *,
+  .MathJax span,
+  .MathJax [style*="font-family"],
   .MathJax_Display,
-  mjx-container .mjx-c,
-  mjx-container .mjx-utext,
-  mjx-container .mjx-mtext,
-  mjx-container .mjx-text
+  .MathJax_Display *,
+  mjx-container,
+  mjx-container *,
+  mjx-container .mjx-c
 ) {
   font-family: var(--katex-math-font) !important;
 }

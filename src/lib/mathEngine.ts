@@ -77,13 +77,12 @@ function enqueueTypeset<T>(fn: () => Promise<T>): Promise<T> {
 export async function loadMathEngine(engine: MathEngine): Promise<void> {
   if (typeof window === 'undefined') return;
 
-  // If engine changed, clean up conflicting window.MathJax instance & scripts
   if (window.__activeMathEngine && window.__activeMathEngine !== engine) {
     if (engine.startsWith('mathjax') || window.__activeMathEngine.startsWith('mathjax')) {
       delete window.MathJax;
       removeScript('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS_HTML');
-      removeScript('https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js');
-      removeScript('https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-chtml.js');
+      removeScript('https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml-full.js');
+      removeScript('https://cdn.jsdelivr.net/npm/mathjax@4.0.0-beta.7/tex-chtml.js');
     }
   }
   window.__activeMathEngine = engine;
@@ -141,12 +140,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
     return;
   }
 
-  if (engine === 'mathjax-v3' || engine === 'mathjax-v4') {
-    const isV4 = engine === 'mathjax-v4';
-    const scriptUrl = isV4
-      ? 'https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-chtml.js'
-      : 'https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js';
-
+  if (engine === 'mathjax-v3') {
     if (!window.MathJax || !window.MathJax.typesetPromise) {
       window.MathJax = {
         tex: {
@@ -161,8 +155,33 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
             vec: ['\\bm{#1}', 1],
           },
         },
-        loader: {
-          load: ['[tex]/mhchem'],
+        options: {
+          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+          enableMenu: false,
+        },
+        startup: {
+          typeset: false,
+        },
+      };
+      await loadScript('https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml-full.js');
+    }
+    return;
+  }
+
+  if (engine === 'mathjax-v4') {
+    if (!window.MathJax || (!window.MathJax.tex2chtmlPromise && !window.MathJax.typesetPromise)) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['\\(', '\\)'], ['$', '$']],
+          displayMath: [['\\[', '\\]'], ['$$', '$$']],
+          processEscapes: true,
+          packages: { '[+]': ['mhchem'] },
+          macros: {
+            tag: ['\\qquad (#1)', 1],
+            male: '{\\text{♂}}',
+            female: '{\\text{♀}}',
+            vec: ['\\bm{#1}', 1],
+          },
         },
         options: {
           skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
@@ -172,7 +191,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
           typeset: false,
         },
       };
-      await loadScript(scriptUrl);
+      await loadScript('https://cdn.jsdelivr.net/npm/mathjax@4.0.0-beta.7/tex-chtml.js');
     }
     return;
   }
@@ -223,7 +242,7 @@ export async function renderMathToElement(
           'MathJax v2 typeset timed out'
         ).catch((err) => console.warn('MathJax v2 typeset error:', err));
       }
-    } else if (engine === 'mathjax-v3' || engine === 'mathjax-v4') {
+    } else if (engine === 'mathjax-v3') {
       if (window.MathJax && window.MathJax.typesetClear) {
         try {
           window.MathJax.typesetClear([container]);
@@ -235,10 +254,46 @@ export async function renderMathToElement(
           await withTimeout(
             window.MathJax.typesetPromise([container]),
             10000,
-            `${engine} typeset timed out`
+            'MathJax v3 typeset timed out'
           );
         } catch (e) {
-          console.warn(`${engine} typeset error:`, e);
+          console.warn('MathJax v3 typeset error:', e);
+        }
+      }
+    } else if (engine === 'mathjax-v4') {
+      if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+        try {
+          await window.MathJax.startup.promise;
+        } catch {}
+      }
+      if (window.MathJax && window.MathJax.tex2chtmlPromise) {
+        try {
+          const node = await withTimeout(
+            window.MathJax.tex2chtmlPromise(math, { display }),
+            10000,
+            'MathJax v4 tex2chtmlPromise timed out'
+          );
+          if (node) {
+            container.replaceChildren(node as Node);
+          }
+        } catch (e) {
+          console.warn('MathJax v4 tex2chtmlPromise error:', e);
+        }
+      } else if (window.MathJax && window.MathJax.typesetPromise) {
+        if (window.MathJax.typesetClear) {
+          try {
+            window.MathJax.typesetClear([container]);
+          } catch {}
+        }
+        container.textContent = rawTex;
+        try {
+          await withTimeout(
+            window.MathJax.typesetPromise([container]),
+            10000,
+            'MathJax v4 typeset timed out'
+          );
+        } catch (e) {
+          console.warn('MathJax v4 typeset error:', e);
         }
       }
     }
