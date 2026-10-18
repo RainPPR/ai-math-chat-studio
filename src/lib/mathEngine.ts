@@ -8,16 +8,77 @@ declare global {
   }
 }
 
+/**
+ * Centralized Math Macros Definition
+ * Defines standard LaTeX custom macros across all rendering engines.
+ * Each entry specifies:
+ * - name: command name (e.g. 'tag', 'male', 'female', 'vec')
+ * - definition: LaTeX replacement template
+ * - args: number of arguments (optional, default 0)
+ */
+export interface CustomMacro {
+  name: string;
+  definition: string;
+  args?: number;
+}
+
+export const CENTRAL_MACROS: CustomMacro[] = [
+  { name: 'tag', definition: '\\qquad (#1)', args: 1 },
+  { name: 'male', definition: '\\text{♂}' },
+  { name: 'female', definition: '\\text{♀}' },
+  { name: 'vec', definition: '\\bm{#1}', args: 1 },
+];
+
+/**
+ * Converts CENTRAL_MACROS into KaTeX macro configuration format
+ */
+export function buildKatexMacros(): Record<string, string> {
+  const macros: Record<string, string> = {};
+  for (const m of CENTRAL_MACROS) {
+    macros[`\\\\${m.name}`] = m.definition;
+  }
+  return macros;
+}
+
+/**
+ * Converts CENTRAL_MACROS into MathJax v2 macro configuration format
+ */
+export function buildMathJaxV2Macros(): Record<string, any> {
+  const macros: Record<string, any> = {};
+  for (const m of CENTRAL_MACROS) {
+    if (m.args && m.args > 0) {
+      macros[m.name] = [m.definition, m.args];
+    } else {
+      macros[m.name] = `{${m.definition}}`;
+    }
+  }
+  return macros;
+}
+
+/**
+ * Converts CENTRAL_MACROS into MathJax v3 / v4 macro configuration format
+ */
+export function buildMathJaxV3V4Macros(): Record<string, any> {
+  const macros: Record<string, any> = {};
+  for (const m of CENTRAL_MACROS) {
+    if (m.args && m.args > 0) {
+      macros[m.name] = [m.definition, m.args];
+    } else {
+      macros[m.name] = `{${m.definition}}`;
+    }
+  }
+  return macros;
+}
+
 export const SHARED_KATEX_OPTIONS: KatexOptions = {
   strict: false,
   throwOnError: false,
-  macros: {
-    '\\tag': '\\qquad (#1)',
-    '\\male': '\\text{♂}',
-    '\\female': '\\text{♀}',
-    '\\vec': '\\bm{#1}',
-  },
+  macros: buildKatexMacros(),
 };
+
+const MATHJAX_CDN_V2 = 'https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS_HTML';
+const MATHJAX_CDN_V3 = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js';
+const MATHJAX_CDN_V4 = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js';
 
 const loadedScripts = new Map<string, { promise: Promise<void>; element: HTMLScriptElement }>();
 
@@ -77,12 +138,13 @@ function enqueueTypeset<T>(fn: () => Promise<T>): Promise<T> {
 export async function loadMathEngine(engine: MathEngine): Promise<void> {
   if (typeof window === 'undefined') return;
 
+  // If engine changed, clean up conflicting window.MathJax instance & scripts
   if (window.__activeMathEngine && window.__activeMathEngine !== engine) {
     if (engine.startsWith('mathjax') || window.__activeMathEngine.startsWith('mathjax')) {
       delete window.MathJax;
-      removeScript('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS_HTML');
-      removeScript('https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml-full.js');
-      removeScript('https://cdn.jsdelivr.net/npm/mathjax@4.0.0-beta.7/tex-chtml.js');
+      removeScript(MATHJAX_CDN_V2);
+      removeScript(MATHJAX_CDN_V3);
+      removeScript(MATHJAX_CDN_V4);
     }
   }
   window.__activeMathEngine = engine;
@@ -93,6 +155,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
 
   if (engine === 'mathjax-v2') {
     if (!window.MathJax || !window.MathJax.Hub) {
+      const v2Macros = buildMathJaxV2Macros();
       window.MathJax = {
         skipStartupTypeset: true,
         tex2jax: {
@@ -101,12 +164,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
           processEscapes: true,
         },
         TeX: {
-          Macros: {
-            tag: ['\\qquad (#1)', 1],
-            male: '{\\text{♂}}',
-            female: '{\\text{♀}}',
-            vec: ['\\bm{#1}', 1],
-          },
+          Macros: v2Macros,
         },
         'HTML-CSS': {
           preferredFont: 'TeX',
@@ -124,18 +182,13 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
                 processEscapes: true,
               },
               TeX: {
-                Macros: {
-                  tag: ['\\qquad (#1)', 1],
-                  male: '{\\text{♂}}',
-                  female: '{\\text{♀}}',
-                  vec: ['\\bm{#1}', 1],
-                },
+                Macros: v2Macros,
               },
             });
           }
         },
       };
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS_HTML');
+      await loadScript(MATHJAX_CDN_V2);
     }
     return;
   }
@@ -148,12 +201,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
           displayMath: [['\\[', '\\]'], ['$$', '$$']],
           processEscapes: true,
           packages: { '[+]': ['mhchem'] },
-          macros: {
-            tag: ['\\qquad (#1)', 1],
-            male: '{\\text{♂}}',
-            female: '{\\text{♀}}',
-            vec: ['\\bm{#1}', 1],
-          },
+          macros: buildMathJaxV3V4Macros(),
         },
         options: {
           skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
@@ -163,7 +211,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
           typeset: false,
         },
       };
-      await loadScript('https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml-full.js');
+      await loadScript(MATHJAX_CDN_V3);
     }
     return;
   }
@@ -176,12 +224,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
           displayMath: [['\\[', '\\]'], ['$$', '$$']],
           processEscapes: true,
           packages: { '[+]': ['mhchem'] },
-          macros: {
-            tag: ['\\qquad (#1)', 1],
-            male: '{\\text{♂}}',
-            female: '{\\text{♀}}',
-            vec: ['\\bm{#1}', 1],
-          },
+          macros: buildMathJaxV3V4Macros(),
         },
         options: {
           skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
@@ -191,7 +234,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
           typeset: false,
         },
       };
-      await loadScript('https://cdn.jsdelivr.net/npm/mathjax@4.0.0-beta.7/tex-chtml.js');
+      await loadScript(MATHJAX_CDN_V4);
     }
     return;
   }
