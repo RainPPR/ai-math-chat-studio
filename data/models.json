@@ -8,6 +8,27 @@
     "reasoningEffort": "max"
   },
   {
+    "id": "87b942d0-bf57-421a-b918-1f4cc3d8f9f9",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "Clef",
+    "displayName": "Clef (AMD)"
+  },
+  {
+    "id": "9f093fcf-5e6f-4e37-8eb5-9d3b0c45acaf",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "d3",
+    "displayName": "d3 (AMD)"
+  },
+  {
+    "id": "24cc6042-ebee-4cbc-b0df-c0ee44cd68c7",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "d3-flash",
+    "displayName": "d3-flash (AMD)"
+  },
+  {
     "id": "8857da95-1ab9-4ec0-8b33-5298939e45ab",
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
@@ -78,6 +99,13 @@
     "providerType": "openai-compatible",
     "modelId": "MiniCPM5-2B",
     "displayName": "MiniCPM5-2B (AMD)"
+  },
+  {
+    "id": "73f577ec-03d6-48d7-98b3-b1cd7c6e686f",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "OmniVoice",
+    "displayName": "OmniVoice (AMD)"
   },
   {
     "id": "49e71f84-ed58-4c8e-9d84-2410d2bad08e",
@@ -776,11 +804,18 @@
     "displayName": "minimax-m3 (FTAI)"
   },
   {
-    "id": "639bd6aa-5071-4de3-a89d-8bcaf2742a41",
+    "id": "ce0e6bf0-c302-4793-8cb7-4487bd171d24",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
-    "modelId": "fta/ocz/fledge-alpha-free",
-    "displayName": "fledge-alpha-free (FTAI)"
+    "modelId": "fta/ocz/beam-free",
+    "displayName": "beam-free (FTAI)"
+  },
+  {
+    "id": "8b7c474f-3f2e-4888-9817-5903b1ebbefa",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/big-pickle",
+    "displayName": "big-pickle (FTAI)"
   },
   {
     "id": "7984a744-7496-4fbc-aecc-f78bc651cb92",
@@ -790,18 +825,11 @@
     "displayName": "longcat-2.5-preview-free (FTAI)"
   },
   {
-    "id": "fa5213eb-1f8b-456d-a13c-11a2931bcaee",
+    "id": "162e9f6b-5146-4b53-9f01-8d48ba050d9a",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
-    "modelId": "fta/ocz/nemotron-3-ultra-free",
-    "displayName": "nemotron-3-ultra-free (FTAI)"
-  },
-  {
-    "id": "b35f24f0-b80a-4078-b770-13494ca2b3b5",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/ocz/nemotron-3.5-lightning-free",
-    "displayName": "nemotron-3.5-lightning-free (FTAI)"
+    "modelId": "fta/ocz/nemotron-3.5-super-vl-free",
+    "displayName": "nemotron-3.5-super-vl-free (FTAI)"
   },
   {
     "id": "0e71dfbc-3d37-4399-a8db-a182ce46db28",
@@ -1132,6 +1160,13 @@
     "displayName": "NVIDIA: Nemotron 3.5 Lightning (Kilo)"
   },
   {
+    "id": "f2600781-332f-4948-9884-30b9cadccd8a",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "nvidia/nemotron-3.5-super-vl:free",
+    "displayName": "NVIDIA: Nemotron 3.5 Super VL (Kilo) (KG)"
+  },
+  {
     "id": "14949368-d0cb-5c39-a1bd-8e78a0ef89fa",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -1159,6 +1194,14 @@
     "modelId": "qwen/qwen3.8-27b:free",
     "displayName": "Qwen: Qwen3.8 27B (Kilo)",
     "reasoningEffort": "xhigh"
+  },
+  {
+    "id": "8afd3533-fe48-4d3d-bdcf-6edcc9344c31",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "reflection/beam-free",
+    "displayName": "Reflection: Beam 1.0 (Kilo) (KG)",
+    "reasoningEffort": "max"
   },
   {
     "id": "c7935d10-0320-49e0-b31f-f27df31045a1",
@@ -1199,6 +1242,20 @@
     "modelId": "thinkingmachines/inkling-small:free",
     "displayName": "Thinking Machines: Inkling Small (Kilo)",
     "reasoningEffort": "max"
+  },
+  {
+    "id": "57463924-b1a7-4125-bc1c-2043daf70d98",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "xingchen-agi/xing4.0-29b-a4b:free",
+    "displayName": "XingChen: Xing4.0 29B A4B (Kilo) (KG)"
+  },
+  {
+    "id": "a993277d-7466-4ae9-b6db-9e248c824ff3",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "claude-haiku-5-5",
+    "displayName": "Claude Haiku 5.5 (LF)"
   },
   {
     "id": "142e4cc3-b3aa-47e2-bb52-e375bddefc7d",
