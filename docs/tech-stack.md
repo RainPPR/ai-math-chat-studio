@@ -21,7 +21,7 @@
 | 技术 | 版本 |
 |---|---|
 | @google/genai | ^2.17.1 |
-| KaTeX | ^0.18.4 (v0 latest) |
+| KaTeX | ^0.18.4 (latest) |
 | MathJax v2 | 2.7.9 (CDN Runtime) |
 | MathJax v3 | 3.2.2 (CDN Runtime) |
 | MathJax v4 | 4.1.3 (CDN Runtime) |
@@ -89,7 +89,7 @@ bun run clean         # 清除 dist、dist-server、dist-compile、release 目�
 本应用支持多渲染引擎选择，用户可在设置 (`SettingsModal.tsx`) 中自由配置：
 
 ### 数学渲染引擎 (`mathEngine`)
-- **KaTeX (v0 latest)**: 基于 `rehype-katex`，同步 AST 渲染，性能极高。
+- **KaTeX (latest)**: 基于 `rehype-katex`，同步 AST 渲染，性能极高。
 - **MathJax v2 (latest)**: 基于 MathJax 2.7.9 运行时，支持经典 TeX 命令与 HTML-CSS 排版。
 - **MathJax v3 (latest)**: 基于 MathJax 3.2.2 CHTML 运行时，异步 Promise 排版。
 - **MathJax v4 (latest)**: 基于 MathJax 4.1.3 CHTML 运行时，支持最新 TeX/mhchem 特性。

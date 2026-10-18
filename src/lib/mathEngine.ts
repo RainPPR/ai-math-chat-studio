@@ -154,6 +154,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
         'fast-preview': { disabled: true },
         CommonHTML: {
           matchFontHeight: false,
+          scale: 108,
           linebreaks: { automatic: false },
         },
         AuthorInit: function () {
@@ -187,6 +188,9 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
   if (engine === 'mathjax-v3') {
     if (!window.MathJax || !window.MathJax.typesetPromise) {
       window.MathJax = {
+        loader: {
+          load: ['[tex]/mhchem'],
+        },
         tex: {
           inlineMath: [['\\(', '\\)'], ['$', '$']],
           displayMath: [['\\[', '\\]'], ['$$', '$$']],
@@ -214,7 +218,6 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
           inlineMath: [['\\(', '\\)'], ['$', '$']],
           displayMath: [['\\[', '\\]'], ['$$', '$$']],
           processEscapes: true,
-          packages: { '[+]': ['mhchem'] },
           macros: buildMathJaxV3V4Macros(),
         },
         options: {
@@ -300,26 +303,13 @@ export async function renderMathToElement(
           await window.MathJax.startup.promise;
         } catch {}
       }
-      if (window.MathJax && window.MathJax.tex2chtmlPromise) {
+      if (window.MathJax && window.MathJax.typesetClear) {
         try {
-          const node = await withTimeout(
-            window.MathJax.tex2chtmlPromise(math, { display }),
-            10000,
-            'MathJax v4 tex2chtmlPromise timed out'
-          );
-          if (node) {
-            container.replaceChildren(node as Node);
-          }
-        } catch (e) {
-          console.warn('MathJax v4 tex2chtmlPromise error:', e);
-        }
-      } else if (window.MathJax && window.MathJax.typesetPromise) {
-        if (window.MathJax.typesetClear) {
-          try {
-            window.MathJax.typesetClear([container]);
-          } catch {}
-        }
-        container.textContent = rawTex;
+          window.MathJax.typesetClear([container]);
+        } catch {}
+      }
+      container.textContent = rawTex;
+      if (window.MathJax && window.MathJax.typesetPromise) {
         try {
           await withTimeout(
             window.MathJax.typesetPromise([container]),
