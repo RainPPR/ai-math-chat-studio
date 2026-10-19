@@ -84,6 +84,21 @@ export function stripNonContentForTOC(content: string): string {
  * Fast heading extractor for a message's content supporting ATX (#) and Setext (=== / ---) headings,
  * including leading space indentation up to 3 spaces per Markdown standard.
  */
+/**
+ * Helper to check if a line is a Markdown thematic break / horizontal rule (e.g. ---, ***, ___).
+ */
+function isThematicBreak(line: string): boolean {
+  return /^ {0,3}([-*_])\s*(?:\1\s*){2,}$/.test(line);
+}
+
+/**
+ * Helper to check if a line starts a block-level element (list item, blockquote, table row)
+ * that cannot be treated as a Setext heading text line.
+ */
+function isBlockElement(line: string): boolean {
+  return /^\s*([-*+]|\d+[.)]|>|\|)\s+/.test(line) || /^\s*\|/.test(line);
+}
+
 export function extractHeadingsFromContent(messageId: string, content: string): TOCHeading[] {
   const cleanContent = stripNonContentForTOC(content);
   const headings: TOCHeading[] = [];
@@ -113,7 +128,12 @@ export function extractHeadingsFromContent(messageId: string, content: string): 
     }
 
     // Check Setext headings: Line followed by === or --- (up to 3 leading spaces)
-    if (i + 1 < lines.length && line.trim().length > 0) {
+    if (
+      i + 1 < lines.length &&
+      line.trim().length > 0 &&
+      !isThematicBreak(line) &&
+      !isBlockElement(line)
+    ) {
       const nextLine = lines[i + 1];
       if (/^ {0,3}=+\s*$/.test(nextLine)) {
         const text = cleanHeadingText(line);
@@ -129,7 +149,7 @@ export function extractHeadingsFromContent(messageId: string, content: string): 
         }
         i++; // skip underline line
         continue;
-      } else if (/^ {0,3}-+\s*$/.test(nextLine) && !/^\s*[-*+]\s+/.test(line)) {
+      } else if (/^ {0,3}-+\s*$/.test(nextLine)) {
         const text = cleanHeadingText(line);
         if (text) {
           headings.push({
