@@ -22,9 +22,6 @@
 |---|---|
 | @google/genai | ^2.17.1 |
 | KaTeX | ^0.18.4 (latest) |
-| MathJax v2 | 2.7.9 (CDN Runtime) |
-| MathJax v3 | 3.2.2 (CDN Runtime) |
-| MathJax v4 | 4.1.3 (CDN Runtime) |
 
 ## Markdown 渲染管线
 | 技术 | 版本 |
@@ -86,17 +83,12 @@ bun run clean         # 清除 dist、dist-server、dist-compile、release 目�
 
 ## 数学公式渲染系统 (Math Formula Rendering System)
 
-本应用支持多渲染引擎选择，用户可在设置 (`SettingsModal.tsx`) 中自由配置：
+本应用数学公式渲染统一使用 KaTeX：
 
-### 数学渲染引擎 (`mathEngine`)
-- **KaTeX (latest)**: 基于 `rehype-katex`，同步 AST 渲染，性能极高。
-- **MathJax v2 (latest)**: 基于 MathJax 2.7.9 运行时，支持经典 TeX 命令与 HTML-CSS 排版。
-- **MathJax v3 (latest)**: 基于 MathJax 3.2.2 CHTML 运行时，异步 Promise 排版。
-- **MathJax v4 (latest)**: 基于 MathJax 4.1.3 CHTML 运行时，支持最新 TeX/mhchem 特性。
+### 数学渲染引擎
+- **KaTeX**: 基于 `rehype-katex`，同步 AST 渲染，性能极高，应用 90% (`0.9em`) 字体缩放。
 
 ### 实现细节
-1. **统一接口服务 (`src/lib/mathEngine.ts`)**: 统一管理 KaTeX 与 MathJax 脚本按需加载、类型排版队列 (`enqueueTypeset`)、自定义宏 (`\tag`, `\vec`, `\male`, `\female`) 与网络超时容错。
-2. **默认库字体**: 各库全权使用其原生默认数学字体，不做强行设置与覆盖。
+1. **统一宏管理 (`src/lib/mathEngine.ts`)**: 管理自定义宏 (`\tag`, `\vec`, `\male`, `\female`) 与 KaTeX 渲染选项 (`SHARED_KATEX_OPTIONS`)。
+2. **默认库字体**: 原生默认数学字体，不做强行设置与覆盖。
 3. **CJK/中文优雅回退**: 确保数学公式内的中文字符（如 `\text{中文}`）优雅回退至主字体 (`--font-main`)。
-4. **无障碍 Explorer / 上下文菜单抑制**: 全面禁用 MathJax 无障碍交互组件 (`enableExplorer: false`, `enableExplorerHelp: false`, `enableSpeech: false`, `enableMenu: false`, `inTabOrder: false`)，并在 CSS 和渲染管道中移除 `tabindex` 与相关弹窗节点，防止意外弹出 `MathJax Expression Explorer Help`。
-5. **行内公式基线对齐 (`vertical-align: baseline`)**: 行内公式包装容器采用 `display: inline; vertical-align: baseline;`，移除破坏基线对齐的 `inline-block align-middle`，保证 MathJax v2/v3/v4 行内公式与正文基线平齐，避免公式偏下。

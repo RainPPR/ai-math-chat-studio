@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import React, { useState, useEffect, useRef } from 'react';
-import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, Skill, BuiltInProviderType, DEFAULT_SETTINGS, MATH_ENGINES, MathEngine, Template } from '../types';
+import { UserSettings, ProviderInstance, ModelInstance, TempModel, Character, Skill, BuiltInProviderType, DEFAULT_SETTINGS, Template } from '../types';
 import { api } from '../lib/api';
 import { X, Plus, Trash2, Save, ChevronDown, ChevronRight, Pencil, Check, AlertTriangle, Download, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 import { sortProviders, sortModels, sortTempModels, sortCharacters, sortSkills, sortTemplates } from '../../shared/sorting';
@@ -1060,12 +1060,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
       setLocal(finalSettings);
       setEditingNoteId(null);
     }
-    const mathEngineChanged = finalSettings.mathEngine !== settings.mathEngine;
     await onSave(finalSettings, characterReassignments);
     await onSaveTemplates(localTemplates);
-    if (mathEngineChanged) {
-      window.location.reload();
-    }
   };
 
   let stickyNotesContent = null;
@@ -1212,19 +1208,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                     <span className="text-gray-500 text-sm">No active character selected</span>
                   )}
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">Math Engine</label>
-                <select
-                  value={local.mathEngine || 'katex'}
-                  onChange={e => { setLocal(s => ({ ...s, mathEngine: e.target.value as MathEngine })); }}
-                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-blue-500 transition-colors"
-                >
-                  {MATH_ENGINES.map(e => (
-                    <option key={e.id} value={e.id}>{e.name}</option>
-                  ))}
-                </select>
               </div>
 
               <div className="space-y-3 pt-4 border-t border-gray-800">

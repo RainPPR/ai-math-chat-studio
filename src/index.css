@@ -30,48 +30,12 @@
 }
 
 /* =========================================================
-   CJK / 中文字符彻底修复
+   KaTeX 90% 缩放与 CJK / 中文字符修复
    ========================================================= */
-.katex .cjk_fallback,
-mjx-container .cjk_fallback,
-.MathJax .cjk_fallback {
+.katex {
+  font-size: 1em;
+}
+
+.katex .cjk_fallback {
   font-family: var(--font-main) !important;
 }
-
-/* =========================================================
-   MathJax: 彻底隐藏并禁用无障碍 Explorer 帮助弹窗与上下文菜单
-   ========================================================= */
-.CtxtMenu_Info,
-.CtxtMenu_MenuFrame,
-.CtxtMenu_Overlay,
-.CtxtMenu_Global,
-.CtxtMenu_Attached_Info,
-[class*="CtxtMenu_"],
-dialog.mjx-dialog-help,
-dialog[class*="mjx-dialog"],
-.mjx-dialog,
-mjx-dialog,
-mjx-explorer,
-.MathJax_Menu,
-.MathJax_MenuFrame,
-.MathJax_About,
-#MathJax_About {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  opacity: 0 !important;
-}
-
-/* =========================================================
-   MathJax 行内公式基线对齐修复
-   ========================================================= */
-.math-inline-wrapper {
-  display: inline !important;
-  vertical-align: baseline !important;
-}
-
-.math-inline-wrapper > mjx-container,
-.math-inline-wrapper > .MathJax {
-  display: inline-block !important;
-}
-
