@@ -57,7 +57,14 @@ export function cleanHeadingText(rawText: string): string {
  * Matches line-anchored code fences properly with matching opening and closing fence boundaries
  * or true end-of-file fallback.
  */
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import { THINK_REGEX } from '../../shared/thinking';
+
+// Reuse processor instance across calls for optimal performance
+const remarkProcessor = unified().use(remarkParse).use(remarkGfm).use(remarkMath);
 
 export function stripNonContentForTOC(content: string): string {
   let text = content;
@@ -65,107 +72,60 @@ export function stripNonContentForTOC(content: string): string {
   // Remove <think>...</think> blocks or unclosed <think>...
   text = text.replace(THINK_REGEX, '');
 
-  // Remove line-anchored code blocks ```...``` or ~~~...~~~
-  text = text.replace(/^[ \t]*(```|~~~)[^\n]*\n[\s\S]*?(?:\n[ \t]*\1[ \t]*\r?$|$(?![\s\S]))/gm, '');
-
-  // Remove display math blocks $$...$$ (or unclosed $$...)
-  text = text.replace(/\$\$[\s\S]*?(?:\$\$|$)/g, '');
-
-  // Remove display math blocks \[...\] (or unclosed \[...)
-  text = text.replace(/\\\[[\s\S]*?(?:\\\]|$)/g, '');
-
-  // Remove LaTeX environment blocks \begin{env}...\end{env} (or unclosed \begin{env}...)
-  text = text.replace(/\\begin\{([a-zA-Z0-9*]+)\}[\s\S]*?(?:\\end\{\1\}|$)/gi, '');
-
   return text;
 }
 
 /**
- * Fast heading extractor for a message's content supporting ATX (#) and Setext (=== / ---) headings,
- * including leading space indentation up to 3 spaces per Markdown standard.
+ * Extract plain text recursively from a remark AST node
  */
-/**
- * Helper to check if a line is a Markdown thematic break / horizontal rule (e.g. ---, ***, ___).
- */
-function isThematicBreak(line: string): boolean {
-  return /^ {0,3}([-*_])\s*(?:\1\s*){2,}$/.test(line);
+function getASTNodeText(node: any): string {
+  if (!node) return '';
+  if (node.type === 'text' || node.type === 'inlineCode' || node.type === 'inlineMath') {
+    return node.value || '';
+  }
+  if (node.children && Array.isArray(node.children)) {
+    return node.children.map(getASTNodeText).join('');
+  }
+  return '';
 }
 
 /**
- * Helper to check if a line starts a block-level element (list item, blockquote, table row)
- * that cannot be treated as a Setext heading text line.
+ * Robust AST-based heading extractor using remark-parse.
+ * Parses Markdown into an AST tree and collects heading nodes in exact document order,
+ * ensuring 1:1 match with ReactMarkdown/rehypeTocHeadingIds AST rendering.
  */
-function isBlockElement(line: string): boolean {
-  return /^\s*([-*+]|\d+[.)]|>|\|)\s+/.test(line) || /^\s*\|/.test(line);
-}
-
 export function extractHeadingsFromContent(messageId: string, content: string): TOCHeading[] {
-  const cleanContent = stripNonContentForTOC(content);
-  const headings: TOCHeading[] = [];
+  let cleanContent = stripNonContentForTOC(content);
 
-  const lines = cleanContent.split(/\r?\n/);
+  // Normalize display math delimiters as MarkdownRenderer does
+  cleanContent = cleanContent.replace(/\\\[([\s\S]*?)\\\]/g, (_match, p1) => `$$${p1}$$`);
+  cleanContent = cleanContent.replace(/\\\(([\s\S]*?)\\\)/g, (_match, p1) => `$${p1}$`);
+
+  const headings: TOCHeading[] = [];
+  const tree = remarkProcessor.parse(cleanContent);
   let headingIndex = 0;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    // Check ATX headings: # Heading (up to 3 leading spaces)
-    const atxMatch = /^ {0,3}(#{1,6})\s+(.+)$/.exec(line);
-    if (atxMatch) {
-      const level = atxMatch[1].length;
-      const text = cleanHeadingText(atxMatch[2]);
+  function visit(node: any) {
+    if (!node) return;
+    if (node.type === 'heading') {
+      const rawText = getASTNodeText(node);
+      const text = cleanHeadingText(rawText);
       if (text) {
         headings.push({
           id: `toc-msg-${messageId}-h-${headingIndex}`,
-          level,
+          level: Math.min(Math.max(node.depth || 1, 1), 6),
           text,
           messageId,
           headingIndex,
         });
         headingIndex++;
       }
-      continue;
     }
-
-    // Check Setext headings: Line followed by === or --- (up to 3 leading spaces)
-    if (
-      i + 1 < lines.length &&
-      line.trim().length > 0 &&
-      !isThematicBreak(line) &&
-      !isBlockElement(line)
-    ) {
-      const nextLine = lines[i + 1];
-      if (/^ {0,3}=+\s*$/.test(nextLine)) {
-        const text = cleanHeadingText(line);
-        if (text) {
-          headings.push({
-            id: `toc-msg-${messageId}-h-${headingIndex}`,
-            level: 1,
-            text,
-            messageId,
-            headingIndex,
-          });
-          headingIndex++;
-        }
-        i++; // skip underline line
-        continue;
-      } else if (/^ {0,3}-+\s*$/.test(nextLine)) {
-        const text = cleanHeadingText(line);
-        if (text) {
-          headings.push({
-            id: `toc-msg-${messageId}-h-${headingIndex}`,
-            level: 2,
-            text,
-            messageId,
-            headingIndex,
-          });
-          headingIndex++;
-        }
-        i++; // skip underline line
-        continue;
-      }
+    if (node.children && Array.isArray(node.children)) {
+      node.children.forEach(visit);
     }
   }
 
+  visit(tree);
   return headings;
 }
