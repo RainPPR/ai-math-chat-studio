@@ -61,15 +61,6 @@ export interface Template {
   content: string;
 }
 
-export type MathEngine = 'katex' | 'mathjax-v2' | 'mathjax-v3' | 'mathjax-v4';
-
-export const MATH_ENGINES: { id: MathEngine; name: string }[] = [
-  { id: 'katex', name: 'KaTeX (latest)' },
-  { id: 'mathjax-v2', name: 'MathJax v2 (latest)' },
-  { id: 'mathjax-v3', name: 'MathJax v3 (latest)' },
-  { id: 'mathjax-v4', name: 'MathJax v4 (latest)' },
-];
-
 export interface UserSettings {
   activeModelId?: string;
   activeCharacterId?: string;
@@ -90,7 +81,6 @@ export interface UserSettings {
   chatgptChunks?: string[];
   chatgptChunkRemarks?: Record<string, string>;
   stickyNotes?: { id: string; content: string; createdAt: string }[];
-  mathEngine?: MathEngine;
 }
 
 export type StarColor = 'yellow' | 'rose' | 'blue' | 'green' | 'orange';
@@ -113,7 +103,6 @@ export const DEFAULT_SETTINGS: UserSettings = {
   chatgptChunks: [],
   chatgptChunkRemarks: {},
   stickyNotes: [],
-  mathEngine: 'katex',
 };
 
 // Legacy type (kept for backward compatibility)

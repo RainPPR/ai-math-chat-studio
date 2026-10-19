@@ -202,7 +202,7 @@ const MessageItem = React.memo(({ msg, msgIdx, isLast, isGenerating, settings, o
             </button>
             {isThoughtOpen && (
               <div className="px-4 py-3 border-t border-gray-700/30 text-gray-300 text-sm">
-                {settings.renderThinkingAsMarkdown ? <MarkdownRenderer content={thought} mathEngine={settings.mathEngine} /> : <pre className="whitespace-pre-wrap font-sans text-sm opacity-80">{thought}</pre>}
+                {settings.renderThinkingAsMarkdown ? <MarkdownRenderer content={thought} /> : <pre className="whitespace-pre-wrap font-sans text-sm opacity-80">{thought}</pre>}
               </div>
             )}
           </div>
@@ -235,7 +235,7 @@ const MessageItem = React.memo(({ msg, msgIdx, isLast, isGenerating, settings, o
               </button>
             </div>
             <div ref={contentRef}>
-              <MarkdownRenderer content={mainContent} messageId={msg.id} mathEngine={settings.mathEngine} />
+              <MarkdownRenderer content={mainContent} messageId={msg.id} />
             </div>
           </div>
         )}
@@ -713,13 +713,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           background-color: transparent !important;
         }
         .katex {
+          font-size: 0.9em;
           text-rendering: auto;
         }
         .katex .frac-line {
           border-color: black !important;
-          color: black !important;
-        }
-        .MathJax, .MathJax_Display, .mjx-chtml, mjx-container, mjx-container * {
           color: black !important;
         }
       </style>
@@ -1546,14 +1544,14 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               {viewingContent.userContent && (
                 <div className="border-b border-gray-800/80 pb-8">
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-400 mb-4 select-none">问题 (Question)</h4>
-                  <MarkdownRenderer content={viewingContent.userContent} mathEngine={settings.mathEngine} />
+                  <MarkdownRenderer content={viewingContent.userContent} />
                 </div>
               )}
               <div>
                 {viewingContent.userContent && (
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-green-400 mb-4 select-none">回答 (Answer)</h4>
                 )}
-                <MarkdownRenderer content={viewingContent.modelContent} mathEngine={settings.mathEngine} />
+                <MarkdownRenderer content={viewingContent.modelContent} />
               </div>
             </div>
           </div>
@@ -1891,7 +1889,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                   <h4 className={`text-xs font-semibold uppercase tracking-wider ${titleColorClass} mb-4 select-none`}>
                     {titleText}
                   </h4>
-                  <MarkdownRenderer content={parsed.mainContent} messageId={msg.id} mathEngine={settings.mathEngine} />
+                  <MarkdownRenderer content={parsed.mainContent} messageId={msg.id} />
                 </div>
               );
             })}
