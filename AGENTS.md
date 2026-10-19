@@ -164,10 +164,6 @@
 - **时间戳**: 统一 `YYYY-MM-DDTHH:MM:SS.ffffffZ`（6 位微秒 + 大写 `Z`）；同一对话内消息时间单调不降，对话的 `created_at` / `updated_at` 必须包住所有消息时间。
 - **修改须知**: 改动导出字段后，用 `scripts/claude-export-probe/build_probe_zips.py` 重新生成探针包验证，再上传 Gemini 实测（每天 5 个 zip 的上限）。
 
-### 10. MathJax 多版本渲染与基线排版架构 (MathJax Multi-version Rendering & Baseline Architecture)
-
-- **无障碍弹窗彻底抑制**: MathJax v3/v4 默认启用了 a11y/explorer 模块，用户点击公式或聚焦时按 `h` 容易误弹出 `MathJax Expression Explorer Help`。系统在 `mathEngine.ts` 初始化配置中彻底关闭相关配置 (`enableExplorer: false`, `enableExplorerHelp: false`, `enableSpeech: false`, `enableBraille: false`, `inTabOrder: false`)，在渲染后自动剥除 `tabindex` 焦点，并在 `index.css` 中将 `dialog.mjx-dialog-help`、`.CtxtMenu_Info` 等弹窗节点完全设为 `display: none !important`。
-- **行内公式基线平齐对齐**: 行内数学包装层 (`math-inline-wrapper`) 采用纯 `display: inline; vertical-align: baseline;`，严禁使用 `inline-block align-middle`（因 `align-middle` 会强行将公式中心对齐至文本 x 高的一半，叠加 MathJax 内部向下深度位移后导致公式显著偏下沉入行底）。
 
 
 ## ⚠️ 严禁事项（强制执行）
