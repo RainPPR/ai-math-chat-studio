@@ -98,3 +98,5 @@ bun run clean         # 清除 dist、dist-server、dist-compile、release 目�
 1. **统一接口服务 (`src/lib/mathEngine.ts`)**: 统一管理 KaTeX 与 MathJax 脚本按需加载、类型排版队列 (`enqueueTypeset`)、自定义宏 (`\tag`, `\vec`, `\male`, `\female`) 与网络超时容错。
 2. **默认库字体**: 各库全权使用其原生默认数学字体，不做强行设置与覆盖。
 3. **CJK/中文优雅回退**: 确保数学公式内的中文字符（如 `\text{中文}`）优雅回退至主字体 (`--font-main`)。
+4. **无障碍 Explorer / 上下文菜单抑制**: 全面禁用 MathJax 无障碍交互组件 (`enableExplorer: false`, `enableExplorerHelp: false`, `enableSpeech: false`, `enableMenu: false`, `inTabOrder: false`)，并在 CSS 和渲染管道中移除 `tabindex` 与相关弹窗节点，防止意外弹出 `MathJax Expression Explorer Help`。
+5. **行内公式基线对齐 (`vertical-align: baseline`)**: 行内公式包装容器采用 `display: inline; vertical-align: baseline;`，移除破坏基线对齐的 `inline-block align-middle`，保证 MathJax v2/v3/v4 行内公式与正文基线平齐，避免公式偏下。

@@ -818,11 +818,46 @@
     "displayName": "big-pickle (FTAI)"
   },
   {
+    "id": "a39d3703-bd46-49c0-b46e-be8db58b926e",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/deepseek-v4.1-flash-free",
+    "displayName": "deepseek-v4.1-flash-free (FTAI)"
+  },
+  {
+    "id": "5fc8c12d-95c6-4c7f-8308-9911a2582ac6",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/glm-5.3-flash-free",
+    "displayName": "glm-5.3-flash-free (FTAI)"
+  },
+  {
     "id": "7984a744-7496-4fbc-aecc-f78bc651cb92",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
     "modelId": "fta/ocz/longcat-2.5-preview-free",
     "displayName": "longcat-2.5-preview-free (FTAI)"
+  },
+  {
+    "id": "1d100990-bede-4f3d-9395-23994d6efd93",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/mimo-v2.6-flash-free",
+    "displayName": "mimo-v2.6-flash-free (FTAI)"
+  },
+  {
+    "id": "fbf6aa42-16fd-46d4-af0a-e7e349f2b2ba",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/nemotron-3-ultra-free",
+    "displayName": "nemotron-3-ultra-free (FTAI)"
+  },
+  {
+    "id": "5489a2d5-d2ce-44a2-803d-1a635f1736e8",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "fta/ocz/nemotron-3.5-lightning-free",
+    "displayName": "nemotron-3.5-lightning-free (FTAI)"
   },
   {
     "id": "162e9f6b-5146-4b53-9f01-8d48ba050d9a",
@@ -1279,6 +1314,13 @@
     "displayName": "DeepSeek V3.2 (LF)"
   },
   {
+    "id": "bedf736f-d6a1-495a-a960-9121e0b861c6",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4-pro-0813",
+    "displayName": "DeepSeek V4 Pro 0813 (LF)"
+  },
+  {
     "id": "4740a6bc-1677-5955-8ae2-a9ddd28bf15a",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -1307,6 +1349,20 @@
     "displayName": "GLM 5 (LF)"
   },
   {
+    "id": "683956b2-a6fc-415c-8b57-6fdf31ec31c8",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5.3",
+    "displayName": "GLM 5.3 (LF)"
+  },
+  {
+    "id": "621ac929-db75-4b8c-832d-5902a9d18c29",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5.3-flash",
+    "displayName": "GLM 5.3 Flash (LF)"
+  },
+  {
     "id": "63621718-4723-4fea-8636-59d57ca2fde3",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -1333,6 +1389,13 @@
     "providerType": "openai-compatible",
     "modelId": "kimi-k2.5",
     "displayName": "Kimi K2.5 (LF)"
+  },
+  {
+    "id": "0cf5856f-e06b-48e6-b14c-a2f3fc0d0739",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kimi-k2.6",
+    "displayName": "Kimi K2.6 (LF)"
   },
   {
     "id": "1abe6765-b67e-5a58-bfef-23b78ae8c91b",
@@ -1370,13 +1433,6 @@
     "displayName": "Space Bunny Alpha (LogFare)"
   },
   {
-    "id": "00f5747f-2c68-4280-a9ce-6655a50c5340",
-    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
-    "providerType": "openai-compatible",
-    "modelId": "ACE-Step/acestep-v15-xl-sft",
-    "displayName": "acestep-v15-xl-sft (MS)"
-  },
-  {
     "id": "843a25d5-bd2b-4eca-8e5b-69949c167843",
     "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
     "providerType": "openai-compatible",
@@ -1404,6 +1460,13 @@
     "modelId": "deepseek-ai/DeepSeek-V4.1-Flash",
     "displayName": "DeepSeek V4.1 Flash (MS)",
     "reasoningEffort": "max"
+  },
+  {
+    "id": "4bda65db-be61-4aa2-8956-4aff4fba56b0",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+    "displayName": "DeepSeek-V4.1-Flash-1017 (MS)"
   },
   {
     "id": "bdbecb38-9653-421b-952b-06aad3ab48ea",
@@ -1579,6 +1642,13 @@
     "providerType": "openai-compatible",
     "modelId": "stepfun-ai/Step-3.7-Flash",
     "displayName": "Step-3.7-Flash (MS)"
+  },
+  {
+    "id": "97b3c3c4-a855-418d-a1ea-5845d94f6c6b",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "stepfun-ai/Step-5-Preview",
+    "displayName": "Step-5-Preview (MS)"
   },
   {
     "id": "7b555a32-498a-4052-b544-d279c87b29df",
