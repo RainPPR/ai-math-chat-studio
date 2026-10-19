@@ -55,15 +55,26 @@ function rehypeMathTransform() {
     const visit = (node: any) => {
       if (!node) return;
       if (node.type === 'element' && node.tagName === 'code' && node.properties?.className) {
-        const classes = Array.isArray(node.properties.className)
-          ? node.properties.className
-          : String(node.properties.className).split(' ');
+        let classes: string[];
+        if (Array.isArray(node.properties.className)) {
+          classes = node.properties.className;
+        } else {
+          classes = String(node.properties.className).split(' ');
+        }
         if (classes.includes('language-math')) {
           const isDisplay = classes.includes('math-display');
+          let displayStr = 'false';
+          if (isDisplay) {
+            displayStr = 'true';
+          }
+          let mathText = '';
+          if (node.children && node.children[0] && node.children[0].value) {
+            mathText = String(node.children[0].value).trim();
+          }
           node.tagName = 'math-node';
           node.properties = {
-            'data-math': String(node.children?.[0]?.value || '').trim(),
-            'data-display': isDisplay ? 'true' : 'false',
+            'data-math': mathText,
+            'data-display': displayStr,
           };
         }
       }
@@ -87,7 +98,7 @@ const MathNode: React.FC<{ math: string; display: boolean; engine: MathEngine }>
   if (display) {
     return <div ref={ref as any} className="my-2 overflow-x-auto text-center math-display-wrapper" />;
   }
-  return <span ref={ref} className="inline-block align-middle math-inline-wrapper" />;
+  return <span ref={ref} className="math-inline-wrapper inline" />;
 };
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content, messageId, mathEngine = 'katex' }) => {

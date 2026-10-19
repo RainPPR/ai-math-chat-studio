@@ -144,6 +144,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
         messageStyle: 'none',
         showMathMenu: false,
         showProcessingMessages: false,
+        menuSettings: { inTabOrder: false },
         tex2jax: {
           inlineMath: [['\\(', '\\)'], ['$', '$']],
           displayMath: [['\\[', '\\]'], ['$$', '$$']],
@@ -155,7 +156,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
         'fast-preview': { disabled: true },
         CommonHTML: {
           matchFontHeight: false,
-          scale: 108,
+          scale: 120,
           linebreaks: { automatic: false },
         },
         AuthorInit: function () {
@@ -164,6 +165,7 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
               showMathMenu: false,
               messageStyle: 'none',
               showProcessingMessages: false,
+              menuSettings: { inTabOrder: false },
               tex2jax: {
                 inlineMath: [['\\(', '\\)'], ['$', '$']],
                 displayMath: [['\\[', '\\]'], ['$$', '$$']],
@@ -202,6 +204,36 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
         options: {
           skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
           enableMenu: false,
+          enableExplorer: false,
+          enableExplorerHelp: false,
+          enableSpeech: false,
+          enableBraille: false,
+          enableEnrichment: false,
+          enableComplexity: false,
+          enableAssistiveMml: false,
+          menuOptions: {
+            settings: {
+              inTabOrder: false,
+              assistiveMml: false,
+              enrich: false,
+              collapsible: false,
+              speech: false,
+              braille: false,
+              explorer: false,
+            },
+          },
+          a11y: {
+            speech: false,
+            braille: false,
+            subtitles: false,
+            viewBraille: false,
+            enrichSpeech: 'none',
+            enableExplorerHelp: false,
+          },
+        },
+        chtml: {
+          matchFontHeight: false,
+          scale: 1.2,
         },
         startup: {
           typeset: false,
@@ -215,15 +247,34 @@ export async function loadMathEngine(engine: MathEngine): Promise<void> {
   if (engine === 'mathjax-v4') {
     if (!window.MathJax || (!window.MathJax.tex2chtmlPromise && !window.MathJax.typesetPromise)) {
       window.MathJax = {
+        loader: {
+          load: ['[tex]/mhchem'],
+        },
         tex: {
           inlineMath: [['\\(', '\\)'], ['$', '$']],
           displayMath: [['\\[', '\\]'], ['$$', '$$']],
           processEscapes: true,
+          packages: { '[+]': ['mhchem'] },
           macros: buildMathJaxV3V4Macros(),
         },
         options: {
           skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
           enableMenu: false,
+          menuOptions: {
+            settings: {
+              inTabOrder: false,
+              assistiveMml: false,
+              enrich: false,
+              collapsible: false,
+              speech: false,
+              braille: false,
+              explorer: false,
+            },
+          },
+        },
+        chtml: {
+          matchFontHeight: false,
+          scale: 1.2,
         },
         startup: {
           typeset: false,
@@ -250,12 +301,19 @@ export async function renderMathToElement(
         displayMode: display,
       });
     } catch {
-      container.textContent = display ? `\\[${math}\\]` : `\\(${math}\\)`;
+      if (display) {
+        container.textContent = `\\[${math}\\]`;
+      } else {
+        container.textContent = `\\(${math}\\)`;
+      }
     }
     return;
   }
 
-  const rawTex = display ? `\\[${math}\\]` : `\\(${math}\\)`;
+  let rawTex = `\\(${math}\\)`;
+  if (display) {
+    rawTex = `\\[${math}\\]`;
+  }
 
   return enqueueTypeset(async () => {
     try {
@@ -321,6 +379,25 @@ export async function renderMathToElement(
           console.warn('MathJax v4 typeset error:', e);
         }
       }
+    }
+
+    const interactiveEls = container.querySelectorAll('[tabindex], mjx-container, .MathJax');
+    interactiveEls.forEach((el) => {
+      el.removeAttribute('tabindex');
+    });
+
+    if (typeof document !== 'undefined') {
+      const dialogs = document.querySelectorAll(
+        'dialog.mjx-dialog-help, dialog[class*="mjx-dialog"], .mjx-dialog, .CtxtMenu_Info'
+      );
+      dialogs.forEach((d) => {
+        try {
+          if (typeof (d as HTMLDialogElement).close === 'function') {
+            (d as HTMLDialogElement).close();
+          }
+          d.remove();
+        } catch {}
+      });
     }
   });
 }
