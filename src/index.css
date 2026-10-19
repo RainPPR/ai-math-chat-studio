@@ -33,7 +33,7 @@
    KaTeX 90% 缩放与 CJK / 中文字符修复
    ========================================================= */
 .katex {
-  font-size: 0.9em;
+  font-size: 1em;
 }
 
 .katex .cjk_fallback {
