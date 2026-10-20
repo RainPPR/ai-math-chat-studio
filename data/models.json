@@ -867,13 +867,6 @@
     "displayName": "nemotron-3.5-super-vl-free (FTAI)"
   },
   {
-    "id": "0e71dfbc-3d37-4399-a8db-a182ce46db28",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/ocz/space-bunny-free",
-    "displayName": "space-bunny-free (FTAI)"
-  },
-  {
     "id": "f130d928-3a0b-4ce7-ba24-6e936c036a79",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
@@ -1158,6 +1151,14 @@
     "displayName": "LiquidAI: LFM2.5-2.6B (Kilo)"
   },
   {
+    "id": "01dd36c5-6ea7-4175-9009-99ee68864c54",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "minimax/minimax-m3.1-flash:free",
+    "displayName": "MiniMax: MiniMax M3.1 Flash (Kilo) (KG)",
+    "reasoningEffort": "max"
+  },
+  {
     "id": "cfcdca0f-3efd-5c17-9003-8d05a905ce00",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -1363,6 +1364,97 @@
     "displayName": "GLM 5.3 Flash (LF)"
   },
   {
+    "id": "1ab96db1-2a1e-482d-bbc1-dcad3724cb0b",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-4.1",
+    "displayName": "GPT 4.1 (LF)"
+  },
+  {
+    "id": "7b9000a6-27e5-4d40-9ca8-a0ec211690e9",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-4.1-nano",
+    "displayName": "GPT 4.1 Nano (LF)"
+  },
+  {
+    "id": "d529ca8e-b632-4147-8018-ea05ef31c336",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-4o",
+    "displayName": "GPT 4o (LF)"
+  },
+  {
+    "id": "e522efd1-3a91-464d-89d5-18da17a38344",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-4o-mini",
+    "displayName": "GPT 4o Mini (LF)"
+  },
+  {
+    "id": "9bbb539b-f585-4f6e-aa20-80bb84132706",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5-chat",
+    "displayName": "GPT-5 Chat (LF)"
+  },
+  {
+    "id": "d979bfff-baac-4529-b07b-6f8581cf9067",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5-chat-2",
+    "displayName": "GPT 5 Chat 2 (LF)"
+  },
+  {
+    "id": "382fe809-08d2-4eeb-b765-f27bc16b4c01",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5-kiara",
+    "displayName": "GPT 5 Kiara (LF)"
+  },
+  {
+    "id": "927e7349-ac5e-4b86-bc02-161ac2ca5e00",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5-mini",
+    "displayName": "GPT 5 Mini (LF)"
+  },
+  {
+    "id": "a1dc6019-4302-4e8e-810b-cae97f4249bd",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5-nano",
+    "displayName": "GPT 5 Nano (LF)"
+  },
+  {
+    "id": "c5c76010-a143-43e2-9a4f-f7ba813cd0a3",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5.2_critique",
+    "displayName": "GPT 5.2 Critique (LF)"
+  },
+  {
+    "id": "23af8e74-c4b3-45f8-8a7b-a3dc7dc2763d",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5.2-chat",
+    "displayName": "GPT 5.2 Chat (LF)"
+  },
+  {
+    "id": "a59baa81-41f5-44dd-8733-36b94ed6b637",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5.4-mini-kb-curate",
+    "displayName": "GPT 5.4 Mini Kb Curate (LF)"
+  },
+  {
+    "id": "19a500f4-c2d3-4917-af3f-a2ddad3f9d09",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-chat-latest",
+    "displayName": "GPT Chat Latest (LF)"
+  },
+  {
     "id": "63621718-4723-4fea-8636-59d57ca2fde3",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -1417,6 +1509,34 @@
     "providerType": "openai-compatible",
     "modelId": "mimo-v2.6-flash",
     "displayName": "MiMo V2.6 Flash (LF)"
+  },
+  {
+    "id": "cf1e00c1-5e35-4ae7-b818-e2cb5d187e1c",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "minimax-m3.1-flash",
+    "displayName": "MiniMax M3.1 Flash (LF)"
+  },
+  {
+    "id": "6a3c484a-846b-4958-94ba-0c1e4299c587",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "noctis-auto",
+    "displayName": "Noctis Auto (LF)"
+  },
+  {
+    "id": "848d4d33-b982-4eea-a0ea-3285cf515ec5",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "noctis-auto-paid",
+    "displayName": "Noctis Auto Paid (LF)"
+  },
+  {
+    "id": "dd1f181b-0db5-4b71-9e44-f180f9bcc1ef",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "obi2",
+    "displayName": "Obi 2 (LF)"
   },
   {
     "id": "e193beee-0f6c-59e6-830f-ddf4d6e9aed8",
