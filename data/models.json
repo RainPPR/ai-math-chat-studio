@@ -139,46 +139,11 @@
     "reasoningEffort": "high"
   },
   {
-    "id": "093d9e89-0eed-437c-bc3f-ca710ebeaee9",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "id": "759b19f7-b736-4f85-9b87-bb38449d0015",
+    "providerId": "5dc8fe51-6d1b-48c9-924b-2b642edfc40d",
     "providerType": "openai-compatible",
-    "modelId": "fta/bbl/gemini-2.5-flash-lite",
-    "displayName": "gemini-2.5-flash-lite (FTAI)"
-  },
-  {
-    "id": "c523d8a5-662b-47c8-be26-921ef9764f9d",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/bbl/gemini-3-flash-preview",
-    "displayName": "gemini-3-flash-preview (FTAI)"
-  },
-  {
-    "id": "d0a99ef6-0653-4bf0-a9fa-68764809fa06",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/bbl/gemini-3.1-flash-lite",
-    "displayName": "gemini-3.1-flash-lite (FTAI)"
-  },
-  {
-    "id": "566547c4-3bab-4c17-ab43-a5681b620f2a",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/bbl/gemini-3.5-flash",
-    "displayName": "gemini-3.5-flash (FTAI)"
-  },
-  {
-    "id": "d015b3c2-2046-43f4-8082-a7e5f1d307d7",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/bbl/gpt-5.4-mini",
-    "displayName": "gpt-5.4-mini (FTAI)"
-  },
-  {
-    "id": "6c8973db-2f40-437a-9242-4f235d013d51",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/bbl/grok-4-1-fast-non-reasoning",
-    "displayName": "grok-4-1-fast-non-reasoning (FTAI)"
+    "modelId": "deepseek-v4-pro",
+    "displayName": "DeepSeek-V4-Pro (DSP)"
   },
   {
     "id": "005736e4-b16d-4101-9086-357776468392",
@@ -1327,6 +1292,13 @@
     "providerType": "openai-compatible",
     "modelId": "deepseek-v4.1-flash",
     "displayName": "Deepseek v4.1 Flash (LogFare)"
+  },
+  {
+    "id": "8f1d7359-ec96-4365-9bac-fd119f5665e8",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4.1-flash-1017",
+    "displayName": "DeepSeek v4.1 Flash (1017) (LF)"
   },
   {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
