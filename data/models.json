@@ -797,13 +797,6 @@
     "displayName": "glm-5.3-flash-free (FTAI)"
   },
   {
-    "id": "7984a744-7496-4fbc-aecc-f78bc651cb92",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/ocz/longcat-2.5-preview-free",
-    "displayName": "longcat-2.5-preview-free (FTAI)"
-  },
-  {
     "id": "1d100990-bede-4f3d-9395-23994d6efd93",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
@@ -1195,6 +1188,13 @@
     "modelId": "qwen/qwen3.8-27b:free",
     "displayName": "Qwen: Qwen3.8 27B (Kilo)",
     "reasoningEffort": "xhigh"
+  },
+  {
+    "id": "855174a4-c900-42bc-bc19-2e10c86bd82b",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "recursive/flint-v1.0:free",
+    "displayName": "Recursive: Flint (Kilo) (KG)"
   },
   {
     "id": "8afd3533-fe48-4d3d-bdcf-6edcc9344c31",
