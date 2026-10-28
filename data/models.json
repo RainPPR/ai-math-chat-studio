@@ -384,13 +384,6 @@
     "displayName": "gpt-6-sol (FTAI)"
   },
   {
-    "id": "0a6f980f-884e-42b3-87c0-b4398ee8b03d",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/fox/gpt-6-luna",
-    "displayName": "gpt-6-luna (FTAI)"
-  },
-  {
     "id": "a96e53e6-e725-4ccb-8d11-71372ede0603",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
@@ -424,13 +417,6 @@
     "providerType": "openai-compatible",
     "modelId": "fta/kai/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
     "displayName": "nemotron-3-nano-omni-30b-a3b-reasoning:free (FTAI)"
-  },
-  {
-    "id": "49a5a29a-0938-4920-a9bf-4067139d03f2",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/kai/nvidia/nemotron-3-super-120b-a12b:free",
-    "displayName": "nemotron-3-super-120b-a12b:free (FTAI)"
   },
   {
     "id": "683008c1-3e17-417d-b7f4-c18277164db2",
