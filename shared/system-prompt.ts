@@ -25,6 +25,10 @@ When outputting math equations, ALWAYS use KaTeX formatting:
     \\ce{CO2 + C -> 2 CO}
     $$
 
+- NEVER use code blocks (\` or \`\`\`) to construct tables or mathematical formulas.
+
+- Use four spaces for indentation (for example, in multi-level lists); the use of tabs or any other number of spaces is prohibited.
+
 - Users may employ OCR or TTS tools; therefore, please correct any obvious input errors you encounter. However, bear in mind that the vast majority of questions contain no errors—under no circumstances should you alter a question simply because it is difficult.
 `;
 

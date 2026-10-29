@@ -790,13 +790,6 @@
     "displayName": "mimo-v2.6-flash-free (FTAI)"
   },
   {
-    "id": "fbf6aa42-16fd-46d4-af0a-e7e349f2b2ba",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/ocz/nemotron-3-ultra-free",
-    "displayName": "nemotron-3-ultra-free (FTAI)"
-  },
-  {
     "id": "5489a2d5-d2ce-44a2-803d-1a635f1736e8",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
@@ -930,36 +923,18 @@
     "displayName": "deepseek-reasoner (FTAI)"
   },
   {
-    "id": "4bfaedc8-2a17-4c88-a531-ed629694a3f8",
-    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "id": "878656d9-37e7-4236-98f1-599887df0c81",
+    "providerId": "a9042535-d764-44b3-8bf2-09bc24112796",
     "providerType": "openai-compatible",
-    "modelId": "gemini-3.1-pro",
-    "displayName": "Gemini 3.1 Pro",
-    "reasoningEffort": "none"
+    "modelId": "gemini-3.5-flash-lite",
+    "displayName": "Gemini 3.5 Flash Lite (GAISAPI)"
   },
   {
-    "id": "8c222c49-2940-4748-b609-08c1624694e4",
-    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
+    "id": "275cd3b3-0796-4848-8b5e-72066ef9fa6b",
+    "providerId": "a9042535-d764-44b3-8bf2-09bc24112796",
     "providerType": "openai-compatible",
-    "modelId": "gemini-3.5-flash-thinking",
-    "displayName": "Gemini 3.5 Flash Thinking",
-    "reasoningEffort": "none"
-  },
-  {
-    "id": "1b9faa4c-99b2-4f16-8fb2-e9863fb470d4",
-    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
-    "providerType": "openai-compatible",
-    "modelId": "gemini-3.6-flash",
-    "displayName": "Gemini 3.6 Flash",
-    "reasoningEffort": "none"
-  },
-  {
-    "id": "e514604c-cd3e-41fc-9932-9ff359d6a35e",
-    "providerId": "0d7a2346-adba-4cd7-8b10-943e47ac6170",
-    "providerType": "openai-compatible",
-    "modelId": "gemini-3.7-flash",
-    "displayName": "Gemini 3.7 Flash",
-    "reasoningEffort": "none"
+    "modelId": "gemini-3.8-flash",
+    "displayName": "Gemini 3.8 Flash (GAISAPI)"
   },
   {
     "id": "090f132d-1796-47d5-b6fa-32244e602e13",
