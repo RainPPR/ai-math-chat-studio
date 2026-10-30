@@ -167,13 +167,6 @@
     "displayName": "claude-4-5-haiku (FTAI)"
   },
   {
-    "id": "a1205bd8-ce90-4a46-9c8a-5105de3f217f",
-    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
-    "providerType": "openai-compatible",
-    "modelId": "fta/dog/claude-4-5-sonnet",
-    "displayName": "claude-4-5-sonnet (FTAI)"
-  },
-  {
     "id": "cf90763b-6e1d-4d94-8b28-5f0ba572ac9d",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
