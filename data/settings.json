@@ -9,7 +9,8 @@
   "userAsSystem": false,
   "starredSessions": {
     "db91cec5-1689-46bb-84c5-a27024231d49": "green",
-    "29e942c0-d884-4b45-a85c-fba4f39329d3": "green"
+    "29e942c0-d884-4b45-a85c-fba4f39329d3": "green",
+    "fbb8bdc6-cdca-46bd-91b7-397549fdc69c": "rose"
   },
   "chatgptChunks": [
     "2026-07-19T08:53:15.252Z",
@@ -19,5 +20,6 @@
   ],
   "chatgptChunkRemarks": {},
   "stickyNotes": [],
-  "activeCharacterId": "ecaef92a-bdaa-4dc2-a578-ef8e7a764294"
+  "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e",
+  "activeModelId": "275cd3b3-0796-4848-8b5e-72066ef9fa6b"
 }

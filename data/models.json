@@ -146,6 +146,27 @@
     "displayName": "DeepSeek-V4-Pro (DSP)"
   },
   {
+    "id": "8df29ac7-79c4-41a5-aa98-ecbedbe61ba7",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "arcticmarten/grok-4.6",
+    "displayName": "grok-4.6 (FTAI)"
+  },
+  {
+    "id": "a31515bd-5770-4de2-ba5a-ee38e0a1511f",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "arcticmarten/grok-4.7",
+    "displayName": "grok-4.7 (FTAI)"
+  },
+  {
+    "id": "be64bc42-1549-4e60-a48d-8a127909bdf7",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-flash-latest",
+    "displayName": "deepseek-flash-latest (FTAI)"
+  },
+  {
     "id": "005736e4-b16d-4101-9086-357776468392",
     "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
     "providerType": "openai-compatible",
@@ -916,6 +937,223 @@
     "displayName": "deepseek-reasoner (FTAI)"
   },
   {
+    "id": "4781f275-873d-4ecb-b8b9-6cd827e1825c",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-3.1-flash-lite",
+    "displayName": "gemini-3.1-flash-lite (FTAI)"
+  },
+  {
+    "id": "2313717b-2f87-4160-b2e0-52fb6d638a3d",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-3.5-flash-lite",
+    "displayName": "gemini-3.5-flash-lite (FTAI)"
+  },
+  {
+    "id": "9b7b8c06-b7b3-4e54-a017-c55607515ff5",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5.3",
+    "displayName": "glm-5.3 (FTAI)"
+  },
+  {
+    "id": "af1bfd0c-1ba7-4805-b6f7-5901c49ad6c9",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5.3-flash",
+    "displayName": "glm-5.3-flash (FTAI)"
+  },
+  {
+    "id": "28dbb269-cba9-4680-9372-ba0f6e6873db",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5.6-luna",
+    "displayName": "gpt-5.6-luna (FTAI)"
+  },
+  {
+    "id": "6b28fe13-8cec-4b9b-b09f-a5f0fb112813",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5.6-sol",
+    "displayName": "gpt-5.6-sol (FTAI)"
+  },
+  {
+    "id": "a1b397db-1f4f-47bd-b1ce-f00c1422c596",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-5.6-terra",
+    "displayName": "gpt-5.6-terra (FTAI)"
+  },
+  {
+    "id": "5e3b35eb-9b10-4b43-bbd9-deb3f4fd5948",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-6-astra",
+    "displayName": "gpt-6-astra (FTAI)"
+  },
+  {
+    "id": "71e2bde2-e6d6-4ba9-a57a-92e2f6c55d09",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-6-luna",
+    "displayName": "gpt-6-luna (FTAI)"
+  },
+  {
+    "id": "7d204631-8e63-402d-8de2-7d45e8ac11d6",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-6-sol",
+    "displayName": "gpt-6-sol (FTAI)"
+  },
+  {
+    "id": "fd8ccbda-282b-4376-bd73-c62ff5d481b2",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-6.1-sol",
+    "displayName": "gpt-6.1-sol (FTAI)"
+  },
+  {
+    "id": "bf40c5cc-2fc4-4345-bf4b-ecbe53abc30c",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-6.1-terra",
+    "displayName": "gpt-6.1-terra (FTAI)"
+  },
+  {
+    "id": "958d720f-259f-4b42-9b7c-bec5d4b61bc2",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "grok-4.6",
+    "displayName": "grok-4.6 (FTAI)"
+  },
+  {
+    "id": "dd3eda21-69ae-43fd-996a-fd3a52eb0249",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "grok-4.7",
+    "displayName": "grok-4.7 (FTAI)"
+  },
+  {
+    "id": "1be40226-3301-4621-aed9-34bdc8777e73",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "indigokestrel/glm-5.3",
+    "displayName": "glm-5.3 (FTAI)"
+  },
+  {
+    "id": "44152cd1-ebee-4064-a29b-48dd16a949bb",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "indigokestrel/glm-5.3-flash",
+    "displayName": "glm-5.3-flash (FTAI)"
+  },
+  {
+    "id": "8baf0798-fc2e-441f-a2ee-49303e9b1587",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "whitesummit/gemini-3.1-flash-lite",
+    "displayName": "gemini-3.1-flash-lite (FTAI)"
+  },
+  {
+    "id": "2f03fee4-3660-4788-9e1a-f0c4d6c7c9e5",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "whitesummit/gemini-3.5-flash-lite",
+    "displayName": "gemini-3.5-flash-lite (FTAI)"
+  },
+  {
+    "id": "982e09ab-a5ed-4589-8d24-6d7fcd14abcd",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "whitesummit/glm-5.3-flash",
+    "displayName": "glm-5.3-flash (FTAI)"
+  },
+  {
+    "id": "d6208794-d34b-45c4-915f-39a61c4de400",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "whitesummit/gpt-5.6-luna",
+    "displayName": "gpt-5.6-luna (FTAI)"
+  },
+  {
+    "id": "2f600e0c-1347-4406-96a5-1c1fb73ee031",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "whitesummit/gpt-5.6-sol",
+    "displayName": "gpt-5.6-sol (FTAI)"
+  },
+  {
+    "id": "9c65000d-7f75-460c-871b-da764de72fa4",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "whitesummit/gpt-5.6-terra",
+    "displayName": "gpt-5.6-terra (FTAI)"
+  },
+  {
+    "id": "ad0a8e5b-90d4-41f2-ae97-44465dc74ab1",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "whitesummit/gpt-6-astra",
+    "displayName": "gpt-6-astra (FTAI)"
+  },
+  {
+    "id": "edeb7691-3438-412a-94fc-0d7fc1d40010",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "whitesummit/gpt-6-luna",
+    "displayName": "gpt-6-luna (FTAI)"
+  },
+  {
+    "id": "d9a519ee-975e-44c9-8a0d-e9dcc7b41b9b",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "whitesummit/gpt-6-sol",
+    "displayName": "gpt-6-sol (FTAI)"
+  },
+  {
+    "id": "7a9bf5c0-70aa-4cf7-b98f-0879e21ec209",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "whitesummit/gpt-6.1-sol",
+    "displayName": "gpt-6.1-sol (FTAI)"
+  },
+  {
+    "id": "ab59b3c2-01d0-47e1-8c53-97a74420306c",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "whitesummit/gpt-6.1-terra",
+    "displayName": "gpt-6.1-terra (FTAI)"
+  },
+  {
+    "id": "c2d6149a-a02e-4a99-868f-400c19ba82df",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "windyhill/deepseek-flash-latest",
+    "displayName": "deepseek-flash-latest (FTAI)"
+  },
+  {
+    "id": "afd3fa5c-d831-4031-ad4b-244dce67bcef",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "windyhill/gpt-5.6-luna",
+    "displayName": "gpt-5.6-luna (FTAI)"
+  },
+  {
+    "id": "387ecd0e-0e59-4b8d-a841-c446f2a34e3b",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "windyhill/gpt-5.6-sol",
+    "displayName": "gpt-5.6-sol (FTAI)"
+  },
+  {
+    "id": "091aa4bb-477f-4a31-8674-3aebd9fe9b74",
+    "providerId": "1f98c3da-e619-4ced-9e1d-baf24155e964",
+    "providerType": "openai-compatible",
+    "modelId": "windyhill/gpt-5.6-terra",
+    "displayName": "gpt-5.6-terra (FTAI)"
+  },
+  {
     "id": "878656d9-37e7-4236-98f1-599887df0c81",
     "providerId": "a9042535-d764-44b3-8bf2-09bc24112796",
     "providerType": "openai-compatible",
@@ -1047,6 +1285,13 @@
     "providerType": "openai-compatible",
     "modelId": "inclusionai/ling-3.1-flash",
     "displayName": "inclusionAI: Ling 3.1 Flash (new) (Kilo) (KG)"
+  },
+  {
+    "id": "5e6958b4-ee89-4434-be95-47c8a6f418c5",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "inclusionai/ling-3.1-flash-1019-free",
+    "displayName": "inclusionAI: Ling 3.1 Flash 1019 (Kilo) (KG)"
   },
   {
     "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
