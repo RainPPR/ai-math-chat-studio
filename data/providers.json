@@ -32,7 +32,7 @@
     "apiKey": "",
     "envKey": "FTA_API_KEY",
     "baseURL": "https://api.freetheai.org/v1",
-    "modelSyncType": "v1_models"
+    "modelSyncType": "none"
   },
   {
     "id": "a9042535-d764-44b3-8bf2-09bc24112796",
