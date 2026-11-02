@@ -1,5 +1,9 @@
 {
-  "activeSkillIds": [],
+  "activeSkillIds": [
+    "b83eacb8-2ab7-4a98-b47b-7cce377d4f7f",
+    "f8513ca7-52fb-4748-8389-af1db9d071f7",
+    "8139aa5b-ddc1-4dcd-b23a-f1aa4bcdbd91"
+  ],
   "systemPrompt": "",
   "renderThinkingAsMarkdown": true,
   "autoScroll": false,
@@ -20,6 +24,6 @@
   ],
   "chatgptChunkRemarks": {},
   "stickyNotes": [],
-  "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e",
+  "activeCharacterId": "b37c8e1a-54f8-4aae-b337-ca1014a433e5",
   "activeModelId": "275cd3b3-0796-4848-8b5e-72066ef9fa6b"
 }
