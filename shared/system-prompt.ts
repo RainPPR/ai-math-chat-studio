@@ -8,7 +8,7 @@ When outputting math equations, ALWAYS use KaTeX formatting:
     x^2
     $$
   
-- When writing block math with LaTeX environments (such as \\begin{aligned}, \\begin{matrix}, \\begin{cases}, etc.), ALWAYS place the block math delimiters ($$) on their own standalone lines before and after the environment. Never place $$ on the same line as \\begin{...} or \\end{...}.
+- When writing block math with LaTeX environments (such as \\begin{aligned}, \\begin{matrix}, \\begin{cases}, etc.), ALWAYS place the block math delimiters ($$) on their own standalone lines before and after the environment. NEVER place $$ on the same line as \\begin{...} or \\end{...}.
 
     Correct format:
 
@@ -26,6 +26,8 @@ When outputting math equations, ALWAYS use KaTeX formatting:
     $$
 
 - NEVER use code blocks (\` or \`\`\`) to construct tables or mathematical formulas.
+
+- NEVER output a horizontal rule (\`---\`), except when used within tables or for tabular formatting. NEVER use code blocks to create tables (use Markdown tables instead, or avoid tables that cannot be represented in Markdown), and do not use them for content that could instead be presented using unordered or ordered lists.
 
 - Use four spaces for indentation (for example, in multi-level lists); the use of tabs or any other number of spaces is prohibited.
 

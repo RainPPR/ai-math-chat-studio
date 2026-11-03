@@ -265,6 +265,13 @@
     "displayName": "Dots Studio: Dots3-Note Preview (Kilo)"
   },
   {
+    "id": "96fd519d-0fa2-4b5f-ab49-e7aa6b1e7f47",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "google/gemma-4-31b-it:free",
+    "displayName": "Google: Gemma 4 31B (Kilo) (KG)"
+  },
+  {
     "id": "8a35fcb1-e29f-5176-8752-632cefb86721",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -433,6 +440,14 @@
     "providerType": "openai-compatible",
     "modelId": "thinkingmachines/inkling-small:free",
     "displayName": "Thinking Machines: Inkling Small (Kilo)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "30b56bb0-720a-409f-bf09-cd710acf0925",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "thinkingmachines/inkling:free",
+    "displayName": "Thinking Machines: Inkling (Kilo) (KG)",
     "reasoningEffort": "max"
   },
   {
