@@ -494,6 +494,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
   const [isExpandedInputOpen, setIsExpandedInputOpen] = useState(false);
   const deferredInput = useDeferredValue(input);
+  const expandBtnRef = useRef<HTMLButtonElement>(null);
+  const expandedModalRef = useRef<HTMLDivElement>(null);
+  const expandedTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [isSystemPromptModalOpen, setIsSystemPromptModalOpen] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
@@ -832,9 +835,34 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   useEffect(() => {
     if (!isExpandedInputOpen) return;
 
+    // Focus the expanded textarea when opened
+    expandedTextareaRef.current?.focus();
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
         setIsExpandedInputOpen(false);
+        expandBtnRef.current?.focus();
+        return;
+      }
+
+      // Focus trap for elements inside the modal when pressing Tab outside the textarea
+      if (e.key === 'Tab' && expandedModalRef.current) {
+        const focusable = expandedModalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length > 0) {
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       }
     };
 
@@ -843,6 +871,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isExpandedInputOpen]);
+
+  const handleCloseExpandedInput = () => {
+    setIsExpandedInputOpen(false);
+    expandBtnRef.current?.focus();
+  };
 
   const handleSend = () => {
     if (input.trim() && !isGenerating) {
@@ -1546,6 +1579,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           />
           <div className="flex items-center gap-1.5 shrink-0 mb-0.5">
             <button
+              ref={expandBtnRef}
               onClick={() => setIsExpandedInputOpen(true)}
               className="p-3 bg-gray-700/70 hover:bg-gray-600 text-gray-300 hover:text-white rounded-xl transition-colors shadow-sm cursor-pointer"
               title="展开放大输入框与实时 Markdown 渲染调试"
@@ -1572,6 +1606,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
       {isExpandedInputOpen && (
         <div
+          ref={expandedModalRef}
           className="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-sm flex flex-col p-2 sm:p-4 md:p-6"
           role="dialog"
           aria-modal="true"
@@ -1594,7 +1629,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                   Est. Tokens: <span className="text-blue-400 font-medium">{estimateTokens(input)}</span> ({input.length} 字符)
                 </span>
                 <button
-                  onClick={() => setIsExpandedInputOpen(false)}
+                  onClick={handleCloseExpandedInput}
                   className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer"
                   title="缩小返回 (Esc)"
                   aria-label="缩小返回"
@@ -1611,12 +1646,29 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               <div className="flex-1 flex flex-col min-h-0 min-w-0 bg-gray-950/50">
                 <div className="px-3 py-1.5 border-b border-gray-800 bg-gray-900/40 flex items-center justify-between text-xs text-gray-400 select-none">
                   <span className="font-medium text-gray-300">源代码 / Prompt 输入</span>
-                  <span className="text-[11px] text-gray-500">已自动同步至草稿</span>
+                  <span className="text-[11px] text-gray-500">已自动同步至草稿 · 支持 Tab 缩进</span>
                 </div>
                 <div className="flex-1 p-2 sm:p-4 min-h-0 overflow-hidden">
                   <textarea
+                    ref={expandedTextareaRef}
                     value={input}
                     onChange={(e) => handleInputChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const target = e.currentTarget;
+                        const start = target.selectionStart;
+                        const end = target.selectionEnd;
+                        const indent = '  ';
+                        if (document.execCommand) {
+                          document.execCommand('insertText', false, indent);
+                        } else {
+                          const updatedValue = input.substring(0, start) + indent + input.substring(end);
+                          handleInputChange(updatedValue);
+                          target.selectionStart = target.selectionEnd = start + indent.length;
+                        }
+                      }
+                    }}
                     placeholder="在此输入源代码、Markdown、Prompt 或数学公式..."
                     className="w-full h-full bg-transparent text-gray-100 font-mono text-sm sm:text-base leading-relaxed p-2 sm:p-3 focus:outline-none resize-none placeholder-gray-600 overflow-y-auto"
                     autoFocus

@@ -519,6 +519,11 @@ export default function App() {
     );
   }
 
+  let isCurrentSessionUnsaved = false;
+  if (currentSessionId && unsavedSessionIds.has(currentSessionId)) {
+    isCurrentSessionUnsaved = true;
+  }
+
   return (
     <div className="flex h-screen bg-gray-900 text-gray-100 overflow-hidden font-sans relative">
       {sidebarElement}
@@ -526,7 +531,7 @@ export default function App() {
       <main className="flex-1 flex flex-col min-w-0">
         <ChatArea
           session={currentSession}
-          isUnsavedSession={currentSessionId ? unsavedSessionIds.has(currentSessionId) : false}
+          isUnsavedSession={isCurrentSessionUnsaved}
           onSendMessage={handleSendMessage}
           isGenerating={currentSessionId ? generatingSessions.has(currentSessionId) : false}
           isStopping={currentSessionId ? stoppingSessions.has(currentSessionId) : false}
