@@ -1,11 +1,11 @@
 ```typescript
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo, useDeferredValue } from 'react';
 import { ChatSession, ChatMessage, UserSettings, Template } from '../types';
 import { api } from '../lib/api';
 import {
   Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal,
   AlertCircle, X, ChevronDown, Bot, Sparkles, FileText, Eye, Printer, Edit,
-  Trash2, ArrowUp, ArrowDown, Plus, ListTree, Menu, Zap, CheckSquare, Square,
+  Maximize2, Minimize2, Trash2, ArrowUp, ArrowDown, Plus, ListTree, Menu, Zap, CheckSquare, Square,
   Terminal
 } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
@@ -15,6 +15,7 @@ import { extractThinkingBlocks } from '../../shared/thinking';
 
 interface ChatAreaProps {
   session?: ChatSession;
+  isUnsavedSession?: boolean;
   onSendMessage: (content: string) => void;
   isGenerating: boolean;
   isStopping?: boolean;
@@ -278,19 +279,45 @@ const estimateTokens = (text: string) => {
 };
 
 const DRAFT_STORAGE_KEY = 'chat_drafts';
+export const NEW_CHAT_DRAFT_KEY = '__new_chat_draft__';
 
-const saveDraft = (sessionId: string, content: string) => {
+const getDraftKey = (sessionId?: string, isUnsaved?: boolean): string => {
+  if (!sessionId || isUnsaved) {
+    return NEW_CHAT_DRAFT_KEY;
+  }
+  return sessionId;
+};
+
+export const saveDraft = (sessionId?: string, content?: string, isUnsaved?: boolean) => {
   try {
+    const key = getDraftKey(sessionId, isUnsaved);
     const drafts = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || '{}');
-    drafts[sessionId] = { content, timestamp: Date.now() };
+    if (!content) {
+      delete drafts[key];
+      if (key === NEW_CHAT_DRAFT_KEY && sessionId) {
+        delete drafts[sessionId];
+      }
+    } else {
+      drafts[key] = { content, timestamp: Date.now() };
+      if (key === NEW_CHAT_DRAFT_KEY && sessionId) {
+        drafts[sessionId] = { content, timestamp: Date.now() };
+      }
+    }
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
   } catch { /* ignore storage errors */ }
 };
 
-const loadDraft = (sessionId: string): string => {
+export const loadDraft = (sessionId?: string, isUnsaved?: boolean): string => {
   try {
     const drafts = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || '{}');
-    const draft = drafts[sessionId];
+    const key = getDraftKey(sessionId, isUnsaved);
+    let draft = drafts[key];
+    if ((!draft || !draft.content) && sessionId && drafts[sessionId]) {
+      draft = drafts[sessionId];
+    }
+    if ((!draft || !draft.content) && isUnsaved && drafts[NEW_CHAT_DRAFT_KEY]) {
+      draft = drafts[NEW_CHAT_DRAFT_KEY];
+    }
     if (draft && Date.now() - draft.timestamp < 7 * 24 * 60 * 60 * 1000) {
       return draft.content || '';
     }
@@ -298,10 +325,17 @@ const loadDraft = (sessionId: string): string => {
   return '';
 };
 
-const clearDraft = (sessionId: string) => {
+export const clearDraft = (sessionId?: string, isUnsaved?: boolean) => {
   try {
     const drafts = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || '{}');
-    delete drafts[sessionId];
+    const key = getDraftKey(sessionId, isUnsaved);
+    delete drafts[key];
+    if (sessionId) {
+      delete drafts[sessionId];
+    }
+    if (isUnsaved || !sessionId) {
+      delete drafts[NEW_CHAT_DRAFT_KEY];
+    }
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
   } catch { /* ignore storage errors */ }
 };
@@ -445,7 +479,7 @@ const compileBlocksToMessages = (blocks: EditBlock[]): ChatMessage[] => {
 };
 
 export const ChatArea: React.FC<ChatAreaProps> = ({
-  session, onSendMessage, isGenerating, isStopping, settings, templates,
+  session, isUnsavedSession = false, onSendMessage, isGenerating, isStopping, settings, templates,
   onStop, onRetry, onContinue, onRegenerate, onGenerationEnd, onSelectModel,
   onSelectCharacter, onSelectSkills, onUpdateSessionCharacter, onUpdateSession, error,
   onClearError, onError, isMobile = false, onOpenMobileSidebar
@@ -458,6 +492,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const [editBlocks, setEditBlocks] = useState<EditBlock[]>([]);
   const [editModalError, setEditModalError] = useState<string | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const [isExpandedInputOpen, setIsExpandedInputOpen] = useState(false);
+  const deferredInput = useDeferredValue(input);
+  const expandBtnRef = useRef<HTMLButtonElement>(null);
+  const expandedModalRef = useRef<HTMLDivElement>(null);
+  const expandedTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [isSystemPromptModalOpen, setIsSystemPromptModalOpen] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
@@ -503,6 +543,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<string>('');
+  const currentInputRef = useRef<string>('');
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [modelSearchQuery, setModelSearchQuery] = useState('');
   const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false);
@@ -533,28 +574,28 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   }, [session?.id]);
 
   useEffect(() => {
-    if (session) {
-      const draft = loadDraft(session.id);
-      setInput(draft);
-      lastInputRef.current = draft;
-      const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
-      if (textarea) {
-        textarea.style.height = 'auto';
-        textarea.style.height = `${Math.min(textarea.scrollHeight, 256)}px`;
-      }
+    const draft = loadDraft(session?.id, isUnsavedSession);
+    setInput(draft);
+    lastInputRef.current = draft;
+    currentInputRef.current = draft;
+    const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 256)}px`;
     }
-  }, [session?.id]);
+  }, [session?.id, isUnsavedSession]);
 
   const handleInputChange = (value: string) => {
     setInput(value);
+    currentInputRef.current = value;
 
     if (draftTimeoutRef.current) {
       clearTimeout(draftTimeoutRef.current);
     }
 
     draftTimeoutRef.current = setTimeout(() => {
-      if (session && value !== lastInputRef.current) {
-        saveDraft(session.id, value);
+      if (value !== lastInputRef.current) {
+        saveDraft(session?.id, value, isUnsavedSession);
         lastInputRef.current = value;
       }
     }, 500);
@@ -565,8 +606,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       if (draftTimeoutRef.current) {
         clearTimeout(draftTimeoutRef.current);
       }
+      if (currentInputRef.current !== lastInputRef.current) {
+        saveDraft(session?.id, currentInputRef.current, isUnsavedSession);
+        lastInputRef.current = currentInputRef.current;
+      }
     };
-  }, []);
+  }, [session?.id, isUnsavedSession]);
 
   useEffect(() => {
     if (!session) { setStreamingContent(''); return; }
@@ -791,10 +836,55 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     };
   }, [viewingContent]);
 
+  useEffect(() => {
+    if (!isExpandedInputOpen) return;
+
+    // Focus the expanded textarea when opened
+    expandedTextareaRef.current?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setIsExpandedInputOpen(false);
+        expandBtnRef.current?.focus();
+        return;
+      }
+
+      // Focus trap for elements inside the modal when pressing Tab outside the textarea
+      if (e.key === 'Tab' && expandedModalRef.current) {
+        const focusable = expandedModalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length > 0) {
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isExpandedInputOpen]);
+
+  const handleCloseExpandedInput = () => {
+    setIsExpandedInputOpen(false);
+    expandBtnRef.current?.focus();
+  };
+
   const handleSend = () => {
     if (input.trim() && !isGenerating) {
       onSendMessage(input);
-      if (session) clearDraft(session.id);
+      clearDraft(session?.id, isUnsavedSession);
       setInput('');
       lastInputRef.current = '';
       const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
@@ -1491,21 +1581,139 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               }
             }}
           />
-          {isGenerating && !isStopping ? (
-            <button onClick={onStop} className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm cursor-pointer">
-              <SquareTerminal size={18} />
+          <div className="flex items-center gap-1.5 shrink-0 mb-0.5">
+            <button
+              ref={expandBtnRef}
+              onClick={() => setIsExpandedInputOpen(true)}
+              className="p-3 bg-gray-700/70 hover:bg-gray-600 text-gray-300 hover:text-white rounded-xl transition-colors shadow-sm cursor-pointer"
+              title="展开放大输入框与实时 Markdown 渲染调试"
+              aria-label="展开编辑与预览"
+            >
+              <Maximize2 size={18} />
             </button>
-          ) : (
-            <button onClick={handleSend} disabled={!input.trim() || isStopping} className="p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl transition-colors shrink-0 mb-0.5 shadow-sm cursor-pointer">
-              <Send size={18} />
-            </button>
-          )}
+            {isGenerating && !isStopping ? (
+              <button onClick={onStop} className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors shadow-sm cursor-pointer">
+                <SquareTerminal size={18} />
+              </button>
+            ) : (
+              <button onClick={handleSend} disabled={!input.trim() || isStopping} className="p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl transition-colors shadow-sm cursor-pointer">
+                <Send size={18} />
+              </button>
+            )}
+          </div>
         </div>
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 mt-2 px-1 text-center sm:text-left">
           <span className="text-[11px] sm:text-xs text-gray-500">AI can make mistakes. Verify important information.</span>
           {input.length > 0 && <span className="text-[11px] sm:text-xs text-gray-500 font-mono">Est. Tokens: <span className="text-blue-400 font-medium">{estimateTokens(input)}</span> (~{input.length} chars)</span>}
         </div>
       </div>
+
+      {isExpandedInputOpen && (
+        <div
+          ref={expandedModalRef}
+          className="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-sm flex flex-col p-2 sm:p-4 md:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="expanded-input-title"
+        >
+          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl flex flex-col h-full w-full overflow-hidden">
+            {/* Top Toolbar */}
+            <div className="p-3 sm:p-4 border-b border-gray-800 bg-gray-900/90 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <Maximize2 size={18} className="text-blue-400 shrink-0" />
+                <h3 id="expanded-input-title" className="text-sm sm:text-base font-semibold text-gray-200 truncate">
+                  代码与 Markdown 编辑调试
+                </h3>
+                <span className="hidden sm:inline-block px-2 py-0.5 bg-gray-800 border border-gray-700/60 rounded text-[11px] text-gray-400">
+                  左侧编辑 · 右侧实时渲染
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="hidden md:inline-block text-xs text-gray-400 font-mono mr-2">
+                  Est. Tokens: <span className="text-blue-400 font-medium">{estimateTokens(input)}</span> ({input.length} 字符)
+                </span>
+                <button
+                  onClick={handleCloseExpandedInput}
+                  className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer"
+                  title="缩小返回 (Esc)"
+                  aria-label="缩小返回"
+                >
+                  <Minimize2 size={16} />
+                  <span>缩小</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Split View Body */}
+            <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden divide-y md:divide-y-0 md:divide-x divide-gray-800">
+              {/* Left Column: Code / Source Editor */}
+              <div className="flex-1 flex flex-col min-h-0 min-w-0 bg-gray-950/50">
+                <div className="px-3 py-1.5 border-b border-gray-800 bg-gray-900/40 flex items-center justify-between text-xs text-gray-400 select-none">
+                  <span className="font-medium text-gray-300">源代码 / Prompt 输入</span>
+                  <span className="text-[11px] text-gray-500">已自动同步至草稿 · 支持 Tab 缩进</span>
+                </div>
+                <div className="flex-1 p-2 sm:p-4 min-h-0 overflow-hidden">
+                  <textarea
+                    ref={expandedTextareaRef}
+                    value={input}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const target = e.currentTarget;
+                        const start = target.selectionStart;
+                        const end = target.selectionEnd;
+                        const indent = '  ';
+                        let inserted = false;
+                        try {
+                          inserted = document.execCommand('insertText', false, indent);
+                        } catch {
+                          inserted = false;
+                        }
+                        if (!inserted) {
+                          const updatedValue = input.substring(0, start) + indent + input.substring(end);
+                          handleInputChange(updatedValue);
+                          target.selectionStart = target.selectionEnd = start + indent.length;
+                        }
+                      }
+                    }}
+                    placeholder="在此输入源代码、Markdown、Prompt 或数学公式..."
+                    className="w-full h-full bg-transparent text-gray-100 font-mono text-sm sm:text-base leading-relaxed p-2 sm:p-3 focus:outline-none resize-none placeholder-gray-600 overflow-y-auto"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              {/* Right Column: Real-time Markdown & Math Renderer */}
+              <div className="flex-1 flex flex-col min-h-0 min-w-0 bg-gray-900/60">
+                <div className="px-3 py-1.5 border-b border-gray-800 bg-gray-900/40 flex items-center justify-between text-xs text-gray-400 select-none">
+                  <span className="font-medium text-green-400">实时 Markdown 预览</span>
+                  <span className="text-[11px] text-gray-500">渲染行为与模型输出完全一致</span>
+                </div>
+                <div className="flex-1 p-3 sm:p-6 min-h-0 overflow-y-auto">
+                  {deferredInput.trim() ? (
+                    <div className="prose prose-invert max-w-none">
+                      <MarkdownRenderer content={deferredInput} />
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-gray-600 select-none py-12 text-sm">
+                      <span>暂无内容，在左侧输入即可实时预览渲染效果</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Status & Info Bar */}
+            <div className="px-3 py-2 border-t border-gray-800 bg-gray-900/80 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 shrink-0">
+              <div className="flex items-center gap-2">
+                <span>提示：按 <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-700 rounded text-[10px] text-gray-300 font-mono">Esc</kbd> 或点击右上角“缩小”返回主界面。</span>
+              </div>
+              <span className="text-amber-400/90 font-medium">注意：发送操作需在缩小返回后于主界面点击发送，避免长篇代码误发。</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {viewingContent && (
         <div
