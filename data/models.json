@@ -73,13 +73,6 @@
     "displayName": "MiMo-V2.6-Flash (AMD)"
   },
   {
-    "id": "058b02bc-ddaf-414f-888b-9893bfbee5bd",
-    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
-    "providerType": "openai-compatible",
-    "modelId": "MinerU2.5-Pro",
-    "displayName": "MinerU2.5-Pro (AMD)"
-  },
-  {
     "id": "57898102-4e34-43e6-8638-42860e47be39",
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
