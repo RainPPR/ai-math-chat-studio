@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './lib/api';
 import { ChatSession, ChatMessage, UserSettings, DEFAULT_SETTINGS, StarColor, Template } from './types';
 import { Sidebar } from './components/Sidebar';
-import { ChatArea } from './components/ChatArea';
+import { ChatArea, clearDraft } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
 import { Loader2 } from 'lucide-react';
 
@@ -76,6 +76,18 @@ export default function App() {
     })();
   }, []);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   const markGenerating = useCallback((id: string, v: boolean) => {
     setGeneratingSessions(prev => {
       const next = new Set(prev);
@@ -128,6 +140,8 @@ export default function App() {
         return next;
       });
     }
+
+    clearDraft(id, isUnsaved);
 
     // Always stop active generation streams for the deleted session
     api.chat.stop(id).catch(() => {});
@@ -512,6 +526,7 @@ export default function App() {
       <main className="flex-1 flex flex-col min-w-0">
         <ChatArea
           session={currentSession}
+          isUnsavedSession={currentSessionId ? unsavedSessionIds.has(currentSessionId) : false}
           onSendMessage={handleSendMessage}
           isGenerating={currentSessionId ? generatingSessions.has(currentSessionId) : false}
           isStopping={currentSessionId ? stoppingSessions.has(currentSessionId) : false}
