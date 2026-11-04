@@ -542,6 +542,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<string>('');
+  const currentInputRef = useRef<string>('');
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [modelSearchQuery, setModelSearchQuery] = useState('');
   const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false);
@@ -575,6 +576,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     const draft = loadDraft(session?.id, isUnsavedSession);
     setInput(draft);
     lastInputRef.current = draft;
+    currentInputRef.current = draft;
     const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
     if (textarea) {
       textarea.style.height = 'auto';
@@ -584,6 +586,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
   const handleInputChange = (value: string) => {
     setInput(value);
+    currentInputRef.current = value;
 
     if (draftTimeoutRef.current) {
       clearTimeout(draftTimeoutRef.current);
@@ -602,12 +605,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       if (draftTimeoutRef.current) {
         clearTimeout(draftTimeoutRef.current);
       }
-      if (input !== lastInputRef.current) {
-        saveDraft(session?.id, input, isUnsavedSession);
-        lastInputRef.current = input;
+      if (currentInputRef.current !== lastInputRef.current) {
+        saveDraft(session?.id, currentInputRef.current, isUnsavedSession);
+        lastInputRef.current = currentInputRef.current;
       }
     };
-  }, [session?.id, isUnsavedSession, input]);
+  }, [session?.id, isUnsavedSession]);
 
   useEffect(() => {
     if (!session) { setStreamingContent(''); return; }
@@ -1660,9 +1663,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                         const start = target.selectionStart;
                         const end = target.selectionEnd;
                         const indent = '  ';
-                        if (document.execCommand) {
-                          document.execCommand('insertText', false, indent);
-                        } else {
+                        let inserted = false;
+                        try {
+                          inserted = document.execCommand('insertText', false, indent);
+                        } catch {
+                          inserted = false;
+                        }
+                        if (!inserted) {
                           const updatedValue = input.substring(0, start) + indent + input.substring(end);
                           handleInputChange(updatedValue);
                           target.selectionStart = target.selectionEnd = start + indent.length;

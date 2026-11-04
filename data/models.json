@@ -403,6 +403,14 @@
     "reasoningEffort": "max"
   },
   {
+    "id": "1f60e673-2de4-461e-939d-65211f4d8571",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "stealth/crouton-alpha",
+    "displayName": "Crouton Alpha (Kilo) (KG)",
+    "reasoningEffort": "max"
+  },
+  {
     "id": "c7935d10-0320-49e0-b31f-f27df31045a1",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
