@@ -300,6 +300,13 @@
     "displayName": "LiquidAI: LFM2.5-2.6B (Kilo)"
   },
   {
+    "id": "71937162-0162-4524-9a3a-d192a2fb63d9",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "liquid/lfm-3-1.7b:free",
+    "displayName": "LiquidAI: LFM3-1.7B (Kilo) (KG)"
+  },
+  {
     "id": "01dd36c5-6ea7-4175-9009-99ee68864c54",
     "providerId": "p-kilo-gw",
     "providerType": "openai-compatible",
@@ -522,11 +529,25 @@
     "displayName": "Gemma 4 31B (LF)"
   },
   {
+    "id": "d396123f-caac-48df-824d-d25143ebca98",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gemma-4-31b-it",
+    "displayName": "Gemma 4 31b IT (LF)"
+  },
+  {
     "id": "11475f8d-1630-4624-bd32-686f086c0a43",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
     "modelId": "glm-5",
     "displayName": "GLM 5 (LF)"
+  },
+  {
+    "id": "e552dd2f-57f6-4d69-ba19-184950a68f14",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "glm-5.2",
+    "displayName": "GLM 5.2 (LF)"
   },
   {
     "id": "683956b2-a6fc-415c-8b57-6fdf31ec31c8",
@@ -669,6 +690,13 @@
     "displayName": "Kimi K2.6 (LF)"
   },
   {
+    "id": "c35d241d-fbe4-40c1-861e-0053dbda8add",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kimi-k2.7-code",
+    "displayName": "Kimi K2.7 Code (LF)"
+  },
+  {
     "id": "1abe6765-b67e-5a58-bfef-23b78ae8c91b",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -808,6 +836,13 @@
     "providerType": "openai-compatible",
     "modelId": "mistralai/Mistral-Large-Instruct-2407",
     "displayName": "Mistral-Large-Instruct-2407 (MS)"
+  },
+  {
+    "id": "fe7d07c7-513c-4b8b-b736-0168fc899aae",
+    "providerId": "3b1ab029-5556-415a-885d-53aa72c7308a",
+    "providerType": "openai-compatible",
+    "modelId": "moonshotai/Kimi-K3.1-Pro",
+    "displayName": "Kimi-K3.1-Pro (MS)"
   },
   {
     "id": "0fae2e97-1bcd-4495-9edd-75ac245b2647",
