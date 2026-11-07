@@ -30,11 +30,12 @@
   --font-mono: "Fira Code", monospace;
 }
 
-/* =========================================================
-   KaTeX 90% 缩放与 CJK / 中文字符修复
-   ========================================================= */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: bold !important;
+}
+
 .katex {
-  font-size: 1em;
+  font-size: 1.1em;
 }
 
 .katex .cjk_fallback {
