@@ -515,6 +515,13 @@
     "displayName": "DeepSeek v4.1 Flash (1017) (LF)"
   },
   {
+    "id": "43910c47-9329-437f-a504-a2f57e8d5d3c",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "economy/deepseek-v4.1-flash",
+    "displayName": "DeepSeek V4.1 Flash (Economy) (LF)"
+  },
+  {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
