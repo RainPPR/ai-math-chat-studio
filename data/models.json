@@ -94,13 +94,6 @@
     "displayName": "MiniCPM5-2B (AMD)"
   },
   {
-    "id": "73f577ec-03d6-48d7-98b3-b1cd7c6e686f",
-    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
-    "providerType": "openai-compatible",
-    "modelId": "OmniVoice",
-    "displayName": "OmniVoice (AMD)"
-  },
-  {
     "id": "49e71f84-ed58-4c8e-9d84-2410d2bad08e",
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
@@ -242,6 +235,14 @@
     "providerType": "openai-compatible",
     "modelId": "apodex/apodex-1.1-mini:free",
     "displayName": "Apodex: Apodex 1.1 Mini (Kilo)"
+  },
+  {
+    "id": "714a1e78-a431-41ce-a884-bf464851c5d3",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "baidu/ernie-5.5-flash-preview:free",
+    "displayName": "Baidu: ERNIE-5.5-Flash-Preview (Kilo) (KG)",
+    "reasoningEffort": "high"
   },
   {
     "id": "e2c6d1c5-44b3-5bcd-aa30-790edccdc2ed",
@@ -441,6 +442,14 @@
     "modelId": "stepfun/step-5-preview-free",
     "displayName": "StepFun: Step 5 Preview (Kilo) (KG)",
     "reasoningEffort": "high"
+  },
+  {
+    "id": "05535bc9-224b-40e8-b392-54575c629690",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "thinkingmachines/inkling-2-small:free",
+    "displayName": "Thinking Machines: Inkling 2 Small (Kilo) (KG)",
+    "reasoningEffort": "max"
   },
   {
     "id": "6d6f127e-92a5-5f2f-8930-22c9fef57e82",
@@ -765,6 +774,20 @@
     "providerType": "openai-compatible",
     "modelId": "space-bunny-alpha",
     "displayName": "Space Bunny Alpha (LogFare)"
+  },
+  {
+    "id": "321cec19-2dd0-46a4-90bf-2dabc59bde59",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "stealth/autistic-parrot",
+    "displayName": "Autistic Parrot (Stealth) (LF)"
+  },
+  {
+    "id": "32d8c566-709d-496f-ad31-c959a301af6b",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "stealth/funfly",
+    "displayName": "Funfly (stealth) (LF)"
   },
   {
     "id": "843a25d5-bd2b-4eca-8e5b-69949c167843",
