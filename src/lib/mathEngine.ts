@@ -11,6 +11,8 @@ export const CENTRAL_MACROS: CustomMacro[] = [
   { name: 'male', definition: '\\text{♂}' },
   { name: 'female', definition: '\\text{♀}' },
   { name: 'vec', definition: '\\bm{#1}', args: 1 },
+  { name: 'celsius', definition: '{{}^{\\circ}}' },
+  { name: 'SI', definition: '\\pu{#1 #2}', args: 2 },
 ];
 
 export function buildKatexMacros(): Record<string, string> {
