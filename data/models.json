@@ -136,14 +136,24 @@
     "providerId": "a9042535-d764-44b3-8bf2-09bc24112796",
     "providerType": "openai-compatible",
     "modelId": "gemini-3.5-flash-lite",
-    "displayName": "Gemini 3.5 Flash Lite (GAISAPI)"
+    "displayName": "Gemini 3.5 Flash Lite (GAISAPI)",
+    "reasoningEffort": "max"
   },
   {
     "id": "275cd3b3-0796-4848-8b5e-72066ef9fa6b",
     "providerId": "a9042535-d764-44b3-8bf2-09bc24112796",
     "providerType": "openai-compatible",
     "modelId": "gemini-3.8-flash",
-    "displayName": "Gemini 3.8 Flash (GAISAPI)"
+    "displayName": "Gemini 3.8 Flash (GAISAPI)",
+    "reasoningEffort": "max"
+  },
+  {
+    "id": "93e41033-0d06-41aa-a9ab-203c93014f93",
+    "providerId": "a9042535-d764-44b3-8bf2-09bc24112796",
+    "providerType": "openai-compatible",
+    "modelId": "gemini-4-hydrogen",
+    "displayName": "Gemini 4 Hydrogen (GAISAPI)",
+    "reasoningEffort": "max"
   },
   {
     "id": "090f132d-1796-47d5-b6fa-32244e602e13",
@@ -365,6 +375,14 @@
     "providerType": "openai-compatible",
     "modelId": "openrouter/free",
     "displayName": "OpenRouter Free Models Router (Kilo)"
+  },
+  {
+    "id": "1d89a382-39b9-4738-9591-c09ddf08d1c4",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "particle-ai/particle-1:free",
+    "displayName": "Particle AI: Particle-1 (Kilo) (KG)",
+    "reasoningEffort": "max"
   },
   {
     "id": "8ca867d4-19c8-53b3-ae7c-38a3f7c37d12",

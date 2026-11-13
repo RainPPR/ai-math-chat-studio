@@ -1,8 +1,6 @@
 {
   "activeSkillIds": [
-    "b83eacb8-2ab7-4a98-b47b-7cce377d4f7f",
-    "8139aa5b-ddc1-4dcd-b23a-f1aa4bcdbd91",
-    "f8513ca7-52fb-4748-8389-af1db9d071f7"
+    "1ba8de64-9def-4ccf-b8ea-46c244caa98b"
   ],
   "systemPrompt": "",
   "renderThinkingAsMarkdown": true,
@@ -14,7 +12,10 @@
   "starredSessions": {
     "db91cec5-1689-46bb-84c5-a27024231d49": "green",
     "29e942c0-d884-4b45-a85c-fba4f39329d3": "green",
-    "fbb8bdc6-cdca-46bd-91b7-397549fdc69c": "rose"
+    "fbb8bdc6-cdca-46bd-91b7-397549fdc69c": "rose",
+    "1cd4da0c-f38b-4167-ba4b-9e63a8484146": "yellow",
+    "2b6c0219-1279-4740-83ec-537fcb9368a6": "yellow",
+    "be77eb20-2058-460e-918a-206ddf8f15e7": "yellow"
   },
   "chatgptChunks": [
     "2026-07-19T08:53:15.252Z",
@@ -25,5 +26,5 @@
   "chatgptChunkRemarks": {},
   "stickyNotes": [],
   "activeCharacterId": "bbe3e239-71d7-4be8-8570-5a730c61279e",
-  "activeModelId": "275cd3b3-0796-4848-8b5e-72066ef9fa6b"
+  "activeModelId": "93e41033-0d06-41aa-a9ab-203c93014f93"
 }
