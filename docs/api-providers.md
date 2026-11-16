@@ -46,7 +46,7 @@
 
 - **SDK**：`@google/genai`
 - **特殊功能**：
-  - Thinking Level 配置（minimal/low/medium/high）
+  - Thinking Level 配置（minimal/low/medium/high/xhigh）
   - `includeThoughts: true` 确保思考过程可见
   - 流式响应 + 思考过程分段（`part.thought` 标记）
 
