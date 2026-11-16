@@ -198,6 +198,13 @@
     "thinkingLevel": "high"
   },
   {
+    "id": "f467ac00-a82e-4e12-86fb-ff931b8f595b",
+    "providerId": "p-google-fc62",
+    "providerType": "google",
+    "modelId": "gemini-4-hydrogen",
+    "displayName": "Gemini 4 Hydrogen (Gemini)"
+  },
+  {
     "id": "54725a4d-5a8f-40b1-8ca3-d25239a29faf",
     "providerId": "p-google-fc62",
     "providerType": "google",
@@ -295,6 +302,13 @@
     "providerType": "openai-compatible",
     "modelId": "inclusionai/ling-3.1-flash-1019-free",
     "displayName": "inclusionAI: Ling 3.1 Flash 1019 (Kilo) (KG)"
+  },
+  {
+    "id": "3fe82a50-1017-4af7-bd40-22e635cdd8d8",
+    "providerId": "p-kilo-gw",
+    "providerType": "openai-compatible",
+    "modelId": "inclusionai/ling-3.2-flash:free",
+    "displayName": "inclusionAI: Ling 3.2 Flash (Kilo) (KG)"
   },
   {
     "id": "07c6c650-b7eb-529e-833e-f64c31733caf",
