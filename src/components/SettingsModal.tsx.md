@@ -2203,6 +2203,7 @@ const ModelEditor: React.FC<{
             <option value="low">Low</option>
             <option value="medium">Medium</option>
             <option value="high">High</option>
+            <option value="xhigh">Xhigh</option>
           </select>
         </div>
       )}
