@@ -68,7 +68,7 @@ async function* streamGoogle(req: StreamRequest, provider: { baseURL?: string; a
   }
 
   if (req.thinkingLevel && req.thinkingLevel !== 'none') {
-    const valid = ['minimal', 'low', 'medium', 'high'];
+    const valid = ['minimal', 'low', 'medium', 'high', 'xhigh'];
     if (valid.includes(req.thinkingLevel)) {
       config.thinkingConfig = { thinkingLevel: req.thinkingLevel.toUpperCase(), includeThoughts: true };
     }

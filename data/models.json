@@ -202,7 +202,8 @@
     "providerId": "p-google-fc62",
     "providerType": "google",
     "modelId": "gemini-4-hydrogen",
-    "displayName": "Gemini 4 Hydrogen (Gemini)"
+    "displayName": "Gemini 4 Hydrogen (Google)",
+    "thinkingLevel": "xhigh"
   },
   {
     "id": "54725a4d-5a8f-40b1-8ca3-d25239a29faf",
