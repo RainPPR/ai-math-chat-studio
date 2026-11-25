@@ -66,6 +66,13 @@
     "displayName": "GLM-5.3-Flash (AMD)"
   },
   {
+    "id": "24095a67-ed67-4b07-a976-306bed49c5c2",
+    "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
+    "providerType": "openai-compatible",
+    "modelId": "Hy4-flash",
+    "displayName": "Hy4-flash (AMD)"
+  },
+  {
     "id": "f5ac07ee-6feb-4e92-bf52-28c00d1ed432",
     "providerId": "86cc06ec-cc34-4762-9ac4-ab49e0026bc1",
     "providerType": "openai-compatible",
@@ -560,11 +567,25 @@
     "displayName": "DeepSeek v4.1 Flash (1017) (LF)"
   },
   {
+    "id": "f3a8ddca-0532-4d5a-9185-d871b0d59350",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "deepseek-v4.1-flash-Jailbreak",
+    "displayName": "DeepSeek V4.1 Flash Jailbreak (LF)"
+  },
+  {
     "id": "43910c47-9329-437f-a504-a2f57e8d5d3c",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
     "modelId": "economy/deepseek-v4.1-flash",
     "displayName": "DeepSeek V4.1 Flash (Economy) (LF)"
+  },
+  {
+    "id": "59f40250-dfca-4cc8-8ac9-9d79d08ce89c",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "ernie-5.5-flash-preview",
+    "displayName": "ERNIE-5.5-Flash-Preview (LF)"
   },
   {
     "id": "b8523775-a813-53e8-a05a-dc2913a445d3",
@@ -700,6 +721,20 @@
     "displayName": "GPT 5.4 Mini Kb Curate (LF)"
   },
   {
+    "id": "58778320-a991-4b9f-8f18-d5d7e5451e71",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-6.1-terra",
+    "displayName": "GPT-6.1 Terra (LF)"
+  },
+  {
+    "id": "f4d52ab1-791a-426a-8dff-042211a42c30",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "gpt-6.2-astra",
+    "displayName": "GPT 6.2 Astra (LF)"
+  },
+  {
     "id": "19a500f4-c2d3-4917-af3f-a2ddad3f9d09",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
@@ -747,6 +782,13 @@
     "providerType": "openai-compatible",
     "modelId": "kimi-k2.7-code",
     "displayName": "Kimi K2.7 Code (LF)"
+  },
+  {
+    "id": "8ce4d2a1-c5c9-490e-bcab-f146b1a41e50",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "kimi-k3.1-pro",
+    "displayName": "Kimi K3.1 Pro (LF)"
   },
   {
     "id": "1abe6765-b67e-5a58-bfef-23b78ae8c91b",
@@ -798,11 +840,32 @@
     "displayName": "Obi 2 (LF)"
   },
   {
+    "id": "f8444598-1861-4ba8-a01e-53c38ad8075d",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "openai/gpt-6-luna",
+    "displayName": "GPT-6 Luna (LF)"
+  },
+  {
     "id": "e193beee-0f6c-59e6-830f-ddf4d6e9aed8",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
     "modelId": "qwen-3.8-27b",
     "displayName": "Qwen 3.8 27b (LogFare)"
+  },
+  {
+    "id": "62dbbbbd-bd65-42a9-8bfc-c8317eb8d345",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "qwen-3.8-flash-next",
+    "displayName": "Qwen 3.8 Flash Next (LF)"
+  },
+  {
+    "id": "ccfb8fc3-9380-41b2-b23a-4e22cf7358f5",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "qwen4-max",
+    "displayName": "Qwen4 Max (LF)"
   },
   {
     "id": "b13f9191-a373-501d-b034-c47d50d41fc4",
@@ -826,11 +889,46 @@
     "displayName": "Funfly (stealth) (LF)"
   },
   {
+    "id": "fcc72431-dfaa-4707-a3f6-0648a71324cd",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "stealth/happiestleaf",
+    "displayName": "Happiest Leaf (Stealth) (LF)"
+  },
+  {
     "id": "9d22b7e6-3168-4137-9cc8-8043bbd42307",
     "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
     "providerType": "openai-compatible",
     "modelId": "stealth/psychotic-killer",
     "displayName": "Psychotic Killer (Stealth) (LF)"
+  },
+  {
+    "id": "e73f4b40-e328-4ca1-957b-421bfdf198ed",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "stealth/watermelonproduct",
+    "displayName": "Watermelon Product (Stealth) (LF)"
+  },
+  {
+    "id": "99f124b5-d668-43c6-afbc-d7514bfc1c77",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "stepfun-ai/step-5-preview",
+    "displayName": "Step 5 Preview (LF)"
+  },
+  {
+    "id": "d46c894b-f8c0-433f-9aa5-0e6e17e9a4e4",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "tencent/hy4",
+    "displayName": "Hy4 (LF)"
+  },
+  {
+    "id": "cc56cad1-2fb8-4a36-9cd4-e41bfab80a06",
+    "providerId": "d687d0d8-349b-4114-81ad-29e752bd49a1",
+    "providerType": "openai-compatible",
+    "modelId": "tencent/hy4-flash",
+    "displayName": "Hy4 Flash (LF)"
   },
   {
     "id": "843a25d5-bd2b-4eca-8e5b-69949c167843",

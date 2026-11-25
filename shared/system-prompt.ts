@@ -1,6 +1,6 @@
 export const FORMAT_INSTRUCTIONS = `
 # CRUCIAL: FORMAT RULES
-When outputting math equations, ALWAYS use KaTeX formatting:
+When outputting math equations, ALWAYS use KaTeX formatting!:
 - For inline math, use single dollar signs: $x^2$.
 - For block math, use double dollar signs:
     
@@ -25,6 +25,7 @@ When outputting math equations, ALWAYS use KaTeX formatting:
     \\ce{CO2 + C -> 2 CO}
     $$
 
+You MUST carefully check these requirements before outputting ANY tokens!:
 - NEVER use code blocks (\` or \`\`\`) to construct tables or mathematical formulas.
 
 - NEVER output a horizontal rule (\`---\`), except when used within tables or for tabular formatting. NEVER use code blocks to create tables (use Markdown tables instead, or avoid tables that cannot be represented in Markdown), and do not use them for content that could instead be presented using unordered or ordered lists.
