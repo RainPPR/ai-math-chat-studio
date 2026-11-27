@@ -23,14 +23,24 @@
   - `resolveApiKey()` — 解析 API Key（优先配置项，其次环境变量，最后 `OPENAI_API_KEY` 回退）
   - `resolveBaseURL()` — 解析 Base URL（优先配置项，其次内置默认值）
 
+- **`server/app.ts`** — 启动时模型同步 (`syncRemoteModels`)
+  - 对非 Google 提供商按 `modelSyncType`（`'none' | 'json' | 'v1_models'`）自动同步远端模型列表（旧配置若存在 `modelSource` 且未设 `modelSyncType` 则按 `'json'` 处理）
+  - 通过 `isTextGenerationModel()` 优先检查 `modelId`、`displayName`、`endpoints`、`object`/`type`/`mode` 与排除关键词，过滤 embedding、绘图、TTS/audio、moderation、rerank 等非文本生成模型
+  - `/v1/models` 模式使用 `buildProviderHeaders()` 注入配置的 `apiKey`（及 `.env` 回退），仅发送给解析后的目标端点，不会泄露给任意 URL
+  - 按 `modelId` 分组保留现有本地模型实例（含 UUID、自定义 `displayName`、`temperature`、`maxTokens`、`reasoningEffort`、`thinkingLevel`、`extraBody`、`injectThinkingTemplate`），支持同 `modelId` 多实例；若本地已有未在远端返回但用户自定义过名称或参数的模型也会予以保留
+  - 默认展示名称由 `deriveDisplayName()` 生成：若含 `a/b` 前缀则提取末段 `b`，并附加基于提供商名称大写字母生成的缩写括号（如 `ModelScope` → `MS`、`FreeTheAI*` → `FTAI`、`AMD*` → `AMD`）
+
 - **`server/routes/chat.ts`** — 模型/提供商解析
-  - `resolveActiveModel()` — 根据 `activeModelId` 解析要使用的模型与提供商；如命中临时模型（TempModel），自动合成 `openai-compatible` 类型提供商 payload（采用显式 Base URL 与 API Key）
+  - `resolveActiveModel()` — 根据 `activeModelId` 解析要使用的模型与提供商；如命中临时模型（TempModel），通过 `buildTempModelPayload()` 自动合成 `openai-compatible` 类型提供商 payload（采用显式 Base URL 与 API Key）；仅当常规 `models` 完全为空（`!settings.models?.length`）时才默认回退到首个 `TempModel`
+  - 所有生成端点（messages / retry / continue / regenerate）均无条件使用全局 `settings.json` 中的 `activeModelId`、`activeCharacterId` 与 `activeSkillIds`
 
 - **`server/providers/stream.ts`** — 流式 API 调用
   - `streamChat()` — 统一入口，根据 `providerType` 分发到三种流式函数
-  - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`）
+  - `streamGoogle()` — Google Gemini 专用流式调用（使用 `@google/genai`，通过 `part.thought` / `part.text` 区分推理与正文）
   - `streamNvidia()` — Nvidia NIM 流式调用（OpenAI SDK，不启用 `reasoning_effort` 级联回退机制）
   - `streamOpenAICompatible()` — 通用 OpenAI 兼容流式调用，支持 `reasoning_effort` 自动重试机制（若未显式指定级别，会从 `max` -> `xhigh` -> `high` 依次尝试请求，每个级别失败后重试一次。若抛出 401、403、404 等严重配置或不存在错误，则立即停止并向上抛出；若抛出与 `reasoning_effort` 相关的 400 或 422 错误，则立刻停止重试尝试并直接回退调用无 `reasoning_effort` 参数的模型流；若检测到 429 速率限制，也会立即向上抛出错误以提升用户体验）
+  - 历史裁剪与 System Prompt 注入：最多截取最近 40 条消息并剔除开头非 `user` 角色消息以确保交替轮次合法；当 `userAsSystem` 开启时，不设置原生 `system` role 或 `systemInstruction`，而是将系统提示词包装为 `<system>...</system>` 作为 `role: 'user'` 消息置于历史最前方
+  - 外部提供商 API 异常或级联重试失败通过 `console.warn` 记录日志，以区分外部连接/配额问题与内部应用错误
   - `StreamRequest` / `StreamChunk` 类型定义
 
 ### 前端统一客户端

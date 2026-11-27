@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from './lib/api';
+import { loadStoredNumber, saveStoredNumber } from './lib/utils';
 import { ChatSession, ChatMessage, UserSettings, DEFAULT_SETTINGS, StarColor, Template } from './types';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea, clearDraft } from './components/ChatArea';
 import { SettingsModal } from './components/SettingsModal';
 import { Loader2 } from 'lucide-react';
+
+const SIDEBAR_WIDTH_STORAGE_KEY = 'chat_sidebar_width';
+const MIN_SIDEBAR_WIDTH = 180;
+const MAX_SIDEBAR_WIDTH = 480;
+const DEFAULT_SIDEBAR_WIDTH = 256;
 
 let settingsSaveQueue = Promise.resolve();
 
@@ -38,7 +44,9 @@ export default function App() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(256);
+  const [sidebarWidth, setSidebarWidth] = useState(() =>
+    loadStoredNumber(SIDEBAR_WIDTH_STORAGE_KEY, DEFAULT_SIDEBAR_WIDTH, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH)
+  );
   const [generatingSessions, setGeneratingSessions] = useState<Set<string>>(new Set());
   const [stoppingSessions, setStoppingSessions] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -443,16 +451,19 @@ export default function App() {
     e.preventDefault();
     const startX = e.clientX;
     const startWidth = sidebarWidth;
+    let latestWidth = startWidth;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX;
-      const newWidth = Math.max(180, Math.min(480, startWidth + deltaX));
+      const newWidth = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, startWidth + deltaX));
+      latestWidth = newWidth;
       setSidebarWidth(newWidth);
     };
 
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      saveStoredNumber(SIDEBAR_WIDTH_STORAGE_KEY, latestWidth, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH);
     };
 
     document.addEventListener('mousemove', handleMouseMove);

@@ -15,8 +15,13 @@ graph TD
     App --> ChatArea
     App --> SettingsModal
 
+    subgraph Sidebar Children
+        BatchExportModal[BatchExportModal.tsx]
+    end
+
     subgraph ChatArea Children
         MessageItem[MessageItem]
+        TOCSidebar[TOCSidebar.tsx]
     end
 
     subgraph MessageItem Children
@@ -24,102 +29,134 @@ graph TD
     end
 
     subgraph SettingsModal Children
+        ActiveModelDropdown[ActiveModelDropdown]
         ProviderEditor[ProviderEditor]
         ModelEditor[ModelEditor]
+        TempModelEditor[TempModelEditor]
     end
 
+    Sidebar --> BatchExportModal
     ChatArea --> MessageItem
+    ChatArea --> TOCSidebar
     MessageItem --> MarkdownRenderer
+    SettingsModal --> ActiveModelDropdown
     SettingsModal --> ProviderEditor
     SettingsModal --> ModelEditor
+    SettingsModal --> TempModelEditor
 ```
 
 ## `App.tsx` — 状态管理中心
 
 **职责**:
 
-*   **状态中心**: 作为整个应用的顶层组件，管理所有核心状态。
-*   **数据获取**: 在应用启动时，通过 `api.ts` 从后端获取初始设置和会话数据。
-*   **状态管理**: 管理会话列表 (`sessions`)、当前会话 (`currentSessionId`)、用户设置 (`settings`)、以及全局 UI 状态（如 `isSettingsOpen`）。
-*   **业务逻辑**: 实现核心业务逻辑，如新建/删除会话、发送/重试消息，并将这些函数作为 props 传递给子组件。
-*   **持久化**: 调用 `api.ts` 中的函数将变更（如保存设置、发送消息）持久化到后端。
+*   **状态中心**: 作为整个应用的顶层组件，管理所有核心状态，包括 `sessions`、`currentSessionId`、`unsavedSessionIds`、`settings`、`templates`、`isSettingsOpen`、per-session `generatingSessions` 与 `stoppingSessions`。
+*   **数据获取**: 启动时并行拉取 `sessions`、`settings`、`templates` 与正在运行的生成任务列表（`getRunningSessions`）。
+*   **未保存会话管理**: 使用 `unsavedSessionIds` Set 跟踪本地尚未发送消息的新建会话，`handleNewChat` 复用既有未保存会话；`handleDeleteChat` 会停止生成流（`api.chat.stop(id)`），对已落盘会话调用 `api.sessions.delete(id)`，并清理本地草稿与加星记录。
+*   **设置持久化与生成同步**: 共享状态变更通过 `updateGlobalSettings` 串行进入 `settingsSaveQueue`；在发起任何生成操作（`handleSendMessage`、`handleRetry`、`handleContinue`、`handleRegenerate`）前调用 `awaitSettledSettingsSave()`，确保最新设置已完整写入磁盘再由后端解析。
+*   **角色过继同步**: `handleSaveSettings` 在保存设置后重新拉取服务端会话列表，同时保留本地未保存会话并根据 `characterReassignments`（或回退到 `activeCharacterId`）更新其 `characterId`。
+*   **关闭拦截**: 注册全局 `window` `beforeunload` 监听器，在关闭标签页或刷新浏览器前提示确认。
+*   **左侧栏宽度记忆**: 桌面端拖拽调整左侧栏宽度（`180px`–`480px`，默认 `256px`）后，自动记忆至 `localStorage`（`chat_sidebar_width`）。
 
 ## `Sidebar.tsx` — 左侧栏
 
 **职责**:
 
-*   **会话列表**: 显示所有聊天会话，按更新时间排序。
-*   **分类过滤**: 在会话列表上方提供角色选择器，允许用户按 Character 过滤显示的会话。
-*   **加星功能 (Starring)**: 允许用户给每个会话进行加星标记，并提供黄、红、蓝、绿、橙五种预设星星颜色。加星数据保存在 `settings.json` 的 `starredSessions` 映射中。
-*   **置顶快速访问 (Starred Sections)**: 当有被加星的会话存在时，在侧边栏最顶端显示一个单独的、可折叠的“已加星会话”分组，保证极高的数据查看和切换效率。
-*   **用户交互**: 允许用户切换会话、新建会话、复制会话、删除会话、加星会话。
-*   **导航**: 提供打开设置模态框的入口。
+*   **会话列表与分组**: 按更新时间倒序展示并按日期分组（今天 / 昨天 / 近7天日期 / 最近一个月 / 过去一年 / 更早）。
+*   **分类过滤**: 在会话列表上方提供角色选择器，允许用户按 `session.characterId` 过滤会话。
+*   **常规与全文搜索**:
+    *   默认实时按标题或会话 ID 过滤（忽略空白与大小写）。
+    *   点击输入框内的全文搜索按钮（或非空输入回车）进入全文搜索模式，调用 `normalizeForSearch`（忽略大小写、所有空白及 `<think>` 块）异步分批检索所有会话正文，显示进度条并锁定输入；通过 `activeSearchIdRef` 使过期的异步扫描失效，关闭/退出全文搜索时弹出确认弹窗。
+*   **批量导出模式**: 切换批量选择模式后可多选会话并打开 `BatchExportModal.tsx` 导出压缩包。
+*   **加星功能 (Starring)**: 支持黄、红、蓝、绿、橙五种预设颜色（`settings.starredSessions`），有加星会话时在顶部展示可折叠的「已加星会话」分组。
+*   **用户交互**: 切换、新建、复制、删除、加星会话，以及打开设置模态框。
+
+## `BatchExportModal.tsx` — 批量导出弹窗
+
+**职责**:
+
+*   **多选打包导出**: 接收 `selectedSessionIds`，逐一通过 `api.sessions.get(id)`（失败回退内存列表）拉取完整会话并使用 `JSZip` 打包为 `batch_export_YYYYMMDD_HHMMSS.zip`。
+*   **格式与思考开关**: 支持 Markdown（`.md`，含 `# 标题` 与 `### User/AI`）和纯文本（`.txt`，无 `#`/`###` 标题符号，使用 `[User]`/`[AI]`），并支持选择保留或通过 `stripThinking` 移除 `<think>` 块。
+*   **完整性校验**: 收集拉取失败的会话 ID，若存在失败项则中止打包并提示错误，避免生成不完整的导出包。
 
 ## `ChatArea.tsx` — 聊天主区域
 
 **职责**:
 
-*   **消息显示**: 渲染当前会话的消息列表，包括用户消息和 AI 回复。
-*   **SSE 订阅**: 这是处理实时响应的核心。它通过 `api.subscribeGeneration` 订阅后端 SSE 端点，并根据接收到的事件 (`delta`, `done`, `error`, `stopped`) 实时更新 `streamingContent` 状态。
-*   **输入处理**: 管理用户输入框，支持 `Ctrl+Enter` 发送和 `Shift+Enter` 换行。
-*   **交互操作**: 提供停止生成、导出聊天记录等功能。支持手动修改当前会话绑定的 Character（点击标题下方的角色名称）。
-*   **快捷选择栏**: 在输入框上方提供浮动栏，允许用户快速切换当前活跃模型、角色以及勾选多选 Skills（支持不选、单选或多选）。切换后即时保存到当前会话与全局 `settings.json`。此外，提供模板选择器按钮，可拉取并显示通过 `SettingsModal` 自定义的全部自动填入模板，点击任意模板可将其内容追加到当前输入框中。
+*   **消息显示与续写平滑更新**: 渲染会话消息列表，订阅 SSE (`delta`、`done`、`error`、`stopped`)。当处于生成中且末尾已存在 `model` 消息（Continue / Regenerate 场景）时，直接原地更新最后一条消息内容，避免重复块或布局跳动。
+*   **草稿持久化**: 将未发送的输入内容以 500ms 防抖保存至 `localStorage` 的 `chat_drafts`（7 天过期）；New Chat 与未保存会话使用专用键 `NEW_CHAT_DRAFT_KEY = '__new_chat_draft__'`。在组件卸载/会话切换时立即 flush，在发送消息或删除会话时清除。
+*   **输入与放大编辑弹窗**:
+    *   主输入框支持 `Ctrl+Enter` 发送、`Enter`/`Shift+Enter` 换行，并显示估算 Token 与字符数。默认与最小高度均为 `44px`（单行高度），不随输入内容自动伸缩；鼠标指向输入框顶部边缘即可上下拖动调整高度（上限 `60vh`），松手后自动记忆至 `localStorage`（`chat_input_height`）。
+    *   点击 `Maximize2` 按钮打开左右分栏放大编辑弹窗（左侧代码/Markdown `textarea`，右侧经 `useDeferredValue` 延迟优化的 `MarkdownRenderer` 实时预览）。文本框内按 `Tab` 插入两个空格（优先使用 `document.execCommand('insertText')` 并提供手动选区回退）；弹窗内其它可聚焦元素使用 `Tab` 焦点陷阱，`Esc` 或 `Minimize2` 关闭后焦点恢复至打开按钮；弹窗内禁止直接发送消息以防长内容误发。
+*   **会话级编辑与角色标记**:
+    *   顶栏展示并允许修改当前会话的 `characterId`（通过 `onUpdateSessionCharacter` 更新会话本身，与全局 `settings.activeCharacterId` 完全解耦）。
+    *   支持打开分块编辑弹窗（`parseMessagesToBlocks` / `compileBlocksToMessages`），将消息拆分为可上/下移动、修改类型、删除、新增的 `input` / `thinking` / `output` 块（文本框 `rows={6}`、`min-h-[160px]`），保存时调用 `PATCH /api/sessions/:id`。
+*   **快捷选择栏与 System Prompt 预览**:
+    *   **Model 下拉框**: 跨提供商子串模糊搜索（`normalizeSearchString` 忽略空格、换行、横杠、中英文逗号、句点、下划线与大小写），左侧显示 `displayName`、右侧 CSS 截断显示 `modelId` 并带原生 `title={modelId}` 提示；打开或关闭时清空搜索词，支持 `Escape` 关闭与 `Enter` 选中首个匹配项并把焦点归还至 `modelToggleBtnRef`，打开时将当前活跃模型滚入可视区域（`scrollIntoView({ block: 'nearest' })`）。
+    *   **Character 下拉框**: 切换全局 `activeCharacterId`。
+    *   **System Prompt 预览弹窗**: 点击 toolbar 的 `System Prompt` 按钮以无障碍弹窗（`role="dialog"`、`aria-modal="true"`）展示 `buildConstructedSystemPrompt` 生成的完整提示词并支持复制。
+    *   **Skills 下拉框**: 绑定 `settings.activeSkillIds` 的多选菜单，使用响应式宽度（`w-80 sm:w-[26rem] min-w-[300px] max-w-[90vw]`）和自适应对齐（`left-0 sm:left-auto sm:right-0`）完整展示长技能名。
+    *   **Templates 下拉框**: 拉取并追加 `/api/templates` 的模板内容至输入框并聚焦输入框。
+*   **目录侧栏集成**: 集成 `TOCSidebar.tsx`，支持桌面端鼠标拖拽调宽（`200px`–`600px`，默认 `288px`，自动记忆至 `localStorage` 的 `chat_toc_width`）、默认展开到 `H6`、监听 `#chat-scroll-container` 滚动计算当前活跃标题，并将桌面端目录显隐状态自动记忆至 `localStorage`（`chat_toc_open`）。
+*   **纯净 PDF 打印 (`executePrint`)**:
+    *   支持单条预览打印（自动前置 `<h1>Session ID: [id]</h1>`）与顶栏全会话打印（通过 `isPrintingAll` 惰性渲染 `#print-all-session-content` 以避免流式阶段额外开销）。
+    *   统一在隐藏 `iframe` 中注入全局打印样式（无 `@media print` 嵌套）：强制浅色模式（`color-scheme: light !important`）、`.katex { font-size: 0.9em; }`、`.katex .frac-line` 强制黑框黑字，确保打印对比度。
 
 ### `MessageItem` (子组件)
 
-*   **职责**: 渲染单条消息，包括消息内容、头像、以及操作按钮（复制、查看/全屏预览、重试、重新生成、继续）。
-*   **思考过程处理**: 解析并渲染 AI 回复中包含的 `<details>` 思考过程块，并提供折叠/展开功能。
-*   **消息操作**:
-    *   **Copy（复制）**: 复制消息的正文内容。除了复制 markdown 源码外，还会调用 `ClipboardItem` 同时向剪贴板写入对应的 HTML 源码（`text/html`），并且永远不包含 `<think>` 块中的思考过程，完美复用已渲染完毕的 DOM HTML 以免多余渲染，保证了粘贴到 Word、飞书等富文本编辑器时的完美格式还原度。
-    *   **View（查看）**: 鼠标悬浮时在消息左侧/右侧（按钮改成竖着并排展示以防错位）显示 👁️ 图标按钮。点击后在页面顶层覆盖一个最大化（填充整个可视页面）的 Markdown 渲染结果遮罩层。如果查看/打印的是模型消息，会往上找到最近的一个用户消息并一同在渲染层中进行“问题”与“回答”拼接显示。支持关闭将其隐藏，并且大遮罩页面支持单独滚动、不与底层页面冲突。
-    *   **Print（纯净打印）**: 在 Markdown 渲染结果遮罩层中支持 Ctrl+P 或点击“打印”按钮，通过构建隐藏的 blank iframe 传入打印命令来实现纯净打印，不带有任何多余的前端 UI 插曲。如果打印模型消息，将同时打印上面找到并拼接的最近用户消息。
-    *   **Retry（重试）**: 从当前消息往前找到最近的 user 消息，抛弃其后所有内容重新生成。
-    *   **Regenerate（重新生成）**: 保留当前 model 消息的 thinking process，删除正文，抛弃后续消息，注入 continue 指令让 AI 基于原有思考继续输出。
-    *   **Continue（继续）**: 仅对最后一条 model 消息显示，在会话末尾添加 continue 指令让 AI 继续被中断的输出。
+*   **职责**: 渲染单条消息、折叠/展开 `<think>` 思考过程，以及悬停操作按钮（View、Copy、Retry、Regenerate、Continue）。
+*   **Copy（复制）**: 同时写入纯文本与富文本 HTML（`ClipboardItem`），不包含 `<think>` 思考过程。
+*   **View（查看）**: 点击 👁️ 按钮弹出全屏预览层（模型消息会附带最近一条用户问题），锁定底层滚动并支持 `Ctrl+P` 打印或 `Esc` 关闭。
+*   **Retry / Regenerate / Continue**: 分别触发对应生成操作（均通过后端 `GenerationManager` 原地处理）。
+
+## `TOCSidebar.tsx` — 目录导航侧栏
+
+**职责**:
+
+*   **AST 标题提取**: 调用 `src/lib/toc.ts`（`unified` + `remark-parse` + `remark-gfm` + `remark-math`）解析每条消息的 Markdown 标题，递归提取纯文本并剔除 `<think>` 块及非正文元素。
+*   **层级筛选与折叠**: 支持 `H1`–`H6` 层级过滤（默认 `H6`）、全部展开/折叠、按消息卡片分组展示（附带角色标签与正文摘要）。
+*   **联动定位**: 随 `#chat-scroll-container` 滚动自动展开当前活跃消息卡片、折叠非活跃卡片，并将当前活跃标题项自动滚入 TOC 可视区域；窄屏（`<768px`）下切换为滑出抽屉遮罩层。
 
 ## `MarkdownRenderer.tsx` — Markdown 渲染器
 
 **职责**:
 
 *   **Markdown-to-HTML**: 使用 `react-markdown` 将 Markdown 文本安全地转换为 React 组件。
-*   **插件管线**: 集成 `remark-*` 和 `rehype-*` 插件生态，以支持 GFM (GitHub Flavored Markdown)、数学公式、化学方程式等高级功能。
-*   **数学渲染**: 通过 `remark-math` 和 `rehype-katex` 插件，将 LaTeX 格式的数学公式（`$...$` 和 `$$...$$`）渲染为 HTML 和 CSS。
-*   **安全**: 使用 `rehype-sanitize` 清理 HTML，防止 XSS 攻击，同时通过 `rehype-raw` 允许安全的、用于特定功能的 HTML 标签（如 `<details>`)。
+*   **插件管线**: 集成 `remark-gfm`、`remark-math`、`remark-breaks`、`remark-squeeze-paragraphs`、`remark-cjk-friendly` 及 `rehype-raw`、`rehype-sanitize`、`rehype-katex`、`rehype-external-links`。
+*   **数学渲染**: 将 `\[...\]` / `\(...\)` 规范化为 `$$...$$` / `$...$`，统一使用 `rehype-katex` 配合 `src/lib/mathEngine.ts` 的 `SHARED_KATEX_OPTIONS` 进行同步渲染。
+*   **TOC 锚点插件**: 通过自定义 `rehypeTocHeadingIds` 插件在 rehype AST 阶段按文档顺序为标题注入确定性锚点 ID（`toc-msg-${messageId}-h-${index}`）。
 
 ## `SettingsModal.tsx` — 设置弹窗
 
-**职责**: 提供一个集中的界面，让用户管理应用的所有配置。它被设计为一个包含选项卡的模态框。
+**职责**: 提供一个集中界面管理所有配置，并在存在未保存子表单编辑（Provider、Model、TempModel、Character、Skill、Template 或便利贴）时通过确认弹窗拦截关闭或主保存操作（`hasUnsavedEdits`）。
 
 ### General Tab
 
-*   **活跃模型选择**: 允许用户从所有已配置的模型中选择一个作为当前聊天使用的模型。
-*   **活跃角色预览**: 显示当前激活的角色名称及其系统提示词摘要（角色管理已移至 Characters tab）。
-*   **UI 开关**: 控制各种前端显示效果，如自动滚动、是否折叠思考过程等。
+*   **活跃模型选择 (`ActiveModelDropdown`)**: 从常规模型（按 Provider 分组）及临时模型中选择当前活跃模型。
+*   **活跃角色预览**: 显示当前激活的角色名称及其系统提示词摘要。
+*   **选项开关**: 控制 `autoScroll`、`collapseThinkingFinished`、`renderThinkingAsMarkdown`、`trimThinkingSpaces`（仅影响前端展示的思考前导空格清理）、`stripThinkingForApi`（向 API 隐藏历史思考块）以及 `userAsSystem`（以 `role: 'user'` + `<system>` 包装发送系统提示词）。
+*   **全局便利贴 (`stickyNotes`)**: 采用拟真胶带纸张卡片样式的便签面板，支持新增、编辑与删除，持久化至 `settings.json`。
+*   **危险区域操作**:
+    *   **导出为 ChatGPT 格式**: 通过分片时间弹窗（`chatgptChunks`）过滤目标更新时间之后的会话并支持编辑各时间点备注（`chatgptChunkRemarks`）；调用 `shared/chatgpt-export.ts` 生成 `All_Conversations.zip` 及各非空角色子压缩包（每个均含 `conversations.json`、`user.json`、`export_manifest.json`），导出成功后自动追加当前时间分片。
+    *   **强制清洗数据**: 调用 `/api/sessions/clean` 规范化所有会话数据。
 
 ### Providers Tab
 
-*   **供应商管理**: 允许用户添加、编辑、删除 AI 供应商实例 (ProviderInstance)。
-*   **连接配置**: 在 `ProviderEditor` 子组件中，用户可以配置供应商类型（Google, Nvidia, OpenAI Compatible）、API Key、Base URL 等连接信息。
+*   **供应商管理**: 通过 `ProviderEditor` 添加、编辑、删除 `ProviderInstance`（配置类型、Base URL、API Key、Env Key、Extra Config JSON 及模型同步模式 `modelSyncType`: `none` / `json` / `v1_models`）。
 
 ### Models Tab
 
-*   **模型管理**: 允许用户添加、编辑、删除模型实例 (ModelInstance)。
-*   **参数配置**: 在 `ModelEditor` 子组件中，用户可以将一个模型绑定到一个供应商，并配置其特定参数，如模型 ID、Temperature、Max Tokens 等。
-
-
-*   **危险区域操作**:
-    *   **Claude 格式导出**: 将所有会话数据转换为符合 Claude 官方规范的 JSON 格式并下载，自动处理思考过程块和时间戳精度。导出的主 ZIP 包含一个特殊的 `All_Conversations.zip` 子压缩包（内含所有符合日期限制且经过排序的对话记录），以及各个角色的独立子压缩包。所有导出数据均先按 character 拼音或字母正序排序，然后按更新时间降序排序。每个子压缩包都是一个完整的 Claude 导出包（`conversations.json` + `users.json` + `projects.json`，DEFLATE 压缩），具体字段构造见 `shared/claude-export.ts`，这是 Gemini「Import chats」能识别来源应用的前提。
-    *   **强制清洗数据**: 移除数据中的废弃字段，保持数据整洁。
+*   **临时模型 (Temp Models)**: 置顶区域管理独立于 Provider 的临时模型（`TempModelEditor`，强制限制 `temperature` 范围为 `0`–`2`、`maxTokens` 范围为 `1`–`1000000`）。
+*   **常规模型**: 手动配置模型按 Provider 直接展示；通过 `json` 或 `/v1/models` 同步的模型分别放入默认折叠的手风琴面板中。
+*   **底部吸底栏**: `Add Temp Model` 与 `Add Model` 按钮固定吸底停靠并预留底部留白，避免遮挡长列表末尾项。
 
 ### Characters Tab
 
-*   **角色管理**: 允许用户添加、编辑、删除角色 (Character)。每个角色包含名称和系统提示词。
-*   **系统提示词迁移**: 原有 `systemPrompt` 字段被迁移为默认角色。后端生成时优先使用 `activeCharacterId` 对应的角色的 `systemPrompt`，若不存在则回退到 `systemPrompt` 字段。
+*   **角色管理**: 添加、编辑、删除 `Character`。删除角色时弹出过继确认框，要求选择剩余角色（或置空）接管其关联会话并维护链式重映射（`characterReassignments`），主保存时通过 `api.sessions.update` 逐会话更新（带容错统计）。
 
 ### Skills Tab
 
-*   **技能管理**: 允许用户添加、编辑、删除独立于角色的技能提示词 (Skill)。每个技能包含名称和提示词内容。默认包含 "Assistant" 技能。
+*   **技能管理**: 添加、编辑、删除独立于角色的技能提示词 (`Skill`)，默认包含 `"Assistant"` 技能。
 
 ### Templates Tab
 
-*   **模板管理**: 允许用户通过图形界面添加、编辑、删除、上下移动（Reorder）聊天自动填入模板（如三角形基础、锐角三角形等数学题目常用句式）。编辑内容支持多行文本。保存后会通过 `/api/templates` 持久化到服务器的 `data/templates.json` 中。
+*   **模板管理**: 添加、编辑、删除聊天自动填入模板；列表按名称自动排序（`sortTemplates`），保存后通过 `/api/templates` 持久化到 `data/templates.json`。

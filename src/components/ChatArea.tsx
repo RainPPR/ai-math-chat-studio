@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo, useDeferredValue } from 'react';
 import { ChatSession, ChatMessage, UserSettings, Template } from '../types';
 import { api } from '../lib/api';
+import { loadStoredBoolean, loadStoredNumber, saveStoredBoolean, saveStoredNumber } from '../lib/utils';
 import {
   Send, Loader2, Copy, Check, Download, RefreshCcw, Play, SquareTerminal,
   AlertCircle, X, ChevronDown, Bot, Sparkles, FileText, Eye, Printer, Edit,
@@ -279,6 +280,24 @@ const estimateTokens = (text: string) => {
 
 const DRAFT_STORAGE_KEY = 'chat_drafts';
 export const NEW_CHAT_DRAFT_KEY = '__new_chat_draft__';
+const INPUT_HEIGHT_STORAGE_KEY = 'chat_input_height';
+const MIN_INPUT_HEIGHT = 44;
+const TOC_WIDTH_STORAGE_KEY = 'chat_toc_width';
+const MIN_TOC_WIDTH = 200;
+const MAX_TOC_WIDTH = 600;
+const DEFAULT_TOC_WIDTH = 288;
+const TOC_OPEN_STORAGE_KEY = 'chat_toc_open';
+
+const getMaxInputHeight = (): number => {
+  if (typeof window === 'undefined') {
+    return 480;
+  }
+  return Math.max(MIN_INPUT_HEIGHT, Math.floor(window.innerHeight * 0.6));
+};
+
+const clampInputHeight = (height: number): number => {
+  return Math.max(MIN_INPUT_HEIGHT, Math.min(Math.round(height), getMaxInputHeight()));
+};
 
 const getDraftKey = (sessionId?: string, isUnsaved?: boolean): string => {
   if (!sessionId || isUnsaved) {
@@ -498,34 +517,115 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const expandedModalRef = useRef<HTMLDivElement>(null);
   const expandedTextareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const [inputHeight, setInputHeight] = useState<number>(() =>
+    loadStoredNumber(INPUT_HEIGHT_STORAGE_KEY, MIN_INPUT_HEIGHT, MIN_INPUT_HEIGHT, Number.MAX_SAFE_INTEGER)
+  );
+  const [isResizingInput, setIsResizingInput] = useState(false);
+  const chatInputRef = useRef<HTMLTextAreaElement>(null);
+  const inputHeightRef = useRef<number>(inputHeight);
+  const dragCleanupRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (dragCleanupRef.current) {
+        dragCleanupRef.current();
+      }
+    };
+  }, []);
+
+  const handleInputResizePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') {
+      return;
+    }
+    e.preventDefault();
+
+    if (dragCleanupRef.current) {
+      dragCleanupRef.current();
+    }
+
+    const startY = e.clientY;
+    let startHeight = clampInputHeight(inputHeightRef.current);
+    if (chatInputRef.current) {
+      const rect = chatInputRef.current.getBoundingClientRect();
+      if (rect.height > 0) {
+        startHeight = clampInputHeight(rect.height);
+      }
+    }
+
+    const prevUserSelect = document.body.style.userSelect;
+    const prevCursor = document.body.style.cursor;
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'ns-resize';
+    setIsResizingInput(true);
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const deltaY = startY - moveEvent.clientY;
+      const nextHeight = clampInputHeight(startHeight + deltaY);
+      inputHeightRef.current = nextHeight;
+      setInputHeight(nextHeight);
+    };
+
+    const cleanup = () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+      document.body.style.userSelect = prevUserSelect;
+      document.body.style.cursor = prevCursor;
+      setIsResizingInput(false);
+      dragCleanupRef.current = null;
+    };
+
+    const handlePointerUp = () => {
+      saveStoredNumber(INPUT_HEIGHT_STORAGE_KEY, inputHeightRef.current, MIN_INPUT_HEIGHT, getMaxInputHeight());
+      cleanup();
+    };
+
+    dragCleanupRef.current = cleanup;
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+  }, []);
+
   const [isSystemPromptModalOpen, setIsSystemPromptModalOpen] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
 
   // TOC State
   const [isTOCOpen, setIsTOCOpen] = useState(() => {
-    if (typeof window !== 'undefined' && window.innerWidth >= 1280) {
-      return true;
+    if (typeof window === 'undefined' || window.innerWidth < 768) {
+      return false;
     }
-    return false;
+    return loadStoredBoolean(TOC_OPEN_STORAGE_KEY, window.innerWidth >= 1280);
   });
   const [tocMaxLevel, setTocMaxLevel] = useState(6);
-  const [tocWidth, setTocWidth] = useState(288);
+  const [tocWidth, setTocWidth] = useState(() =>
+    loadStoredNumber(TOC_WIDTH_STORAGE_KEY, DEFAULT_TOC_WIDTH, MIN_TOC_WIDTH, MAX_TOC_WIDTH)
+  );
   const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
+
+  const handleSetTocOpen = useCallback((nextOpen: boolean) => {
+    setIsTOCOpen(nextOpen);
+    if (!isMobile) {
+      saveStoredBoolean(TOC_OPEN_STORAGE_KEY, nextOpen);
+    }
+  }, [isMobile]);
 
   const handleTocMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     const startX = e.clientX;
     const startWidth = tocWidth;
+    let latestWidth = startWidth;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = startX - moveEvent.clientX;
-      const newWidth = Math.max(200, Math.min(600, startWidth + deltaX));
+      const newWidth = Math.max(MIN_TOC_WIDTH, Math.min(MAX_TOC_WIDTH, startWidth + deltaX));
+      latestWidth = newWidth;
       setTocWidth(newWidth);
     };
 
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      saveStoredNumber(TOC_WIDTH_STORAGE_KEY, latestWidth, MIN_TOC_WIDTH, MAX_TOC_WIDTH);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -577,11 +677,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     setInput(draft);
     lastInputRef.current = draft;
     currentInputRef.current = draft;
-    const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 256)}px`;
-    }
   }, [session?.id, isUnsavedSession]);
 
   const handleInputChange = (value: string) => {
@@ -882,12 +977,15 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
   const handleSend = () => {
     if (input.trim() && !isGenerating) {
+      if (draftTimeoutRef.current) {
+        clearTimeout(draftTimeoutRef.current);
+        draftTimeoutRef.current = null;
+      }
       onSendMessage(input);
       clearDraft(session?.id, isUnsavedSession);
       setInput('');
       lastInputRef.current = '';
-      const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
-      if (textarea) textarea.style.height = 'auto';
+      currentInputRef.current = '';
     }
   };
 
@@ -897,12 +995,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     setTemplateDropdownOpen(false);
 
     setTimeout(() => {
-      const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
-      if (textarea) {
-        textarea.style.height = 'auto';
-        textarea.style.height = `${Math.min(textarea.scrollHeight, 256)}px`;
-        textarea.focus();
-      }
+      chatInputRef.current?.focus();
     }, 0);
   };
 
@@ -1114,6 +1207,21 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     tocToggleClass = 'bg-blue-600/20 text-blue-300 border border-blue-500/30';
   }
 
+  let inputBoxContainerClass =
+    'max-w-4xl mx-auto relative flex items-end gap-2 sm:gap-3 bg-gray-800 rounded-xl border transition-colors p-2 shadow-lg ';
+  if (isResizingInput) {
+    inputBoxContainerClass += 'border-blue-500/70';
+  } else {
+    inputBoxContainerClass += 'border-gray-700 focus-within:border-gray-500';
+  }
+
+  let resizeIndicatorClass = 'h-[3px] rounded-full transition-all ';
+  if (isResizingInput) {
+    resizeIndicatorClass += 'bg-blue-400 w-16 opacity-100';
+  } else {
+    resizeIndicatorClass += 'bg-gray-500/60 w-12 opacity-0 group-hover/resize:opacity-100 group-hover/resize:bg-blue-400';
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full relative bg-gray-900 overflow-hidden">
       {/* Top Header */}
@@ -1198,7 +1306,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           </button>
 
           <button
-            onClick={() => setIsTOCOpen(!isTOCOpen)}
+            onClick={() => handleSetTocOpen(!isTOCOpen)}
             className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors cursor-pointer ${tocToggleClass}`}
             title="切换 TOC 目录"
           >
@@ -1267,7 +1375,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           onMaxLevelChange={setTocMaxLevel}
           activeHeadingId={activeHeadingId}
           isOpen={isTOCOpen}
-          onClose={() => setIsTOCOpen(false)}
+          onClose={() => handleSetTocOpen(false)}
           onSelectHeading={handleSelectHeading}
           isGenerating={isGenerating}
           isMobile={isMobile}
@@ -1563,16 +1671,25 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto relative flex items-end gap-2 sm:gap-3 bg-gray-800 rounded-xl border border-gray-700 focus-within:border-gray-500 transition-colors p-2 shadow-lg">
+        <div className={inputBoxContainerClass}>
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="拖动调整输入框高度"
+            title="拖动调整输入框高度"
+            onPointerDown={handleInputResizePointerDown}
+            className="group/resize absolute -top-1.5 left-3 right-3 h-3 cursor-ns-resize touch-none flex items-center justify-center z-10 select-none"
+          >
+            <div className={resizeIndicatorClass} />
+          </div>
           <textarea
             id="chat-input"
+            ref={chatInputRef}
             value={input}
             onChange={(e) => { handleInputChange(e.target.value); }}
             placeholder="Type a message... (Ctrl+Enter to send, Enter/Shift+Enter for newline)"
-            className="flex-1 bg-transparent text-white resize-none max-h-64 min-h-[44px] p-2.5 sm:p-3 focus:outline-none placeholder-gray-500 text-sm"
-            rows={1}
-            style={{ height: 'auto' }}
-            onInput={(e) => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = `${Math.min(t.scrollHeight, 256)}px`; }}
+            className="flex-1 bg-transparent text-white resize-none min-h-[44px] max-h-[60vh] overflow-y-auto p-2.5 sm:p-3 focus:outline-none placeholder-gray-500 text-sm leading-5"
+            style={{ height: `${inputHeight}px` }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && e.ctrlKey) {
                 e.preventDefault();
