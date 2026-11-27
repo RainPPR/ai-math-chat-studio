@@ -14,6 +14,7 @@ interface ProviderInstance {
   envKey?: string;      // 环境变量前缀（如 NVIDIA_API_KEY）
   extra?: Record<string, any>;  // 额外配置（高拓展性）
   modelSource?: string; // 远程模型列表 JSON URL（仅适用于 nvidia/openai-compatible，启动时自动同步）
+  modelSyncType?: 'none' | 'json' | 'v1_models'; // 模型列表同步模式
 }
 ```
 
@@ -78,7 +79,7 @@ interface Skill {
 }
 ```
 
-> **设计意图**：技能是独立于角色的可多选提示词模块。默认系统包含 "Assistant" 技能。选中的 Skills 在发送消息时会自动被包裹为 `# Skill: ${name}\n${prompt}` 注入至 Character 系统提示词上方，且整体排在 KaTeX/Markdown 格式指令之后。
+> **设计意图**：技能是独立于角色的可多选提示词模块。默认系统包含 "Assistant" 技能。发送消息时，后端通过 `shared/system-prompt.ts` 依次拼接活跃 Character 系统提示词（或回退 `systemPrompt`）、选中的 Skills 块（`# Skill: ${name}\n${prompt}`），并在末尾追加 KaTeX/Markdown 格式指令（`FORMAT_INSTRUCTIONS`）。
 
 ### Template（自动填入模板）
 
@@ -95,6 +96,8 @@ interface Template {
 ### UserSettings（用户设置）
 
 ```typescript
+type StarColor = 'yellow' | 'rose' | 'blue' | 'green' | 'orange';
+
 interface UserSettings {
   activeModelId?: string;           // 当前活跃模型的 ModelInstance.id 或 TempModel.id
   activeCharacterId?: string;       // 当前活跃角色的 Character.id
@@ -108,8 +111,13 @@ interface UserSettings {
   renderThinkingAsMarkdown: boolean;
   autoScroll: boolean;
   collapseThinkingFinished: boolean;
-  trimThinkingSpaces: boolean;
-  starredSessions?: Record<string, string>; // 加星会话映射（会话 ID => 星星颜色 ID）
+  trimThinkingSpaces: boolean;      // 仅作用于前端 parseMessageContent 渲染展示，不改写存储或分块编辑内容
+  stripThinkingForApi?: boolean;    // 构造 API 请求时过滤历史模型消息（非末条）的 <think> 块
+  userAsSystem?: boolean;           // 以 role: 'user' + <system>...</system> 传入系统提示词
+  starredSessions?: Record<string, StarColor>; // 加星会话映射（会话 ID => 星星颜色 ID）
+  chatgptChunks?: string[];         // ChatGPT 导出时间分片点（ISO 8601 字符串列表）
+  chatgptChunkRemarks?: Record<string, string>; // 分片时间戳备注映射
+  stickyNotes?: { id: string; content: string; createdAt: string }[]; // 全局便利贴
 }
 ```
 
@@ -166,39 +174,42 @@ interface GenerationProvider {
 
 ### 本地 JSON 文件存储
 
-数据通过 Express 服务端 REST API 读写本地 JSON 文件：
+数据通过 Express 服务端 REST API 读写本地 JSON 文件；`server/lib/settings-helper.ts` 负责将配置列表分拆存储到独立 JSON 文件（仅写入内容发生变更的文件，并通过 `.tmp-` 与 `.bak-` 实现多文件事务写入与回滚），并在启动/加载时透明执行旧版单文件字段及 `claudeChunks` → `chatgptChunks` 的迁移：
 
 **文件结构**：
 
 ```
 /data/
-  settings.json           # UserSettings（单文件）
-  providers.json          # ProviderInstance[]（提供商列表）
-  models.json             # ModelInstance[]（模型列表）
+  settings.json           # UserSettings 通用设置（不含分拆列表）
+  providers.json          # ProviderInstance[]（提供商列表，自动排序）
+  models.json             # ModelInstance[]（模型列表，自动排序）
   temp-models.json        # TempModel[]（临时模型列表，包含 API Key，已 Git 忽略）
-  characters.json         # Character[]（角色列表）
-  skills.json             # Skill[]（技能列表）
-  templates.json          # Template[]（聊天自动填入模板单文件）
-  sessions/{sessionId}.json  # ChatSession（每会话一个文件）
+  characters.json         # Character[]（角色列表，自动排序）
+  skills.json             # Skill[]（技能列表，自动排序）
+  templates.json          # Template[]（聊天自动填入模板单文件，自动排序）
+  sessions/{sessionId}.json  # ChatSession（每会话一个文件，characterId 始终位于 JSON 最后字段）
   log/                    # 日志文件（YYYY-MM-DD.log）
 ```
 
 **API 端点**：
 
-- `GET /api/settings` — 读取设置
-- `PUT /api/settings` — 写入设置
+- `GET /api/settings` — 读取并合并分拆设置
+- `PUT /api/settings` — 分拆排序并原子写入设置
 - `GET /api/templates` — 读取模板列表
-- `PUT /api/templates` — 保存/更新模板列表（带严格的结构和非空校验）
+- `PUT /api/templates` — 保存/更新模板列表（严格校验 `name` 非空、`content` 为字符串，并经 `sortTemplates` 自动排序）
 - `GET /api/sessions` — 列出所有会话
 - `GET /api/sessions/:id` — 获取单个会话
-- `DELETE /api/sessions/:id` — 删除会话
-- `PATCH /api/sessions/:id` — 更新会话元数据或消息。接受 `title`、`characterId` 和 `messages`（数组类型，元素结构需符合 `ChatMessage` 规范，必须包含 `id`、`role`、`content`、`createdAt`）
+- `DELETE /api/sessions/:id` — 停止生成并删除会话
+- `PATCH /api/sessions/:id` — 更新会话元数据或消息。接受 `title`、`characterId` 和 `messages`（校验数组结构与唯一 `id`）。若磁盘上不存在目标会话，`GenerationManager.updateSession()` 返回 `null` 并响应 `404`（防止生成幽灵会话）
+- `POST /api/sessions/:id/duplicate` — 复制会话（重新生成会话及消息 UUID）
+- `POST /api/sessions/clean` — 批量规范化清洗所有会话（转换旧式思考块、合并连续 `<think>` 块、重新生成标题并将 `characterId` 置于末尾）
 - `POST /api/sessions/:id/messages` — 发送消息并触发生成
 - `GET /api/sessions/:id/generation` — SSE 订阅生成进度
 - `DELETE /api/sessions/:id/generation` — 停止生成
 - `GET /api/generation-status` — 获取正在运行的会话 ID 列表（页面刷新后恢复状态用）
 - `POST /api/sessions/:id/retry` — 重试消息
 - `POST /api/sessions/:id/continue` — 继续生成
+- `POST /api/sessions/:id/regenerate` — 保留思考过程重新生成正文
 - `GET /api/providers` — 获取内置提供商类型列表
 - `POST /api/providers/:type/models` — 获取指定类型的模型列表（POST 避免在 URL 中传递敏感信息）
 
@@ -208,51 +219,57 @@ interface GenerationProvider {
 const DEFAULT_SETTINGS: UserSettings = {
   providers: [],
   models: [],
+  tempModels: [],
   characters: [],
+  skills: DEFAULT_SKILLS,
+  activeSkillIds: [],
   systemPrompt: '',
   renderThinkingAsMarkdown: false,
   autoScroll: true,
   collapseThinkingFinished: true,
   trimThinkingSpaces: false,
+  stripThinkingForApi: false,
+  userAsSystem: false,
   starredSessions: {},
+  chatgptChunks: [],
+  chatgptChunkRemarks: {},
+  stickyNotes: [],
 };
 ```
 
 > **设计要点**：所有参数（temperature、maxTokens 等）为 "Unset" 时不传给 API，由供应商使用默认值。已删除 `topP` 参数。
 
-## Claude 导出包（`shared/claude-export.ts`）
+## ChatGPT 导出包（`shared/chatgpt-export.ts`）
 
-「导出为 Claude 格式」生成的每个子压缩包都必须是一个**完整的 Claude 导出包**，而不是单独一个 `conversations.json`：
+「导出为 ChatGPT 格式」生成的每个子压缩包都采用 OpenAI ChatGPT 官方导出包结构，由 `buildChatGPTConversation()` 与 `buildChatGPTBundleFiles()` 集中构造：
 
 ```
 All_Conversations.zip / <角色名>.zip
-├── conversations.json   # Conversation[]
-├── users.json           # [{ uuid, full_name, email_address, verified_phone_number }]
-└── projects.json        # []
+├── conversations.json     # ChatGPTConversation[]
+├── user.json              # ChatGPTUser
+└── export_manifest.json   # ChatGPTExportManifest（记录文件字节大小与分片信息）
 ```
 
 ```typescript
-interface ClaudeConversation {
-  uuid: string;             // 会话 id（UUID v4，全局唯一）
-  name: string;             // 标题，无标题写 ""
-  created_at: string;       // YYYY-MM-DDTHH:MM:SS.ffffffZ
-  updated_at: string;       // 同上，且 >= created_at
-  account: { uuid: string };// 账号主键，与 users.json 一致
-  chat_messages: ClaudeMessage[];
+interface ChatGPTNode {
+  id: string;
+  message: ChatGPTMessage | null; // 根节点 'client-created-root' 的 message 为 null
+  parent: string | null;          // 线性父节点链接
 }
 
-interface ClaudeMessage {
-  uuid: string;             // 消息 id（UUID v4，全局唯一）
-  text: string;             // 纯文本正文，必填；正文被 <think> 吃空时回落为思考内容
-  content: ClaudeContentBlock[];  // thinking 块在前、text 块在后
-  sender: 'human' | 'assistant';
-  created_at: string;       // 同对话层级格式，组内单调不降
-  updated_at: string;
-  attachments: [];
-  files: [];
+interface ChatGPTConversation {
+  id: string;
+  title: string;
+  create_time: number;            // Unix 浮点秒级时间戳
+  update_time: number;
+  mapping: Record<string, ChatGPTNode>;
+  current_node: string;
+  conversation_id: string;
+  default_model_slug: string;     // 'auto'
+  // ...其余官方导出兼容元数据字段
 }
 ```
 
-> **约束来源**：Gemini 的 Import chats 自 2026-09 起在「来源识别」阶段校验整包特征，
-> 只放 `conversations.json` 或消息缺少 `text` 会被判定为「无法读取上传的文件。请确保该文件来自受支持的 AI 应用」。
-> 时间戳必须是 6 位微秒 + 大写 `Z`；`sender` 只能是 `human` / `assistant`（不是 `user`）。
+> **处理细节**：
+> - `assistant`（本地 `model`）消息在导出前通过 `extractThinkingBlocks(rawContent, false).mainContent` 剥离已闭合的 `<think>...</think>` 思考过程（`allowUnclosed = false` 以避免未闭合标签误删正文）。
+> - 分片时间过滤支持基于 `settings.chatgptChunks` 仅导出更新于指定 ISO 时间戳及之后的会话，并忽略无会话命中的角色子压缩包；导出成功后自动追加新分片时间戳。
