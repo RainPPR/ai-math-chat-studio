@@ -1,397 +1,3 @@
-### 代码质量与格式规范
-
-```text
-本项目执行严格的代码质量和格式检查。所有代码必须通过 Prettier 和 TypeScript 的严格模式检查。
-```
-
-### 代码质量与格式规范 / 检查工具
-
-```text
-- **Formatting**: `bun run pretty` (prettier --check)
-- **Type Check**: `bun run check` (tsc --noEmit --strict)
-```
-
-### 代码质量与格式规范 / 修复工具
-
-```text
-- **自动修复格式**: `bun run pretty:fix`
-```
-
-### 代码质量与格式规范 / 严格修复规则
-
-```text
-1. **禁止未使用变量**: 所有的未使用变量必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
-2. **禁止未使用的表达式**: 严禁将三元运算符或逻辑表达式作为独立语句使用。应使用标准的 `if/else` 语句。
-3. **严格类型检查**: TypeScript 必须处于 `--strict` 模式。严禁无故使用 `@ts-ignore` 或 `@ts-expect-error`。如果第三方库缺少类型或存在上游 Bug，必须在注释中说明原因。
-4. **文档同步**: 任何逻辑变更必须同步更新 `AGENTS.md` 和 `docs/` 目录下的相关文档。
-```
-
-### 代码质量与格式规范 / 最佳实践 (TypeScript)
-
-```text
-- **Make Illegal States Unrepresentable**: 使用辨析联合类型 (Discriminated Unions) 确保状态合法。
-- **Runtime Validation**: 对外部数据（API 响应、本地存储）使用 Zod 等工具进行运行时验证。
-- **Branded Types**: 对 ID 等原始类型使用 Branded Types 以增强区分度。
-- **Exhaustive Checks**: 使用 `never` 类型确保 `switch` 语句处理了所有可能的情况。
-```
-
-### 项目架构概览
-
-```text
-
-```
-
-### 项目架构概览 / 项目名称
-
-```text
-**AI Math & Chat Studio** — 一款专注于对话体验的多会话 AI 聊天应用，支持丰富的数学公式渲染和多供应商接入。
-```
-
-### 项目架构概览 / 整体架构
-
-```text
-graph TD
-    subgraph Frontend (React SPA)
-        A[Sidebar] --> |Manages sessions| App
-        B[ChatArea] --> |Displays messages, handles input| App
-        C[SettingsModal] --> |Configures app| App
-        D[MarkdownRenderer] --> |Renders content| B
-
-        subgraph App State & Logic
-            App(App.tsx - State Center)
-        end
-
-        E[src/lib/api.ts] --> |REST+SSE Client| F
-        App --> |Uses| E
-    end
-
-    subgraph Backend (Express 5)
-        F(server/app.ts - Express App)
-        subgraph API Routes (server/routes/)
-            R_Settings[settings.ts]
-            R_Sessions[sessions.ts]
-            R_Chat[chat.ts]
-            R_Models[models.ts]
-        end
-
-        subgraph Core Services (server/services/)
-            S_GenMan[generation-manager.ts]
-            S_Logger[logger.ts]
-        end
-
-        subgraph AI Providers (server/providers/)
-            P_BuiltIn[built-in.ts]
-            P_Config[config.ts]
-            P_Stream[stream.ts]
-        end
-
-        F --> R_Settings
-        F --> R_Sessions
-        F --> R_Chat
-        F --> R_Models
-        F -- Initializes --> S_Logger
-
-        R_Chat --> S_GenMan
-        S_GenMan --> P_Stream
-        P_Stream --> P_Config
-        P_Config --> P_BuiltIn
-    end
-
-    subgraph Data Layer
-        subgraph Local Storage (data/)
-            Data_Settings[settings.json]
-            Data_Sessions[sessions/*.json]
-            Data_Logs[log/*.log]
-        end
-    end
-
-    subgraph External Services
-        Ext_Google[Google Gemini API]
-        Ext_Nvidia[Nvidia NIM API]
-        Ext_OpenAI[OpenAI Compatible API]
-    end
-
-    F -- Reads/Writes --> Data_Settings
-    F -- Reads/Writes --> Data_Sessions
-    F -- Writes --> Data_Logs
-    P_Stream -- Calls --> Ext_Google
-    P_Stream -- Calls --> Ext_Nvidia
-    P_Stream -- Calls --> Ext_OpenAI
-```
-
-### 项目架构概览 / 核心设计
-
-```text
-1.  **后端驱动生成**：所有 AI 生成任务由后端的 `GenerationManager` 服务管理。这意味着即使用户关闭浏览器或断开连接，生成任务也会在服务器上继续运行，直到完成。
-
-2.  **核心提示词与角色/技能架构 (Provider + Model + Character + Skills)**：
-    *   **Provider (供应商)**: 定义了如何连接到一个 AI 服务（如 Google, Nvidia）。用户在 `Settings > Providers` 中配置 API Key 和 Base URL 等连接信息。
-    *   **Model (模型)**: 定义了要使用的具体模型及其参数（如 `gemini-1.5-pro`, temperature）。每个模型都必须关联一个已配置的供应商实例。
-    *   **Character (角色)**: 定义了系统提示词 (System Prompt)。用户可以在 `Settings > Characters` 中创建多个角色（如"代码专家"、"数学导师"），并在聊天时灵活切换。
-    *   **Skill (技能)**: 定义了独立的模块化技能提示词（如 "Assistant"）。用户可在 `Settings > Skills` 中定义，在 ChatArea 浮动栏中多选。后端按 `FORMAT_INSTRUCTIONS` -> Selected Skills -> Character System Prompt 的层级组合系统提示词。
-
-3.  **统一 API 客户端**：前端通过 `src/lib/api.ts` 与后端通信。这个模块封装了所有的 REST API 调用和 SSE (Server-Sent Events) 订阅逻辑，为上层组件提供了简洁的接口。
-
-4.  **模块化后端**：后端代码（位于 `server/` 目录）被清晰地划分为不同的职责模块：
-    *   `routes/`: 定义 Express API 端点。
-    *   `services/`: 包含核心业务逻辑，如 `GenerationManager`。
-    *   `providers/`: 封装了与外部 AI API 交互的所有逻辑。
-
-5.  **实时日志系统**：系统通过 `server/services/logger.ts` 拦截 `console` 方法（log, info, warn, error），并将日志持久化到 `data/log/`。日志文件名采用 `YYYY-MM-DD.log` 格式，使用 UTC 时间。
-
-6.  **SSE 实时订阅**：前端使用 `EventSource` API 订阅后端的 `/api/sessions/:id/generation` 端点。后端通过这个长连接实时推送 AI 生成的 `delta` (内容块)、`done` (完成)、`error` (错误) 或 `stopped` (停止) 事件，实现了打字机效果和实时状态更新。
-```
-
-### 项目架构概览 / 性能优化
-
-```text
-
-```
-
-### 项目架构概览 / 性能优化 / 1. 同步标题生成
-
-```text
-**实现**: `generateTitleFromMarkdown()` 使用纯 JavaScript 字符串操作，无需异步：
-- 使用 `unicodeit` 将 LaTeX 数学公式转换为 Unicode 字符
-- 使用 `markdown-to-txt` 清理 Markdown 语法
-- 只处理前200个字符，保证处理速度
-- 同步执行，生成后直接保存到 session.json，无需 SSE 通知前端
-```
-
-### 项目架构概览 / 性能优化 / 2. 多并发生成优化
-
-```text
-**问题**: 同时运行多个 AI 解题会话时，快速新增或切换对话会导致卡顿，可能存在以下问题：
-1. **Race Condition**: 新建会话立即发送消息时，会话未完全创建就开始生成
-2. **文件写入冲突**: 频繁写入 session.json 导致磁盘 I/O 瓶颈
-3. **通知风暴**: 每个 token 都触发 SSE 通知，压垮客户端
-4. **内存泄漏**: 已完成的任务不会自动清理
-5. **删除会话冲突**: 删除正在生成的会话时仍会尝试写入文件
-6. **SSE 连接资源泄漏**: 客户端断开连接时清理不完善
-
-**解决方案**:
-```
-
-### 项目架构概览 / 性能优化 / 2. 多并发生成优化 / 后端优化
-
-```text
-**防抖写操作（Debounced Writes）**: 
-- 实现 `debouncedWrite()` 方法，对同一 session 的文件写入进行批处理
-- 减少频繁的磁盘 I/O 操作，避免写操作堆积导致的性能问题
-- 删除会话时通过 `deletedSessions` Set 跟踪，防止向已删除的会话写入
-
-**通知节流（Throttled Notifications）**:
-- 在 `runGeneration()` 中实现通知节流机制，限制为最多 20 次/秒
-- 防止高频内容更新压垮客户端，提升整体响应性
-
-**任务清理（Task Cleanup）**:
-- 生成完成或中止时自动清理 `tasks` Map
-- `deleteSession()` 方法中调用 `clearSessionOperations()` 完整清理
-
-**生成器启动优化**:
-- `startGeneration()` 改为 async 方法，在启动新生成前等待旧任务清理（50ms）
-- 防止旧任务的最终写入与新任务冲突
-
-**中止处理优化**:
-- `runGeneration()` 检测 `stopped` 状态后发送 `stopped` 事件而非 `done`
-- 中止后不写入最终消息到 session 文件
-
-**SSE 连接健壮性增强**:
-- 添加 `X-Accel-Buffering: no` 头部，禁用 Nginx 等代理的缓冲
-- 实现指数退避策略（exponential backoff）替代固定轮询等待任务
-- 使用 `isClosed` 标志防止双重清理
-- 添加 `req.on('error')` 处理异常连接
-```
-
-### 项目架构概览 / 性能优化 / 2. 多并发生成优化 / 前端优化
-
-```text
-**新会话消息发送防抖**:
-- 在 `App.tsx` 中使用 `pendingSendsRef` 跟踪待发送的新会话消息
-- 对新建会话后的第一条消息添加 100ms 防抖延迟，避免 race condition
-
-**滚动性能优化**:
-- 在 `ChatArea.tsx` 中实现滚动节流，限制为最多 10 次/秒
-- 减少布局计算和重绘频率，改善大量内容渲染时的性能
-```
-
-### 项目架构概览 / 数据存储
-
-```text
-- **本地 JSON 文件**: 项目不依赖外部数据库，所有数据都存储在本地 `/data` 目录下的 JSON 文件中。这使得项目易于部署和迁移。
-    -   `settings.json`: 存储所有用户配置，包括供应商、模型和通用设置。
-    -   `sessions/{id}.json`: 每个聊天会话存储为一个单独的 JSON 文件。
-    -   `log/*.log`: 运行日志，记录服务器行为和 AI 调用情况。
-- **无认证**: 该应用设计为单用户本地工具，不包含用户认证系统。
-```
-
-### 项目架构概览 / 数据流：一次完整的消息交互
-
-```text
-1.  **用户发送消息**: 用户在 `ChatArea` 组件的输入框中输入消息，按下 `Ctrl+Enter`。
-2.  **前端乐观更新**: `App.tsx` 中的 `handleSendMessage` 被调用。它立即将用户的消息添加到当前会话的 `messages` 数组中，并更新 UI，提供即时反馈。
-3.  **API 调用**: `api.ts` 中的 `sendMessage` 函数被调用，向后端 `POST /api/sessions/:id/messages` 发送请求。
-4.  **后端接收**: `server/routes/chat.ts` 中的路由处理器接收到请求。
-5.  **启动生成**: 后端将用户消息保存到对应的 `session.json` 文件中，然后调用 `GenerationManager` 来启动一个新的 AI 生成任务。
-    *   **提示词注入**: 后端根据 `activeCharacterId` 及全局选择的 `activeSkillIds` 组合最终系统提示词：最头上注入 `FORMAT_INSTRUCTIONS` 格式约束，随后注入各 selected skill 块 (`# Skill: ${name}\n${prompt}`)，最后拼接角色提示词。
-6.  **SSE 连接**: 与此同时，前端的 `ChatArea` 组件通过 `useEffect` 自动订阅 `/api/sessions/:id/generation` 的 SSE 端点。
-7.  **流式响应**: `GenerationManager` 通过 `stream.ts` 调用相应的 AI Provider API。获取到的数据块被包装成 `delta` 事件，通过 SSE 连接实时发送回前端。
-8.  **前端渲染**: `ChatArea` 接收到 `delta` 事件，并将其内容追加到当前正在生成的回复中，用户看到平滑的打字机效果。
-9.  **任务结束**: 当 AI 完成生成时，后端发送 `done` 事件。前端接收到后，将最终的完整消息保存到状态中，并清理订阅。
-```
-
-### 项目架构概览 / 消息操作机制
-
-```text
-系统提供三种对已生成消息的操作机制，每种有不同的适用场景：
-```
-
-### 项目架构概览 / 消息操作机制 / 1. Retry（重试）
-
-```text
-- **触发方式**: 每条 model 消息上的 "Retry" 按钮
-- **实现逻辑**: `GenerationManager.retryMessage()` 找到该消息前面最近的 user 消息，截断从该 user 消息之后的所有消息（包括当前消息），从那个 user 消息开始重新生成
-- **适用场景**: 对某条 AI 回复完全不满意，希望完全重新开始
-```
-
-### 项目架构概览 / 消息操作机制 / 2. Regenerate（重新生成）
-
-```text
-- **触发方式**: 每条 model 消息上的 "Regenerate" 按钮
-- **实现逻辑**: `GenerationManager.regenerateMessage()` 执行以下操作：
-  1. 清洗当前消息：保留 `<details><summary>Thinking Process</summary>` 包裹的思考过程，删除正文输出部分
-  2. 截断该消息之后的所有消息
-  3. 直接对包含已有思考过程的助理消息进行流式生成（类似 Continue），不注入额外的提示词或用户指令
-- **适用场景**: AI 的思考过程有价值，但正文输出不完善或需要修正，希望在保留思考基础上直接继续输出
-```
-
-### 项目架构概览 / 消息操作机制 / 3. Continue（继续）
-
-```text
-- **触发方式**: 仅最后一条 model 消息上的 "Continue" 按钮
-- **实现逻辑**: `GenerationManager.continueGeneration()` 在会话末尾添加 user 指令，明确告知 AI 这是由于网络错误或流中断导致的，并指导 AI 根据当前状态（已开始输出 vs 仍在思考）采取相应行动
-- **适用场景**: 网络错误、流中断或 AI 输出被意外截断，需要继续完成未完成的响应
-```
-
-### 项目架构概览 / 核心设计决策
-
-```text
--   **服务端代理模式**: 所有对外部 AI API 的调用都通过 Express 后端进行。这确保了 API 密钥永远不会暴露给前端，增强了应用的安全性。
--   **三级架构 (Provider + Model + Character)**: 解耦了 API 连接信息、模型参数和角色指令，极大地提高了灵活性。
--   **思考过程包装**: 为了在 UI 中统一展示不同模型的“思考过程”(reasoning)，所有此类信息在 `GenerationManager` 中被统一包装成一个可折叠的 `<details>` HTML 标签。
--   **上下文窗口限制**: 为控制成本和 API 请求大小，每次生成只向 AI 模型发送最近的 40 条消息历史记录。
--   **文档同步规则**: `AGENTS.md` 中明确规定，任何对代码、架构或数据模型的修改都必须同步更新相关的文档，以保持其准确性。
-```
-
-### 文件结构
-
-```text
-ai-math-chat-studio/
-├── .env                      # 环境变量（不提交）
-├── .env.example              # 环境变量模板
-├── .gitignore
-├── .prettierignore           # Prettier 忽略文件
-├── AGENTS.md                 # AI 开发指导文件
-├── docs/                     # 项目文档
-│   ├── architecture.md       # 架构概览
-│   ├── api-providers.md      # AI 供应商集成
-│   ├── components.md         # 组件结构
-│   ├── data-models.md        # 数据模型
-│   ├── tech-stack.md         # 技术栈
-│   ├── linting-and-quality.md # 代码质量指南
-│   └── file-structure.md     # 本文件
-├── data/                     # 本地数据存储（不提交）
-│   ├── settings.json         # 用户设置
-│   ├── providers.json        # 提供商数据
-│   ├── models.json           # 模型数据
-│   ├── temp-models.json      # 临时模型数据
-│   ├── characters.json       # 角色数据
-│   ├── skills.json           # 技能数据
-│   ├── templates.json        # 聊天自动填入模板设置
-│   ├── sessions/             # 会话数据
-│   └── log/                  # 日志数据 (YYYY-MM-DD.log)
-├── index.html                # SPA 入口 HTML
-├── scripts/                  # 构建与辅助脚本
-│   ├── build-bundle.ts       # 打包构建
-│   ├── build-bun-compile.ts  # bun compile 可执行文件构建
-│   ├── create-server-entry.ts # 生成服务端入口
-│   ├── prepare-context7.ts   # Context7 预处理
-│   ├── sync-context7.ts      # Context7 同步
-│   ├── sync-main.ts          # 主分支同步
-│   └── claude-export-probe/  # Gemini「Import chats」导入失败排查（临时诊断用，可删）
-│       ├── README.md         # 排查结论与上传顺序
-│       ├── build_probe_zips.py # 生成格式对比用的测试 zip
-│       ├── control-sample-conversations.json # 已知可导入的最小样例
-│       └── out/              # 生成的测试 zip
-├── package.json              # 项目依赖和脚本
-├── bun.lock                  # Bun 依赖锁定文件
-├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
-├── server/                   # 后端模块
-│   ├── app.ts                # Express 5 应用组装，挂载所有路由
-│   ├── vite-helper.ts        # Vite 开发服务器辅助
-│   ├── providers/            # AI 供应商相关
-│   │   ├── built-in.ts       # 内置提供商类型定义
-│   │   ├── config.ts         # 提供商配置解析（apiKey、baseURL）
-│   │   └── stream.ts         # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
-│   ├── routes/               # API 路由
-│   │   ├── settings.ts       # /api/settings GET/PUT
-│   │   ├── templates.ts      # /api/templates GET/PUT
-│   │   ├── sessions.ts       # /api/sessions GET/GET/:id/DELETE
-│   │   ├── chat.ts           # /api/sessions/:id/messages, generation, retry, continue
-│   │   └── models.ts         # /api/providers, /api/providers/:type/models
-│   └── services/             # 核心服务
-│       ├── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
-│       └── logger.ts             # 日志服务：拦截 console 输出并持久化到 data/log/
-├── shared/                   # 前后端共享的纯函数模块
-│   ├── claude-export.ts      # Claude 导出包构造（conversations/users/projects + 时间戳规范化）
-│   ├── skills.ts             # 技能定义
-│   ├── sorting.ts            # 排序工具
-│   ├── system-prompt.ts      # 系统提示词拼装
-│   └── thinking.ts           # <think> 块解析工具
-├── src/
-│   ├── App.tsx               # 主应用组件（状态管理）
-│   ├── main.tsx              # React 入口
-│   ├── index.css             # Tailwind 导入
-│   ├── types.ts              # TypeScript 类型定义
-│   ├── vite-env.d.ts         # Vite 类型声明
-│   ├── components/
-│   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
-│   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
-│   │   ├── SettingsModal.tsx # 设置弹窗（General / Providers / Models / Characters / Skills / Templates）
-│   │   └── Sidebar.tsx       # 左侧栏（会话列表）
-│   └── lib/
-│       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
-│       └── utils.ts          # cn() 样式合并工具
-├── tsconfig.json             # TypeScript 配置
-└── vite.config.ts            # Vite 构建配置
-```
-
-### 文件结构 / 关键文件说明
-
-```text
-| 文件 | 职责 |
-|------|------|
-| `server.ts` | 入口文件，`import 'dotenv/config'` + `startApp()` |
-| `server/app.ts` | Express 5 应用组装，挂载路由，创建 GenerationManager |
-| `server/providers/built-in.ts` | 内置 3 种提供商类型定义（google / nvidia / openai-compatible） |
-| `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
-| `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
-| `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、取消。 |
-| `server/services/logger.ts` | **日志服务**：拦截 console 输出并持久化到 `data/log/`。 |
-| `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
-| `server/routes/settings.ts` | `/api/settings` GET/PUT |
-| `server/routes/templates.ts` | `/api/templates` GET/PUT |
-| `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
-| `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
-| `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
-| `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
-| `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
-| `src/components/SettingsModal.tsx` | 设置弹窗（General / Providers / Models / Characters / Skills / Templates） |
-| `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
-| `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
-| `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
-```
-
 ### 数据模型与存储
 
 ```text
@@ -907,6 +513,115 @@ bun run clean         # 清除 dist、dist-server、dist-compile、release 目�
 3. **CJK/中文优雅回退**: 确保数学公式内的中文字符（如 `\text{中文}`）优雅回退至主字体 (`--font-main`)。
 ```
 
+### 文件结构
+
+```text
+ai-math-chat-studio/
+├── .env                      # 环境变量（不提交）
+├── .env.example              # 环境变量模板
+├── .gitignore
+├── .prettierignore           # Prettier 忽略文件
+├── AGENTS.md                 # AI 开发指导文件
+├── docs/                     # 项目文档
+│   ├── architecture.md       # 架构概览
+│   ├── api-providers.md      # AI 供应商集成
+│   ├── components.md         # 组件结构
+│   ├── data-models.md        # 数据模型
+│   ├── tech-stack.md         # 技术栈
+│   ├── linting-and-quality.md # 代码质量指南
+│   └── file-structure.md     # 本文件
+├── data/                     # 本地数据存储（不提交）
+│   ├── settings.json         # 用户设置
+│   ├── providers.json        # 提供商数据
+│   ├── models.json           # 模型数据
+│   ├── temp-models.json      # 临时模型数据
+│   ├── characters.json       # 角色数据
+│   ├── skills.json           # 技能数据
+│   ├── templates.json        # 聊天自动填入模板设置
+│   ├── sessions/             # 会话数据
+│   └── log/                  # 日志数据 (YYYY-MM-DD.log)
+├── index.html                # SPA 入口 HTML
+├── scripts/                  # 构建与辅助脚本
+│   ├── build-bundle.ts       # 打包构建
+│   ├── build-bun-compile.ts  # bun compile 可执行文件构建
+│   ├── create-server-entry.ts # 生成服务端入口
+│   ├── prepare-context7.ts   # Context7 预处理
+│   ├── sync-context7.ts      # Context7 同步
+│   ├── sync-main.ts          # 主分支同步
+│   └── claude-export-probe/  # Gemini「Import chats」导入失败排查（临时诊断用，可删）
+│       ├── README.md         # 排查结论与上传顺序
+│       ├── build_probe_zips.py # 生成格式对比用的测试 zip
+│       ├── control-sample-conversations.json # 已知可导入的最小样例
+│       └── out/              # 生成的测试 zip
+├── package.json              # 项目依赖和脚本
+├── bun.lock                  # Bun 依赖锁定文件
+├── server.ts                 # 入口文件（import 'dotenv/config' + startApp()）
+├── server/                   # 后端模块
+│   ├── app.ts                # Express 5 应用组装，挂载所有路由
+│   ├── vite-helper.ts        # Vite 开发服务器辅助
+│   ├── providers/            # AI 供应商相关
+│   │   ├── built-in.ts       # 内置提供商类型定义
+│   │   ├── config.ts         # 提供商配置解析（apiKey、baseURL）
+│   │   └── stream.ts         # 流式 API 调用（Google / Nvidia / OpenAI 兼容）
+│   ├── routes/               # API 路由
+│   │   ├── settings.ts       # /api/settings GET/PUT
+│   │   ├── templates.ts      # /api/templates GET/PUT
+│   │   ├── sessions.ts       # /api/sessions GET/GET/:id/DELETE
+│   │   ├── chat.ts           # /api/sessions/:id/messages, generation, retry, continue
+│   │   └── models.ts         # /api/providers, /api/providers/:type/models
+│   └── services/             # 核心服务
+│       ├── generation-manager.ts # GenerationManager：生成任务生命周期、SSE 订阅
+│       └── logger.ts             # 日志服务：拦截 console 输出并持久化到 data/log/
+├── shared/                   # 前后端共享的纯函数模块
+│   ├── claude-export.ts      # Claude 导出包构造（conversations/users/projects + 时间戳规范化）
+│   ├── skills.ts             # 技能定义
+│   ├── sorting.ts            # 排序工具
+│   ├── system-prompt.ts      # 系统提示词拼装
+│   └── thinking.ts           # <think> 块解析工具
+├── src/
+│   ├── App.tsx               # 主应用组件（状态管理）
+│   ├── main.tsx              # React 入口
+│   ├── index.css             # Tailwind 导入
+│   ├── types.ts              # TypeScript 类型定义
+│   ├── vite-env.d.ts         # Vite 类型声明
+│   ├── components/
+│   │   ├── ChatArea.tsx      # 聊天区域（SSE 订阅 + 消息列表 + 输入框）
+│   │   ├── MarkdownRenderer.tsx # Markdown + KaTeX 渲染器
+│   │   ├── SettingsModal.tsx # 设置弹窗（General / Providers / Models / Characters / Skills / Templates）
+│   │   └── Sidebar.tsx       # 左侧栏（会话列表）
+│   └── lib/
+│       ├── api.ts            # 统一 API 客户端（REST + SSE 订阅）
+│       └── utils.ts          # cn() 样式合并工具
+├── tsconfig.json             # TypeScript 配置
+└── vite.config.ts            # Vite 构建配置
+```
+
+### 文件结构 / 关键文件说明
+
+```text
+| 文件 | 职责 |
+|------|------|
+| `server.ts` | 入口文件，`import 'dotenv/config'` + `startApp()` |
+| `server/app.ts` | Express 5 应用组装，挂载路由，创建 GenerationManager |
+| `server/providers/built-in.ts` | 内置 3 种提供商类型定义（google / nvidia / openai-compatible） |
+| `server/providers/config.ts` | 提供商配置解析（apiKey、baseURL、envKey） |
+| `server/providers/stream.ts` | 流式 API 调用（Google / Nvidia / OpenAI 兼容） |
+| `server/services/generation-manager.ts` | **核心服务**：GenerationManager 管理生成任务生命周期、SSE 订阅、并发、取消。 |
+| `server/services/logger.ts` | **日志服务**：拦截 console 输出并持久化到 `data/log/`。 |
+| `server/routes/chat.ts` | POST messages、GET generation（SSE）、DELETE stop、POST retry/continue |
+| `server/routes/settings.ts` | `/api/settings` GET/PUT |
+| `server/routes/templates.ts` | `/api/templates` GET/PUT |
+| `server/routes/sessions.ts` | `/api/sessions` GET/GET/:id/DELETE |
+| `server/routes/models.ts` | GET `/api/providers`、GET `/api/providers/:type/models` |
+| `src/App.tsx` | 状态管理、会话 CRUD、per-session generating 状态 |
+| `src/lib/api.ts` | 统一 API 客户端，封装 REST 调用和 SSE 订阅逻辑 |
+| `src/components/ChatArea.tsx` | 聊天 UI，通过 `api.ts` 订阅 SSE 事件并更新流式内容 |
+| `src/components/SettingsModal.tsx` | 设置弹窗（General / Providers / Models / Characters / Skills / Templates） |
+| `src/components/Sidebar.tsx` | 左侧栏 UI，展示会话列表 |
+| `src/components/MarkdownRenderer.tsx` | Markdown 渲染管线，集成 KaTeX 和其他插件 |
+| `src/types.ts` | TypeScript 接口定义（ProviderInstance, ModelInstance, UserSettings, ChatSession 等） |
+```
+
 ### 组件结构文档
 
 ```text
@@ -1059,5 +774,290 @@ graph TD
 
 ```text
 *   **模板管理**: 允许用户通过图形界面添加、编辑、删除、上下移动（Reorder）聊天自动填入模板（如三角形基础、锐角三角形等数学题目常用句式）。编辑内容支持多行文本。保存后会通过 `/api/templates` 持久化到服务器的 `data/templates.json` 中。
+```
+
+### 项目架构概览
+
+```text
+
+```
+
+### 项目架构概览 / 项目名称
+
+```text
+**AI Math & Chat Studio** — 一款专注于对话体验的多会话 AI 聊天应用，支持丰富的数学公式渲染和多供应商接入。
+```
+
+### 项目架构概览 / 整体架构
+
+```text
+graph TD
+    subgraph Frontend (React SPA)
+        A[Sidebar] --> |Manages sessions| App
+        B[ChatArea] --> |Displays messages, handles input| App
+        C[SettingsModal] --> |Configures app| App
+        D[MarkdownRenderer] --> |Renders content| B
+
+        subgraph App State & Logic
+            App(App.tsx - State Center)
+        end
+
+        E[src/lib/api.ts] --> |REST+SSE Client| F
+        App --> |Uses| E
+    end
+
+    subgraph Backend (Express 5)
+        F(server/app.ts - Express App)
+        subgraph API Routes (server/routes/)
+            R_Settings[settings.ts]
+            R_Sessions[sessions.ts]
+            R_Chat[chat.ts]
+            R_Models[models.ts]
+        end
+
+        subgraph Core Services (server/services/)
+            S_GenMan[generation-manager.ts]
+            S_Logger[logger.ts]
+        end
+
+        subgraph AI Providers (server/providers/)
+            P_BuiltIn[built-in.ts]
+            P_Config[config.ts]
+            P_Stream[stream.ts]
+        end
+
+        F --> R_Settings
+        F --> R_Sessions
+        F --> R_Chat
+        F --> R_Models
+        F -- Initializes --> S_Logger
+
+        R_Chat --> S_GenMan
+        S_GenMan --> P_Stream
+        P_Stream --> P_Config
+        P_Config --> P_BuiltIn
+    end
+
+    subgraph Data Layer
+        subgraph Local Storage (data/)
+            Data_Settings[settings.json]
+            Data_Sessions[sessions/*.json]
+            Data_Logs[log/*.log]
+        end
+    end
+
+    subgraph External Services
+        Ext_Google[Google Gemini API]
+        Ext_Nvidia[Nvidia NIM API]
+        Ext_OpenAI[OpenAI Compatible API]
+    end
+
+    F -- Reads/Writes --> Data_Settings
+    F -- Reads/Writes --> Data_Sessions
+    F -- Writes --> Data_Logs
+    P_Stream -- Calls --> Ext_Google
+    P_Stream -- Calls --> Ext_Nvidia
+    P_Stream -- Calls --> Ext_OpenAI
+```
+
+### 项目架构概览 / 核心设计
+
+```text
+1.  **后端驱动生成**：所有 AI 生成任务由后端的 `GenerationManager` 服务管理。这意味着即使用户关闭浏览器或断开连接，生成任务也会在服务器上继续运行，直到完成。
+
+2.  **核心提示词与角色/技能架构 (Provider + Model + Character + Skills)**：
+    *   **Provider (供应商)**: 定义了如何连接到一个 AI 服务（如 Google, Nvidia）。用户在 `Settings > Providers` 中配置 API Key 和 Base URL 等连接信息。
+    *   **Model (模型)**: 定义了要使用的具体模型及其参数（如 `gemini-1.5-pro`, temperature）。每个模型都必须关联一个已配置的供应商实例。
+    *   **Character (角色)**: 定义了系统提示词 (System Prompt)。用户可以在 `Settings > Characters` 中创建多个角色（如"代码专家"、"数学导师"），并在聊天时灵活切换。
+    *   **Skill (技能)**: 定义了独立的模块化技能提示词（如 "Assistant"）。用户可在 `Settings > Skills` 中定义，在 ChatArea 浮动栏中多选。后端按 `FORMAT_INSTRUCTIONS` -> Selected Skills -> Character System Prompt 的层级组合系统提示词。
+
+3.  **统一 API 客户端**：前端通过 `src/lib/api.ts` 与后端通信。这个模块封装了所有的 REST API 调用和 SSE (Server-Sent Events) 订阅逻辑，为上层组件提供了简洁的接口。
+
+4.  **模块化后端**：后端代码（位于 `server/` 目录）被清晰地划分为不同的职责模块：
+    *   `routes/`: 定义 Express API 端点。
+    *   `services/`: 包含核心业务逻辑，如 `GenerationManager`。
+    *   `providers/`: 封装了与外部 AI API 交互的所有逻辑。
+
+5.  **实时日志系统**：系统通过 `server/services/logger.ts` 拦截 `console` 方法（log, info, warn, error），并将日志持久化到 `data/log/`。日志文件名采用 `YYYY-MM-DD.log` 格式，使用 UTC 时间。
+
+6.  **SSE 实时订阅**：前端使用 `EventSource` API 订阅后端的 `/api/sessions/:id/generation` 端点。后端通过这个长连接实时推送 AI 生成的 `delta` (内容块)、`done` (完成)、`error` (错误) 或 `stopped` (停止) 事件，实现了打字机效果和实时状态更新。
+```
+
+### 项目架构概览 / 性能优化
+
+```text
+
+```
+
+### 项目架构概览 / 性能优化 / 1. 同步标题生成
+
+```text
+**实现**: `generateTitleFromMarkdown()` 使用纯 JavaScript 字符串操作，无需异步：
+- 使用 `unicodeit` 将 LaTeX 数学公式转换为 Unicode 字符
+- 使用 `markdown-to-txt` 清理 Markdown 语法
+- 只处理前200个字符，保证处理速度
+- 同步执行，生成后直接保存到 session.json，无需 SSE 通知前端
+```
+
+### 项目架构概览 / 性能优化 / 2. 多并发生成优化
+
+```text
+**问题**: 同时运行多个 AI 解题会话时，快速新增或切换对话会导致卡顿，可能存在以下问题：
+1. **Race Condition**: 新建会话立即发送消息时，会话未完全创建就开始生成
+2. **文件写入冲突**: 频繁写入 session.json 导致磁盘 I/O 瓶颈
+3. **通知风暴**: 每个 token 都触发 SSE 通知，压垮客户端
+4. **内存泄漏**: 已完成的任务不会自动清理
+5. **删除会话冲突**: 删除正在生成的会话时仍会尝试写入文件
+6. **SSE 连接资源泄漏**: 客户端断开连接时清理不完善
+
+**解决方案**:
+```
+
+### 项目架构概览 / 性能优化 / 2. 多并发生成优化 / 后端优化
+
+```text
+**防抖写操作（Debounced Writes）**: 
+- 实现 `debouncedWrite()` 方法，对同一 session 的文件写入进行批处理
+- 减少频繁的磁盘 I/O 操作，避免写操作堆积导致的性能问题
+- 删除会话时通过 `deletedSessions` Set 跟踪，防止向已删除的会话写入
+
+**通知节流（Throttled Notifications）**:
+- 在 `runGeneration()` 中实现通知节流机制，限制为最多 20 次/秒
+- 防止高频内容更新压垮客户端，提升整体响应性
+
+**任务清理（Task Cleanup）**:
+- 生成完成或中止时自动清理 `tasks` Map
+- `deleteSession()` 方法中调用 `clearSessionOperations()` 完整清理
+
+**生成器启动优化**:
+- `startGeneration()` 改为 async 方法，在启动新生成前等待旧任务清理（50ms）
+- 防止旧任务的最终写入与新任务冲突
+
+**中止处理优化**:
+- `runGeneration()` 检测 `stopped` 状态后发送 `stopped` 事件而非 `done`
+- 中止后不写入最终消息到 session 文件
+
+**SSE 连接健壮性增强**:
+- 添加 `X-Accel-Buffering: no` 头部，禁用 Nginx 等代理的缓冲
+- 实现指数退避策略（exponential backoff）替代固定轮询等待任务
+- 使用 `isClosed` 标志防止双重清理
+- 添加 `req.on('error')` 处理异常连接
+```
+
+### 项目架构概览 / 性能优化 / 2. 多并发生成优化 / 前端优化
+
+```text
+**新会话消息发送防抖**:
+- 在 `App.tsx` 中使用 `pendingSendsRef` 跟踪待发送的新会话消息
+- 对新建会话后的第一条消息添加 100ms 防抖延迟，避免 race condition
+
+**滚动性能优化**:
+- 在 `ChatArea.tsx` 中实现滚动节流，限制为最多 10 次/秒
+- 减少布局计算和重绘频率，改善大量内容渲染时的性能
+```
+
+### 项目架构概览 / 数据存储
+
+```text
+- **本地 JSON 文件**: 项目不依赖外部数据库，所有数据都存储在本地 `/data` 目录下的 JSON 文件中。这使得项目易于部署和迁移。
+    -   `settings.json`: 存储所有用户配置，包括供应商、模型和通用设置。
+    -   `sessions/{id}.json`: 每个聊天会话存储为一个单独的 JSON 文件。
+    -   `log/*.log`: 运行日志，记录服务器行为和 AI 调用情况。
+- **无认证**: 该应用设计为单用户本地工具，不包含用户认证系统。
+```
+
+### 项目架构概览 / 数据流：一次完整的消息交互
+
+```text
+1.  **用户发送消息**: 用户在 `ChatArea` 组件的输入框中输入消息，按下 `Ctrl+Enter`。
+2.  **前端乐观更新**: `App.tsx` 中的 `handleSendMessage` 被调用。它立即将用户的消息添加到当前会话的 `messages` 数组中，并更新 UI，提供即时反馈。
+3.  **API 调用**: `api.ts` 中的 `sendMessage` 函数被调用，向后端 `POST /api/sessions/:id/messages` 发送请求。
+4.  **后端接收**: `server/routes/chat.ts` 中的路由处理器接收到请求。
+5.  **启动生成**: 后端将用户消息保存到对应的 `session.json` 文件中，然后调用 `GenerationManager` 来启动一个新的 AI 生成任务。
+    *   **提示词注入**: 后端根据 `activeCharacterId` 及全局选择的 `activeSkillIds` 组合最终系统提示词：最头上注入 `FORMAT_INSTRUCTIONS` 格式约束，随后注入各 selected skill 块 (`# Skill: ${name}\n${prompt}`)，最后拼接角色提示词。
+6.  **SSE 连接**: 与此同时，前端的 `ChatArea` 组件通过 `useEffect` 自动订阅 `/api/sessions/:id/generation` 的 SSE 端点。
+7.  **流式响应**: `GenerationManager` 通过 `stream.ts` 调用相应的 AI Provider API。获取到的数据块被包装成 `delta` 事件，通过 SSE 连接实时发送回前端。
+8.  **前端渲染**: `ChatArea` 接收到 `delta` 事件，并将其内容追加到当前正在生成的回复中，用户看到平滑的打字机效果。
+9.  **任务结束**: 当 AI 完成生成时，后端发送 `done` 事件。前端接收到后，将最终的完整消息保存到状态中，并清理订阅。
+```
+
+### 项目架构概览 / 消息操作机制
+
+```text
+系统提供三种对已生成消息的操作机制，每种有不同的适用场景：
+```
+
+### 项目架构概览 / 消息操作机制 / 1. Retry（重试）
+
+```text
+- **触发方式**: 每条 model 消息上的 "Retry" 按钮
+- **实现逻辑**: `GenerationManager.retryMessage()` 找到该消息前面最近的 user 消息，截断从该 user 消息之后的所有消息（包括当前消息），从那个 user 消息开始重新生成
+- **适用场景**: 对某条 AI 回复完全不满意，希望完全重新开始
+```
+
+### 项目架构概览 / 消息操作机制 / 2. Regenerate（重新生成）
+
+```text
+- **触发方式**: 每条 model 消息上的 "Regenerate" 按钮
+- **实现逻辑**: `GenerationManager.regenerateMessage()` 执行以下操作：
+  1. 清洗当前消息：保留 `<details><summary>Thinking Process</summary>` 包裹的思考过程，删除正文输出部分
+  2. 截断该消息之后的所有消息
+  3. 直接对包含已有思考过程的助理消息进行流式生成（类似 Continue），不注入额外的提示词或用户指令
+- **适用场景**: AI 的思考过程有价值，但正文输出不完善或需要修正，希望在保留思考基础上直接继续输出
+```
+
+### 项目架构概览 / 消息操作机制 / 3. Continue（继续）
+
+```text
+- **触发方式**: 仅最后一条 model 消息上的 "Continue" 按钮
+- **实现逻辑**: `GenerationManager.continueGeneration()` 在会话末尾添加 user 指令，明确告知 AI 这是由于网络错误或流中断导致的，并指导 AI 根据当前状态（已开始输出 vs 仍在思考）采取相应行动
+- **适用场景**: 网络错误、流中断或 AI 输出被意外截断，需要继续完成未完成的响应
+```
+
+### 项目架构概览 / 核心设计决策
+
+```text
+-   **服务端代理模式**: 所有对外部 AI API 的调用都通过 Express 后端进行。这确保了 API 密钥永远不会暴露给前端，增强了应用的安全性。
+-   **三级架构 (Provider + Model + Character)**: 解耦了 API 连接信息、模型参数和角色指令，极大地提高了灵活性。
+-   **思考过程包装**: 为了在 UI 中统一展示不同模型的“思考过程”(reasoning)，所有此类信息在 `GenerationManager` 中被统一包装成一个可折叠的 `<details>` HTML 标签。
+-   **上下文窗口限制**: 为控制成本和 API 请求大小，每次生成只向 AI 模型发送最近的 40 条消息历史记录。
+-   **文档同步规则**: `AGENTS.md` 中明确规定，任何对代码、架构或数据模型的修改都必须同步更新相关的文档，以保持其准确性。
+```
+
+### 代码质量与格式规范
+
+```text
+本项目执行严格的代码质量和格式检查。所有代码必须通过 Prettier 和 TypeScript 的严格模式检查。
+```
+
+### 代码质量与格式规范 / 检查工具
+
+```text
+- **Formatting**: `bun run pretty` (prettier --check)
+- **Type Check**: `bun run check` (tsc --noEmit --strict)
+```
+
+### 代码质量与格式规范 / 修复工具
+
+```text
+- **自动修复格式**: `bun run pretty:fix`
+```
+
+### 代码质量与格式规范 / 严格修复规则
+
+```text
+1. **禁止未使用变量**: 所有的未使用变量必须移除。如果是 catch 子句中不需要 error 对象，使用 `catch { ... }` (ES2019+)。
+2. **禁止未使用的表达式**: 严禁将三元运算符或逻辑表达式作为独立语句使用。应使用标准的 `if/else` 语句。
+3. **严格类型检查**: TypeScript 必须处于 `--strict` 模式。严禁无故使用 `@ts-ignore` 或 `@ts-expect-error`。如果第三方库缺少类型或存在上游 Bug，必须在注释中说明原因。
+4. **文档同步**: 任何逻辑变更必须同步更新 `AGENTS.md` 和 `docs/` 目录下的相关文档。
+```
+
+### 代码质量与格式规范 / 最佳实践 (TypeScript)
+
+```text
+- **Make Illegal States Unrepresentable**: 使用辨析联合类型 (Discriminated Unions) 确保状态合法。
+- **Runtime Validation**: 对外部数据（API 响应、本地存储）使用 Zod 等工具进行运行时验证。
+- **Branded Types**: 对 ID 等原始类型使用 Branded Types 以增强区分度。
+- **Exhaustive Checks**: 使用 `never` 类型确保 `switch` 语句处理了所有可能的情况。
 ```
 
